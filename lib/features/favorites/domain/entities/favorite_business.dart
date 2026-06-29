@@ -1,0 +1,25 @@
+class FavoriteBusiness {
+  const FavoriteBusiness({
+    required this.id,
+    required this.name,
+    required this.category,
+    required this.rating,
+    required this.distanceKm,
+    required this.imageUrl,
+    this.businessCategoryId,
+    this.priceLevel = '',
+    this.city,
+    this.addedAt,
+  });
+
+  final String id;
+  final String name;
+  final String category;
+  final double rating;
+  final double distanceKm;
+  final String imageUrl;
+  final int? businessCategoryId;
+  final String priceLevel;
+  final String? city;
+  final DateTime? addedAt;
+}

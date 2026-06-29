@@ -1,0 +1,140 @@
+import 'package:flutter/material.dart';
+import '../../../../core/di/service_locator.dart';
+import '../../../../core/errors/user_error_message.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/utils/input_validators.dart';
+import '../../../../shared/widgets/ciervo_button.dart';
+import '../../domain/repositories/delivery_repository.dart';
+
+class DeliveryApplyPage extends StatefulWidget {
+  const DeliveryApplyPage({super.key});
+  @override
+  State<DeliveryApplyPage> createState() => _DeliveryApplyPageState();
+}
+
+class _DeliveryApplyPageState extends State<DeliveryApplyPage> {
+  final _key = GlobalKey<FormState>();
+  final _document = TextEditingController();
+  final _phone = TextEditingController();
+  DateTime? _birthDate;
+  String _vehicle = 'Bike';
+  bool _saving = false;
+  @override
+  void dispose() {
+    _document.dispose();
+    _phone.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Inscripcion domiciliario')),
+    body: AbsorbPointer(
+      absorbing: _saving,
+      child: ListView(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        children: [
+          Form(
+            key: _key,
+            child: Column(
+              children: [
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.cake_outlined),
+                  title: Text(
+                    _birthDate == null
+                        ? 'Fecha de nacimiento'
+                        : '${_birthDate!.year}-${_birthDate!.month.toString().padLeft(2, '0')}-${_birthDate!.day.toString().padLeft(2, '0')}',
+                  ),
+                  trailing: const Icon(Icons.calendar_month),
+                  onTap: _pickDate,
+                ),
+                TextFormField(
+                  controller: _document,
+                  decoration: const InputDecoration(
+                    labelText: 'Numero de documento',
+                  ),
+                  validator: (v) =>
+                      InputValidators.requiredText(v ?? '', 'tu documento'),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextFormField(
+                  controller: _phone,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(labelText: 'Telefono'),
+                  validator: (v) => InputValidators.phone(v ?? ''),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                DropdownButtonFormField<String>(
+                  initialValue: _vehicle,
+                  decoration: const InputDecoration(
+                    labelText: 'Tipo de vehiculo',
+                  ),
+                  items: const ['Bike', 'Motorcycle', 'Car', 'Walking']
+                      .map((v) => DropdownMenuItem(value: v, child: Text(v)))
+                      .toList(),
+                  onChanged: (v) => _vehicle = v ?? 'Bike',
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                CiervoButton(
+                  label: _saving ? 'Enviando' : 'Enviar solicitud',
+                  icon: Icons.send_outlined,
+                  state: _saving
+                      ? CiervoButtonState.loading
+                      : CiervoButtonState.normal,
+                  onPressed: _submit,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+  Future<void> _pickDate() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().subtract(const Duration(days: 365 * 20)),
+      firstDate: DateTime(1940),
+      lastDate: DateTime.now(),
+    );
+    if (date != null) setState(() => _birthDate = date);
+  }
+
+  Future<void> _submit() async {
+    if (!_key.currentState!.validate()) return;
+    if (_birthDate == null) {
+      _message('Selecciona tu fecha de nacimiento.');
+      return;
+    }
+    final today = DateTime.now();
+    final adultDate = DateTime(today.year - 18, today.month, today.day);
+    if (_birthDate!.isAfter(adultDate)) {
+      _message('Debes ser mayor de edad para inscribirte.');
+      return;
+    }
+    setState(() => _saving = true);
+    final d = _birthDate!;
+    final result = await getIt<DeliveryRepository>().apply({
+      'birthDate':
+          '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}',
+      'documentNumber': _document.text.trim(),
+      'phone': _phone.text.trim(),
+      'vehicleType': _vehicle,
+    });
+    if (!mounted) return;
+    result.when(
+      success: (_) {
+        _message('Solicitud enviada correctamente.');
+        Navigator.of(context).pop();
+      },
+      failure: (e) {
+        setState(() => _saving = false);
+        _message(UserErrorMessage.from(e));
+      },
+    );
+  }
+
+  void _message(String text) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+}

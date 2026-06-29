@@ -1,0 +1,188 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../../core/di/service_locator.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/utils/input_validators.dart';
+import '../../../../shared/widgets/ciervo_button.dart';
+import '../../../../shared/widgets/ciervo_card.dart';
+import '../../domain/entities/user_profile.dart';
+import '../../domain/repositories/profile_repository.dart';
+import '../cubit/profile_cubit.dart';
+import '../cubit/profile_state.dart';
+
+class EditProfilePage extends StatelessWidget {
+  const EditProfilePage({required this.profile, super.key});
+
+  final UserProfile profile;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => ProfileCubit(getIt<ProfileRepository>()),
+      child: _EditProfileView(profile: profile),
+    );
+  }
+}
+
+class _EditProfileView extends StatefulWidget {
+  const _EditProfileView({required this.profile});
+
+  final UserProfile profile;
+
+  @override
+  State<_EditProfileView> createState() => _EditProfileViewState();
+}
+
+class _EditProfileViewState extends State<_EditProfileView> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _firstName;
+  late final TextEditingController _lastName;
+  late final TextEditingController _email;
+  late final TextEditingController _phone;
+
+  @override
+  void initState() {
+    super.initState();
+    _firstName = TextEditingController(text: widget.profile.firstName);
+    _lastName = TextEditingController(text: widget.profile.lastName);
+    _email = TextEditingController(text: widget.profile.email);
+    _phone = TextEditingController(text: widget.profile.phone);
+  }
+
+  @override
+  void dispose() {
+    _firstName.dispose();
+    _lastName.dispose();
+    _email.dispose();
+    _phone.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<ProfileCubit, ProfileState>(
+      listenWhen: (previous, current) => previous.status != current.status,
+      listener: (context, state) async {
+        if (state.status == ProfileStatus.saved) {
+          await showDialog<void>(
+            context: context,
+            barrierDismissible: false,
+            builder: (dialogContext) => AlertDialog(
+              icon: const Icon(Icons.check_circle_outline),
+              title: const Text('Perfil actualizado'),
+              content: const Text('Tus datos se guardaron correctamente.'),
+              actions: [
+                FilledButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Continuar'),
+                ),
+              ],
+            ),
+          );
+          if (!context.mounted) return;
+          Navigator.of(context).pop(true);
+        }
+        if (state.status == ProfileStatus.failure &&
+            state.errorMessage != null) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.errorMessage!)));
+        }
+      },
+      builder: (context, state) {
+        final saving = state.isSaving;
+        return Scaffold(
+          appBar: AppBar(title: const Text('Editar perfil')),
+          body: AbsorbPointer(
+            absorbing: saving,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: CiervoCard(
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _field(
+                        controller: _firstName,
+                        label: 'Nombre',
+                        icon: Icons.person_outline,
+                        validator: (value) => InputValidators.requiredText(
+                          value ?? '',
+                          'tu nombre',
+                        ),
+                      ),
+                      _field(
+                        controller: _lastName,
+                        label: 'Apellido',
+                        icon: Icons.person_outline,
+                        validator: (value) => InputValidators.requiredText(
+                          value ?? '',
+                          'tu apellido',
+                        ),
+                      ),
+                      _field(
+                        controller: _email,
+                        label: 'Correo electrónico',
+                        icon: Icons.mail_outline,
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (value) =>
+                            InputValidators.email(value ?? ''),
+                      ),
+                      _field(
+                        controller: _phone,
+                        label: 'Teléfono',
+                        icon: Icons.phone_outlined,
+                        keyboardType: TextInputType.phone,
+                        validator: (value) =>
+                            InputValidators.phone(value ?? ''),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      CiervoButton(
+                        label: saving ? 'Guardando' : 'Guardar cambios',
+                        icon: Icons.save_outlined,
+                        state: saving
+                            ? CiervoButtonState.loading
+                            : CiervoButtonState.normal,
+                        onPressed: saving ? null : _save,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _field({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    required String? Function(String?) validator,
+    TextInputType? keyboardType,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: TextFormField(
+        controller: controller,
+        validator: validator,
+        keyboardType: keyboardType,
+        decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
+      ),
+    );
+  }
+
+  void _save() {
+    if (!_formKey.currentState!.validate()) return;
+    context.read<ProfileCubit>().updateProfile(
+      firstName: _firstName.text.trim(),
+      lastName: _lastName.text.trim(),
+      email: _email.text.trim(),
+      phone: _phone.text.trim(),
+    );
+  }
+}
