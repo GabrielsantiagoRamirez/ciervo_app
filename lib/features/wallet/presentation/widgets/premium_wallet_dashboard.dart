@@ -15,6 +15,7 @@ import '../cubit/wallet_cubit.dart';
 import '../cubit/wallet_state.dart';
 import '../utils/nfc_navigation.dart';
 import 'ciervo_digital_card.dart';
+import '../../../bonuses/presentation/widgets/wallet_available_bonuses_section.dart';
 import 'wallet_nfc_section.dart';
 import '../pages/recharge_page.dart';
 import '../pages/transfer_page.dart';
@@ -113,6 +114,8 @@ class _PremiumWalletDashboardState extends State<PremiumWalletDashboard> {
               ),
               const SizedBox(height: AppSpacing.md),
               WalletNfcSection(selectedCard: card),
+              const SizedBox(height: AppSpacing.xl),
+              const WalletAvailableBonusesSection(),
               const SizedBox(height: AppSpacing.xl),
               _RecentMovementsHeader(
                 onSeeAll: () => Navigator.of(context).push(

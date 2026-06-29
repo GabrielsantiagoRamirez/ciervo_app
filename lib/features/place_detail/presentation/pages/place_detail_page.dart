@@ -17,7 +17,9 @@ import '../../../home/domain/entities/home_place.dart';
 import '../../../chat/domain/repositories/chat_repository.dart';
 import '../../../chat/presentation/pages/chat_conversation_page.dart';
 import '../../../delivery/domain/repositories/delivery_repository.dart';
-import '../../../favorites/data/favorites_repository.dart';
+import '../../../bonuses/presentation/pages/bonus_detail_page.dart';
+import '../../../campaigns/presentation/widgets/paid_campaign_banner_section.dart';
+import '../../../favorites/domain/repositories/favorites_repository.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/location/app_location.dart';
@@ -181,6 +183,13 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
                   ProductSubcategoryFilters(
                     businessCategoryId: businessCategoryId,
                   ),
+                const SizedBox(height: AppSpacing.lg),
+                PlaceDetailBonusesSection(businessId: place.id),
+                const SizedBox(height: AppSpacing.lg),
+                PaidCampaignBannerSection(
+                  businessId: place.id,
+                  compactTitle: 'Campanas del comercio',
+                ),
                 const SizedBox(height: AppSpacing.lg),
                 const _SectionTitle('Promociones'),
                 const SizedBox(height: AppSpacing.sm),
@@ -1058,7 +1067,7 @@ class _FavoriteButtonState extends State<_FavoriteButton> {
   }
 
   Future<void> _load() async {
-    final result = await getIt<FavoritesRepository>().exists(widget.businessId);
+    final result = await getIt<FavoritesRepository>().check(widget.businessId);
     if (!mounted) return;
     result.when(
       success: (value) => setState(() => _favorite = value),

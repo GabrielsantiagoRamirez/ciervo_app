@@ -43,6 +43,8 @@ ActivityFeedItem _fromJson(Map<String, dynamic> json) => ActivityFeedItem(
   benefitId: _i(json['benefitId']),
   rewardId: _i(json['rewardId']),
   couponId: _i(json['couponId']),
+  bonusId: _nullable(json['bonusId'] ?? json['linkedBonusId']),
+  campaignId: _nullable(json['campaignId'] ?? json['adsCampaignId']),
   deepLink: _nullable(json['deepLink']),
   imageMediaId: _nullable(
     json['imageMediaId'] ?? json['mediaId'] ?? json['coverMediaId'],

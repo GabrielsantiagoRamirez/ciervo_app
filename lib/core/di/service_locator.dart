@@ -27,7 +27,15 @@ import '../../features/discovery/domain/repositories/discovery_repository.dart';
 import '../../features/delivery/data/repositories/delivery_repository_impl.dart';
 import '../../features/delivery/domain/repositories/delivery_repository.dart';
 import '../../features/cashback/data/cashback_repository.dart';
-import '../../features/favorites/data/favorites_repository.dart';
+import '../../features/favorites/data/datasources/favorites_remote_datasource.dart';
+import '../../features/favorites/data/repositories/favorites_repository_impl.dart';
+import '../../features/favorites/domain/repositories/favorites_repository.dart';
+import '../../features/bonuses/data/datasources/bonuses_remote_datasource.dart';
+import '../../features/bonuses/data/repositories/bonuses_repository_impl.dart';
+import '../../features/bonuses/domain/repositories/bonuses_repository.dart';
+import '../../features/campaigns/data/datasources/campaigns_remote_datasource.dart';
+import '../../features/campaigns/data/repositories/campaigns_repository_impl.dart';
+import '../../features/campaigns/domain/repositories/campaigns_repository.dart';
 import '../../features/financial_history/data/datasources/financial_history_remote_datasource.dart';
 import '../../features/financial_history/data/repositories/financial_history_repository_impl.dart';
 import '../../features/financial_history/domain/repositories/financial_history_repository.dart';
@@ -158,8 +166,23 @@ Future<void> configureDependencies() async {
     ..registerLazySingleton<FamilyChatRepository>(
       () => FamilyChatRepository(getIt<NetworkClient>()),
     )
+    ..registerLazySingleton<FavoritesRemoteDataSource>(
+      () => DioFavoritesRemoteDataSource(getIt<NetworkClient>()),
+    )
     ..registerLazySingleton<FavoritesRepository>(
-      () => FavoritesRepository(getIt<NetworkClient>()),
+      () => FavoritesRepositoryImpl(getIt<FavoritesRemoteDataSource>()),
+    )
+    ..registerLazySingleton<BonusesRemoteDataSource>(
+      () => DioBonusesRemoteDataSource(getIt<NetworkClient>()),
+    )
+    ..registerLazySingleton<BonusesRepository>(
+      () => BonusesRepositoryImpl(getIt<BonusesRemoteDataSource>()),
+    )
+    ..registerLazySingleton<CampaignsRemoteDataSource>(
+      () => DioCampaignsRemoteDataSource(getIt<NetworkClient>()),
+    )
+    ..registerLazySingleton<CampaignsRepository>(
+      () => CampaignsRepositoryImpl(getIt<CampaignsRemoteDataSource>()),
     )
     ..registerLazySingleton<MediaRepository>(
       () => MediaRepository(getIt<NetworkClient>()),

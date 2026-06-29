@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../features/bonuses/presentation/pages/bonus_detail_page.dart';
+import '../../features/bonuses/presentation/pages/bonuses_pages.dart';
 import '../../features/chat/presentation/pages/chat_conversation_page.dart';
 import '../../features/delivery/presentation/pages/customer_order_detail_page.dart';
 import '../../features/delivery/presentation/pages/customer_orders_page.dart';
@@ -63,6 +65,19 @@ class NotificationDeepLink {
       _push(context, const VakupliPage());
       return true;
     }
+    if (lower.contains('/bonus') || lower.contains('/bonuses')) {
+      final id = _segmentId(path);
+      if (id != null) {
+        _push(context, BonusDetailPage(bonusId: id));
+        return true;
+      }
+      _push(context, const MyBonusesPage());
+      return true;
+    }
+    if (lower.contains('/campaign') || lower.contains('/ads')) {
+      _push(context, const BonusesCatalogPage());
+      return true;
+    }
     if (lower.contains('/wallet') || lower.contains('/nfc')) {
       _push(context, const WalletPage());
       return true;
@@ -112,6 +127,27 @@ class NotificationDeepLink {
     final text = '$type $category'.toLowerCase();
     if (text.contains('message') || text.contains('chat')) {
       _push(context, const VakupliPage());
+      return true;
+    }
+    if (text.contains('bonus_claimed') ||
+        text.contains('bonus_redeemed') ||
+        text.contains('bonus claimed') ||
+        text.contains('bonus redeemed') ||
+        text.contains('bono reclam') ||
+        text.contains('bono redim')) {
+      final bonusId = data['bonusId']?.toString();
+      if (bonusId != null && bonusId.isNotEmpty) {
+        _push(context, BonusDetailPage(bonusId: bonusId));
+      } else {
+        _push(context, const MyBonusesPage());
+      }
+      return true;
+    }
+    if (text.contains('ads_campaign_published') ||
+        text.contains('campaign_published') ||
+        text.contains('campana publicada') ||
+        text.contains('nueva campana')) {
+      _push(context, const BonusesCatalogPage());
       return true;
     }
     if (text.contains('wallet') ||

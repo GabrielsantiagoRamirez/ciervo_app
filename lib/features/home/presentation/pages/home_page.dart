@@ -17,6 +17,9 @@ import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
 import '../../../discovery/presentation/widgets/activity_feed_section.dart';
+import '../../../bonuses/presentation/pages/bonuses_pages.dart';
+import '../../../campaigns/presentation/widgets/paid_campaign_banner_section.dart';
+import '../../../favorites/presentation/widgets/home_favorites_section.dart';
 import '../../../discovery/data/repositories/business_categories_repository.dart';
 import '../../../discovery/domain/entities/business_summary.dart';
 import '../../../discovery/domain/repositories/discovery_repository.dart';
@@ -121,6 +124,30 @@ class _HomeView extends StatelessWidget {
                             ],
                             const SizedBox(height: AppSpacing.lg),
                             const ActivityFeedSection(),
+                            const SizedBox(height: AppSpacing.lg),
+                            PaidCampaignBannerSection(
+                              country: state.countryCode,
+                              city: state.city,
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            HomeFavoritesSection(
+                              country: state.countryCode,
+                              city: state.city,
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            HomeBonusesSection(
+                              title: 'Bonos cerca de ti',
+                              onlyFavorites: false,
+                              country: state.countryCode,
+                              city: state.city,
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            HomeBonusesSection(
+                              title: 'Bonos de tus favoritos',
+                              onlyFavorites: true,
+                              country: state.countryCode,
+                              city: state.city,
+                            ),
                             const SizedBox(height: AppSpacing.lg),
                             HomeCategoryList(
                               categories: cubit.categories,

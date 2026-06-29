@@ -7,6 +7,7 @@ import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_brand_loader.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
+import '../../../bonuses/presentation/pages/bonus_detail_page.dart';
 import '../../../home/domain/entities/home_place.dart';
 import '../../../media/presentation/authenticated_media_image.dart';
 import '../../../place_detail/presentation/pages/place_detail_page.dart';
@@ -153,6 +154,29 @@ class _ActivityCard extends StatelessWidget {
 }
 
 void _openActivity(BuildContext context, ActivityFeedItem item) {
+  final type = item.type.toLowerCase();
+  if ((item.bonusId ?? '').isNotEmpty ||
+      type.contains('bonus') ||
+      type.contains('coupon')) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => BonusDetailPage(bonusId: item.bonusId!),
+      ),
+    );
+    return;
+  }
+  if (type.contains('ads_campaign') ||
+      type.contains('campaign_published') ||
+      type.contains('campaign')) {
+    if (item.businessId != null) {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => PlaceDetailPage(place: _placeFromActivity(item)),
+        ),
+      );
+      return;
+    }
+  }
   if (item.businessId != null) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(

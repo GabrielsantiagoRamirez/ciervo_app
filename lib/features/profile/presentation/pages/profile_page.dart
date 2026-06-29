@@ -30,6 +30,7 @@ import '../../../qr_wallet/presentation/pages/qr_wallet_page.dart';
 import '../../../reservations/presentation/pages/reservations_page.dart';
 import '../../../delivery/presentation/pages/delivery_page.dart';
 import '../../../delivery/presentation/pages/customer_orders_page.dart';
+import '../../../bonuses/presentation/pages/bonuses_pages.dart';
 import '../../../favorites/presentation/pages/favorites_page.dart';
 import '../../../media/presentation/authenticated_media_image.dart';
 import '../../domain/entities/user_profile.dart';
@@ -473,6 +474,20 @@ class _AccountActions extends StatelessWidget {
             title: 'Mis Favoritos',
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(builder: (_) => const FavoritesPage()),
+            ),
+          ),
+          _ActionTile(
+            icon: Icons.local_offer_outlined,
+            title: 'Bonos y cupones',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const BonusesCatalogPage()),
+            ),
+          ),
+          _ActionTile(
+            icon: Icons.card_giftcard_outlined,
+            title: 'Mis bonos',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const MyBonusesPage()),
             ),
           ),
           _ActionTile(

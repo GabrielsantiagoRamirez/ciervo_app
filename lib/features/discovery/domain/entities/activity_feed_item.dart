@@ -13,6 +13,8 @@ class ActivityFeedItem {
     this.benefitId,
     this.rewardId,
     this.couponId,
+    this.bonusId,
+    this.campaignId,
     this.deepLink,
     this.imageMediaId,
     this.createdAt,
@@ -31,6 +33,8 @@ class ActivityFeedItem {
   final int? benefitId;
   final int? rewardId;
   final int? couponId;
+  final String? bonusId;
+  final String? campaignId;
   final String? deepLink;
   final String? imageMediaId;
   final DateTime? createdAt;
