@@ -22,6 +22,8 @@ class AppNotification {
     this.qrId,
     this.deepLink,
     this.metadataJson,
+    this.priority,
+    this.icon,
   });
 
   final String id;
@@ -46,4 +48,6 @@ class AppNotification {
   final int? qrId;
   final String? deepLink;
   final String? metadataJson;
+  final String? priority;
+  final String? icon;
 }

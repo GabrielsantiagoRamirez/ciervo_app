@@ -45,6 +45,9 @@ dependencies:
   permission_handler: ^11.3.1
   qr_flutter: ^4.1.0
   url_launcher: ^6.3.1
+  firebase_core: ^3.8.1
+  firebase_messaging: ^15.1.6
+  flutter_local_notifications: ^18.0.1
 
 flutter_launcher_icons:
   android: true
@@ -110,3 +113,4 @@ flutter:
 
   assets:
     - assets/icon/icon.png
+    - assets/notifications/ciervo_logo_gold.png

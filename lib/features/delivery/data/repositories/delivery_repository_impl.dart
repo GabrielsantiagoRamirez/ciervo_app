@@ -5,6 +5,8 @@ import '../../../../core/network/api_response_unwrapper.dart';
 import '../../../../core/network/network_client.dart';
 import '../../../../core/result/result.dart';
 import '../../../receipts/domain/entities/action_confirmation.dart';
+import '../../../wallet/data/dtos/nfc_dto.dart';
+import '../../../wallet/domain/entities/nfc_models.dart';
 import '../../domain/entities/delivery_models.dart';
 import '../../domain/repositories/delivery_repository.dart';
 
@@ -156,6 +158,19 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
       },
     );
     return _paymentResult(unwrapApiMap(response.data));
+  });
+
+  @override
+  Future<Result<NfcSession>> createOrderNfcSession({
+    required String orderId,
+  }) => _guard(() async {
+    final response = await _client.dio.post<dynamic>(
+      '/api/delivery/orders/$orderId/nfc/session',
+      data: {
+        'idempotencyKey': _idempotencyKey('delivery-nfc', orderId),
+      },
+    );
+    return NfcSessionDto.fromJson(unwrapApiMap(response.data)).toDomain();
   });
 
   @override

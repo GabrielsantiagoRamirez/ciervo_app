@@ -7,6 +7,8 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../payments/domain/repositories/payments_repository.dart';
+import '../../../wallet/presentation/pages/nfc_pay_session_page.dart';
+import '../../../wallet/presentation/utils/nfc_navigation.dart';
 import '../../domain/entities/delivery_models.dart';
 import '../../domain/repositories/delivery_repository.dart';
 import '../../../wallet/domain/entities/wallet_card.dart';
@@ -170,6 +172,31 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
       failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(UserErrorMessage.from(error))),
       ),
+    );
+  }
+
+  Future<void> _startDeliveryNfcSession() async {
+    setState(() => _busy = true);
+    final result =
+        await getIt<DeliveryRepository>().createOrderNfcSession(
+      orderId: widget.orderId,
+    );
+    if (!mounted) return;
+    setState(() => _busy = false);
+    await result.when(
+      success: (session) async {
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => NfcPaySessionPage(
+              session: session,
+              businessName: _order?.businessName ?? 'Delivery',
+              isDelivery: true,
+            ),
+          ),
+        );
+        _load();
+      },
+      failure: (error) => handleNfcError(context, error),
     );
   }
 
@@ -419,6 +446,38 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
                         icon: Icons.payments_outlined,
                         variant: CiervoButtonVariant.secondary,
                         onPressed: _busy ? null : () => _pay('cash'),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      CiervoButton(
+                        label: 'Pagar con NFC CIERVO',
+                        icon: Icons.nfc,
+                        variant: CiervoButtonVariant.secondary,
+                        onPressed: _busy ? null : () => _pay('nfc'),
+                      ),
+                    ],
+                    if (_order!.isNfcPrepared) ...[
+                      const SizedBox(height: AppSpacing.lg),
+                      CiervoCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const Text(
+                              'Pago NFC preparado',
+                              style: TextStyle(fontWeight: FontWeight.w700),
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              'Al recibir tu pedido, activa NFC para que el domiciliario cobre '
+                              'COP ${_order!.totalAmount?.toStringAsFixed(0) ?? '—'}.',
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            CiervoButton(
+                              label: 'Acercar celular para pagar',
+                              icon: Icons.nfc,
+                              onPressed: _busy ? null : _startDeliveryNfcSession,
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                     if (_order!.deliveryPin case final pin?) ...[

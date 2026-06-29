@@ -87,6 +87,8 @@ class _ConversationViewState extends State<_ConversationView> {
                       context,
                       buttons: state.chatButtons,
                       conversationId: widget.conversationId,
+                      businessId: state.conversation?.businessId,
+                      businessName: state.conversation?.title,
                     ),
           ),
         ],
@@ -155,6 +157,8 @@ class _ConversationViewState extends State<_ConversationView> {
                         buttons: state.chatButtons,
                         conversationId: widget.conversationId,
                         enabled: !state.isSending,
+                        businessId: state.conversation?.businessId,
+                        businessName: state.conversation?.title,
                       ),
                       SafeArea(
                         top: false,

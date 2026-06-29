@@ -21,6 +21,8 @@ import '../../domain/entities/wallet_transaction.dart';
 import '../../domain/repositories/wallet_repository.dart';
 import '../cubit/wallet_cubit.dart';
 import '../cubit/wallet_state.dart';
+import '../widgets/premium_wallet_dashboard.dart';
+import '../widgets/wallet_nfc_section.dart';
 import 'payment_requests_page.dart';
 import 'recharge_by_ciervo_id_page.dart';
 import 'recharge_page.dart';
@@ -56,28 +58,38 @@ class _WalletView extends StatelessWidget {
       builder: (context, state) {
         final cubit = context.read<WalletCubit>();
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Wallet'),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined),
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const NotificationsPage(),
-                  ),
+          backgroundColor: state.status == WalletStatus.loaded ||
+                  state.status == WalletStatus.empty
+              ? const Color(0xFF0D0D0D)
+              : null,
+          appBar: state.status == WalletStatus.loaded
+              ? null
+              : AppBar(
+                  title: const Text('Wallet'),
+                  actions: [
+                    IconButton(
+                      icon: const Icon(Icons.notifications_outlined),
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const NotificationsPage(),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.receipt_long_outlined),
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const ReceiptsPage(),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.receipt_long_outlined),
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(builder: (_) => const ReceiptsPage()),
-                ),
-              ),
-            ],
-          ),
           body: RefreshIndicator(
             onRefresh: cubit.load,
-            child: CustomScrollView(
+            child: state.status == WalletStatus.loaded
+                ? PremiumWalletDashboard(state: state)
+                : CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 SliverPadding(
@@ -119,6 +131,7 @@ class _WalletView extends StatelessWidget {
           _BalanceSummary(state: state),
           const SizedBox(height: AppSpacing.lg),
           _QuickActions(state: state),
+          WalletNfcSection(selectedCard: state.selectedCard),
           const SizedBox(height: AppSpacing.lg),
           Text('Tarjetas', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: AppSpacing.sm),

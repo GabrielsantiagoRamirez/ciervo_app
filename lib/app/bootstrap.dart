@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../core/crash/crash_reporting_service.dart';
 import '../core/di/service_locator.dart';
+import '../core/notifications/ciervo_push_service.dart';
 import '../core/experience/experience_mode_cubit.dart';
 import '../core/session/session_manager.dart';
 import '../core/storage/secure_storage.dart';
@@ -19,6 +20,7 @@ Future<void> bootstrap() async {
       Bloc.observer = AppBlocObserver();
 
       await getIt<SessionManager>().restore();
+      await getIt<CiervoPushService>().initialize();
 
       runApp(
         BlocProvider(

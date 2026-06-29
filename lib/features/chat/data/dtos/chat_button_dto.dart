@@ -19,10 +19,15 @@ class ChatButtonDto {
 
   factory ChatButtonDto.fromJson(Map<String, dynamic> json) {
     return ChatButtonDto(
-      code: _string(json, const ['code', 'buttonCode', 'id']),
+      code: _string(json, const ['code', 'buttonCode', 'buttonKey', 'id']),
       label: _string(json, const ['label', 'title', 'name']),
       visibility: ChatButtonVisibility.parse(
-        _string(json, const ['visibility', 'status', 'state']),
+        _string(json, const [
+          'visibility',
+          'status',
+          'state',
+          'availability',
+        ]),
       ),
       message: _optional(json, const ['message', 'disabledMessage', 'reason']),
       icon: _optional(json, const ['icon', 'iconName']),

@@ -8,6 +8,7 @@ import '../../../wallet/presentation/pages/recharge_by_ciervo_id_page.dart';
 import '../../../wallet/presentation/pages/request_money_page.dart';
 import '../../../wallet/presentation/pages/transfer_page.dart';
 import '../../../wallet/presentation/pages/wallet_page.dart';
+import '../../../wallet/presentation/utils/nfc_navigation.dart';
 import '../../domain/entities/chat_button.dart';
 
 IconData iconForChatButton(String code) {
@@ -29,6 +30,7 @@ IconData iconForChatButton(String code) {
       Icons.workspace_premium_outlined,
     'trips' || 'viajes' => Icons.flight_outlined,
     'transport' || 'transporte' => Icons.directions_bus_outlined,
+    'nfc' || 'paynfc' || 'pagonfc' => Icons.nfc,
     _ => Icons.touch_app_outlined,
   };
 }
@@ -37,6 +39,8 @@ Future<void> handleChatButtonTap(
   BuildContext context, {
   required ChatButton button,
   required String conversationId,
+  int? businessId,
+  String? businessName,
 }) async {
   if (!button.visibility.isEnabled) {
     final message = button.message?.trim();
@@ -111,6 +115,15 @@ Future<void> handleChatButtonTap(
         MaterialPageRoute<void>(builder: (_) => const WalletPage()),
       );
       return;
+    case 'nfc':
+    case 'paynfc':
+    case 'pagonfc':
+      await openNfcPaySetup(
+        context,
+        businessId: businessId,
+        businessName: businessName,
+      );
+      return;
     default:
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -123,6 +136,8 @@ Future<void> showChatButtonsSheet(
   BuildContext context, {
   required List<ChatButton> buttons,
   required String conversationId,
+  int? businessId,
+  String? businessName,
 }) async {
   final visible = buttons.where((b) => b.visibility.isVisible).toList()
     ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
@@ -154,6 +169,8 @@ Future<void> showChatButtonsSheet(
                   context,
                   button: button,
                   conversationId: conversationId,
+                  businessId: businessId,
+                  businessName: businessName,
                 );
               },
             ),

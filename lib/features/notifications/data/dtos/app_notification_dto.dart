@@ -24,6 +24,8 @@ class AppNotificationDto {
     this.qrId,
     this.deepLink,
     this.metadataJson,
+    this.priority,
+    this.icon,
   });
 
   factory AppNotificationDto.fromJson(Map<String, dynamic> json) {
@@ -51,6 +53,8 @@ class AppNotificationDto {
       qrId: _i(json['qrId']),
       deepLink: _s(json, const ['deepLink']),
       metadataJson: _s(json, const ['metadataJson']),
+      priority: _s(json, const ['priority']),
+      icon: _s(json, const ['icon']),
     );
   }
 
@@ -76,6 +80,8 @@ class AppNotificationDto {
   final int? qrId;
   final String? deepLink;
   final String? metadataJson;
+  final String? priority;
+  final String? icon;
 
   AppNotification toDomain() => AppNotification(
     id: id,
@@ -100,6 +106,8 @@ class AppNotificationDto {
     qrId: qrId,
     deepLink: deepLink,
     metadataJson: metadataJson,
+    priority: priority,
+    icon: icon,
   );
 
   static List<AppNotificationDto> listFrom(dynamic value) {

@@ -8,36 +8,47 @@ class NotificationsCubit extends Cubit<NotificationsState> {
   NotificationsCubit(this._repository) : super(const NotificationsState());
   final NotificationsRepository _repository;
 
-  Future<void> load() async {
-    emit(const NotificationsState(status: NotificationsStatus.loading));
-    final result = await _repository.notifications();
+  Future<void> load({String? category}) async {
+    emit(NotificationsState(
+      status: NotificationsStatus.loading,
+      selectedCategory: category,
+    ));
+    final result = await _repository.notifications(category: category);
     result.when(
       success: (items) => emit(
         NotificationsState(
-          status:
-              items.isEmpty ? NotificationsStatus.empty : NotificationsStatus.loaded,
+          status: items.isEmpty
+              ? NotificationsStatus.empty
+              : NotificationsStatus.loaded,
           items: items,
+          selectedCategory: category,
         ),
       ),
       failure: (error) => emit(
         NotificationsState(
           status: NotificationsStatus.failure,
           errorMessage: UserErrorMessage.from(error),
+          selectedCategory: category,
         ),
       ),
     );
   }
 
   Future<void> markAsRead(String id) async {
-    emit(NotificationsState(status: NotificationsStatus.actionLoading, items: state.items));
+    emit(NotificationsState(
+      status: NotificationsStatus.actionLoading,
+      items: state.items,
+      selectedCategory: state.selectedCategory,
+    ));
     final result = await _repository.markAsRead(id);
     result.when(
-      success: (_) => load(),
+      success: (_) => load(category: state.selectedCategory),
       failure: (error) => emit(
         NotificationsState(
           status: NotificationsStatus.failure,
           items: state.items,
           errorMessage: UserErrorMessage.from(error),
+          selectedCategory: state.selectedCategory,
         ),
       ),
     );
@@ -47,15 +58,47 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     emit(NotificationsState(
       status: NotificationsStatus.actionLoading,
       items: state.items,
+      selectedCategory: state.selectedCategory,
     ));
     final result = await _repository.markAllAsRead();
     result.when(
-      success: (_) => load(),
+      success: (_) => load(category: state.selectedCategory),
       failure: (error) => emit(
         NotificationsState(
           status: NotificationsStatus.failure,
           items: state.items,
           errorMessage: UserErrorMessage.from(error),
+          selectedCategory: state.selectedCategory,
+        ),
+      ),
+    );
+  }
+
+  Future<void> deleteNotification(String id) async {
+    final result = await _repository.deleteNotification(id);
+    result.when(
+      success: (_) => load(category: state.selectedCategory),
+      failure: (error) => emit(
+        NotificationsState(
+          status: NotificationsStatus.failure,
+          items: state.items,
+          errorMessage: UserErrorMessage.from(error),
+          selectedCategory: state.selectedCategory,
+        ),
+      ),
+    );
+  }
+
+  Future<void> deleteAll() async {
+    final result = await _repository.deleteAllNotifications();
+    result.when(
+      success: (_) => load(category: state.selectedCategory),
+      failure: (error) => emit(
+        NotificationsState(
+          status: NotificationsStatus.failure,
+          items: state.items,
+          errorMessage: UserErrorMessage.from(error),
+          selectedCategory: state.selectedCategory,
         ),
       ),
     );

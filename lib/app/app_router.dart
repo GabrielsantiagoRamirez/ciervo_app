@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/session/session_manager.dart';
@@ -20,9 +21,11 @@ abstract final class AppRoutePaths {
 
 GoRouter createAppRouter(
   SessionManager sessionManager,
-  ExperienceModeCubit experienceModeCubit,
-) {
+  ExperienceModeCubit experienceModeCubit, {
+  GlobalKey<NavigatorState>? navigatorKey,
+}) {
   return GoRouter(
+    navigatorKey: navigatorKey,
     initialLocation: AppRoutePaths.splash,
     refreshListenable: AppRouterRefreshStream(
       sessionManager.stream,

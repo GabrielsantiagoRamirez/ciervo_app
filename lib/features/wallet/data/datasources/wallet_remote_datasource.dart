@@ -2,6 +2,7 @@
 
 import '../../../../core/network/api_response_unwrapper.dart';
 import '../../../../core/network/network_client.dart';
+import '../dtos/nfc_dto.dart';
 import '../dtos/payment_request_dto.dart';
 import '../dtos/wallet_card_dto.dart';
 import '../dtos/wallet_operation_dtos.dart';
@@ -41,6 +42,24 @@ abstract interface class WalletRemoteDataSource {
   Future<PaymentRequestDto> approvePaymentRequest(String id);
   Future<PaymentRequestDto> rejectPaymentRequest(String id, String reason);
   Future<PaymentRequestDto> cancelPaymentRequest(String id);
+  Future<NfcSessionDto> createNfcSession({
+    required String walletCardId,
+    required int businessId,
+    required double amount,
+    required String currency,
+    required String idempotencyKey,
+    String? description,
+    int expirationSeconds = 60,
+  });
+  Future<NfcSessionDto> nfcSession(int sessionId);
+  Future<void> cancelNfcSession(int sessionId);
+  Future<List<PhysicalNfcCardDto>> physicalNfcCards();
+  Future<PhysicalNfcCardDto> registerPhysicalNfcCard({
+    required String cardId,
+    required String cardUid,
+    required String label,
+  });
+  Future<void> blockPhysicalNfcCard(int id);
 }
 
 class DioWalletRemoteDataSource implements WalletRemoteDataSource {
@@ -240,6 +259,75 @@ class DioWalletRemoteDataSource implements WalletRemoteDataSource {
       '/api/payment-requests/$id/cancel',
     );
     return PaymentRequestDto.fromJson(unwrapApiMap(response.data));
+  }
+
+  @override
+  Future<NfcSessionDto> createNfcSession({
+    required String walletCardId,
+    required int businessId,
+    required double amount,
+    required String currency,
+    required String idempotencyKey,
+    String? description,
+    int expirationSeconds = 60,
+  }) async {
+    final response = await _client.dio.post<Map<String, dynamic>>(
+      '/api/wallet/nfc/sessions',
+      data: {
+        'idempotencyKey': idempotencyKey,
+        'walletCardId': int.tryParse(walletCardId) ?? walletCardId,
+        'businessId': businessId,
+        'amount': amount,
+        'currency': currency,
+        'expirationSeconds': expirationSeconds,
+        ?description: description,
+      },
+    );
+    return NfcSessionDto.fromJson(unwrapApiMap(response.data));
+  }
+
+  @override
+  Future<NfcSessionDto> nfcSession(int sessionId) async {
+    final response = await _client.dio.get<Map<String, dynamic>>(
+      '/api/wallet/nfc/sessions/$sessionId',
+    );
+    return NfcSessionDto.fromJson(unwrapApiMap(response.data));
+  }
+
+  @override
+  Future<void> cancelNfcSession(int sessionId) async {
+    await _client.dio.post<void>(
+      '/api/wallet/nfc/sessions/$sessionId/cancel',
+    );
+  }
+
+  @override
+  Future<List<PhysicalNfcCardDto>> physicalNfcCards() async {
+    final response = await _client.dio.get<dynamic>(
+      '/api/wallet/nfc/physical-cards',
+    );
+    return PhysicalNfcCardDto.listFrom(unwrapApiResponse(response.data));
+  }
+
+  @override
+  Future<PhysicalNfcCardDto> registerPhysicalNfcCard({
+    required String cardId,
+    required String cardUid,
+    required String label,
+  }) async {
+    final response = await _client.dio.post<Map<String, dynamic>>(
+      '/api/wallet/cards/$cardId/physical-nfc',
+      data: {
+        'cardUid': cardUid,
+        'label': label,
+      },
+    );
+    return PhysicalNfcCardDto.fromJson(unwrapApiMap(response.data));
+  }
+
+  @override
+  Future<void> blockPhysicalNfcCard(int id) async {
+    await _client.dio.post<void>('/api/wallet/physical-nfc/$id/block');
   }
 
   String _idempotencyKey(String prefix, String seed) {

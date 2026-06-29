@@ -2,6 +2,7 @@ import '../../../../core/errors/error_mapper.dart';
 import '../../../../core/result/result.dart';
 import '../../../payments/domain/entities/payment_intent.dart';
 import '../../../payments/domain/repositories/payments_repository.dart';
+import '../../domain/entities/nfc_models.dart';
 import '../../domain/entities/payment_request.dart';
 import '../../domain/entities/recharge_intent.dart';
 import '../../domain/entities/resolved_wallet_user.dart';
@@ -228,6 +229,78 @@ class WalletRepositoryImpl implements WalletRepository {
   @override
   Future<Result<PaymentRequest>> cancelPaymentRequest(String id) =>
       _paymentRequest(() => _remoteDataSource.cancelPaymentRequest(id));
+
+  @override
+  Future<Result<NfcSession>> createNfcSession({
+    required String walletCardId,
+    required int businessId,
+    required double amount,
+    String currency = 'COP',
+    String? description,
+    int expirationSeconds = 60,
+  }) async {
+    try {
+      final key =
+          'nfc-$walletCardId-$businessId-${DateTime.now().microsecondsSinceEpoch}';
+      final dto = await _remoteDataSource.createNfcSession(
+        walletCardId: walletCardId,
+        businessId: businessId,
+        amount: amount,
+        currency: currency,
+        idempotencyKey: key,
+        description: description,
+        expirationSeconds: expirationSeconds,
+      );
+      return Success(dto.toDomain());
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
+  Future<Result<NfcSession>> nfcSession(int sessionId) async {
+    try {
+      return Success((await _remoteDataSource.nfcSession(sessionId)).toDomain());
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
+  Future<Result<void>> cancelNfcSession(int sessionId) =>
+      _void(() => _remoteDataSource.cancelNfcSession(sessionId));
+
+  @override
+  Future<Result<List<PhysicalNfcCard>>> physicalNfcCards() async {
+    try {
+      final items = await _remoteDataSource.physicalNfcCards();
+      return Success(items.map((item) => item.toDomain()).toList());
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
+  Future<Result<PhysicalNfcCard>> registerPhysicalNfcCard({
+    required String cardId,
+    required String cardUid,
+    required String label,
+  }) async {
+    try {
+      final dto = await _remoteDataSource.registerPhysicalNfcCard(
+        cardId: cardId,
+        cardUid: cardUid,
+        label: label,
+      );
+      return Success(dto.toDomain());
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
+  Future<Result<void>> blockPhysicalNfcCard(int id) =>
+      _void(() => _remoteDataSource.blockPhysicalNfcCard(id));
 
   Future<Result<void>> _void(Future<void> Function() action) async {
     try {

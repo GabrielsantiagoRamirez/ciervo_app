@@ -119,6 +119,11 @@ class DeliveryOrder {
         normalized.contains('delivery');
   }
 
+  bool get isNfcPrepared {
+    final normalized = (paymentStatus ?? '').toLowerCase().replaceAll('_', '');
+    return normalized.contains('nfcprepared');
+  }
+
   bool get isDelivered {
     final normalized = status.toLowerCase().replaceAll('_', '');
     return normalized == 'delivered' || normalized.contains('delivered');

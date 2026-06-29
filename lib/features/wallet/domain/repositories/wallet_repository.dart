@@ -1,4 +1,5 @@
 import '../../../../core/result/result.dart';
+import '../entities/nfc_models.dart';
 import '../entities/payment_request.dart';
 import '../entities/recharge_intent.dart';
 import '../entities/resolved_wallet_user.dart';
@@ -43,4 +44,21 @@ abstract interface class WalletRepository {
   Future<Result<PaymentRequest>> approvePaymentRequest(String id);
   Future<Result<PaymentRequest>> rejectPaymentRequest(String id, String reason);
   Future<Result<PaymentRequest>> cancelPaymentRequest(String id);
+  Future<Result<NfcSession>> createNfcSession({
+    required String walletCardId,
+    required int businessId,
+    required double amount,
+    String currency = 'COP',
+    String? description,
+    int expirationSeconds = 60,
+  });
+  Future<Result<NfcSession>> nfcSession(int sessionId);
+  Future<Result<void>> cancelNfcSession(int sessionId);
+  Future<Result<List<PhysicalNfcCard>>> physicalNfcCards();
+  Future<Result<PhysicalNfcCard>> registerPhysicalNfcCard({
+    required String cardId,
+    required String cardUid,
+    required String label,
+  });
+  Future<Result<void>> blockPhysicalNfcCard(int id);
 }

@@ -25,6 +25,18 @@ void main() {
     expect(items.last.toDomain().visibility.isVisible, isFalse);
   });
 
+  test('parses nfc button with availability field', () {
+    final button = ChatButtonDto.fromJson({
+      'buttonKey': 'nfc',
+      'label': 'Pago NFC CIERVO',
+      'availability': 'ProductionReady',
+    }).toDomain();
+
+    expect(button.code, 'nfc');
+    expect(button.visibility, ChatButtonVisibility.productionReady);
+    expect(button.visibility.isVisible, isTrue);
+  });
+
   test('disabled button stays visible but not enabled', () {
     final button = ChatButtonDto.fromJson({
       'code': 'Transport',

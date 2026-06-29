@@ -1,3 +1,4 @@
+import '../../../wallet/domain/entities/nfc_models.dart';
 import '../../../../core/result/result.dart';
 import '../entities/delivery_models.dart';
 
@@ -30,6 +31,7 @@ abstract interface class DeliveryRepository {
     required String paymentMethod,
     String? walletCardId,
   });
+  Future<Result<NfcSession>> createOrderNfcSession({required String orderId});
   Future<Result<void>> addTip({
     required String orderId,
     required double amount,

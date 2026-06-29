@@ -9,12 +9,16 @@ class ChatButtonsBar extends StatelessWidget {
     required this.buttons,
     required this.conversationId,
     this.enabled = true,
+    this.businessId,
+    this.businessName,
     super.key,
   });
 
   final List<ChatButton> buttons;
   final String conversationId;
   final bool enabled;
+  final int? businessId;
+  final String? businessName;
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +43,8 @@ class ChatButtonsBar extends StatelessWidget {
                       context,
                       button: button,
                       conversationId: conversationId,
+                      businessId: businessId,
+                      businessName: businessName,
                     ),
               backgroundColor: button.visibility.isEnabled
                   ? null
