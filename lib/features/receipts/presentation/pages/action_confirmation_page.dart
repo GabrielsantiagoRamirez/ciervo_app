@@ -1,15 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../../core/di/service_locator.dart';
-import '../../../../core/kids/selected_kid_context.dart';
-import '../../../../core/session/auth_token_claims.dart';
-import '../../../../core/session/session_manager.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../kid_me/data/kid_me_repository.dart';
-import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../domain/entities/action_confirmation.dart';
 import '../../../../shared/widgets/ciervo_payment_receipt.dart';
+import '../../../../shared/widgets/ciervo_user_id_badge.dart';
 
 class ActionConfirmationPage extends StatelessWidget {
   const ActionConfirmationPage({
@@ -96,35 +91,5 @@ Future<void> showCiervoPaymentReceipt(
   );
 }
 
-Future<String?> resolveCurrentCiervoUserCode() async {
-  final session = getIt<SessionManager>();
-  if (!session.state.isAuthenticated) return null;
-  final token = await session.accessToken();
-  if (token == null || token.isEmpty) return null;
-  final claims = AuthTokenClaims.fromJwt(token);
-  if (claims.routeKind == 'Kid') {
-    final result = await getIt<KidMeRepository>().profile();
-    return result.when(
-      success: (profile) {
-        for (final key in const [
-          'ciervoUserCode',
-          'publicCode',
-          'userPublicCode',
-          'id',
-        ]) {
-          final value = profile[key]?.toString().trim();
-          if (value != null && value.isNotEmpty) return value;
-        }
-        return null;
-      },
-      failure: (_) => null,
-    );
-  }
-  final kidContext = getIt<SelectedKidContext>();
-  if (kidContext.isActive) return kidContext.kidId;
-  final result = await getIt<ProfileRepository>().getMe();
-  return result.when(
-    success: (profile) => profile.ciervoUserCode ?? profile.id,
-    failure: (_) => null,
-  );
-}
+Future<String?> resolveCurrentCiervoUserCode() =>
+    resolveCiervoUserCodeForSession();

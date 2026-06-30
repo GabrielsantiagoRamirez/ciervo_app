@@ -53,4 +53,7 @@ abstract interface class KidsRepository {
     String? walletCardId,
     String? idempotencyKey,
   });
+  Future<Result<List<dynamic>>> payForMeRequests();
+  Future<Result<void>> approvePayForMeRequest(int requestId);
+  Future<Result<void>> rejectPayForMeRequest(int requestId, {String? reason});
 }

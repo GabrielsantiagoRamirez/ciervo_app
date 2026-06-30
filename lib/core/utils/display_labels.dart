@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 /// Etiquetas amigables en español para valores técnicos del backend.
 abstract final class DisplayLabels {
   static String kycStatus(String? status) {
@@ -287,6 +289,59 @@ abstract final class DisplayLabels {
               : '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}',
         );
     return 'Plan ${words.join(' ')}';
+  }
+
+  static String secureShipmentStatus(String? statusName) {
+    if (statusName == null || statusName.isEmpty) {
+      return 'En preparación';
+    }
+    final key = statusName.replaceAll('_', '').replaceAll(' ', '');
+    return switch (key.toLowerCase()) {
+      'created' => 'Creado',
+      'pendingacceptance' => 'Esperando aceptación',
+      'rejected' => 'Rechazado',
+      'accepted' => 'Aceptado',
+      'fundsheld' => 'Fondos retenidos',
+      'pinsgenerated' => 'PIN listos',
+      'pickedup' => 'Recogido',
+      'intransit' => 'En tránsito',
+      'logisticscenter' => 'En centro logístico',
+      'outfordelivery' => 'En reparto',
+      'arriveddestination' => 'Llegó al destino',
+      'senderpinvalidated' => 'PIN emisor confirmado',
+      'receiverpinvalidated' => 'PIN receptor confirmado',
+      'deliveryconfirmed' => 'Entrega confirmada',
+      'paymentreleased' => 'Pago liberado',
+      'completed' => 'Completado',
+      'cancelled' => 'Cancelado',
+      'expired' => 'Expirado',
+      'disputed' => 'En disputa',
+      'refunded' => 'Reembolsado',
+      'failed' => 'Fallido',
+      _ => _humanize(statusName),
+    };
+  }
+
+  static Color secureShipmentStatusColor(String? statusName) {
+    final key = (statusName ?? '').replaceAll('_', '').toLowerCase();
+    if (key.contains('pending') || key.contains('accepted')) {
+      return const Color(0xFFE6A817);
+    }
+    if (key.contains('completed') ||
+        key.contains('paymentreleased') ||
+        key.contains('deliveryconfirmed')) {
+      return const Color(0xFF2E7D52);
+    }
+    if (key.contains('disputed') ||
+        key.contains('rejected') ||
+        key.contains('failed') ||
+        key.contains('cancelled')) {
+      return const Color(0xFFC62828);
+    }
+    if (key.contains('fundsheld') || key.contains('pins')) {
+      return const Color(0xFF1565C0);
+    }
+    return const Color(0xFF757575);
   }
 
   static String _humanize(String value) {

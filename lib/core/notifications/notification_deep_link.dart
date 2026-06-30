@@ -10,6 +10,8 @@ import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/qr_wallet/presentation/pages/qr_wallet_page.dart';
 import '../../features/reservations/presentation/pages/reservations_page.dart';
 import '../../features/vakupli/presentation/pages/vakupli_page.dart';
+import '../../features/secure_shipment/presentation/pages/secure_shipment_detail_page.dart';
+import '../../features/secure_shipment/presentation/pages/secure_shipment_list_page.dart';
 import '../../features/wallet/presentation/pages/wallet_page.dart';
 
 /// Navega desde una notificacion (in-app o push) a la pantalla correspondiente.
@@ -78,6 +80,14 @@ class NotificationDeepLink {
       _push(context, const BonusesCatalogPage());
       return true;
     }
+    if (lower.contains('/secure-shipment') || lower.contains('/secure_shipment')) {
+      final id = _segmentId(path);
+      if (id != null) {
+        _push(context, SecureShipmentDetailPage(publicId: id));
+        return true;
+      }
+      return false;
+    }
     if (lower.contains('/wallet') || lower.contains('/nfc')) {
       _push(context, const WalletPage());
       return true;
@@ -125,6 +135,18 @@ class NotificationDeepLink {
     Map<String, dynamic> data,
   ) {
     final text = '$type $category'.toLowerCase();
+    final publicId = data['resourceId']?.toString() ??
+        data['publicId']?.toString();
+    if (text.contains('secure_shipment') ||
+        text.contains('secure shipment') ||
+        text.startsWith('secure_')) {
+      if (publicId != null && publicId.isNotEmpty) {
+        _push(context, SecureShipmentDetailPage(publicId: publicId));
+      } else {
+        _push(context, const SecureShipmentListPage());
+      }
+      return true;
+    }
     if (text.contains('message') || text.contains('chat')) {
       _push(context, const VakupliPage());
       return true;

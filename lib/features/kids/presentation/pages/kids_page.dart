@@ -17,6 +17,7 @@ import '../../domain/entities/child_profile.dart';
 import '../../domain/repositories/kids_repository.dart';
 import '../cubit/kids_cubit.dart';
 import '../cubit/kids_state.dart';
+import 'guardian_pay_for_me_page.dart';
 import 'allowed_businesses_page.dart';
 import 'allowed_categories_page.dart';
 import 'child_spending_limits_page.dart';
@@ -64,6 +65,16 @@ class _KidsView extends StatelessWidget {
                 Text(
                   'Administra la experiencia de tus niños en Ciervo.',
                   style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.family_restroom_outlined),
+                  label: const Text('Solicitudes de pago (pay-for-me)'),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const GuardianPayForMePage(),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 if (state.status == KidsStatus.initial ||

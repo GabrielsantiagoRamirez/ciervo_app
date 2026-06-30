@@ -17,6 +17,7 @@ abstract interface class WalletRemoteDataSource {
   Future<void> unblock(String cardId);
   Future<void> delete(String cardId);
   Future<Map<String, dynamic>> mercadoPagoConfig();
+  Future<Map<String, dynamic>> myCiervoId();
   Future<RechargeIntentDto> createRechargeIntent(String cardId, double amount);
   Future<RechargeIntentDto> rechargeIntent(String intentId);
   Future<ResolvedWalletUserDto> resolveUser(String ciervoUserCode);
@@ -113,6 +114,14 @@ class DioWalletRemoteDataSource implements WalletRemoteDataSource {
   Future<Map<String, dynamic>> mercadoPagoConfig() async {
     final response = await _client.dio.get<Map<String, dynamic>>(
       '/api/wallet/mercadopago/config',
+    );
+    return unwrapApiMap(response.data);
+  }
+
+  @override
+  Future<Map<String, dynamic>> myCiervoId() async {
+    final response = await _client.dio.get<Map<String, dynamic>>(
+      '/api/wallet/me/ciervo-id',
     );
     return unwrapApiMap(response.data);
   }

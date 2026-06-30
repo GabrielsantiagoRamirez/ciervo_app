@@ -11,7 +11,10 @@ import '../../data/user_search_repository.dart';
 import '../../domain/entities/user_search_result.dart';
 
 class UserSearchPage extends StatefulWidget {
-  const UserSearchPage({super.key});
+  const UserSearchPage({this.selectMode = false, super.key});
+
+  /// Si es true, devuelve el userId seleccionado con Navigator.pop.
+  final bool selectMode;
 
   @override
   State<UserSearchPage> createState() => _UserSearchPageState();
@@ -89,7 +92,9 @@ class _UserSearchPageState extends State<UserSearchPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Buscar personas')),
+    appBar: AppBar(
+      title: Text(widget.selectMode ? 'Invitar amigo' : 'Buscar personas'),
+    ),
     body: ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
@@ -159,7 +164,13 @@ class _UserSearchPageState extends State<UserSearchPage> {
                     ? const Icon(Icons.chat_bubble_outline)
                     : const Icon(Icons.block, size: 20),
             onTap: user.canStartConversation && !opening
-                ? () => _openChat(user)
+                ? () {
+                    if (widget.selectMode) {
+                      Navigator.of(context).pop(user.userId);
+                      return;
+                    }
+                    _openChat(user);
+                  }
                 : null,
           );
         }),

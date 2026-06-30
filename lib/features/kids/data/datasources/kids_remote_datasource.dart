@@ -52,6 +52,9 @@ abstract interface class KidsRemoteDataSource {
     String? walletCardId,
     String? idempotencyKey,
   });
+  Future<List<dynamic>> payForMeRequests();
+  Future<void> approvePayForMeRequest(int requestId);
+  Future<void> rejectPayForMeRequest(int requestId, {String? reason});
 }
 
 class DioKidsRemoteDataSource implements KidsRemoteDataSource {
@@ -266,6 +269,28 @@ class DioKidsRemoteDataSource implements KidsRemoteDataSource {
       },
     );
     return unwrapApiMap(response.data);
+  }
+
+  @override
+  Future<List<dynamic>> payForMeRequests() async {
+    return _list('/api/guardians/pay-for-me/requests');
+  }
+
+  @override
+  Future<void> approvePayForMeRequest(int requestId) async {
+    await _client.dio.post<void>(
+      '/api/guardians/pay-for-me/requests/$requestId/approve',
+    );
+  }
+
+  @override
+  Future<void> rejectPayForMeRequest(int requestId, {String? reason}) async {
+    await _client.dio.post<void>(
+      '/api/guardians/pay-for-me/requests/$requestId/reject',
+      data: {
+        if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
+      },
+    );
   }
 
   Future<List<dynamic>> _list(

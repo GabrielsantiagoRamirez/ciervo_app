@@ -261,4 +261,36 @@ class KidsRepositoryImpl implements KidsRepository {
       return Failure(ErrorMapper.fromObject(error));
     }
   }
+
+  @override
+  Future<Result<List<dynamic>>> payForMeRequests() async {
+    try {
+      return Success(await _remoteDataSource.payForMeRequests());
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
+  Future<Result<void>> approvePayForMeRequest(int requestId) async {
+    try {
+      await _remoteDataSource.approvePayForMeRequest(requestId);
+      return const Success<void>(null);
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
+  Future<Result<void>> rejectPayForMeRequest(
+    int requestId, {
+    String? reason,
+  }) async {
+    try {
+      await _remoteDataSource.rejectPayForMeRequest(requestId, reason: reason);
+      return const Success<void>(null);
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
 }

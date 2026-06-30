@@ -21,9 +21,17 @@ class PaymentIntent {
 
   String get normalizedStatus => status.toLowerCase();
 
-  bool get isApproved => normalizedStatus == 'approved' || normalizedStatus == 'succeeded';
+  bool get isApproved =>
+      normalizedStatus == 'approved' ||
+      normalizedStatus == 'succeeded' ||
+      normalizedStatus == '4' ||
+      normalizedStatus.contains('success') ||
+      normalizedStatus.contains('paid');
 
-  bool get isRejected => normalizedStatus == 'rejected' || normalizedStatus == 'failed';
+  bool get isRejected =>
+      normalizedStatus == 'rejected' ||
+      normalizedStatus == 'failed' ||
+      normalizedStatus == '5';
 
   bool get isPending =>
       normalizedStatus == 'pending' ||

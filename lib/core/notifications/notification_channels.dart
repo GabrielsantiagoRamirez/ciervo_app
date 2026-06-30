@@ -17,10 +17,11 @@ abstract final class CiervoNotificationChannels {
 
   static String channelForCategory(String? category) {
     final normalized = (category ?? '').toLowerCase();
+    if (normalized.startsWith('secure')) return pagos;
     return switch (normalized) {
       'messages' || 'mensajes' || 'chat' => messages,
       'wallet' => wallet,
-      'pagos' || 'payments' || 'payment' => pagos,
+      'pagos' || 'payments' || 'payment' || 'secure' => pagos,
       'reservas' || 'reservations' || 'booking' => reservas,
       'delivery' || 'entregas' => delivery,
       'eventos' || 'events' || 'event' => eventos,

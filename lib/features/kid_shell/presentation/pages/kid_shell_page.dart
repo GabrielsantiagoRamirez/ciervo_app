@@ -8,6 +8,8 @@ import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
 import '../../../kid_businesses/presentation/pages/kid_businesses_page.dart';
 import '../../../kid_family_chat/presentation/pages/kid_family_page.dart';
+import '../../../kid_pay_for_me/presentation/pages/kid_pay_for_me_list_page.dart';
+import '../../../kid_wallet/presentation/pages/kid_wallet_page.dart';
 import '../../../kid_me/data/kid_me_repository.dart';
 import '../../../kid_profile/presentation/pages/kid_profile_page.dart';
 import '../../../kid_wallet/presentation/pages/kid_wallet_page.dart';
@@ -160,6 +162,29 @@ class _KidHomePageState extends State<KidHomePage> {
                     icon: Icons.storefront_outlined,
                     title: 'Comercios permitidos',
                     subtitle: '$businesses disponibles',
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const KidBusinessesPage(),
+                      ),
+                    ),
+                  ),
+                  _QuickTile(
+                    icon: Icons.account_balance_wallet_outlined,
+                    title: 'Mi wallet',
+                    subtitle: 'Ver saldo y movimientos',
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const KidWalletPage()),
+                    ),
+                  ),
+                  _QuickTile(
+                    icon: Icons.family_restroom_outlined,
+                    title: 'Pedidos a mi familia',
+                    subtitle: 'Solicitudes pay-for-me',
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const KidPayForMeListPage(),
+                      ),
+                    ),
                   ),
                   _QuickTile(
                     icon: Icons.chat_bubble_outline,
@@ -167,6 +192,9 @@ class _KidHomePageState extends State<KidHomePage> {
                     subtitle: unread == 0
                         ? 'Sin mensajes nuevos'
                         : '$unread sin leer',
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const KidFamilyPage()),
+                    ),
                   ),
                 ],
               ),
@@ -180,11 +208,13 @@ class _QuickTile extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.onTap,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -196,6 +226,8 @@ class _QuickTile extends StatelessWidget {
           leading: Icon(icon),
           title: Text(title),
           subtitle: Text(subtitle),
+          trailing: onTap != null ? const Icon(Icons.chevron_right) : null,
+          onTap: onTap,
         ),
       ),
     );

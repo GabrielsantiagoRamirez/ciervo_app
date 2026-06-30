@@ -18,6 +18,7 @@ class WalletState {
     this.resolvedUser,
     this.rechargeIntent,
     this.transferResult,
+    this.ciervoUserCode,
     this.errorMessage,
     this.successMessage,
   });
@@ -31,6 +32,7 @@ class WalletState {
   final ResolvedWalletUser? resolvedUser;
   final RechargeIntent? rechargeIntent;
   final TransferResult? transferResult;
+  final String? ciervoUserCode;
   final String? errorMessage;
   final String? successMessage;
 
@@ -47,6 +49,7 @@ class WalletState {
     ResolvedWalletUser? resolvedUser,
     RechargeIntent? rechargeIntent,
     TransferResult? transferResult,
+    String? ciervoUserCode,
     String? errorMessage,
     String? successMessage,
     bool clearMessages = false,
@@ -70,6 +73,7 @@ class WalletState {
       transferResult: clearTransferResult
           ? null
           : transferResult ?? this.transferResult,
+      ciervoUserCode: ciervoUserCode ?? this.ciervoUserCode,
       errorMessage: clearMessages ? null : errorMessage ?? this.errorMessage,
       successMessage: clearMessages
           ? null

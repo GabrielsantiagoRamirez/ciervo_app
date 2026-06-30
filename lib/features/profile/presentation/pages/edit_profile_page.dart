@@ -9,6 +9,7 @@ import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../widgets/profile_photo_image.dart';
 import '../../domain/entities/user_profile.dart';
+import '../../../wallet/domain/repositories/wallet_repository.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../cubit/profile_cubit.dart';
 import '../cubit/profile_state.dart';
@@ -21,7 +22,10 @@ class EditProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => ProfileCubit(getIt<ProfileRepository>()),
+      create: (_) => ProfileCubit(
+        getIt<ProfileRepository>(),
+        getIt<WalletRepository>(),
+      ),
       child: _EditProfileView(profile: profile),
     );
   }

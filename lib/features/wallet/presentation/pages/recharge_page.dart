@@ -22,53 +22,84 @@ class RechargePage extends StatefulWidget {
   State<RechargePage> createState() => _RechargePageState();
 }
 
-class _RechargePageState extends State<RechargePage> {
+class _RechargePageState extends State<RechargePage> with WidgetsBindingObserver {
   final _amountController = TextEditingController();
+  late final WalletCubit _walletCubit;
   String? _lastIntentId;
+  bool _pollingOnResume = false;
+  bool _rechargeSucceeded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _walletCubit = WalletCubit(getIt<WalletRepository>());
+    WidgetsBinding.instance.addObserver(this);
+  }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _amountController.dispose();
+    _walletCubit.close();
     super.dispose();
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    final intentId = _lastIntentId;
+    if (intentId == null || intentId.isEmpty || _pollingOnResume) return;
+    _pollingOnResume = true;
+    _walletCubit.pollRechargeIntent(intentId).whenComplete(() {
+      _pollingOnResume = false;
+    });
+  }
+
+  Future<void> _onRechargeSucceeded(
+    BuildContext context,
+    WalletState state,
+  ) async {
+    if (_rechargeSucceeded) return;
+    _rechargeSucceeded = true;
+    final amount =
+        double.tryParse(_amountController.text.replaceAll(',', '.')) ?? 0;
+    final userCode = await resolveCurrentCiervoUserCode();
+    if (!context.mounted) return;
+    await showCiervoPaymentReceipt(
+      context,
+      confirmation: ActionConfirmation(
+        title: 'Recarga confirmada',
+        confirmationCode: state.rechargeIntent?.id ?? _lastIntentId ?? '',
+        userCiervoCode: userCode,
+        amount: amount > 0 ? amount : null,
+        currency: widget.card.currency,
+        status: 'Pago realizado con éxito',
+        shareDescription: 'Tu saldo CIERVO fue recargado correctamente.',
+      ),
+      referenceLabel: 'Tarjeta',
+      referenceValue: widget.card.name,
+      onDone: () {
+        Navigator.of(context).pop();
+        if (context.mounted) Navigator.of(context).pop(true);
+      },
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => WalletCubit(getIt<WalletRepository>()),
+    return BlocProvider.value(
+      value: _walletCubit,
       child: BlocConsumer<WalletCubit, WalletState>(
         listener: (context, state) async {
           if (state.errorMessage != null) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.errorMessage!)));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.errorMessage!)),
+            );
           }
           if (state.rechargeIntent?.isSucceeded == true &&
               state.successMessage != null &&
               state.successMessage!.contains('acreditada')) {
-            final amount =
-                double.tryParse(
-                  _amountController.text.replaceAll(',', '.'),
-                ) ??
-                0;
-            final userCode = await resolveCurrentCiervoUserCode();
-            if (!context.mounted) return;
-            await showCiervoPaymentReceipt(
-              context,
-              confirmation: ActionConfirmation(
-                title: 'Recarga confirmada',
-                confirmationCode:
-                    state.rechargeIntent?.id ?? _lastIntentId ?? '',
-                userCiervoCode: userCode,
-                amount: amount > 0 ? amount : null,
-                currency: widget.card.currency,
-                status: 'Pago realizado con éxito',
-                shareDescription:
-                    'Tu saldo CIERVO fue recargado correctamente.',
-              ),
-              referenceLabel: 'Tarjeta',
-              referenceValue: widget.card.name,
-            );
+            await _onRechargeSucceeded(context, state);
             return;
           }
           if (state.successMessage != null &&
@@ -110,6 +141,12 @@ class _RechargePageState extends State<RechargePage> {
                           const SizedBox(height: AppSpacing.xs),
                           Text(
                             'Disponible: ${widget.card.currency} ${widget.card.availableBalance.toStringAsFixed(0)}',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          Text(
+                            'Tras pagar en Mercado Pago, vuelve a la app. '
+                            'Consultamos el estado automaticamente o usa el boton de abajo.',
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                           const SizedBox(height: AppSpacing.lg),
@@ -173,7 +210,7 @@ class _RechargePageState extends State<RechargePage> {
                         color: Colors.black.withValues(alpha: 0.88),
                       ),
                       child: const CiervoBrandLoader(
-                        message: 'Creando recarga segura',
+                        message: 'Consultando recarga segura',
                       ),
                     ),
                   ),

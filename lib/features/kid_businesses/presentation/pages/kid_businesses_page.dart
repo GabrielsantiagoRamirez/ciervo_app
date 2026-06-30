@@ -7,6 +7,8 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
+import '../../../kid_pay_for_me/presentation/pages/kid_pay_for_me_request_page.dart';
+import '../../../kid_nfc/presentation/pages/kid_nfc_pay_page.dart';
 import '../../../kid_me/data/kid_me_repository.dart';
 
 class KidBusinessesPage extends StatefulWidget {
@@ -107,12 +109,75 @@ class _KidBusinessesPageState extends State<KidBusinessesPage> {
                       ),
                       trailing: item['isOpen'] == false
                           ? const Text('Cerrado')
-                          : null,
+                          : const Icon(Icons.chevron_right),
+                      onTap: () => _openBusinessActions(context, item),
                     ),
                   ),
                 ),
               ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openBusinessActions(
+    BuildContext context,
+    Map<String, dynamic> item,
+  ) async {
+    final businessId = '${item['id'] ?? item['businessId'] ?? ''}';
+    final businessName = '${item['name'] ?? 'Comercio'}';
+    if (businessId.isEmpty) return;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                businessName,
+                style: Theme.of(sheetContext).textTheme.titleLarge,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              ListTile(
+                leading: const Icon(Icons.family_restroom_outlined),
+                title: const Text('Pedir a mi familia'),
+                subtitle: const Text('Tu tutor aprueba el pago'),
+                onTap: () async {
+                  Navigator.pop(sheetContext);
+                  await Navigator.of(context).push<bool>(
+                    MaterialPageRoute(
+                      builder: (_) => KidPayForMeRequestPage(
+                        businessId: businessId,
+                        businessName: businessName,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.nfc),
+                title: const Text('Pagar con NFC / QR'),
+                subtitle: const Text('Usa tu saldo en el comercio'),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => KidNfcPayPage(
+                        businessId: businessId,
+                        businessName: businessName,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

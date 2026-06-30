@@ -2,6 +2,7 @@ import '../../../../core/errors/error_mapper.dart';
 import '../../../../core/result/result.dart';
 import '../../../payments/domain/entities/payment_intent.dart';
 import '../../../payments/domain/repositories/payments_repository.dart';
+import '../../domain/entities/ciervo_wallet_identity.dart';
 import '../../domain/entities/nfc_models.dart';
 import '../../domain/entities/payment_request.dart';
 import '../../domain/entities/recharge_intent.dart';
@@ -89,11 +90,51 @@ class WalletRepositoryImpl implements WalletRepository {
 
   @override
   Future<Result<RechargeIntent>> rechargeIntent(String intentId) async {
-    final result = await _payments.intent(intentId);
-    return result.when(
-      success: (intent) => Success(_mapIntent(intent)),
-      failure: (error) => Failure(error),
-    );
+    try {
+      return Success(
+        (await _remoteDataSource.rechargeIntent(intentId)).toDomain(),
+      );
+    } catch (walletError) {
+      final result = await _payments.intent(intentId);
+      return result.when(
+        success: (intent) => Success(_mapIntent(intent)),
+        failure: (_) => Failure(ErrorMapper.fromObject(walletError)),
+      );
+    }
+  }
+
+  @override
+  Future<Result<CiervoWalletIdentity>> myCiervoId() async {
+    try {
+      final json = await _remoteDataSource.myCiervoId();
+      final userId = '${json['userId'] ?? json['id'] ?? ''}'.trim();
+      final code = _extractCiervoCode(json);
+      if (code.isEmpty) {
+        return Failure(ErrorMapper.fromObject('Ciervo ID no disponible.'));
+      }
+      return Success(
+        CiervoWalletIdentity(
+          userId: userId.isEmpty ? code : userId,
+          ciervoUserCode: code,
+        ),
+      );
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  static String _extractCiervoCode(Map<String, dynamic> json) {
+    for (final key in const [
+      'ciervoUserCode',
+      'CiervoUserCode',
+      'userCode',
+      'userPublicCode',
+      'userCiervoCode',
+    ]) {
+      final value = json[key]?.toString().trim();
+      if (value != null && value.isNotEmpty) return value;
+    }
+    return '';
   }
 
   @override

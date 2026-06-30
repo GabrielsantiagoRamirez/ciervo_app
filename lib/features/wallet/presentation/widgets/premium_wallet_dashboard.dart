@@ -9,6 +9,7 @@ import '../../../notifications/presentation/cubit/notification_badges_cubit.dart
 import '../../../notifications/presentation/pages/notifications_page.dart';
 import '../../../pins/presentation/pages/pins_page.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
+import '../../../../shared/widgets/ciervo_user_id_badge.dart';
 import '../../domain/entities/wallet_card.dart';
 import '../../domain/entities/wallet_transaction.dart';
 import '../cubit/wallet_cubit.dart';
@@ -16,6 +17,7 @@ import '../cubit/wallet_state.dart';
 import '../utils/nfc_navigation.dart';
 import 'ciervo_digital_card.dart';
 import '../../../bonuses/presentation/widgets/wallet_available_bonuses_section.dart';
+import '../../../secure_shipment/presentation/pages/secure_shipment_list_page.dart';
 import 'wallet_nfc_section.dart';
 import '../pages/recharge_page.dart';
 import '../pages/transfer_page.dart';
@@ -80,6 +82,14 @@ class _PremiumWalletDashboardState extends State<PremiumWalletDashboard> {
             ),
             children: [
               _Header(userName: _userName, palette: palette),
+              if (widget.state.ciervoUserCode != null) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Center(
+                  child: CiervoUserIdBadge(
+                    codeOverride: widget.state.ciervoUserCode,
+                  ),
+                ),
+              ],
               const SizedBox(height: AppSpacing.lg),
               if (card != null)
                 CiervoDigitalCard(
@@ -101,11 +111,16 @@ class _PremiumWalletDashboardState extends State<PremiumWalletDashboard> {
                 palette: palette,
                 onRecharge: card == null
                     ? null
-                    : () => Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => RechargePage(card: card),
-                        ),
-                      ),
+                    : () async {
+                        await Navigator.of(context).push<bool>(
+                          MaterialPageRoute<bool>(
+                            builder: (_) => RechargePage(card: card),
+                          ),
+                        );
+                        if (context.mounted) {
+                          await context.read<WalletCubit>().load();
+                        }
+                      },
               ),
               const SizedBox(height: AppSpacing.xl),
               _QuickActionsRow(
@@ -117,6 +132,8 @@ class _PremiumWalletDashboardState extends State<PremiumWalletDashboard> {
               ),
               const SizedBox(height: AppSpacing.md),
               WalletNfcSection(selectedCard: card),
+              const SizedBox(height: AppSpacing.md),
+              _SecureShipmentEntry(palette: palette),
               const SizedBox(height: AppSpacing.xl),
               const WalletAvailableBonusesSection(),
               const SizedBox(height: AppSpacing.xl),
@@ -553,6 +570,66 @@ class _MovementTile extends StatelessWidget {
       'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic',
     ];
     return months[m - 1];
+  }
+}
+
+class _SecureShipmentEntry extends StatelessWidget {
+  const _SecureShipmentEntry({required this.palette});
+
+  final CiervoWalletPalette palette;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: palette.surface,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => const SecureShipmentListPage(),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                decoration: BoxDecoration(
+                  color: CiervoBrandColors.gold.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.local_shipping_outlined,
+                  color: CiervoBrandColors.gold,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Envíos seguros',
+                      style: TextStyle(
+                        color: palette.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      'PIN dual, fondos en custodia y recibo al liberar pago',
+                      style: TextStyle(color: palette.textMuted, fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: palette.textMuted),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

@@ -66,7 +66,7 @@ class CiervoPushService {
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
     final messaging = FirebaseMessaging.instance;
-    await messaging.requestPermission(alert: true, badge: true, sound: true);
+    // Permiso de notificaciones: AppPermissionService tras autenticación.
     await messaging.setForegroundNotificationPresentationOptions(
       alert: true,
       badge: true,

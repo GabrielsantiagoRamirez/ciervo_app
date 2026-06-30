@@ -1,8 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
-import '../../../payments/domain/repositories/payments_repository.dart';
 import '../../../../core/result/result.dart';
 import '../../domain/entities/recharge_intent.dart';
 import '../../domain/entities/wallet_card.dart';
@@ -16,7 +14,15 @@ class WalletCubit extends Cubit<WalletState> {
 
   Future<void> load() async {
     emit(state.copyWith(status: WalletStatus.loading, clearMessages: true));
-    final result = await _repository.cards();
+    final cardsFuture = _repository.cards();
+    final ciervoIdFuture = _repository.myCiervoId();
+    final result = await cardsFuture;
+    String? ciervoUserCode;
+    final idResult = await ciervoIdFuture;
+    idResult.when(
+      success: (identity) => ciervoUserCode = identity.ciervoUserCode,
+      failure: (_) {},
+    );
     await result.when(
       success: (cards) async {
         final selected = cards.isEmpty
@@ -30,6 +36,7 @@ class WalletCubit extends Cubit<WalletState> {
             status: cards.isEmpty ? WalletStatus.empty : WalletStatus.loaded,
             cards: cards,
             selectedCard: selected,
+            ciervoUserCode: ciervoUserCode,
           ),
         );
         await loadPaymentRequests();
@@ -39,6 +46,7 @@ class WalletCubit extends Cubit<WalletState> {
         state.copyWith(
           status: WalletStatus.failure,
           errorMessage: UserErrorMessage.from(error),
+          ciervoUserCode: ciervoUserCode,
         ),
       ),
     );
@@ -80,34 +88,40 @@ class WalletCubit extends Cubit<WalletState> {
 
   Future<void> pollRechargeIntent(String intentId) async {
     emit(state.copyWith(status: WalletStatus.actionLoading, clearMessages: true));
-    final result = await getIt<PaymentsRepository>().pollIntent(intentId);
-    result.when(
-      success: (intent) {
-        final mapped = RechargeIntent(
-          id: intent.id,
-          checkoutUrl: intent.checkoutUrl,
-          status: intent.status,
-        );
-        emit(
-          state.copyWith(
-            status: WalletStatus.loaded,
-            rechargeIntent: mapped,
-            successMessage: mapped.isSucceeded
-                ? 'Recarga acreditada correctamente.'
-                : mapped.isRejected
-                ? 'Pago rechazado. Intenta nuevamente.'
-                : 'Estado de recarga: ${mapped.statusLabel}',
-          ),
-        );
-        if (mapped.isSucceeded) load();
-      },
-      failure: (error) => emit(
+    RechargeIntent? last;
+    for (var attempt = 0; attempt < 20; attempt++) {
+      final result = await _repository.rechargeIntent(intentId);
+      result.when(
+        success: (intent) => last = intent,
+        failure: (_) {},
+      );
+      if (last?.isTerminal == true) break;
+      if (attempt < 19) {
+        await Future<void>.delayed(const Duration(seconds: 3));
+      }
+    }
+    if (last == null) {
+      emit(
         state.copyWith(
           status: WalletStatus.loaded,
-          errorMessage: UserErrorMessage.from(error),
+          errorMessage: 'No se pudo confirmar el pago. Intenta de nuevo.',
         ),
+      );
+      return;
+    }
+    final mapped = last!;
+    emit(
+      state.copyWith(
+        status: WalletStatus.loaded,
+        rechargeIntent: mapped,
+        successMessage: mapped.isSucceeded
+            ? 'Recarga acreditada correctamente.'
+            : mapped.isRejected
+            ? 'Pago rechazado. Intenta nuevamente.'
+            : 'Estado de recarga: ${mapped.statusLabel}',
       ),
     );
+    if (mapped.isSucceeded) await load();
   }
 
   Future<void> createRechargeIntent(String cardId, double amount) async {

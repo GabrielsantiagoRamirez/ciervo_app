@@ -38,6 +38,7 @@ import '../../../favorites/presentation/pages/favorites_page.dart';
 import '../widgets/profile_photo_image.dart';
 import '../../domain/entities/user_profile.dart';
 import '../../domain/repositories/profile_repository.dart';
+import '../../../wallet/domain/repositories/wallet_repository.dart';
 import '../cubit/profile_cubit.dart';
 import '../cubit/profile_state.dart';
 import 'edit_profile_page.dart';
@@ -49,7 +50,10 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => ProfileCubit(getIt<ProfileRepository>())..loadProfile(),
+      create: (_) => ProfileCubit(
+        getIt<ProfileRepository>(),
+        getIt<WalletRepository>(),
+      )..loadProfile(),
       child: const _ProfileView(),
     );
   }
@@ -143,7 +147,11 @@ class _ProfileContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _ProfileHeader(profile: profile),
+        _ProfileHeader(
+          profile: profile,
+          ciervoUserCode: state.ciervoUserCode,
+          loadingCiervoId: state.isLoading,
+        ),
         const SizedBox(height: AppSpacing.lg),
         _CompleteProfileBanner(profile: profile),
         const SizedBox(height: AppSpacing.lg),
@@ -217,9 +225,15 @@ class _FamilyCard extends StatelessWidget {
 }
 
 class _ProfileHeader extends StatefulWidget {
-  const _ProfileHeader({required this.profile});
+  const _ProfileHeader({
+    required this.profile,
+    this.ciervoUserCode,
+    this.loadingCiervoId = false,
+  });
 
   final UserProfile profile;
+  final String? ciervoUserCode;
+  final bool loadingCiervoId;
 
   @override
   State<_ProfileHeader> createState() => _ProfileHeaderState();
@@ -348,13 +362,11 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
                     ? 'Telefono pendiente'
                     : profile.phone,
               ),
-              if (profile.ciervoUserCode != null)
-                CiervoUserIdBadge(compact: false)
-              else
-                _InfoChip(
-                  icon: Icons.badge_outlined,
-                  label: 'Ciervo ID no disponible',
-                ),
+              _ProfileCiervoIdChip(
+                code: widget.ciervoUserCode,
+                loading: widget.loadingCiervoId,
+                onRetry: () => context.read<ProfileCubit>().refreshCiervoId(),
+              ),
               _InfoChip(
                 icon: Icons.verified_user_outlined,
                 label: _profileStatus(profile),
@@ -387,6 +399,59 @@ class _InfoChip extends StatelessWidget {
     return Chip(
       avatar: Icon(icon, size: 18),
       label: Text(label),
+      visualDensity: VisualDensity.compact,
+    );
+  }
+}
+
+class _ProfileCiervoIdChip extends StatelessWidget {
+  const _ProfileCiervoIdChip({
+    required this.code,
+    required this.loading,
+    required this.onRetry,
+  });
+
+  final String? code;
+  final bool loading;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    if (loading && (code == null || code!.isEmpty)) {
+      return Chip(
+        avatar: SizedBox(
+          width: 18,
+          height: 18,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+        label: const Text('Obteniendo CIERVO ID...'),
+        visualDensity: VisualDensity.compact,
+      );
+    }
+
+    final resolved = code?.trim();
+    if (resolved != null && resolved.isNotEmpty) {
+      return ActionChip(
+        avatar: const Icon(Icons.badge_outlined, size: 18),
+        label: SelectionArea(
+          child: Text(
+            resolved,
+            style: const TextStyle(fontWeight: FontWeight.w700, letterSpacing: 0.4),
+          ),
+        ),
+        tooltip: 'Toca para copiar tu CIERVO ID',
+        onPressed: () => copyCiervoId(context, resolved),
+        visualDensity: VisualDensity.compact,
+      );
+    }
+
+    return ActionChip(
+      avatar: const Icon(Icons.refresh, size: 18),
+      label: const Text('Generar CIERVO ID'),
+      onPressed: onRetry,
       visualDensity: VisualDensity.compact,
     );
   }

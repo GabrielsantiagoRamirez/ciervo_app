@@ -1,4 +1,5 @@
 import '../../../../core/result/result.dart';
+import '../entities/ciervo_wallet_identity.dart';
 import '../entities/nfc_models.dart';
 import '../entities/payment_request.dart';
 import '../entities/recharge_intent.dart';
@@ -20,6 +21,7 @@ abstract interface class WalletRepository {
     required double amount,
   });
   Future<Result<RechargeIntent>> rechargeIntent(String intentId);
+  Future<Result<CiervoWalletIdentity>> myCiervoId();
   Future<Result<Map<String, dynamic>>> mercadoPagoConfig();
   Future<Result<ResolvedWalletUser>> resolveUser(String ciervoUserCode);
   Future<Result<TransferResult>> transfer({

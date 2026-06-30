@@ -91,21 +91,78 @@ class KidMeRepository {
         );
       });
 
-  Future<Result<void>> requestPayForMe({
+  Future<Result<Map<String, dynamic>>> requestPayForMe({
     required String businessId,
     required double amount,
-    String? notes,
+    String? description,
+    double? latitude,
+    double? longitude,
+    String? address,
   }) =>
       _guard(() async {
-        await _client.dio.post<void>(
+        final response = await _client.dio.post<dynamic>(
           '/api/kids/me/pay-for-me/request',
           data: {
             'businessId': int.tryParse(businessId) ?? businessId,
             'amount': amount,
             'currency': 'COP',
-            if (notes != null && notes.trim().isNotEmpty) 'notes': notes.trim(),
+            if (description != null && description.trim().isNotEmpty)
+              'description': description.trim(),
+            if (latitude != null && longitude != null)
+              'location': {
+                'latitude': latitude,
+                'longitude': longitude,
+                if (address != null && address.trim().isNotEmpty)
+                  'address': address.trim(),
+              },
           },
         );
+        return unwrapApiMap(response.data);
+      });
+
+  Future<Result<List<Map<String, dynamic>>>> payForMeRequests() =>
+      _guard(() async {
+        final response = await _client.dio.get<dynamic>(
+          '/api/kids/me/pay-for-me/requests',
+        );
+        final value = unwrapApiResponse(response.data);
+        if (value is List) {
+          return value
+              .whereType<Map>()
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList();
+        }
+        if (value is Map && value['items'] is List) {
+          return (value['items'] as List)
+              .whereType<Map>()
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList();
+        }
+        return const [];
+      });
+
+  Future<Result<Map<String, dynamic>>> createNfcSession({
+    required String businessId,
+    required double amount,
+  }) =>
+      _guard(() async {
+        final response = await _client.dio.post<dynamic>(
+          '/api/kids/me/nfc/sessions',
+          data: {
+            'businessId': int.tryParse(businessId) ?? businessId,
+            'amount': amount,
+            'currency': 'COP',
+          },
+        );
+        return unwrapApiMap(response.data);
+      });
+
+  Future<Result<Map<String, dynamic>>> nfcSession(int sessionId) =>
+      _guard(() async {
+        final response = await _client.dio.get<dynamic>(
+          '/api/kids/me/nfc/sessions/$sessionId',
+        );
+        return unwrapApiMap(response.data);
       });
 
   Future<Result<T>> _guard<T>(Future<T> Function() run) async {

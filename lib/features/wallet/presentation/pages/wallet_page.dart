@@ -261,11 +261,16 @@ class _QuickActions extends StatelessWidget {
           icon: Icons.add_card_outlined,
           onTap: card == null
               ? null
-              : () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => RechargePage(card: card),
-                  ),
-                ),
+              : () async {
+                  await Navigator.of(context).push<bool>(
+                    MaterialPageRoute<bool>(
+                      builder: (_) => RechargePage(card: card),
+                    ),
+                  );
+                  if (context.mounted) {
+                    await context.read<WalletCubit>().load();
+                  }
+                },
         ),
         _ActionChipButton(
           label: 'Transferir',

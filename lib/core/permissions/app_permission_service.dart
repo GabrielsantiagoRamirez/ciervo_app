@@ -5,6 +5,9 @@ import '../location/location_service.dart';
 
 abstract interface class AppPermissionService {
   Future<void> requestRequiredEntryPermissions();
+
+  /// Solicita cámara solo cuando el usuario va a escanear QR o tomar foto.
+  Future<bool> requestCameraIfNeeded();
 }
 
 class DeviceAppPermissionService implements AppPermissionService {
@@ -31,5 +34,17 @@ class DeviceAppPermissionService implements AppPermissionService {
     if (status.isDenied) {
       await Permission.notification.request();
     }
+  }
+
+  @override
+  Future<bool> requestCameraIfNeeded() async {
+    final status = await Permission.camera.status;
+    if (status.isGranted) return true;
+    if (status.isPermanentlyDenied) {
+      await openAppSettings();
+      return false;
+    }
+    final result = await Permission.camera.request();
+    return result.isGranted;
   }
 }

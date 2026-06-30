@@ -35,8 +35,11 @@ class UserProfileDto {
       phone: _string(source, const ['phone', 'phoneNumber', 'telefono']),
       ciervoUserCode: _optionalString(source, const [
         'ciervoUserCode',
+        'CiervoUserCode',
         'ciervoCode',
         'userCode',
+        'userPublicCode',
+        'userCiervoCode',
       ]),
       identityDocument: _optionalString(source, const [
         'identityDocument',

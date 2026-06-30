@@ -1,5 +1,6 @@
 class VakupliPlan {
   const VakupliPlan({
+    this.id,
     required this.title,
     required this.timeLeftLabel,
     required this.statusLabel,
@@ -9,6 +10,7 @@ class VakupliPlan {
     required this.messages,
   });
 
+  final int? id;
   final String title;
   final String timeLeftLabel;
   final String statusLabel;

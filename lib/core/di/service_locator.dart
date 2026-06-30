@@ -64,6 +64,8 @@ import '../../features/profile/data/repositories/profile_repository_impl.dart';
 import '../../features/profile/domain/repositories/profile_repository.dart';
 import '../../features/product_categories/data/product_categories_repository.dart';
 import '../../features/qr_wallet/data/qr_wallet_repository.dart';
+import '../../features/vakupli/data/vakupli_repository.dart';
+import '../../features/secure_shipment/data/secure_shipment_repository.dart';
 import '../../features/receipts/data/datasources/receipts_remote_datasource.dart';
 import '../../features/receipts/data/repositories/receipts_repository_impl.dart';
 import '../../features/receipts/domain/repositories/receipts_repository.dart';
@@ -203,6 +205,12 @@ Future<void> configureDependencies() async {
     )
     ..registerLazySingleton<QrWalletRepository>(
       () => QrWalletRepository(getIt<NetworkClient>()),
+    )
+    ..registerLazySingleton<VakupliRepository>(
+      () => VakupliRepository(getIt<NetworkClient>()),
+    )
+    ..registerLazySingleton<SecureShipmentRepository>(
+      () => SecureShipmentRepository(getIt<NetworkClient>()),
     )
     ..registerLazySingleton<StaffScannerRepository>(
       () => StaffScannerRepository(getIt<NetworkClient>()),

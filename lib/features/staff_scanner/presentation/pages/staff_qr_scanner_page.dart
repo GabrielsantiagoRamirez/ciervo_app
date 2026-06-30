@@ -3,6 +3,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
+import '../../../../core/permissions/app_permission_service.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../data/staff_scanner_repository.dart';
@@ -24,6 +25,25 @@ class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
   String? _payload;
   String? _error;
   bool _isBusy = false;
+  bool _cameraReady = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _ensureCamera();
+  }
+
+  Future<void> _ensureCamera() async {
+    final granted =
+        await getIt<AppPermissionService>().requestCameraIfNeeded();
+    if (!mounted) return;
+    setState(() {
+      _cameraReady = granted;
+      if (!granted) {
+        _error = 'Necesitamos acceso a la cámara para escanear códigos QR.';
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -50,10 +70,18 @@ class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              MobileScanner(
-                controller: _controller,
-                onDetect: _onDetect,
-              ),
+              if (_cameraReady)
+                MobileScanner(
+                  controller: _controller,
+                  onDetect: _onDetect,
+                )
+              else
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Text(_error ?? 'Preparando cámara...'),
+                  ),
+                ),
               DecoratedBox(
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.white70, width: 2),
