@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../chat/domain/entities/chat_button.dart';
+import '../../../chat/domain/repositories/chat_repository.dart';
+import '../../../chat/presentation/widgets/chat_buttons_bar.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -237,16 +240,17 @@ class _VakupliCreatePlanTabState extends State<VakupliCreatePlanTab> {
     );
     if (!mounted) return;
     result.when(
+      failure: (error) => setState(() {
+        _error = UserErrorMessage.from(error);
+        _submitting = false;
+      }),
       success: (_) {
+        setState(() => _submitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Plan creado.')),
         );
         widget.onCreated();
       },
-      failure: (error) => setState(() {
-        _error = UserErrorMessage.from(error);
-        _submitting = false;
-      }),
     );
   }
 
@@ -314,6 +318,8 @@ class VakupliPlanDetailPage extends StatefulWidget {
 
 class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
   List<VakupliMessage> _messages = const [];
+  List<VakupliFriend> _friends = const [];
+  List<ChatButton> _chatButtons = const [];
   final _message = TextEditingController();
   bool _loading = true;
   bool _sending = false;
@@ -322,7 +328,32 @@ class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
   void initState() {
     super.initState();
     _messages = widget.plan.messages;
+    _friends = widget.plan.friends;
     _loadMessages();
+    _loadParticipants();
+    _loadButtons();
+  }
+
+  Future<void> _loadButtons() async {
+    final chatId = widget.plan.chatId;
+    if (chatId == null) return;
+    final result = await getIt<ChatRepository>().buttons();
+    if (!mounted) return;
+    result.when(
+      success: (buttons) => setState(() => _chatButtons = buttons),
+      failure: (_) {},
+    );
+  }
+
+  Future<void> _loadParticipants() async {
+    final groupId = widget.plan.id;
+    if (groupId == null) return;
+    final result = await widget.repository.participants(groupId);
+    if (!mounted) return;
+    result.when(
+      success: (friends) => setState(() => _friends = friends),
+      failure: (_) {},
+    );
   }
 
   @override
@@ -379,6 +410,9 @@ class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
     final result = await widget.repository.inviteToPlan(
       planId: planId,
       userId: userId,
+      amount: widget.plan.totalAmount > 0
+          ? widget.plan.totalAmount
+          : 10000,
     );
     if (!mounted) return;
     result.when(
@@ -429,7 +463,7 @@ class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
               children: [
                 VakupliPlanCard(plan: widget.plan),
                 const SizedBox(height: AppSpacing.md),
-                VakupliFriendsGroup(friends: widget.plan.friends),
+                VakupliFriendsGroup(friends: _friends),
                 const SizedBox(height: AppSpacing.md),
                 Row(
                   children: [
@@ -470,6 +504,12 @@ class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
               ],
             ),
           ),
+          if (widget.plan.chatId != null && _chatButtons.isNotEmpty)
+            ChatButtonsBar(
+              buttons: _chatButtons,
+              conversationId: '${widget.plan.chatId}',
+              enabled: !_sending,
+            ),
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.sm),

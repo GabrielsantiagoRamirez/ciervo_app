@@ -15,6 +15,7 @@ import '../kids/selected_kid_context.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
+import '../../features/chat/data/chat_inbox_repository.dart';
 import '../../features/chat/data/datasources/chat_remote_datasource.dart';
 import '../../features/chat/data/repositories/chat_repository_impl.dart';
 import '../../features/chat/domain/repositories/chat_repository.dart';
@@ -79,6 +80,7 @@ import '../../features/pins/domain/repositories/pins_repository.dart';
 import '../../features/payments/data/datasources/payments_remote_datasource.dart';
 import '../../features/payments/data/repositories/payments_repository_impl.dart';
 import '../../features/payments/domain/repositories/payments_repository.dart';
+import '../../features/wallet/data/datasources/payment_approvals_remote_datasource.dart';
 import '../../features/wallet/data/datasources/wallet_remote_datasource.dart';
 import '../../features/wallet/data/repositories/wallet_repository_impl.dart';
 import '../../features/wallet/domain/repositories/wallet_repository.dart';
@@ -139,6 +141,13 @@ Future<void> configureDependencies() async {
     )
     ..registerLazySingleton<ChatRepository>(
       () => ChatRepositoryImpl(getIt<ChatRemoteDataSource>()),
+    )
+    ..registerLazySingleton<ChatInboxRepository>(
+      () => ChatInboxRepository(
+        getIt<ChatRepository>(),
+        getIt<FamilyChatRepository>(),
+        getIt<VakupliRepository>(),
+      ),
     )
     ..registerLazySingleton<AuthRepository>(
       () => AuthRepositoryImpl(
@@ -229,6 +238,9 @@ Future<void> configureDependencies() async {
     )
     ..registerLazySingleton<WalletRemoteDataSource>(
       () => DioWalletRemoteDataSource(getIt<NetworkClient>()),
+    )
+    ..registerLazySingleton<PaymentApprovalsRemoteDataSource>(
+      () => PaymentApprovalsRemoteDataSource(getIt<NetworkClient>()),
     )
     ..registerLazySingleton<WalletRepository>(
       () => WalletRepositoryImpl(

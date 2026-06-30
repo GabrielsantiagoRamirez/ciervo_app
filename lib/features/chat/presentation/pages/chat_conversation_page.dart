@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../../core/utils/display_labels.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/location/location_service.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -11,6 +12,7 @@ import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../media/presentation/authenticated_media_image.dart';
 import '../widgets/chat_button_handler.dart';
 import '../widgets/chat_buttons_bar.dart';
+import '../widgets/chat_forward_sheet.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/repositories/chat_repository.dart';
 import '../cubit/chat_cubit.dart';
@@ -116,7 +118,13 @@ class _ConversationViewState extends State<_ConversationView> {
                         return const Center(child: CircularProgressIndicator());
                       }
                       final message = state.messages[index];
-                      return Align(
+                      return GestureDetector(
+                        onLongPress: () => showChatForwardSheet(
+                          context,
+                          message: message,
+                          sourceConversationId: widget.conversationId,
+                        ),
+                        child: Align(
                         alignment: message.isMine
                             ? Alignment.centerRight
                             : Alignment.centerLeft,
@@ -140,6 +148,7 @@ class _ConversationViewState extends State<_ConversationView> {
                                 )
                               : _MessageContent(message: message),
                         ),
+                      ),
                       );
                     },
                   ),
@@ -396,7 +405,7 @@ class _PaymentCard extends StatelessWidget {
         ],
       ),
       Text('${payload.currency} ${payload.amount.toStringAsFixed(0)}'),
-      Text('Estado: ${payload.status}'),
+      Text('Estado: ${DisplayLabels.bookingStatus(payload.status)}'),
       if (payload.description != null) Text(payload.description!),
     ],
   );

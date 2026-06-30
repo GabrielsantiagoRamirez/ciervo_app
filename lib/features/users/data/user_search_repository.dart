@@ -15,6 +15,9 @@ class UserSearchRepository {
     required String query,
     String? country,
     bool includeOtherCountries = false,
+    double? latitude,
+    double? longitude,
+    String sortBy = 'distance',
     int page = 1,
     int pageSize = 20,
   }) async {
@@ -25,11 +28,18 @@ class UserSearchRepository {
           'q': query,
           if (country != null && country.isNotEmpty) 'country': country,
           'includeOtherCountries': includeOtherCountries,
+          if (latitude != null) 'latitude': latitude,
+          if (longitude != null) 'longitude': longitude,
+          if (latitude != null && longitude != null) 'sortBy': sortBy,
           'page': page,
           'pageSize': pageSize,
         },
       );
-      final items = unwrapApiList(response.data)
+      final value = unwrapApiResponse(response.data);
+      final itemsRaw = value is Map
+          ? (value['items'] ?? value['Items'] ?? value)
+          : value;
+      final items = (itemsRaw is List ? itemsRaw : unwrapApiList(response.data))
           .whereType<Map>()
           .map((item) => UserSearchResult.fromJson(Map<String, dynamic>.from(item)))
           .where((user) => user.userId.isNotEmpty)

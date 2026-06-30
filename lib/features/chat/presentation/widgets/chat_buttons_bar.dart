@@ -22,7 +22,7 @@ class ChatButtonsBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final visible = buttons.where((b) => b.visibility.isVisible).toList();
+    final visible = buttons.visibleOnMobile();
     if (visible.isEmpty) return const SizedBox.shrink();
 
     return SingleChildScrollView(

@@ -2,11 +2,16 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
+import '../../../../core/location/location_service.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../chat/domain/repositories/chat_repository.dart';
 import '../../../chat/presentation/pages/chat_conversation_page.dart';
+import '../../../chat_payments/presentation/pages/chat_gift_page.dart';
+import '../../../chat_payments/presentation/pages/chat_pay_page.dart';
+import '../../../wallet/presentation/pages/recharge_by_ciervo_id_page.dart';
+import '../../../wallet/presentation/pages/request_money_page.dart';
 import '../../data/user_search_repository.dart';
 import '../../domain/entities/user_search_result.dart';
 
@@ -47,9 +52,21 @@ class _UserSearchPageState extends State<UserSearchPage> {
       _loading = true;
       _error = null;
     });
+
+    double? latitude;
+    double? longitude;
+    try {
+      final location = await getIt<LocationService>().currentLocation();
+      latitude = location.latitude;
+      longitude = location.longitude;
+    } catch (_) {}
+
     final result = await getIt<UserSearchRepository>().search(
       query: query,
       includeOtherCountries: _includeOtherCountries,
+      latitude: latitude,
+      longitude: longitude,
+      sortBy: 'distance',
     );
     if (!mounted) return;
     result.when(
@@ -65,11 +82,11 @@ class _UserSearchPageState extends State<UserSearchPage> {
     );
   }
 
-  Future<void> _openChat(UserSearchResult user) async {
-    if (!user.canStartConversation || _openingUserId != null) return;
+  Future<void> _openDirectChat(UserSearchResult user) async {
+    if (_openingUserId != null) return;
     setState(() => _openingUserId = user.userId);
-    final result = await getIt<ChatRepository>().createUserConversation(
-      participantUserId: user.userId,
+    final result = await getIt<ChatRepository>().createDirectConversation(
+      targetUserId: user.userId,
     );
     if (!mounted) return;
     setState(() => _openingUserId = null);
@@ -86,6 +103,106 @@ class _UserSearchPageState extends State<UserSearchPage> {
       },
       failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(UserErrorMessage.from(error))),
+      ),
+    );
+  }
+
+  Future<void> _showUserActions(UserSearchResult user) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: CircleAvatar(
+                backgroundImage: user.photoUrl != null
+                    ? NetworkImage(user.photoUrl!)
+                    : null,
+                child:
+                    user.photoUrl == null ? const Icon(Icons.person_outline) : null,
+              ),
+              title: Text(user.fullName),
+              subtitle: Text(
+                [
+                  if (user.ciervoUserCode != null) user.ciervoUserCode,
+                  if (user.distanceLabel != null) user.distanceLabel,
+                  if (user.city != null) user.city,
+                  if (user.country != null) user.country,
+                ].whereType<String>().join(' · '),
+              ),
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.chat_bubble_outline),
+              title: const Text('Abrir chat'),
+              onTap: () {
+                Navigator.pop(context);
+                _openDirectChat(user);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.payments_outlined),
+              title: const Text('Pagar'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.of(this.context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => ChatPayPage(
+                      initialTargetCiervoCode: user.ciervoUserCode,
+                      initialTargetUserId: user.userId,
+                    ),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.card_giftcard_outlined),
+              title: const Text('Enviar regalo'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.of(this.context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => ChatGiftPage(
+                      initialTargetCiervoCode: user.ciervoUserCode,
+                      initialTargetUserId: user.userId,
+                    ),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.request_page_outlined),
+              title: const Text('Paga por mi'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.of(this.context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => RequestMoneyPage(
+                      initialPayerCiervoCode: user.ciervoUserCode,
+                    ),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.add_card_outlined),
+              title: const Text('Recargar por CIERVO ID'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.of(this.context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => RechargeByCiervoIdPage(
+                      initialCiervoCode: user.ciervoUserCode,
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: AppSpacing.sm),
+          ],
+        ),
       ),
     );
   }
@@ -140,7 +257,9 @@ class _UserSearchPageState extends State<UserSearchPage> {
         ..._results.map((user) {
           final opening = _openingUserId == user.userId;
           final subtitle = [
-            if (user.city != null) user.city,
+            if (user.ciervoUserCode != null) user.ciervoUserCode,
+            if (user.distanceLabel != null) user.distanceLabel,
+            if (user.distanceKm == null && user.city != null) user.city,
             if (user.country != null) user.country,
           ].join(' · ');
           return ListTile(
@@ -153,7 +272,9 @@ class _UserSearchPageState extends State<UserSearchPage> {
                   : null,
             ),
             title: Text(user.fullName),
-            subtitle: subtitle.isEmpty ? null : Text(subtitle),
+            subtitle: subtitle.isEmpty
+                ? const Text('Sin ubicación')
+                : Text(subtitle),
             trailing: opening
                 ? const SizedBox(
                     width: 24,
@@ -161,7 +282,25 @@ class _UserSearchPageState extends State<UserSearchPage> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : user.canStartConversation
-                    ? const Icon(Icons.chat_bubble_outline)
+                    ? PopupMenuButton<String>(
+                        onSelected: (value) {
+                          if (value == 'chat') {
+                            _openDirectChat(user);
+                          } else if (value == 'more') {
+                            _showUserActions(user);
+                          }
+                        },
+                        itemBuilder: (context) => const [
+                          PopupMenuItem(
+                            value: 'chat',
+                            child: Text('Abrir chat'),
+                          ),
+                          PopupMenuItem(
+                            value: 'more',
+                            child: Text('Mas acciones'),
+                          ),
+                        ],
+                      )
                     : const Icon(Icons.block, size: 20),
             onTap: user.canStartConversation && !opening
                 ? () {
@@ -169,8 +308,11 @@ class _UserSearchPageState extends State<UserSearchPage> {
                       Navigator.of(context).pop(user.userId);
                       return;
                     }
-                    _openChat(user);
+                    _openDirectChat(user);
                   }
+                : null,
+            onLongPress: user.canStartConversation && !widget.selectMode
+                ? () => _showUserActions(user)
                 : null,
           );
         }),

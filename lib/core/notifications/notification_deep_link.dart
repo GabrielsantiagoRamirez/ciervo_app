@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../features/bonuses/presentation/pages/bonus_detail_page.dart';
 import '../../features/bonuses/presentation/pages/bonuses_pages.dart';
 import '../../features/chat/presentation/pages/chat_conversation_page.dart';
+import '../../features/chat/presentation/pages/chat_inbox_page.dart';
 import '../../features/delivery/presentation/pages/customer_order_detail_page.dart';
 import '../../features/delivery/presentation/pages/customer_orders_page.dart';
 import '../../features/notifications/domain/entities/app_notification.dart';
@@ -12,6 +13,7 @@ import '../../features/reservations/presentation/pages/reservations_page.dart';
 import '../../features/vakupli/presentation/pages/vakupli_page.dart';
 import '../../features/secure_shipment/presentation/pages/secure_shipment_detail_page.dart';
 import '../../features/secure_shipment/presentation/pages/secure_shipment_list_page.dart';
+import '../../features/wallet/presentation/pages/payment_requests_page.dart';
 import '../../features/wallet/presentation/pages/wallet_page.dart';
 
 /// Navega desde una notificacion (in-app o push) a la pantalla correspondiente.
@@ -64,6 +66,14 @@ class NotificationDeepLink {
         _push(context, ChatConversationPage(conversationId: id));
         return true;
       }
+      _push(context, const ChatInboxPage());
+      return true;
+    }
+    if (lower.contains('/payment-request') || lower.contains('/payment_request')) {
+      _push(context, const PaymentRequestsPage());
+      return true;
+    }
+    if (lower.contains('/vakupli')) {
       _push(context, const VakupliPage());
       return true;
     }
@@ -147,7 +157,31 @@ class NotificationDeepLink {
       }
       return true;
     }
-    if (text.contains('message') || text.contains('chat')) {
+    if (text.contains('chat.message') ||
+        text.contains('message.received') ||
+        (text.contains('message') && text.contains('chat'))) {
+      final conversationId = data['conversationId']?.toString() ??
+          data['chatConversationId']?.toString() ??
+          data['resourceId']?.toString();
+      if (conversationId != null && conversationId.isNotEmpty) {
+        _push(context, ChatConversationPage(conversationId: conversationId));
+      } else {
+        _push(context, const ChatInboxPage());
+      }
+      return true;
+    }
+    if (text.contains('payment_request') ||
+        text.contains('pay_for_me') ||
+        text.contains('paga por mi')) {
+      _push(context, const PaymentRequestsPage());
+      return true;
+    }
+    if (text.contains('approval.requested') ||
+        text.contains('payment_approval')) {
+      _push(context, const PaymentRequestsPage());
+      return true;
+    }
+    if (text.contains('vakupli')) {
       _push(context, const VakupliPage());
       return true;
     }

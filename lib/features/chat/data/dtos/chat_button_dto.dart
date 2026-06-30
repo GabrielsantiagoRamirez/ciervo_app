@@ -8,6 +8,7 @@ class ChatButtonDto {
     this.message,
     this.icon,
     this.sortOrder = 0,
+    this.showOnMobile = true,
   });
 
   final String code;
@@ -16,22 +17,34 @@ class ChatButtonDto {
   final String? message;
   final String? icon;
   final int sortOrder;
+  final bool showOnMobile;
 
   factory ChatButtonDto.fromJson(Map<String, dynamic> json) {
+    final status = _string(json, const [
+      'productionStatus',
+      'availability',
+      'visibility',
+      'status',
+      'state',
+    ]);
     return ChatButtonDto(
-      code: _string(json, const ['code', 'buttonCode', 'buttonKey', 'id']),
+      code: _string(json, const [
+        'buttonKey',
+        'code',
+        'buttonCode',
+        'id',
+      ]),
       label: _string(json, const ['label', 'title', 'name']),
-      visibility: ChatButtonVisibility.parse(
-        _string(json, const [
-          'visibility',
-          'status',
-          'state',
-          'availability',
-        ]),
-      ),
-      message: _optional(json, const ['message', 'disabledMessage', 'reason']),
+      visibility: ChatButtonVisibility.parse(status),
+      message: _optional(json, const [
+        'disabledMessage',
+        'message',
+        'disabledReason',
+        'reason',
+      ]),
       icon: _optional(json, const ['icon', 'iconName']),
       sortOrder: _int(json['sortOrder'] ?? json['order']),
+      showOnMobile: json['showOnMobile'] != false,
     );
   }
 
@@ -42,6 +55,7 @@ class ChatButtonDto {
     message: message,
     icon: icon,
     sortOrder: sortOrder,
+    showOnMobile: showOnMobile,
   );
 
   static List<ChatButtonDto> listFrom(dynamic value) {

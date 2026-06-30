@@ -232,6 +232,8 @@ class WalletCubit extends Cubit<WalletState> {
     String? payerCiervoUserCode,
     required double amount,
     required String description,
+    String? chatConversationId,
+    int? businessId,
   }) async {
     emit(
       state.copyWith(status: WalletStatus.actionLoading, clearMessages: true),
@@ -241,6 +243,8 @@ class WalletCubit extends Cubit<WalletState> {
       payerCiervoUserCode: payerCiervoUserCode,
       amount: amount,
       description: description,
+      chatConversationId: chatConversationId,
+      businessId: businessId,
     );
     result.when(
       success: (_) {

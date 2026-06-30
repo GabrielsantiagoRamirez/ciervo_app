@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../core/theme/app_spacing.dart';
+import '../../features/chat/presentation/pages/chat_inbox_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/notifications/domain/entities/notification_badges.dart';
 import '../../features/notifications/presentation/cubit/notification_badges_cubit.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/reservations/presentation/pages/reservations_page.dart';
 import '../../features/search/presentation/pages/search_page.dart';
-import '../../features/vakupli/presentation/pages/vakupli_page.dart';
 
 class CiervoBottomNavScaffold extends StatefulWidget {
   const CiervoBottomNavScaffold({super.key});
@@ -24,7 +24,7 @@ class _CiervoBottomNavScaffoldState extends State<CiervoBottomNavScaffold> {
   static const _pages = <Widget>[
     HomePage(),
     SearchPage(),
-    VakupliPage(),
+    ChatInboxPage(),
     ReservationsPage(),
     ProfilePage(),
   ];

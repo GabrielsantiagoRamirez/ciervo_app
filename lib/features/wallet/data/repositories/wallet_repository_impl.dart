@@ -203,6 +203,8 @@ class WalletRepositoryImpl implements WalletRepository {
     String? payerCiervoUserCode,
     required double amount,
     required String description,
+    String? chatConversationId,
+    int? businessId,
   }) async {
     try {
       return Success(
@@ -211,6 +213,8 @@ class WalletRepositoryImpl implements WalletRepository {
           payerCiervoUserCode: payerCiervoUserCode,
           amount: amount,
           description: description,
+          chatConversationId: chatConversationId,
+          businessId: businessId,
         )).toDomain(),
       );
     } catch (error) {

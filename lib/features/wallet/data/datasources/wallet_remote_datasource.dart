@@ -32,6 +32,8 @@ abstract interface class WalletRemoteDataSource {
     String? payerCiervoUserCode,
     required double amount,
     required String description,
+    String? chatConversationId,
+    int? businessId,
   });
   Future<RechargeIntentDto> rechargeByCiervoId({
     required String targetCiervoUserCode,
@@ -185,6 +187,8 @@ class DioWalletRemoteDataSource implements WalletRemoteDataSource {
     String? payerCiervoUserCode,
     required double amount,
     required String description,
+    String? chatConversationId,
+    int? businessId,
   }) async {
     final seed = payerCiervoUserCode ?? payerUserId ?? 'unknown';
     final data = <String, dynamic>{
@@ -199,6 +203,13 @@ class DioWalletRemoteDataSource implements WalletRemoteDataSource {
     }
     if (payerUserId != null && payerUserId.isNotEmpty) {
       data['payerUserId'] = payerUserId;
+    }
+    if (businessId != null) {
+      data['businessId'] = businessId;
+    }
+    if (chatConversationId != null && chatConversationId.isNotEmpty) {
+      data['chatConversationId'] =
+          int.tryParse(chatConversationId) ?? chatConversationId;
     }
     final response = await _client.dio.post<Map<String, dynamic>>(
       '/api/payment-requests/pay-for-me',

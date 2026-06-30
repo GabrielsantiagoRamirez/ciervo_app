@@ -8,9 +8,16 @@ import '../../../../shared/widgets/ciervo_card.dart';
 import '../../data/chat_payments_remote_datasource.dart';
 
 class ChatGiftPage extends StatefulWidget {
-  const ChatGiftPage({required this.conversationId, super.key});
+  const ChatGiftPage({
+    this.conversationId,
+    this.initialTargetCiervoCode,
+    this.initialTargetUserId,
+    super.key,
+  });
 
-  final String conversationId;
+  final String? conversationId;
+  final String? initialTargetCiervoCode;
+  final String? initialTargetUserId;
 
   @override
   State<ChatGiftPage> createState() => _ChatGiftPageState();
@@ -30,6 +37,14 @@ class _ChatGiftPageState extends State<ChatGiftPage> {
     'Benefit': 'Beneficio',
     'Event': 'Evento',
   };
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialTargetCiervoCode != null) {
+      _codeController.text = widget.initialTargetCiervoCode!;
+    }
+  }
 
   @override
   void dispose() {
@@ -112,10 +127,10 @@ class _ChatGiftPageState extends State<ChatGiftPage> {
     final code = _codeController.text.trim();
     final amount =
         double.tryParse(_amountController.text.replaceAll(',', '.')) ?? 0;
-    if (code.isEmpty || amount <= 0) {
+    if (amount <= 0 || (code.isEmpty && widget.initialTargetUserId == null)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Ingresa Ciervo ID y un monto valido.'),
+          content: Text('Ingresa Ciervo ID o selecciona destinatario y un monto valido.'),
         ),
       );
       return;
@@ -123,11 +138,12 @@ class _ChatGiftPageState extends State<ChatGiftPage> {
     setState(() => _sending = true);
     try {
       await getIt<ChatPaymentsRemoteDataSource>().sendGift(
-        conversationId: widget.conversationId,
+        chatConversationId: widget.conversationId,
         targetCiervoUserCode: code,
+        targetUserId: widget.initialTargetUserId,
         amount: amount,
         giftType: _giftType,
-        description: _descriptionController.text.trim(),
+        message: _descriptionController.text.trim(),
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

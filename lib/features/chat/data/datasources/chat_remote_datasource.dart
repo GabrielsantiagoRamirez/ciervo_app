@@ -22,16 +22,45 @@ class ChatRemoteDataSource {
         )).data,
       );
 
-  Future<Map<String, dynamic>> createUserConversation({
-    required String participantUserId,
+  Future<Map<String, dynamic>> createDirectConversation({
+    required String targetUserId,
   }) async =>
       unwrapApiMap(
         (await _client.dio.post<dynamic>(
           '/api/chat/conversations',
           data: {
             'type': 'Direct',
-            'participantUserId':
-                int.tryParse(participantUserId) ?? participantUserId,
+            'targetUserId': int.tryParse(targetUserId) ?? targetUserId,
+          },
+        )).data,
+      );
+
+  Future<Map<String, dynamic>> forwardMessage({
+    required String conversationId,
+    required String messageId,
+    required String targetConversationId,
+    String? comment,
+  }) async =>
+      unwrapApiMap(
+        (await _client.dio.post<dynamic>(
+          '/api/chat/conversations/$conversationId/messages/$messageId/forward',
+          data: {
+            'targetConversationId':
+                int.tryParse(targetConversationId) ?? targetConversationId,
+            if (comment != null && comment.isNotEmpty) 'comment': comment,
+          },
+        )).data,
+      );
+
+  Future<Map<String, dynamic>> createSupportConversation({
+    required String title,
+  }) async =>
+      unwrapApiMap(
+        (await _client.dio.post<dynamic>(
+          '/api/chat/conversations',
+          data: {
+            'type': 'Support',
+            'title': title,
           },
         )).data,
       );

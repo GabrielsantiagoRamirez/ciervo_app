@@ -16,6 +16,8 @@ abstract final class UserErrorMessage {
       'FILE_TOO_LARGE' => 'La imagen supera el tamaño permitido.',
       'INVALID_FILE_TYPE' => 'Formato de imagen no permitido.',
       'USER_NOT_PARTICIPANT' => 'No tienes acceso a esta conversación.',
+      'INSUFFICIENT_BALANCE' =>
+        'Saldo insuficiente. Recarga tu wallet con Mercado Pago o transferencia.',
       _ => null,
     };
     if (codeMessage != null) return codeMessage;
@@ -42,6 +44,9 @@ abstract final class UserErrorMessage {
       }
       if (message.contains('cotizacion') || message.contains('cotización')) {
         return 'Este plan requiere cotizacion comercial.';
+      }
+      if (message.contains('insufficient') || message.contains('saldo insuficiente')) {
+        return 'Saldo insuficiente. Recarga tu wallet con Mercado Pago o transferencia.';
       }
       if (message.contains('amount') && message.contains('membership')) {
         return 'No envies monto para membresias. El backend calcula el cobro.';

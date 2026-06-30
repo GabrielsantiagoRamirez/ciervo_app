@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../../../delivery/presentation/pages/customer_orders_page.dart';
 import '../../../memberships/presentation/pages/membership_page.dart';
+import '../../../qr_wallet/presentation/pages/qr_wallet_page.dart';
 import '../../../transport/presentation/pages/transport_page.dart';
 import '../../../chat_payments/presentation/pages/chat_gift_page.dart';
-import '../../../wallet/presentation/pages/payment_requests_page.dart';
+import '../../../chat_payments/presentation/pages/chat_pay_page.dart';
+import '../../../wallet/presentation/pages/payment_approval_request_page.dart';
 import '../../../wallet/presentation/pages/recharge_by_ciervo_id_page.dart';
 import '../../../wallet/presentation/pages/request_money_page.dart';
-import '../../../wallet/presentation/pages/transfer_page.dart';
 import '../../../wallet/presentation/pages/wallet_page.dart';
 import '../../../wallet/presentation/utils/nfc_navigation.dart';
 import '../../domain/entities/chat_button.dart';
@@ -24,12 +26,15 @@ IconData iconForChatButton(String code) {
     'rechargeaccount' ||
     'recargarcuenta' ||
     'recharge' ||
-    'recargar' =>
+    'recargar' ||
+    'rechargeid' =>
       Icons.add_card_outlined,
     'memberships' || 'membresias' || 'membership' =>
       Icons.workspace_premium_outlined,
     'trips' || 'viajes' => Icons.flight_outlined,
     'transport' || 'transporte' => Icons.directions_bus_outlined,
+    'delivery' || 'domicilios' => Icons.delivery_dining_outlined,
+    'qr' => Icons.qr_code_2_outlined,
     'nfc' || 'paynfc' || 'pagonfc' => Icons.nfc,
     _ => Icons.touch_app_outlined,
   };
@@ -41,6 +46,8 @@ Future<void> handleChatButtonTap(
   required String conversationId,
   int? businessId,
   String? businessName,
+  String? initialTargetCiervoCode,
+  String? initialTargetUserId,
 }) async {
   if (!button.visibility.isEnabled) {
     final message = button.message?.trim();
@@ -57,7 +64,15 @@ Future<void> handleChatButtonTap(
     case 'pay':
     case 'pagar':
       await Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const TransferPage()),
+        MaterialPageRoute<void>(
+          builder: (_) => ChatPayPage(
+            chatConversationId: conversationId,
+            businessId: businessId,
+            businessName: businessName,
+            initialTargetCiervoCode: initialTargetCiervoCode,
+            initialTargetUserId: initialTargetUserId,
+          ),
+        ),
       );
       return;
     case 'sendgift':
@@ -65,29 +80,70 @@ Future<void> handleChatButtonTap(
     case 'enviarregalo':
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (_) => ChatGiftPage(conversationId: conversationId),
+          builder: (_) => ChatGiftPage(
+            conversationId: conversationId,
+            initialTargetCiervoCode: initialTargetCiervoCode,
+            initialTargetUserId: initialTargetUserId,
+          ),
         ),
       );
       return;
     case 'payforme':
     case 'pagapormi':
       await Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const RequestMoneyPage()),
+        MaterialPageRoute<void>(
+          builder: (_) => RequestMoneyPage(
+            chatConversationId: conversationId,
+            businessId: businessId,
+            initialPayerCiervoCode: initialTargetCiervoCode,
+          ),
+        ),
       );
       return;
     case 'requestapproval':
     case 'solicitaraprobacion':
     case 'approval':
       await Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const PaymentRequestsPage()),
+        MaterialPageRoute<void>(
+          builder: (_) => PaymentApprovalRequestPage(
+            chatConversationId: conversationId,
+            businessId: businessId,
+          ),
+        ),
       );
       return;
     case 'rechargeaccount':
     case 'recargarcuenta':
     case 'recharge':
     case 'recargar':
+    case 'rechargeid':
       await Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const RechargeByCiervoIdPage()),
+        MaterialPageRoute<void>(
+          builder: (_) => RechargeByCiervoIdPage(
+            initialCiervoCode: initialTargetCiervoCode,
+          ),
+        ),
+      );
+      return;
+    case 'delivery':
+    case 'domicilios':
+      if (businessId != null) {
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => const CustomerOrdersPage(),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Abre un chat con un negocio para pedir domicilio.'),
+          ),
+        );
+      }
+      return;
+    case 'qr':
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => const QrWalletPage()),
       );
       return;
     case 'memberships':
@@ -139,8 +195,7 @@ Future<void> showChatButtonsSheet(
   int? businessId,
   String? businessName,
 }) async {
-  final visible = buttons.where((b) => b.visibility.isVisible).toList()
-    ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+  final visible = buttons.visibleOnMobile();
   if (visible.isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('No hay acciones disponibles en este chat.')),

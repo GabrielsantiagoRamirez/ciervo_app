@@ -11,9 +11,16 @@ import '../cubit/wallet_cubit.dart';
 import '../cubit/wallet_state.dart';
 
 class RequestMoneyPage extends StatefulWidget {
-  const RequestMoneyPage({this.initialPayerCiervoCode, super.key});
+  const RequestMoneyPage({
+    this.initialPayerCiervoCode,
+    this.chatConversationId,
+    this.businessId,
+    super.key,
+  });
 
   final String? initialPayerCiervoCode;
+  final String? chatConversationId;
+  final int? businessId;
 
   @override
   State<RequestMoneyPage> createState() => _RequestMoneyPageState();
@@ -153,6 +160,8 @@ class _RequestMoneyPageState extends State<RequestMoneyPage> {
       description: _descriptionController.text.trim().isEmpty
           ? 'Solicitud de pago'
           : _descriptionController.text.trim(),
+      chatConversationId: widget.chatConversationId,
+      businessId: widget.businessId,
     );
   }
 }

@@ -56,12 +56,36 @@ class ChatRepositoryImpl implements ChatRepository {
   );
 
   @override
-  Future<Result<ChatConversation>> createUserConversation({
-    required String participantUserId,
+  Future<Result<ChatConversation>> createSupportConversation({
+    required String title,
   }) => _guard(
     () async => conversationFromJson(
-      await _remote.createUserConversation(
-        participantUserId: participantUserId,
+      await _remote.createSupportConversation(title: title),
+    ),
+  );
+
+  @override
+  Future<Result<ChatConversation>> createDirectConversation({
+    required String targetUserId,
+  }) => _guard(
+    () async => conversationFromJson(
+      await _remote.createDirectConversation(targetUserId: targetUserId),
+    ),
+  );
+
+  @override
+  Future<Result<ChatMessage>> forwardMessage({
+    required String sourceConversationId,
+    required String messageId,
+    required String targetConversationId,
+    String? comment,
+  }) => _guard(
+    () async => messageFromJson(
+      await _remote.forwardMessage(
+        conversationId: sourceConversationId,
+        messageId: messageId,
+        targetConversationId: targetConversationId,
+        comment: comment,
       ),
     ),
   );
@@ -84,7 +108,10 @@ class ChatRepositoryImpl implements ChatRepository {
   @override
   Future<Result<List<ChatButton>>> buttons() => _guard(() async {
     final raw = await _remote.buttons();
-    return ChatButtonDto.listFrom(raw).map((dto) => dto.toDomain()).toList()
+    return ChatButtonDto.listFrom(raw)
+        .map((dto) => dto.toDomain())
+        .where((button) => button.isVisibleOnMobile)
+        .toList()
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
   });
 

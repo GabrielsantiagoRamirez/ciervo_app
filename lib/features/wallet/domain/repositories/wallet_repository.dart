@@ -35,6 +35,8 @@ abstract interface class WalletRepository {
     String? payerCiervoUserCode,
     required double amount,
     required String description,
+    String? chatConversationId,
+    int? businessId,
   });
   Future<Result<RechargeIntent>> rechargeByCiervoId({
     required String targetCiervoUserCode,
