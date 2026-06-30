@@ -32,6 +32,7 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
+android/hs_err_pid*.log
 
 # Symbolication related
 app.*.symbols
