@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../core/session/session_manager.dart';
 import '../core/session/session_state.dart';
 import '../core/experience/experience_mode_cubit.dart';
+import '../features/kid_auth/presentation/pages/kid_login_page.dart';
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/register_page.dart';
 import '../features/auth/presentation/pages/splash_page.dart';
@@ -15,6 +16,7 @@ abstract final class AppRoutePaths {
   static const root = '/';
   static const splash = '/splash';
   static const login = '/login';
+  static const kidLogin = '/kid-login';
   static const register = '/register';
   static const experienceMode = '/experience-mode';
 }
@@ -35,6 +37,7 @@ GoRouter createAppRouter(
       final status = sessionManager.state.status;
       final location = state.matchedLocation;
       final isAuthRoute = location == AppRoutePaths.login ||
+          location == AppRoutePaths.kidLogin ||
           location == AppRoutePaths.register;
       final isSplash = location == AppRoutePaths.splash;
 
@@ -60,6 +63,10 @@ GoRouter createAppRouter(
       GoRoute(
         path: AppRoutePaths.login,
         builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: AppRoutePaths.kidLogin,
+        builder: (context, state) => const KidLoginPage(),
       ),
       GoRoute(
         path: AppRoutePaths.register,

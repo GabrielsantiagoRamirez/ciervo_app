@@ -7,8 +7,10 @@ abstract interface class PinsRemoteDataSource {
     required String walletCardId,
     required String businessId,
     required double amount,
-    bool kidsMode,
-    bool requireParentApproval,
+    bool kidsMode = false,
+    bool requireParentApproval = false,
+    String? childProfileId,
+    String? childWalletCardId,
   });
 
   Future<List<CiervoPinDto>> myPins({bool activeOnly = true});
@@ -30,11 +32,14 @@ class DioPinsRemoteDataSource implements PinsRemoteDataSource {
     required double amount,
     bool kidsMode = false,
     bool requireParentApproval = false,
+    String? childProfileId,
+    String? childWalletCardId,
   }) async {
     final response = await _client.dio.post<Map<String, dynamic>>(
       '/api/pins',
       data: {
-        'walletCardId': int.tryParse(walletCardId) ?? walletCardId,
+        if (!kidsMode)
+          'walletCardId': int.tryParse(walletCardId) ?? walletCardId,
         'businessId': int.tryParse(businessId) ?? businessId,
         'amount': amount,
         'currency': 'COP',
@@ -43,6 +48,12 @@ class DioPinsRemoteDataSource implements PinsRemoteDataSource {
         'idempotencyKey': _idempotencyKey('pin', walletCardId),
         'kidsMode': kidsMode,
         'requireParentApproval': requireParentApproval,
+        if (kidsMode && childProfileId != null)
+          'childProfileId':
+              int.tryParse(childProfileId) ?? childProfileId,
+        if (kidsMode && childWalletCardId != null)
+          'childWalletCardId':
+              int.tryParse(childWalletCardId) ?? childWalletCardId,
       },
     );
     return CiervoPinDto.fromJson(unwrapApiMap(response.data));

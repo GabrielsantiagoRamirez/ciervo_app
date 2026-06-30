@@ -8,6 +8,8 @@ abstract interface class PinsRepository {
     required double amount,
     bool kidsMode = false,
     bool requireParentApproval = false,
+    String? childProfileId,
+    String? childWalletCardId,
   });
 
   Future<Result<List<CiervoPin>>> myPins({bool activeOnly = true});

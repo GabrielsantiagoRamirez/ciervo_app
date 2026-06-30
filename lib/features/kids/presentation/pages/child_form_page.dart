@@ -41,6 +41,7 @@ class _ChildFormViewState extends State<_ChildFormView> {
   final _medicalNotes = TextEditingController();
   DateTime? _birthDate;
   int _relationshipType = 1;
+  bool _isPrimaryGuardian = true;
   String _countryCode = 'CO';
   String? _documentType;
 
@@ -210,6 +211,16 @@ class _ChildFormViewState extends State<_ChildFormView> {
                         topSpacing: true,
                         maxLines: 3,
                       ),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Soy tutor principal'),
+                        subtitle: const Text(
+                          'El tutor principal gestiona permisos y cuenta del menor.',
+                        ),
+                        value: _isPrimaryGuardian,
+                        onChanged: (value) =>
+                            setState(() => _isPrimaryGuardian = value),
+                      ),
                       const SizedBox(height: AppSpacing.lg),
                       CiervoButton(
                         label: saving ? 'Guardando' : 'Guardar',
@@ -308,7 +319,7 @@ class _ChildFormViewState extends State<_ChildFormView> {
         'documentType': _documentType,
         'documentNumber': _documentNumber.text.trim(),
         'medicalNotes': _medicalNotes.text.trim(),
-        'isPrimaryGuardian': true,
+        'isPrimaryGuardian': _isPrimaryGuardian,
       },
     );
   }

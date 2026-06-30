@@ -30,7 +30,7 @@ class FavoriteCountsBadge extends StatelessWidget {
           _Chip(
             icon: Icons.campaign_outlined,
             label: '$campaigns',
-            tooltip: 'Campanas activas',
+            tooltip: 'Campañas activas',
           ),
       ],
     );

@@ -5,6 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/app_router.dart';
+import '../../../../core/kids/selected_kid_context.dart';
+import '../../../../shared/widgets/kids_mode_banner.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/country/country_context.dart';
 import '../../../../core/experience/experience_mode.dart';
@@ -52,8 +54,39 @@ class HomePage extends StatelessWidget {
   }
 }
 
-class _HomeView extends StatelessWidget {
+class _HomeView extends StatefulWidget {
   const _HomeView();
+
+  @override
+  State<_HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<_HomeView> {
+  late final SelectedKidContext _kidContext;
+
+  @override
+  void initState() {
+    super.initState();
+    _kidContext = getIt<SelectedKidContext>();
+    _kidContext.addListener(_onKidModeChanged);
+  }
+
+  @override
+  void dispose() {
+    _kidContext.removeListener(_onKidModeChanged);
+    super.dispose();
+  }
+
+  void _onKidModeChanged() {
+    if (!mounted) return;
+    setState(() {});
+    final cubit = context.read<HomeDiscoveryCubit>();
+    if (cubit.state.permissionStatus == AppLocationPermissionStatus.granted) {
+      cubit.loadNearby();
+    } else {
+      cubit.loadGeneral();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,14 +105,20 @@ class _HomeView extends StatelessWidget {
             final shouldShowPermission =
                 state.permissionStatus != AppLocationPermissionStatus.granted;
 
-            return SafeArea(
-              child: RefreshIndicator(
-                onRefresh: state.usingLocation
-                    ? cubit.loadNearby
-                    : cubit.loadGeneral,
-                child: CustomScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  slivers: [
+            return Column(
+              children: [
+                KidsModeBanner(
+                  kidContext: _kidContext,
+                  onExit: _kidContext.clear,
+                ),
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: state.usingLocation
+                        ? cubit.loadNearby
+                        : cubit.loadGeneral,
+                    child: CustomScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      slivers: [
                     SliverPadding(
                       padding: const EdgeInsets.fromLTRB(
                         AppSpacing.lg,
@@ -172,8 +211,10 @@ class _HomeView extends StatelessWidget {
                       ),
                     ),
                   ],
+                    ),
+                  ),
                 ),
-              ),
+              ],
             );
           },
         );

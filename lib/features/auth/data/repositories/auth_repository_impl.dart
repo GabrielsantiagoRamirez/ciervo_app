@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/error_mapper.dart';
+import '../../../../core/kids/selected_kid_context.dart';
 import '../../../../core/result/result.dart';
 import '../../../../core/session/auth_token_claims.dart';
 import '../../../../core/session/session_manager.dart';
@@ -48,6 +50,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } catch (_) {
       // Local session must be cleared even if the server-side logout fails.
     }
+    getIt<SelectedKidContext>().clear();
     await _sessionManager.clear();
     return const Success<void>(null);
   }

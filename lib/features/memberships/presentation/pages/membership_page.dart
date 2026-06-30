@@ -419,7 +419,7 @@ class _BenefitsView extends StatelessWidget {
                 ],
                 if (limits.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.sm),
-                  Text('Limites', style: Theme.of(context).textTheme.titleSmall),
+                  Text('Límites', style: Theme.of(context).textTheme.titleSmall),
                   ...limits.entries.map((e) => Text('${e.key}: ${e.value}')),
                 ],
               ],
@@ -554,7 +554,7 @@ class _PlanCard extends StatelessWidget {
             ],
             if (plan.limits.isNotEmpty) ...[
               const SizedBox(height: AppSpacing.sm),
-              Text('Limites', style: Theme.of(context).textTheme.titleSmall),
+              Text('Límites', style: Theme.of(context).textTheme.titleSmall),
               ...plan.limits.entries.map((entry) => Text('${entry.key}: ${entry.value}')),
             ],
             if (actionLabel != null) ...[

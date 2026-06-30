@@ -76,6 +76,11 @@ class AuthTokenClaims {
     if (values.contains('staff') || values.contains('employee')) {
       return 'Staff';
     }
+    if (values.contains('kid') ||
+        role?.toLowerCase() == 'kid' ||
+        role == '4') {
+      return 'Kid';
+    }
     return 'Client';
   }
 }

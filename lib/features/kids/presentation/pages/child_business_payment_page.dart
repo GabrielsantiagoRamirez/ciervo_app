@@ -240,24 +240,27 @@ class _ChildBusinessPaymentPageState extends State<ChildBusinessPaymentPage> {
               payload['transactionId']?.toString() ??
               payload['id']?.toString(),
         );
-        await Navigator.of(context).push<void>(
-          MaterialPageRoute<void>(
-            builder: (_) => ActionConfirmationPage(
-              confirmation: ActionConfirmation(
-                title: confirmation.title,
-                confirmationCode: confirmation.confirmationCode,
-                businessName: confirmation.businessName ?? businessName,
-                amount: confirmation.amount ?? amount,
-                currency: confirmation.currency ?? 'COP',
-                status: confirmation.status ?? 'Completado',
-                publicReceiptUrl: confirmation.publicReceiptUrl ??
-                    payload['receiptUrl']?.toString() ??
-                    payload['publicReceiptUrl']?.toString(),
-                shareDescription:
-                    'Pago realizado con la wallet Kids de $childName.',
-              ),
-            ),
+        final userCode = confirmation.userCiervoCode ??
+            await resolveCurrentCiervoUserCode();
+        if (!mounted) return;
+        await showCiervoPaymentReceipt(
+          context,
+          confirmation: ActionConfirmation(
+            title: confirmation.title,
+            confirmationCode: confirmation.confirmationCode,
+            userCiervoCode: userCode,
+            businessName: confirmation.businessName ?? businessName,
+            amount: confirmation.amount ?? amount,
+            currency: confirmation.currency ?? 'COP',
+            status: confirmation.status ?? 'Completado',
+            publicReceiptUrl: confirmation.publicReceiptUrl ??
+                payload['receiptUrl']?.toString() ??
+                payload['publicReceiptUrl']?.toString(),
+            shareDescription:
+                'Pago realizado con la wallet Kids de $childName.',
           ),
+          referenceLabel: 'Comercio',
+          referenceValue: businessName,
         );
         if (mounted) _load();
       },
@@ -338,7 +341,7 @@ class _ChildBusinessPaymentPageState extends State<ChildBusinessPaymentPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Limites de gasto',
+                                    'Límites de gasto',
                                     style:
                                         Theme.of(context).textTheme.titleMedium,
                                   ),

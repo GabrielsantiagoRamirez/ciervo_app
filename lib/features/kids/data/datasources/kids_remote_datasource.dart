@@ -17,7 +17,19 @@ abstract interface class KidsRemoteDataSource {
   Future<void> saveAllowedBusinesses(String childId, List<String> businessIds);
   Future<List<dynamic>> allowedCategories(String childId);
   Future<List<dynamic>> categoryCandidates(String childId);
-  Future<List<dynamic>> businessCandidates(String childId);
+  Future<List<dynamic>> businessCandidates(
+    String childId, {
+    String? query,
+    String? city,
+    int? categoryId,
+    int page,
+    int pageSize,
+  });
+  Future<Map<String, dynamic>> createChildWalletCard({
+    required String childId,
+    required String displayName,
+    required String currency,
+  });
   Future<void> saveAllowedCategories(String childId, List<int> categoryIds);
   Future<Map<String, dynamic>> spendingLimits(String childId);
   Future<Map<String, dynamic>> updateSpendingLimits(
@@ -100,15 +112,44 @@ class DioKidsRemoteDataSource implements KidsRemoteDataSource {
   }
 
   @override
-  Future<List<dynamic>> businessCandidates(String childId) async {
+  Future<List<dynamic>> businessCandidates(
+    String childId, {
+    String? query,
+    String? city,
+    int? categoryId,
+    int page = 1,
+    int pageSize = 50,
+  }) async {
     try {
-      return await _list('/api/kids/$childId/business-candidates');
+      return await _list(
+        '/api/kids/$childId/business-candidates',
+        queryParameters: {
+          if (query != null && query.trim().isNotEmpty) 'query': query.trim(),
+          if (city != null && city.trim().isNotEmpty) 'city': city.trim(),
+          if (categoryId != null) 'categoryId': categoryId,
+          'page': page,
+          'pageSize': pageSize,
+        },
+      );
     } on DioException catch (error) {
       if (error.response?.statusCode == 404) {
         return const [];
       }
       rethrow;
     }
+  }
+
+  @override
+  Future<Map<String, dynamic>> createChildWalletCard({
+    required String childId,
+    required String displayName,
+    required String currency,
+  }) async {
+    final response = await _client.dio.post<Map<String, dynamic>>(
+      '/api/guardians/children/$childId/wallet/cards',
+      data: {'displayName': displayName, 'currency': currency},
+    );
+    return unwrapApiMap(response.data);
   }
 
   @override
@@ -227,8 +268,14 @@ class DioKidsRemoteDataSource implements KidsRemoteDataSource {
     return unwrapApiMap(response.data);
   }
 
-  Future<List<dynamic>> _list(String path) async {
-    final response = await _client.dio.get<dynamic>(path);
+  Future<List<dynamic>> _list(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    final response = await _client.dio.get<dynamic>(
+      path,
+      queryParameters: queryParameters,
+    );
     final value = unwrapApiResponse(response.data);
     if (value is List) return value;
     if (value is Map<String, dynamic> && value['items'] is List) {

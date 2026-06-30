@@ -37,6 +37,7 @@ import '../../../product_categories/presentation/widgets/product_subcategory_fil
 import '../../../reservations/data/booking_repository.dart';
 import '../../../../core/kids/selected_kid_context.dart';
 import '../../../delivery/presentation/pages/customer_order_detail_page.dart';
+import '../../../receipts/domain/entities/action_confirmation.dart';
 import '../../../receipts/presentation/pages/action_confirmation_page.dart';
 
 class PlaceDetailPage extends StatefulWidget {
@@ -188,7 +189,7 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
                 const SizedBox(height: AppSpacing.lg),
                 PaidCampaignBannerSection(
                   businessId: place.id,
-                  compactTitle: 'Campanas del comercio',
+                  compactTitle: 'Campañas del comercio',
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 const _SectionTitle('Promociones'),
@@ -246,7 +247,7 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
                 const SizedBox(height: AppSpacing.lg),
                 Row(
                   children: [
-                    const Expanded(child: _SectionTitle('ReseÃ±as')),
+                    const Expanded(child: _SectionTitle('Reseñas')),
                     if ((_hasReviewed && _userReviewId != null) ||
                         (!_hasReviewed && _canCreateReview))
                       TextButton.icon(
@@ -688,14 +689,33 @@ class _ReservationSheetState extends State<_ReservationSheet> {
     if (!mounted) return;
     setState(() => _submitting = false);
     result.when(
-      success: (booking) {
+      success: (booking) async {
         Navigator.of(context).pop();
-        Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => ActionConfirmationPage(
-              confirmation: booking.confirmation!,
-            ),
+        final base = booking.confirmation!;
+        final userCode =
+            base.userCiervoCode ?? await resolveCurrentCiervoUserCode();
+        if (!mounted) return;
+        await showCiervoPaymentReceipt(
+          context,
+          confirmation: ActionConfirmation(
+            title: base.title,
+            confirmationCode: base.confirmationCode,
+            userCiervoCode: userCode,
+            businessName: base.businessName ?? booking.businessName,
+            amount: base.amount ?? booking.totalAmount,
+            currency: base.currency ?? booking.currency,
+            status: base.status ?? 'Reserva confirmada',
+            date: base.date ??
+                booking.bookingDate?.toIso8601String().substring(0, 10),
+            time: base.time ?? booking.time,
+            publicReceiptUrl: base.publicReceiptUrl,
+            shareDescription: base.shareDescription ??
+                '¡Gracias por confiar en CIERVO! Tu entretenimiento, nuestra misión.',
           ),
+          referenceLabel: 'Reserva',
+          referenceValue: booking.publicCode.isNotEmpty
+              ? booking.publicCode
+              : base.confirmationCode,
         );
       },
       failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
@@ -1259,7 +1279,7 @@ class _MetaRow extends StatelessWidget {
     final rating = ratingAverage ?? detail.rating;
     final count = reviewsCount ?? detail.reviewCount;
     return Text(
-      '$rating - $count reseÃ±as - ${detail.locationLabel}',
+      '$rating - $count reseñas - ${detail.locationLabel}',
       style: AppTextStyles.bodyMuted,
     );
   }

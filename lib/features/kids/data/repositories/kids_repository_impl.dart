@@ -85,7 +85,14 @@ class KidsRepositoryImpl implements KidsRepository {
     int? categoryId,
   }) async {
     try {
-      return Success(await _remoteDataSource.businessCandidates(childId));
+      return Success(
+        await _remoteDataSource.businessCandidates(
+          childId,
+          query: query,
+          city: city,
+          categoryId: categoryId,
+        ),
+      );
     } catch (error) {
       return Failure(ErrorMapper.fromObject(error));
     }
@@ -206,6 +213,25 @@ class KidsRepositoryImpl implements KidsRepository {
           childId: childId,
           cardId: cardId,
           amount: amount,
+        ),
+      );
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
+  Future<Result<Map<String, dynamic>>> createChildWalletCard({
+    required String childId,
+    required String displayName,
+    required String currency,
+  }) async {
+    try {
+      return Success(
+        await _remoteDataSource.createChildWalletCard(
+          childId: childId,
+          displayName: displayName,
+          currency: currency,
         ),
       );
     } catch (error) {

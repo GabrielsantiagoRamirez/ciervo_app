@@ -180,7 +180,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
               const SizedBox(height: AppSpacing.sm),
               DropdownButtonFormField<int?>(
                 value: categoryId,
-                decoration: const InputDecoration(labelText: 'Categoria'),
+                decoration: const InputDecoration(labelText: 'Categoría'),
                 items: [
                   const DropdownMenuItem<int?>(value: null, child: Text('Todas')),
                   ..._categories.map(

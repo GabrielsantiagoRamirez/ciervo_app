@@ -6,6 +6,7 @@ import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
+import '../../../kids/domain/repositories/kids_repository.dart';
 import '../../domain/entities/ciervo_pin.dart';
 import '../../domain/repositories/pins_repository.dart';
 import '../../../wallet/domain/entities/wallet_card.dart';
@@ -97,11 +98,46 @@ class _PinsPageState extends State<PinsPage> {
               }
               Navigator.of(context).pop();
               final kidId = getIt<SelectedKidContext>().kidId;
+              String? childWalletCardId;
+              if (kidId != null) {
+                final cards =
+                    await getIt<KidsRepository>().childWalletCards(kidId);
+                cards.when(
+                  success: (items) {
+                    for (final item in items) {
+                      if (item is Map) {
+                        final map = Map<String, dynamic>.from(item);
+                        final isPrimary = map['isPrimary'] == true;
+                        final id = '${map['id'] ?? map['cardId'] ?? ''}';
+                        if (id.isNotEmpty &&
+                            (isPrimary || childWalletCardId == null)) {
+                          childWalletCardId = id;
+                          if (isPrimary) break;
+                        }
+                      }
+                    }
+                  },
+                  failure: (_) {},
+                );
+                if (childWalletCardId == null) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'El menor no tiene tarjeta wallet disponible.',
+                      ),
+                    ),
+                  );
+                  return;
+                }
+              }
               final result = await _repository.createPin(
                 walletCardId: widget.card.id,
                 businessId: businessId,
                 amount: amount,
                 kidsMode: kidId != null,
+                childProfileId: kidId,
+                childWalletCardId: childWalletCardId,
               );
               if (!context.mounted) return;
               result.when(

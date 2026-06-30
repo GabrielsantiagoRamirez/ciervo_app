@@ -82,7 +82,7 @@ class _PaidCampaignBannerSectionState extends State<PaidCampaignBannerSection> {
             return const SizedBox(
               height: 120,
               child: CiervoBrandLoader(
-                message: 'Cargando campanas',
+                message: 'Cargando campañas',
                 compact: true,
               ),
             );
@@ -90,7 +90,7 @@ class _PaidCampaignBannerSectionState extends State<PaidCampaignBannerSection> {
           final items = snapshot.data ?? const [];
           if (items.isEmpty) return const SizedBox.shrink();
 
-          final title = widget.compactTitle ?? 'Campanas destacadas';
+          final title = widget.compactTitle ?? 'Campañas destacadas';
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

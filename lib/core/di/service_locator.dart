@@ -43,6 +43,9 @@ import '../../features/family_chat/data/family_chat_repository.dart';
 import '../../features/kids/data/datasources/kids_remote_datasource.dart';
 import '../../features/kids/data/repositories/kids_repository_impl.dart';
 import '../../features/kids/domain/repositories/kids_repository.dart';
+import '../../features/kid_auth/data/datasources/kid_auth_remote_datasource.dart';
+import '../../features/kid_auth/data/repositories/kid_auth_repository_impl.dart';
+import '../../features/kid_me/data/kid_me_repository.dart';
 import '../../features/catalogs/data/catalog_repository.dart';
 import '../../features/users/data/user_search_repository.dart';
 import '../../features/kyc/data/kyc_repository.dart';
@@ -250,6 +253,15 @@ Future<void> configureDependencies() async {
     )
     ..registerLazySingleton<KidsRepository>(
       () => KidsRepositoryImpl(getIt<KidsRemoteDataSource>()),
+    )
+    ..registerLazySingleton<KidAuthRemoteDataSource>(
+      () => DioKidAuthRemoteDataSource(getIt<NetworkClient>()),
+    )
+    ..registerLazySingleton<KidAuthRepository>(
+      () => KidAuthRepositoryImpl(getIt<KidAuthRemoteDataSource>()),
+    )
+    ..registerLazySingleton<KidMeRepository>(
+      () => KidMeRepository(getIt<NetworkClient>()),
     )
     ..registerLazySingleton<CatalogRepository>(
       () => CatalogRepository(getIt<NetworkClient>()),

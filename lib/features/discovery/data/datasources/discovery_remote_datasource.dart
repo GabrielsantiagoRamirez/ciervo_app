@@ -60,7 +60,7 @@ class DioDiscoveryRemoteDataSource implements DiscoveryRemoteDataSource {
   }) async {
     final categoryId = _categoryId(category);
     final response = await _client.dio.get<Map<String, dynamic>>(
-      '/api/businesses',
+      '/api/businesses/nearby',
       queryParameters: {
         'latitude': location.latitude,
         'longitude': location.longitude,

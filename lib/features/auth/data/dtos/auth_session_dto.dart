@@ -18,16 +18,20 @@ class AuthSessionDto {
     final user = source['user'] ?? source['client'];
     final userMap = user is Map<String, dynamic> ? user : source;
 
+    final accessToken = _requiredString(source, const [
+      'accessToken',
+      'token',
+      'jwt',
+    ]);
+    final refreshToken = _optionalString(source, const [
+          'refreshToken',
+          'refresh_token',
+        ]) ??
+        accessToken;
+
     return AuthSessionDto(
-      accessToken: _requiredString(source, const [
-        'accessToken',
-        'token',
-        'jwt',
-      ]),
-      refreshToken: _requiredString(source, const [
-        'refreshToken',
-        'refresh_token',
-      ]),
+      accessToken: accessToken,
+      refreshToken: refreshToken,
       userId: _optionalString(userMap, const [
         'id',
         'userId',
@@ -36,9 +40,12 @@ class AuthSessionDto {
           _optionalString(source, const ['userId']),
       email: _optionalString(userMap, const ['email', 'mail']) ??
           _optionalString(source, const ['email']),
-      fullName: _optionalString(source, const ['fullName', 'name']),
-      roleId: _optionalString(source, const ['roleId', 'role']),
-      accountKind: _optionalString(source, const ['accountKind']),
+      fullName: _optionalString(userMap, const ['fullName', 'name']) ??
+          _optionalString(source, const ['fullName', 'name']),
+      roleId: _optionalString(userMap, const ['roleId', 'role']) ??
+          _optionalString(source, const ['roleId', 'role']),
+      accountKind: _optionalString(userMap, const ['accountKind']) ??
+          _optionalString(source, const ['accountKind']),
     );
   }
 

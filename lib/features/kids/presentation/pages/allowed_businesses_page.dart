@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -15,10 +17,10 @@ class AllowedBusinessesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => BlocProvider(
-    create: (_) =>
-        KidsCubit(getIt<KidsRepository>())..loadBusinessCandidates(childId),
-    child: _AllowedBusinessesView(childId: childId),
-  );
+        create: (_) => KidsCubit(getIt<KidsRepository>())
+          ..loadBusinessCandidates(childId),
+        child: _AllowedBusinessesView(childId: childId),
+      );
 }
 
 class _AllowedBusinessesView extends StatefulWidget {
@@ -34,28 +36,32 @@ class _AllowedBusinessesViewState extends State<_AllowedBusinessesView> {
   final Set<String> _selected = {};
   List<Map<String, dynamic>> _businesses = const [];
   String? _city;
-  String? _category;
+  int? _categoryId;
   bool _initialized = false;
+  Timer? _debounce;
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
 
   void _initialize(dynamic value) {
-    if (_initialized || value is! List) return;
+    if (value is! List) return;
     _businesses = value
         .whereType<Map>()
         .map((item) => Map<String, dynamic>.from(item))
         .toList();
-    _selected.addAll(
-      _businesses
-          .where((item) => item['isAllowed'] != false)
-          .map(_id)
-          .where((id) => id.isNotEmpty),
-    );
-    _initialized = true;
+    if (!_initialized) {
+      _selected.addAll(
+        _businesses
+            .where((item) => item['isAllowed'] == true)
+            .map(_id)
+            .where((id) => id.isNotEmpty),
+      );
+      _initialized = true;
+    }
   }
 
   String _id(Map<String, dynamic> item) =>
@@ -63,39 +69,49 @@ class _AllowedBusinessesViewState extends State<_AllowedBusinessesView> {
   String _label(Map<String, dynamic> item, String key) =>
       (item[key] ?? '').toString();
 
+  void _reloadFromServer() {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 350), () {
+      if (!mounted) return;
+      context.read<KidsCubit>().loadBusinessCandidates(
+            widget.childId,
+            query: _searchController.text.trim(),
+            city: _city,
+            categoryId: _categoryId,
+          );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<KidsCubit, KidsState>(
       listener: (context, state) {
         if (state.errorMessage != null) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(state.errorMessage!)));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.errorMessage!)),
+          );
         }
       },
       builder: (context, state) {
         _initialize(state.overview['allowedBusinesses']);
-        final cities =
-            _businesses
-                .map((item) => _label(item, 'city'))
-                .where((v) => v.isNotEmpty)
-                .toSet()
-                .toList()
-              ..sort();
-        final categories =
-            _businesses
-                .map((item) => _label(item, 'category'))
-                .where((v) => v.isNotEmpty)
-                .toSet()
-                .toList()
-              ..sort();
-        final query = _searchController.text.trim().toLowerCase();
-        final filtered = _businesses.where((item) {
-          final name = _label(item, 'name').toLowerCase();
-          return (query.isEmpty || name.contains(query)) &&
-              (_city == null || _label(item, 'city') == _city) &&
-              (_category == null || _label(item, 'category') == _category);
-        }).toList();
+        final cities = _businesses
+            .map((item) => _label(item, 'city'))
+            .where((v) => v.isNotEmpty)
+            .toSet()
+            .toList()
+          ..sort();
+        final categories = <int, String>{};
+        for (final item in _businesses) {
+          final id = int.tryParse(
+            '${item['categoryId'] ?? item['businessCategoryId'] ?? ''}',
+          );
+          final name = _label(item, 'category').isNotEmpty
+              ? _label(item, 'category')
+              : _label(item, 'categoryName');
+          if (id != null && name.isNotEmpty) {
+            categories[id] = name;
+          }
+        }
         final saving = state.status == KidsStatus.actionLoading;
 
         return Scaffold(
@@ -107,7 +123,10 @@ class _AllowedBusinessesViewState extends State<_AllowedBusinessesView> {
               children: [
                 TextField(
                   controller: _searchController,
-                  onChanged: (_) => setState(() {}),
+                  onChanged: (_) {
+                    setState(() {});
+                    _reloadFromServer();
+                  },
                   decoration: const InputDecoration(
                     labelText: 'Buscar comercio por nombre',
                     prefixIcon: Icon(Icons.search),
@@ -118,7 +137,7 @@ class _AllowedBusinessesViewState extends State<_AllowedBusinessesView> {
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String?>(
-                        initialValue: _city,
+                        value: _city,
                         decoration: const InputDecoration(labelText: 'Ciudad'),
                         items: [
                           const DropdownMenuItem(
@@ -129,26 +148,35 @@ class _AllowedBusinessesViewState extends State<_AllowedBusinessesView> {
                             (v) => DropdownMenuItem(value: v, child: Text(v)),
                           ),
                         ],
-                        onChanged: (value) => setState(() => _city = value),
+                        onChanged: (value) {
+                          setState(() => _city = value);
+                          _reloadFromServer();
+                        },
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
-                      child: DropdownButtonFormField<String?>(
-                        initialValue: _category,
+                      child: DropdownButtonFormField<int?>(
+                        value: _categoryId,
                         decoration: const InputDecoration(
-                          labelText: 'Categoria',
+                          labelText: 'Categoría',
                         ),
                         items: [
                           const DropdownMenuItem(
                             value: null,
                             child: Text('Todas'),
                           ),
-                          ...categories.map(
-                            (v) => DropdownMenuItem(value: v, child: Text(v)),
+                          ...categories.entries.map(
+                            (entry) => DropdownMenuItem(
+                              value: entry.key,
+                              child: Text(entry.value),
+                            ),
                           ),
                         ],
-                        onChanged: (value) => setState(() => _category = value),
+                        onChanged: (value) {
+                          setState(() => _categoryId = value);
+                          _reloadFromServer();
+                        },
                       ),
                     ),
                   ],
@@ -161,7 +189,7 @@ class _AllowedBusinessesViewState extends State<_AllowedBusinessesView> {
                 const SizedBox(height: AppSpacing.sm),
                 if (state.status == KidsStatus.loading)
                   const Center(child: CircularProgressIndicator())
-                else if (filtered.isEmpty)
+                else if (_businesses.isEmpty)
                   const CiervoEmptyState(
                     title: 'Aún no hay comercios disponibles',
                     description:
@@ -169,7 +197,7 @@ class _AllowedBusinessesViewState extends State<_AllowedBusinessesView> {
                     icon: Icons.storefront_outlined,
                   )
                 else
-                  ...filtered.map((item) {
+                  ..._businesses.map((item) {
                     final id = _id(item);
                     return SwitchListTile(
                       contentPadding: EdgeInsets.zero,
@@ -181,7 +209,9 @@ class _AllowedBusinessesViewState extends State<_AllowedBusinessesView> {
                       subtitle: Text(
                         [
                           _label(item, 'city'),
-                          _label(item, 'category'),
+                          _label(item, 'category').isNotEmpty
+                              ? _label(item, 'category')
+                              : _label(item, 'categoryName'),
                         ].where((v) => v.isNotEmpty).join(' · '),
                       ),
                       value: _selected.contains(id),
@@ -208,7 +238,7 @@ class _AllowedBusinessesViewState extends State<_AllowedBusinessesView> {
                                 _selected.toList(),
                               );
                           if (saved && context.mounted) {
-                            Navigator.of(context).pop();
+                            Navigator.of(context).pop(true);
                           }
                         },
                 ),

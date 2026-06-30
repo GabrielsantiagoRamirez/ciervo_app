@@ -7,7 +7,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/input_validators.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
-import '../../../media/presentation/authenticated_media_image.dart';
+import '../widgets/profile_photo_image.dart';
 import '../../domain/entities/user_profile.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../cubit/profile_cubit.dart';
@@ -134,12 +134,11 @@ class _EditProfileViewState extends State<_EditProfileView> {
                                           .headlineSmall,
                                     )
                                   : ClipOval(
-                                      child: AuthenticatedMediaImage(
-                                        mediaId: profile.photoUrl!,
-                                        thumbnail: true,
+                                      child: ProfilePhotoImage(
+                                        photoRef: profile.photoUrl,
                                         width: 84,
                                         height: 84,
-                                        errorWidget: Text(profile.initials),
+                                        fallback: Text(profile.initials),
                                       ),
                                     ),
                             ),

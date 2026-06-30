@@ -293,7 +293,7 @@ class _NotificationDetailPage extends StatelessWidget {
               Text(item.message),
               const SizedBox(height: AppSpacing.md),
               _detail('Tipo', item.type),
-              _detail('Categoria', item.category),
+              _detail('Categoría', item.category),
               _detail('Ruta interna', item.deepLink),
               _detail('Datos adicionales', item.metadataJson),
             ],

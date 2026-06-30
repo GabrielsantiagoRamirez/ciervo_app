@@ -101,6 +101,50 @@ class _ChildWalletPageState extends State<ChildWalletPage> {
     );
   }
 
+  Future<void> _createCard() async {
+    final nameController = TextEditingController(text: 'Tarjeta Kids');
+    final created = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Nueva tarjeta Kids'),
+        content: TextField(
+          controller: nameController,
+          decoration: const InputDecoration(labelText: 'Nombre de la tarjeta'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Crear'),
+          ),
+        ],
+      ),
+    );
+    if (created != true) return;
+    final displayName = nameController.text.trim();
+    if (displayName.isEmpty) return;
+    final result = await _repository.createChildWalletCard(
+      childId: widget.childId,
+      displayName: displayName,
+      currency: 'COP',
+    );
+    if (!mounted) return;
+    result.when(
+      success: (_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tarjeta creada.')),
+        );
+        _load();
+      },
+      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(UserErrorMessage.from(error))),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -163,12 +207,26 @@ class _ChildWalletPageState extends State<ChildWalletPage> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  Text('Tarjetas', style: Theme.of(context).textTheme.titleLarge),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Tarjetas',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                      ),
+                      TextButton.icon(
+                        onPressed: _createCard,
+                        icon: const Icon(Icons.add_card_outlined),
+                        label: const Text('Nueva tarjeta'),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: AppSpacing.sm),
                   if (_cards.isEmpty)
                     const CiervoEmptyState(
                       title: 'Sin tarjetas',
-                      description: 'Este menor aun no tiene tarjetas wallet.',
+                      description: 'Este menor aún no tiene tarjetas wallet.',
                       icon: Icons.credit_card_outlined,
                     )
                   else
@@ -196,7 +254,7 @@ class _ChildWalletPageState extends State<ChildWalletPage> {
                   if (_history.isEmpty)
                     const CiervoEmptyState(
                       title: 'Sin movimientos',
-                      description: 'Aun no hay transacciones registradas.',
+                      description: 'Aún no hay transacciones registradas.',
                       icon: Icons.receipt_long_outlined,
                     )
                   else

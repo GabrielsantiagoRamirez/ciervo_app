@@ -7,6 +7,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/app_router.dart';
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/kids/selected_kid_context.dart';
+import '../../../../shared/widgets/kids_mode_banner.dart';
 import '../../../../core/experience/experience_mode_cubit.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/input_validators.dart';
@@ -15,6 +17,7 @@ import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
+import '../../../../shared/widgets/ciervo_user_id_badge.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../../notifications/presentation/pages/notifications_page.dart';
 import '../../../kids/presentation/pages/kids_page.dart';
@@ -32,7 +35,7 @@ import '../../../delivery/presentation/pages/delivery_page.dart';
 import '../../../delivery/presentation/pages/customer_orders_page.dart';
 import '../../../bonuses/presentation/pages/bonuses_pages.dart';
 import '../../../favorites/presentation/pages/favorites_page.dart';
-import '../../../media/presentation/authenticated_media_image.dart';
+import '../widgets/profile_photo_image.dart';
 import '../../domain/entities/user_profile.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../cubit/profile_cubit.dart';
@@ -68,38 +71,53 @@ class _ProfileView extends StatelessWidget {
       builder: (context, state) {
         return Scaffold(
           appBar: AppBar(title: const Text('Perfil')),
-          body: RefreshIndicator(
-            onRefresh: context.read<ProfileCubit>().loadProfile,
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.lg,
-                    AppSpacing.md,
-                    AppSpacing.lg,
-                    AppSpacing.xxl,
-                  ),
-                  sliver: SliverToBoxAdapter(
-                    child: switch (state.status) {
-                      ProfileStatus.initial || ProfileStatus.loading =>
-                        const CiervoLoadingState(itemCount: 4),
-                      ProfileStatus.empty => const CiervoEmptyState(
-                        title: 'Perfil no disponible',
-                        description: 'Sincroniza tu cuenta para continuar.',
+          body: Column(
+            children: [
+              ListenableBuilder(
+                listenable: getIt<SelectedKidContext>(),
+                builder: (context, _) => KidsModeBanner(
+                  kidContext: getIt<SelectedKidContext>(),
+                  onExit: getIt<SelectedKidContext>().clear,
+                ),
+              ),
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: context.read<ProfileCubit>().loadProfile,
+                  child: CustomScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.lg,
+                          AppSpacing.md,
+                          AppSpacing.lg,
+                          AppSpacing.xxl,
+                        ),
+                        sliver: SliverToBoxAdapter(
+                          child: switch (state.status) {
+                            ProfileStatus.initial || ProfileStatus.loading =>
+                              const CiervoLoadingState(itemCount: 4),
+                            ProfileStatus.empty => const CiervoEmptyState(
+                              title: 'Perfil no disponible',
+                              description:
+                                  'Sincroniza tu cuenta para continuar.',
+                            ),
+                            ProfileStatus.failure => CiervoErrorState(
+                              title: 'No pudimos cargar tu perfil',
+                              description:
+                                  state.errorMessage ?? 'Intenta nuevamente.',
+                              onRetry:
+                                  context.read<ProfileCubit>().loadProfile,
+                            ),
+                            _ => _ProfileContent(state: state),
+                          },
+                        ),
                       ),
-                      ProfileStatus.failure => CiervoErrorState(
-                        title: 'No pudimos cargar tu perfil',
-                        description:
-                            state.errorMessage ?? 'Intenta nuevamente.',
-                        onRetry: context.read<ProfileCubit>().loadProfile,
-                      ),
-                      _ => _ProfileContent(state: state),
-                    },
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },
@@ -281,12 +299,11 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
                             ),
                           )
                         : ClipOval(
-                            child: AuthenticatedMediaImage(
-                              mediaId: profile.photoUrl!,
-                              thumbnail: true,
+                            child: ProfilePhotoImage(
+                              photoRef: profile.photoUrl,
                               width: 68,
                               height: 68,
-                              errorWidget: Text(profile.initials),
+                              fallback: Text(profile.initials),
                             ),
                           ),
                   ),
@@ -331,12 +348,13 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
                     ? 'Telefono pendiente'
                     : profile.phone,
               ),
-              _InfoChip(
-                icon: Icons.badge_outlined,
-                label: profile.ciervoUserCode == null
-                    ? 'Ciervo ID no disponible'
-                    : 'Ciervo ID: ${profile.ciervoUserCode}',
-              ),
+              if (profile.ciervoUserCode != null)
+                CiervoUserIdBadge(compact: false)
+              else
+                _InfoChip(
+                  icon: Icons.badge_outlined,
+                  label: 'Ciervo ID no disponible',
+                ),
               _InfoChip(
                 icon: Icons.verified_user_outlined,
                 label: _profileStatus(profile),

@@ -21,6 +21,7 @@ import '../../domain/entities/wallet_transaction.dart';
 import '../../domain/repositories/wallet_repository.dart';
 import '../cubit/wallet_cubit.dart';
 import '../cubit/wallet_state.dart';
+import '../widgets/ciervo_digital_card.dart';
 import '../widgets/premium_wallet_dashboard.dart';
 import '../widgets/wallet_nfc_section.dart';
 import 'payment_requests_page.dart';
@@ -60,7 +61,7 @@ class _WalletView extends StatelessWidget {
         return Scaffold(
           backgroundColor: state.status == WalletStatus.loaded ||
                   state.status == WalletStatus.empty
-              ? const Color(0xFF0D0D0D)
+              ? CiervoWalletPalette.of(context).background
               : null,
           appBar: state.status == WalletStatus.loaded
               ? null

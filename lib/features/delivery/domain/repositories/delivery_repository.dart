@@ -30,6 +30,7 @@ abstract interface class DeliveryRepository {
     required String orderId,
     required String paymentMethod,
     String? walletCardId,
+    String? childWalletCardId,
   });
   Future<Result<NfcSession>> createOrderNfcSession({required String orderId});
   Future<Result<void>> addTip({

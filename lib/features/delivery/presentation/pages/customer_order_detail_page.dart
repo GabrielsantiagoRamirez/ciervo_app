@@ -3,16 +3,20 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
+import '../../../../core/kids/selected_kid_context.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../payments/domain/repositories/payments_repository.dart';
 import '../../../wallet/presentation/pages/nfc_pay_session_page.dart';
 import '../../../wallet/presentation/utils/nfc_navigation.dart';
+import '../../../kids/domain/repositories/kids_repository.dart';
 import '../../domain/entities/delivery_models.dart';
 import '../../domain/repositories/delivery_repository.dart';
 import '../../../wallet/domain/entities/wallet_card.dart';
 import '../../../wallet/domain/repositories/wallet_repository.dart';
+import '../../../receipts/domain/entities/action_confirmation.dart';
+import '../../../receipts/presentation/pages/action_confirmation_page.dart';
 import 'delivery_chat_page.dart';
 
 class CustomerOrderDetailPage extends StatefulWidget {
@@ -51,6 +55,52 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
   Future<void> _pay(String method) async {
     setState(() => _busy = true);
     String? walletCardId;
+    String? childWalletCardId;
+    final kidId = getIt<SelectedKidContext>().kidId;
+
+    if (method == 'KidsWallet') {
+      if (kidId == null) {
+        if (mounted) {
+          setState(() => _busy = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Activa el modo menor para pagar con wallet Kids.'),
+            ),
+          );
+        }
+        return;
+      }
+      final cards = await getIt<KidsRepository>().childWalletCards(kidId);
+      cards.when(
+        success: (items) {
+          for (final item in items) {
+            if (item is Map) {
+              final map = Map<String, dynamic>.from(item);
+              final isPrimary = map['isPrimary'] == true;
+              final id = '${map['id'] ?? map['cardId'] ?? ''}';
+              if (id.isNotEmpty && (isPrimary || childWalletCardId == null)) {
+                childWalletCardId = id;
+                if (isPrimary) break;
+              }
+            }
+          }
+        },
+        failure: (_) {},
+      );
+      if (childWalletCardId == null) {
+        if (mounted) {
+          setState(() => _busy = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('El menor no tiene tarjeta wallet disponible.'),
+            ),
+          );
+        }
+        return;
+      }
+      method = 'KidsWallet';
+    }
+
     if (method == 'wallet') {
       final cards = await getIt<WalletRepository>().cards();
       WalletCard? selected;
@@ -144,6 +194,7 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
       orderId: widget.orderId,
       paymentMethod: method,
       walletCardId: walletCardId,
+      childWalletCardId: childWalletCardId,
     );
     if (!mounted) return;
     setState(() => _busy = false);
@@ -156,10 +207,44 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
           );
         }
         if (!mounted) return;
+
+        final paidNow = _isPaymentSucceeded(payment.paymentStatus);
+        if (paidNow && (method == 'wallet' || method == 'KidsWallet')) {
+          await _load();
+          if (!mounted) return;
+          final order = _order;
+          if (order != null) {
+            final userCode = await resolveCurrentCiervoUserCode();
+            if (!mounted) return;
+            await showCiervoPaymentReceipt(
+              context,
+              confirmation: ActionConfirmation(
+                title: 'Pago de domicilio confirmado',
+                confirmationCode: order.reference ??
+                    order.confirmation?.confirmationCode ??
+                    order.id,
+                userCiervoCode:
+                    order.userCiervoCode ?? order.confirmation?.userCiervoCode ?? userCode,
+                businessName: order.businessName,
+                amount: order.totalAmount,
+                currency: order.currency ?? 'COP',
+                status: 'Pago realizado con éxito',
+                publicReceiptUrl: order.publicUrl ??
+                    order.confirmation?.publicReceiptUrl,
+                shareDescription:
+                    '¡Gracias por confiar en CIERVO! Tu entretenimiento, nuestra misión.',
+              ),
+              referenceLabel: 'Pedido',
+              referenceValue: order.reference ?? order.id,
+            );
+            return;
+          }
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              method == 'wallet'
+              method == 'wallet' || method == 'KidsWallet'
                   ? (payment.message ??
                       'Pago ${deliveryPaymentStatusLabel(payment.paymentStatus)}')
                   : (payment.message ??
@@ -428,6 +513,15 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
                     ],
                     if (_order!.needsPayment) ...[
                       const SizedBox(height: AppSpacing.lg),
+                      if (getIt<SelectedKidContext>().isActive) ...[
+                        CiervoButton(
+                          label: 'Pagar con Wallet Kids',
+                          icon: Icons.child_care_outlined,
+                          onPressed:
+                              _busy ? null : () => _pay('KidsWallet'),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                      ],
                       CiervoButton(
                         label: 'Pagar con Wallet',
                         icon: Icons.account_balance_wallet_outlined,
@@ -547,4 +641,13 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
             ],
           ),
   );
+}
+
+bool _isPaymentSucceeded(String? status) {
+  if (status == null || status.isEmpty) return false;
+  final normalized = status.toLowerCase();
+  return normalized == '3' ||
+      normalized == 'paid' ||
+      normalized == 'succeeded' ||
+      normalized == 'completed';
 }

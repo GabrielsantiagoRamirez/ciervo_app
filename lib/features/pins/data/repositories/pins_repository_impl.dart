@@ -16,6 +16,8 @@ class PinsRepositoryImpl implements PinsRepository {
     required double amount,
     bool kidsMode = false,
     bool requireParentApproval = false,
+    String? childProfileId,
+    String? childWalletCardId,
   }) async {
     try {
       final dto = await _remoteDataSource.createPin(
@@ -24,6 +26,8 @@ class PinsRepositoryImpl implements PinsRepository {
         amount: amount,
         kidsMode: kidsMode,
         requireParentApproval: requireParentApproval,
+        childProfileId: childProfileId,
+        childWalletCardId: childWalletCardId,
       );
       final revealedPin = dto.pin;
       return Success(dto.toDomain(revealedPin: revealedPin));

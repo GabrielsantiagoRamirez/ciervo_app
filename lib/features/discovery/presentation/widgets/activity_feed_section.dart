@@ -226,7 +226,7 @@ class _ActivityDetailPage extends StatelessWidget {
               Text(item.description),
               const SizedBox(height: AppSpacing.md),
               _line('Tipo', item.type),
-              _line('Categoria', item.category),
+              _line('Categoría', item.category),
               _line('Ruta interna', item.deepLink),
             ],
           ),

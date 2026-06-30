@@ -14,6 +14,7 @@ import 'core/session/session_manager.dart';
 import 'core/session/session_state.dart';
 import 'core/theme/app_theme.dart';
 import 'features/notifications/presentation/cubit/notification_badges_cubit.dart';
+import 'shared/widgets/ciervo_user_id_badge.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -93,6 +94,10 @@ class _CiervoAppState extends State<CiervoApp> {
                 ? ThemeMode.light
                 : ThemeMode.dark,
             routerConfig: _router,
+            builder: (context, child) {
+              if (child == null) return const SizedBox.shrink();
+              return CiervoUserIdOverlay(child: child);
+            },
           );
         },
       ),

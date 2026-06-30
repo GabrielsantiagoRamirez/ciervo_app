@@ -181,6 +181,13 @@ class _LoginViewState extends State<_LoginView> {
                             icon: Icons.person_add_alt_1,
                             onPressed: () => context.go(AppRoutes.register),
                           ),
+                          const SizedBox(height: AppSpacing.sm),
+                          CiervoButton(
+                            label: 'Soy hijo/a',
+                            variant: CiervoButtonVariant.secondary,
+                            icon: Icons.child_care_outlined,
+                            onPressed: () => context.go(AppRoutes.kidLogin),
+                          ),
                         ],
                       ),
                     ),

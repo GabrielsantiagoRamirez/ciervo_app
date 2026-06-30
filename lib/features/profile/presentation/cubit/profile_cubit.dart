@@ -64,10 +64,12 @@ class ProfileCubit extends Cubit<ProfileState> {
     );
     result.when(
       success: (upload) {
-        final photoUrl = upload.photoUrl ?? current.photoUrl;
+        final photoRef = (upload.photoUrl != null && upload.photoUrl!.isNotEmpty)
+            ? upload.photoUrl
+            : upload.mediaId;
         emit(state.copyWith(
           status: ProfileStatus.loaded,
-          profile: current.copyWith(photoUrl: photoUrl),
+          profile: current.copyWith(photoUrl: photoRef),
         ));
         loadProfile();
       },

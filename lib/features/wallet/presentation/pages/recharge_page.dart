@@ -11,6 +11,8 @@ import '../../domain/entities/wallet_card.dart';
 import '../../domain/repositories/wallet_repository.dart';
 import '../cubit/wallet_cubit.dart';
 import '../cubit/wallet_state.dart';
+import '../../../receipts/domain/entities/action_confirmation.dart';
+import '../../../receipts/presentation/pages/action_confirmation_page.dart';
 
 class RechargePage extends StatefulWidget {
   const RechargePage({required this.card, super.key});
@@ -41,8 +43,37 @@ class _RechargePageState extends State<RechargePage> {
               context,
             ).showSnackBar(SnackBar(content: Text(state.errorMessage!)));
           }
+          if (state.rechargeIntent?.isSucceeded == true &&
+              state.successMessage != null &&
+              state.successMessage!.contains('acreditada')) {
+            final amount =
+                double.tryParse(
+                  _amountController.text.replaceAll(',', '.'),
+                ) ??
+                0;
+            final userCode = await resolveCurrentCiervoUserCode();
+            if (!context.mounted) return;
+            await showCiervoPaymentReceipt(
+              context,
+              confirmation: ActionConfirmation(
+                title: 'Recarga confirmada',
+                confirmationCode:
+                    state.rechargeIntent?.id ?? _lastIntentId ?? '',
+                userCiervoCode: userCode,
+                amount: amount > 0 ? amount : null,
+                currency: widget.card.currency,
+                status: 'Pago realizado con éxito',
+                shareDescription:
+                    'Tu saldo CIERVO fue recargado correctamente.',
+              ),
+              referenceLabel: 'Tarjeta',
+              referenceValue: widget.card.name,
+            );
+            return;
+          }
           if (state.successMessage != null &&
-              state.successMessage!.contains('Recarga')) {
+              state.successMessage!.contains('Recarga') &&
+              state.rechargeIntent?.isSucceeded != true) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.successMessage!)),
             );

@@ -281,7 +281,16 @@ class _MessageContent extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (attachment.startsWith('http'))
-          Text('Adjunto: $attachment')
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              attachment,
+              width: 220,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) =>
+                  const Icon(Icons.broken_image_outlined),
+            ),
+          )
         else
           ClipRRect(
             borderRadius: BorderRadius.circular(12),

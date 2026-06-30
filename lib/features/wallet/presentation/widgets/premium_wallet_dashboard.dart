@@ -59,13 +59,14 @@ class _PremiumWalletDashboardState extends State<PremiumWalletDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = CiervoWalletPalette.of(context);
     final card = _card;
     final balance = card?.availableBalance ?? 0;
     final currency = card?.currency ?? 'COP';
     final recent = widget.state.transactions.take(3).toList();
 
     return ColoredBox(
-      color: CiervoBrandColors.background,
+      color: palette.background,
       child: SafeArea(
         child: RefreshIndicator(
           color: CiervoBrandColors.gold,
@@ -78,7 +79,7 @@ class _PremiumWalletDashboardState extends State<PremiumWalletDashboard> {
               AppSpacing.xxl,
             ),
             children: [
-              _Header(userName: _userName),
+              _Header(userName: _userName, palette: palette),
               const SizedBox(height: AppSpacing.lg),
               if (card != null)
                 CiervoDigitalCard(
@@ -97,6 +98,7 @@ class _PremiumWalletDashboardState extends State<PremiumWalletDashboard> {
               _BalanceBar(
                 balance: balance,
                 currency: currency,
+                palette: palette,
                 onRecharge: card == null
                     ? null
                     : () => Navigator.of(context).push(
@@ -108,6 +110,7 @@ class _PremiumWalletDashboardState extends State<PremiumWalletDashboard> {
               const SizedBox(height: AppSpacing.xl),
               _QuickActionsRow(
                 card: card,
+                palette: palette,
                 onBlock: card == null
                     ? null
                     : () => context.read<WalletCubit>().block(card.id),
@@ -118,6 +121,7 @@ class _PremiumWalletDashboardState extends State<PremiumWalletDashboard> {
               const WalletAvailableBonusesSection(),
               const SizedBox(height: AppSpacing.xl),
               _RecentMovementsHeader(
+                palette: palette,
                 onSeeAll: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (_) => const FinancialHistoryPage(),
@@ -126,16 +130,16 @@ class _PremiumWalletDashboardState extends State<PremiumWalletDashboard> {
               ),
               const SizedBox(height: AppSpacing.sm),
               if (recent.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
                   child: Text(
-                    'Aun no hay movimientos recientes.',
-                    style: TextStyle(color: CiervoBrandColors.textMuted),
+                    'Aún no hay movimientos recientes.',
+                    style: TextStyle(color: palette.textMuted),
                   ),
                 )
               else
                 ...recent.map(
-                  (tx) => _MovementTile(transaction: tx),
+                  (tx) => _MovementTile(transaction: tx, palette: palette),
                 ),
             ],
           ),
@@ -145,11 +149,12 @@ class _PremiumWalletDashboardState extends State<PremiumWalletDashboard> {
   }
 
   Future<void> _editAlias(BuildContext context, WalletCard card) async {
+    final palette = CiervoWalletPalette.of(context);
     final controller = TextEditingController(text: _displayAlias ?? card.name);
     final saved = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: CiervoBrandColors.surface,
+        backgroundColor: palette.surface,
         title: const Text('Personalizar apodo'),
         content: TextField(
           controller: controller,
@@ -174,8 +179,9 @@ class _PremiumWalletDashboardState extends State<PremiumWalletDashboard> {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.userName});
+  const _Header({required this.userName, required this.palette});
   final String userName;
+  final CiervoWalletPalette palette;
 
   @override
   Widget build(BuildContext context) {
@@ -188,7 +194,7 @@ class _Header extends StatelessWidget {
               RichText(
                 text: TextSpan(
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: CiervoBrandColors.textPrimary,
+                    color: palette.textPrimary,
                   ),
                   children: [
                     const TextSpan(text: 'Hola, '),
@@ -200,9 +206,9 @@ class _Header extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              const Text(
+              Text(
                 'Bienvenido a tu cuenta Ciervo',
-                style: TextStyle(color: CiervoBrandColors.textMuted),
+                style: TextStyle(color: palette.textMuted),
               ),
             ],
           ),
@@ -236,11 +242,13 @@ class _BalanceBar extends StatelessWidget {
   const _BalanceBar({
     required this.balance,
     required this.currency,
+    required this.palette,
     this.onRecharge,
   });
 
   final double balance;
   final String currency;
+  final CiervoWalletPalette palette;
   final VoidCallback? onRecharge;
 
   @override
@@ -248,8 +256,11 @@ class _BalanceBar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: CiervoBrandColors.surfaceHigh,
+        color: palette.surfaceHigh,
         borderRadius: BorderRadius.circular(16),
+        border: Theme.of(context).brightness == Brightness.light
+            ? Border.all(color: palette.textMuted.withValues(alpha: 0.2))
+            : null,
       ),
       child: Row(
         children: [
@@ -268,8 +279,8 @@ class _BalanceBar extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   _formatMoney(balance, currency),
-                  style: const TextStyle(
-                    color: CiervoBrandColors.textPrimary,
+                  style: TextStyle(
+                    color: palette.textPrimary,
                     fontSize: 28,
                     fontWeight: FontWeight.w700,
                   ),
@@ -289,7 +300,7 @@ class _BalanceBar extends StatelessWidget {
                   Icon(
                     Icons.account_balance_wallet_outlined,
                     color: onRecharge == null
-                        ? CiervoBrandColors.textMuted
+                        ? palette.textMuted
                         : CiervoBrandColors.gold,
                   ),
                   const SizedBox(height: 4),
@@ -298,7 +309,7 @@ class _BalanceBar extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: onRecharge == null
-                          ? CiervoBrandColors.textMuted
+                          ? palette.textMuted
                           : CiervoBrandColors.goldSoft,
                       fontSize: 9,
                       height: 1.2,
@@ -315,9 +326,14 @@ class _BalanceBar extends StatelessWidget {
 }
 
 class _QuickActionsRow extends StatelessWidget {
-  const _QuickActionsRow({required this.card, this.onBlock});
+  const _QuickActionsRow({
+    required this.card,
+    required this.palette,
+    this.onBlock,
+  });
 
   final WalletCard? card;
+  final CiervoWalletPalette palette;
   final VoidCallback? onBlock;
 
   @override
@@ -328,6 +344,7 @@ class _QuickActionsRow extends StatelessWidget {
         _CircleAction(
           label: 'Movimientos',
           icon: Icons.credit_card_outlined,
+          palette: palette,
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute<void>(
               builder: (_) => const FinancialHistoryPage(),
@@ -337,6 +354,7 @@ class _QuickActionsRow extends StatelessWidget {
         _CircleAction(
           label: 'Pagar',
           icon: Icons.qr_code_2_outlined,
+          palette: palette,
           onTap: card == null
               ? null
               : () => Navigator.of(context).push(
@@ -348,6 +366,7 @@ class _QuickActionsRow extends StatelessWidget {
         _CircleAction(
           label: 'Transferir',
           icon: Icons.swap_horiz,
+          palette: palette,
           onTap: card == null
               ? null
               : () => Navigator.of(context).push(
@@ -359,6 +378,7 @@ class _QuickActionsRow extends StatelessWidget {
         _CircleAction(
           label: 'Bloquear tarjeta',
           icon: Icons.lock_outline,
+          palette: palette,
           onTap: onBlock,
         ),
       ],
@@ -370,11 +390,13 @@ class _CircleAction extends StatelessWidget {
   const _CircleAction({
     required this.label,
     required this.icon,
+    required this.palette,
     this.onTap,
   });
 
   final String label;
   final IconData icon;
+  final CiervoWalletPalette palette;
   final VoidCallback? onTap;
 
   @override
@@ -386,12 +408,10 @@ class _CircleAction extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 28,
-            backgroundColor: CiervoBrandColors.surfaceHigh,
+            backgroundColor: palette.surfaceHigh,
             child: Icon(
               icon,
-              color: onTap == null
-                  ? CiervoBrandColors.textMuted
-                  : CiervoBrandColors.gold,
+              color: onTap == null ? palette.textMuted : CiervoBrandColors.gold,
             ),
           ),
           const SizedBox(height: 6),
@@ -400,8 +420,8 @@ class _CircleAction extends StatelessWidget {
             child: Text(
               label,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: CiervoBrandColors.textMuted,
+              style: TextStyle(
+                color: palette.textMuted,
                 fontSize: 11,
               ),
             ),
@@ -413,18 +433,22 @@ class _CircleAction extends StatelessWidget {
 }
 
 class _RecentMovementsHeader extends StatelessWidget {
-  const _RecentMovementsHeader({required this.onSeeAll});
+  const _RecentMovementsHeader({
+    required this.palette,
+    required this.onSeeAll,
+  });
+  final CiervoWalletPalette palette;
   final VoidCallback onSeeAll;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Expanded(
+        Expanded(
           child: Text(
             'Movimientos recientes',
             style: TextStyle(
-              color: CiervoBrandColors.textPrimary,
+              color: palette.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
@@ -443,8 +467,9 @@ class _RecentMovementsHeader extends StatelessWidget {
 }
 
 class _MovementTile extends StatelessWidget {
-  const _MovementTile({required this.transaction});
+  const _MovementTile({required this.transaction, required this.palette});
   final WalletTransaction transaction;
+  final CiervoWalletPalette palette;
 
   @override
   Widget build(BuildContext context) {
@@ -465,14 +490,17 @@ class _MovementTile extends StatelessWidget {
         vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: CiervoBrandColors.surface,
+        color: palette.surface,
         borderRadius: BorderRadius.circular(14),
+        border: Theme.of(context).brightness == Brightness.light
+            ? Border.all(color: palette.textMuted.withValues(alpha: 0.15))
+            : null,
       ),
       child: Row(
         children: [
           CircleAvatar(
             radius: 22,
-            backgroundColor: CiervoBrandColors.surfaceHigh,
+            backgroundColor: palette.surfaceHigh,
             child: Icon(_iconFor(transaction), color: CiervoBrandColors.gold, size: 20),
           ),
           const SizedBox(width: AppSpacing.md),
@@ -484,16 +512,16 @@ class _MovementTile extends StatelessWidget {
                   transaction.description.isEmpty
                       ? transaction.type
                       : transaction.description,
-                  style: const TextStyle(
-                    color: CiervoBrandColors.textPrimary,
+                  style: TextStyle(
+                    color: palette.textPrimary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 if (dateLabel.isNotEmpty)
                   Text(
                     dateLabel,
-                    style: const TextStyle(
-                      color: CiervoBrandColors.textMuted,
+                    style: TextStyle(
+                      color: palette.textMuted,
                       fontSize: 12,
                     ),
                   ),
@@ -505,7 +533,7 @@ class _MovementTile extends StatelessWidget {
             style: TextStyle(color: color, fontWeight: FontWeight.w700),
           ),
           const SizedBox(width: 4),
-          const Icon(Icons.chevron_right, color: CiervoBrandColors.textMuted, size: 18),
+          Icon(Icons.chevron_right, color: palette.textMuted, size: 18),
         ],
       ),
     );

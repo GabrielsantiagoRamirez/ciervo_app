@@ -118,11 +118,21 @@ class KidsCubit extends Cubit<KidsState> {
       businessIds,
     );
     return result.when(
-      success: (_) {
-        emit(
-          state.copyWith(
-            status: KidsStatus.loaded,
-            successMessage: 'Comercios permitidos actualizados.',
+      success: (_) async {
+        final refreshed = await _repository.allowedBusinesses(childId);
+        refreshed.when(
+          success: (items) => emit(
+            state.copyWith(
+              status: KidsStatus.loaded,
+              successMessage: 'Comercios permitidos actualizados.',
+              overview: {...state.overview, 'allowedBusinesses': items},
+            ),
+          ),
+          failure: (_) => emit(
+            state.copyWith(
+              status: KidsStatus.loaded,
+              successMessage: 'Comercios permitidos actualizados.',
+            ),
           ),
         );
         return true;
@@ -216,11 +226,21 @@ class KidsCubit extends Cubit<KidsState> {
       categoryIds,
     );
     return result.when(
-      success: (_) {
-        emit(
-          state.copyWith(
-            status: KidsStatus.loaded,
-            successMessage: 'Categorias permitidas actualizadas.',
+      success: (_) async {
+        final refreshed = await _repository.allowedCategories(childId);
+        refreshed.when(
+          success: (items) => emit(
+            state.copyWith(
+              status: KidsStatus.loaded,
+              successMessage: 'Categorías permitidas actualizadas.',
+              overview: {...state.overview, 'allowedCategories': items},
+            ),
+          ),
+          failure: (_) => emit(
+            state.copyWith(
+              status: KidsStatus.loaded,
+              successMessage: 'Categorías permitidas actualizadas.',
+            ),
           ),
         );
         return true;

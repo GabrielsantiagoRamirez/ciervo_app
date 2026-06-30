@@ -8,7 +8,8 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
-import '../../../receipts/presentation/pages/receipts_page.dart';
+import '../../../receipts/domain/entities/action_confirmation.dart';
+import '../../../receipts/presentation/pages/action_confirmation_page.dart';
 import '../../domain/entities/nfc_models.dart';
 import '../../domain/repositories/wallet_repository.dart';
 
@@ -90,38 +91,31 @@ class _NfcPaySessionPageState extends State<NfcPaySessionPage> {
     _countdownTimer?.cancel();
     if (!mounted) return;
     if (success) {
-      showDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        builder: (dialogContext) => AlertDialog(
-          title: const Text('Pago confirmado'),
-          content: Text(
-            widget.isDelivery
+      final session = _session;
+      final now = DateTime.now();
+      unawaited(
+        showCiervoPaymentReceipt(
+          context,
+          confirmation: ActionConfirmation(
+            title: widget.isDelivery
+                ? 'Pago delivery NFC confirmado'
+                : 'Pago NFC confirmado',
+            confirmationCode:
+                '${session.receiptId ?? session.id}',
+            businessName: widget.businessName,
+            amount: session.amount,
+            currency: session.currency ?? 'COP',
+            status: 'Pago realizado con éxito',
+            date: now.toIso8601String(),
+            time: now.toIso8601String(),
+            shareDescription: widget.isDelivery
                 ? 'Tu pedido fue pagado con NFC CIERVO.'
-                : 'El comercio cobro correctamente tu pago NFC.',
+                : 'El comercio cobró correctamente tu pago NFC.',
           ),
-          actions: [
-            if (_session.receiptId != null)
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(dialogContext);
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const ReceiptsPage(),
-                    ),
-                  );
-                  Navigator.of(context).pop(true);
-                },
-                child: const Text('Ver recibos'),
-              ),
-            FilledButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-                Navigator.of(context).pop(true);
-              },
-              child: const Text('Listo'),
-            ),
-          ],
+          onDone: () {
+            Navigator.of(context).pop();
+            Navigator.of(context).pop(true);
+          },
         ),
       );
     } else {

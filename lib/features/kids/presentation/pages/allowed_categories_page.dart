@@ -83,7 +83,7 @@ class _CategoriesViewState extends State<_CategoriesView> {
                   return CheckboxListTile(
                     contentPadding: EdgeInsets.zero,
                     title: Text(
-                      '${category['name'] ?? category['displayName'] ?? 'Categoria'}',
+                      '${category['name'] ?? category['displayName'] ?? 'Categoría'}',
                     ),
                     value: id != null && _selected.contains(id),
                     onChanged: id == null
@@ -112,7 +112,7 @@ class _CategoriesViewState extends State<_CategoriesView> {
                               _selected.toList(),
                             );
                         if (saved && context.mounted) {
-                          Navigator.of(context).pop();
+                          Navigator.of(context).pop(true);
                         }
                       },
               ),

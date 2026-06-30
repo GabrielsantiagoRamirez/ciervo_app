@@ -62,7 +62,7 @@ class _KidsView extends StatelessWidget {
               padding: const EdgeInsets.all(AppSpacing.lg),
               children: [
                 Text(
-                  'Administra la experiencia de tus ninos en Ciervo.',
+                  'Administra la experiencia de tus niños en Ciervo.',
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
                 const SizedBox(height: AppSpacing.lg),
@@ -150,7 +150,7 @@ class _KidsEmptyPanel extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Aun no tienes ninos agregados',
+              'Aún no tienes niños agregados',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w800,
@@ -158,7 +158,7 @@ class _KidsEmptyPanel extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Crea un perfil para administrar permisos, comercios, categorias y experiencia familiar.',
+              'Crea un perfil para administrar permisos, comercios, categorías y experiencia familiar.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: colors.onSurfaceVariant,
@@ -206,10 +206,10 @@ class _ChildCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            '${child.age == null ? 'Edad no registrada' : '${child.age} anos'}${document.isEmpty ? '' : ' · $document'}',
+            '${child.age == null ? 'Edad no registrada' : '${child.age} años'}${document.isEmpty ? '' : ' · $document'}',
           ),
           Text('Comercios permitidos: ${child.allowedBusinessesCount}'),
-          Text('Categorias permitidas: ${child.allowedCategoriesCount}'),
+          Text('Categorías permitidas: ${child.allowedCategoriesCount}'),
           const SizedBox(height: AppSpacing.sm),
           Align(
             alignment: Alignment.centerRight,
@@ -262,7 +262,7 @@ class KidsDetailPage extends StatelessWidget {
                       _DetailsCard(child: child),
                       const SizedBox(height: AppSpacing.md),
                       _PermissionCard(
-                        title: 'Categorias permitidas',
+                        title: 'Categorías permitidas',
                         value: state.overview['allowedCategories'],
                       ),
                       const SizedBox(height: AppSpacing.md),
@@ -321,7 +321,7 @@ class KidsDetailPage extends StatelessWidget {
                       const SizedBox(height: AppSpacing.sm),
                       OutlinedButton.icon(
                         icon: const Icon(Icons.speed_outlined),
-                        label: const Text('Limites de gasto'),
+                        label: const Text('Límites de gasto'),
                         onPressed: () => Navigator.of(context).push(
                           MaterialPageRoute<void>(
                             builder: (_) =>
@@ -333,30 +333,43 @@ class KidsDetailPage extends StatelessWidget {
                       OutlinedButton.icon(
                         icon: const Icon(Icons.storefront_outlined),
                         label: const Text('Gestionar comercios permitidos'),
-                        onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) =>
-                                AllowedBusinessesPage(childId: childId),
-                          ),
-                        ),
+                        onPressed: () async {
+                          final updated = await Navigator.of(context).push<bool>(
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  AllowedBusinessesPage(childId: childId),
+                            ),
+                          );
+                          if (updated == true && context.mounted) {
+                            context.read<KidsCubit>().loadChild(childId);
+                          }
+                        },
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       OutlinedButton.icon(
                         icon: const Icon(Icons.category_outlined),
-                        label: const Text('Gestionar categorias permitidas'),
-                        onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) =>
-                                AllowedCategoriesPage(childId: childId),
-                          ),
-                        ),
+                        label: const Text('Gestionar categorías permitidas'),
+                        onPressed: () async {
+                          final updated = await Navigator.of(context).push<bool>(
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  AllowedCategoriesPage(childId: childId),
+                            ),
+                          );
+                          if (updated == true && context.mounted) {
+                            context.read<KidsCubit>().loadChild(childId);
+                          }
+                        },
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       OutlinedButton.icon(
                         icon: const Icon(Icons.visibility_outlined),
                         label: const Text('Navegar como este menor'),
                         onPressed: () {
-                          getIt<SelectedKidContext>().select(childId);
+                          getIt<SelectedKidContext>().select(
+                            childId,
+                            name: child.fullName,
+                          );
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
@@ -364,6 +377,47 @@ class KidsDetailPage extends StatelessWidget {
                               ),
                             ),
                           );
+                          Navigator.of(context).popUntil((route) => route.isFirst);
+                        },
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      OutlinedButton.icon(
+                        icon: const Icon(Icons.delete_outline),
+                        label: const Text('Eliminar menor'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Theme.of(context).colorScheme.error,
+                        ),
+                        onPressed: () async {
+                          final confirmed = await showDialog<bool>(
+                            context: context,
+                            builder: (dialogContext) => AlertDialog(
+                              title: const Text('Eliminar menor'),
+                              content: Text(
+                                '¿Seguro que deseas eliminar el perfil de ${child.fullName}? '
+                                'Esta acción no se puede deshacer.',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(dialogContext, false),
+                                  child: const Text('Cancelar'),
+                                ),
+                                FilledButton(
+                                  onPressed: () =>
+                                      Navigator.pop(dialogContext, true),
+                                  child: const Text('Eliminar'),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirmed != true || !context.mounted) return;
+                          await context.read<KidsCubit>().deleteChild(childId);
+                          if (!context.mounted) return;
+                          final kidContext = getIt<SelectedKidContext>();
+                          if (kidContext.kidId == childId) {
+                            kidContext.clear();
+                          }
+                          Navigator.of(context).pop();
                         },
                       ),
                     ],
@@ -383,17 +437,17 @@ class _DetailsCard extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Datos basicos', style: Theme.of(context).textTheme.titleLarge),
+        Text('Datos básicos', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: AppSpacing.sm),
         Text('Nombre: ${child.fullName}'),
         Text('Edad: ${child.age ?? 'No registrada'}'),
-        Text('Relacion: ${child.relationshipType}'),
+        Text('Relación: ${child.relationshipType}'),
         Text(
           'Documento: ${child.documentType ?? ''} ${child.documentNumber ?? 'No registrado'}',
         ),
         Text('Estado del perfil: ${child.isActive ? 'Activo' : 'Inactivo'}'),
         Text('Comercios permitidos: ${child.allowedBusinessesCount}'),
-        Text('Categorias permitidas: ${child.allowedCategoriesCount}'),
+        Text('Categorías permitidas: ${child.allowedCategoriesCount}'),
       ],
     ),
   );

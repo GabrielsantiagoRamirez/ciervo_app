@@ -75,7 +75,7 @@ class _ChildSpendingLimitsPageState extends State<ChildSpendingLimitsPage> {
     result.when(
       success: (_) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Limites actualizados.')),
+          const SnackBar(content: Text('Límites actualizados.')),
         );
       },
       failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
@@ -92,7 +92,7 @@ class _ChildSpendingLimitsPageState extends State<ChildSpendingLimitsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Limites de gasto')),
+      appBar: AppBar(title: const Text('Límites de gasto')),
       body: _loading
           ? const Padding(
               padding: EdgeInsets.all(AppSpacing.lg),

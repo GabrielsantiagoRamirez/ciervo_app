@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 
-/// Colores premium CIERVO CLUB (Wallet / Notificaciones).
+/// Paleta premium CIERVO CLUB (Wallet / Notificaciones).
 abstract final class CiervoBrandColors {
   static const Color gold = Color(0xFFD4AF37);
   static const Color goldSoft = Color(0xFFC8B27A);
@@ -14,6 +15,59 @@ abstract final class CiervoBrandColors {
   static const Color textMuted = Color(0xFF9A968E);
   static const Color income = Color(0xFF2EAD74);
   static const Color expense = Color(0xFFE25D5D);
+}
+
+/// Colores del wallet que respetan modo día / noche.
+class CiervoWalletPalette {
+  const CiervoWalletPalette({
+    required this.background,
+    required this.surface,
+    required this.surfaceHigh,
+    required this.textPrimary,
+    required this.textMuted,
+    required this.cardGradient,
+    required this.cardBorderAlpha,
+  });
+
+  final Color background;
+  final Color surface;
+  final Color surfaceHigh;
+  final Color textPrimary;
+  final Color textMuted;
+  final List<Color> cardGradient;
+  final double cardBorderAlpha;
+
+  static CiervoWalletPalette of(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    if (isDark) {
+      return const CiervoWalletPalette(
+        background: CiervoBrandColors.background,
+        surface: CiervoBrandColors.surface,
+        surfaceHigh: CiervoBrandColors.surfaceHigh,
+        textPrimary: CiervoBrandColors.textPrimary,
+        textMuted: CiervoBrandColors.textMuted,
+        cardGradient: [
+          Color(0xFF1A1712),
+          Color(0xFF0D0D0D),
+          Color(0xFF14110A),
+        ],
+        cardBorderAlpha: 0.35,
+      );
+    }
+    return const CiervoWalletPalette(
+      background: AppColors.dayBackground,
+      surface: AppColors.daySurface,
+      surfaceHigh: AppColors.daySurfaceHigh,
+      textPrimary: AppColors.dayText,
+      textMuted: AppColors.dayTextMuted,
+      cardGradient: [
+        Color(0xFFFFF8E8),
+        Color(0xFFF8F4EA),
+        Color(0xFFE8DFC8),
+      ],
+      cardBorderAlpha: 0.45,
+    );
+  }
 }
 
 class CiervoDigitalCard extends StatelessWidget {
@@ -38,20 +92,19 @@ class CiervoDigitalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = CiervoWalletPalette.of(context);
     return Container(
       height: 210,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1A1712),
-            Color(0xFF0D0D0D),
-            Color(0xFF14110A),
-          ],
+          colors: palette.cardGradient,
         ),
-        border: Border.all(color: CiervoBrandColors.gold.withValues(alpha: 0.35)),
+        border: Border.all(
+          color: CiervoBrandColors.gold.withValues(alpha: palette.cardBorderAlpha),
+        ),
         boxShadow: [
           BoxShadow(
             color: CiervoBrandColors.gold.withValues(alpha: 0.12),
@@ -90,7 +143,7 @@ class CiervoDigitalCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'ENTRETENIMIENTO SIN LIMITES',
+                        'ENTRETENIMIENTO SIN LÍMITES',
                         style: TextStyle(
                           color: CiervoBrandColors.goldSoft.withValues(alpha: 0.8),
                           fontSize: 8,
@@ -145,8 +198,8 @@ class CiervoDigitalCard extends StatelessWidget {
                             Text(
                               alias.isNotEmpty ? alias.toUpperCase() : holderName.toUpperCase(),
                               textAlign: TextAlign.right,
-                              style: const TextStyle(
-                                color: CiervoBrandColors.textPrimary,
+                              style: TextStyle(
+                                color: palette.textPrimary,
                                 fontWeight: FontWeight.w700,
                                 fontSize: 18,
                                 letterSpacing: 0.5,
@@ -156,8 +209,8 @@ class CiervoDigitalCard extends StatelessWidget {
                               const SizedBox(height: 4),
                               Text(
                                 mask!,
-                                style: const TextStyle(
-                                  color: CiervoBrandColors.textMuted,
+                                style: TextStyle(
+                                  color: palette.textMuted,
                                   fontSize: 12,
                                 ),
                               ),

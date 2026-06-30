@@ -7,6 +7,7 @@ import '../core/session/auth_token_claims.dart';
 import '../core/session/session_manager.dart';
 import '../features/auth/domain/repositories/auth_repository.dart';
 import '../features/experience/presentation/pages/experience_mode_page.dart';
+import '../features/kid_shell/presentation/pages/kid_shell_page.dart';
 import '../features/staff_scanner/presentation/pages/staff_mode_gate.dart';
 import '../shared/widgets/ciervo_bottom_nav_scaffold.dart';
 import '../shared/widgets/ciervo_brand_loader.dart';
@@ -55,6 +56,7 @@ class _AccountRouteGateState extends State<AccountRouteGate> {
 
           return switch (routeKind) {
             'Staff' => const StaffModeGate(),
+            'Kid' => const KidShellPage(),
             'BusinessOwner' => const _AdminPlaceholder(
                 title: 'Dashboard dueño',
                 description:

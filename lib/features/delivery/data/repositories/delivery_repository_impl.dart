@@ -147,6 +147,7 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
     required String orderId,
     required String paymentMethod,
     String? walletCardId,
+    String? childWalletCardId,
   }) => _guard(() async {
     final response = await _client.dio.post<dynamic>(
       '/api/delivery/orders/$orderId/pay',
@@ -155,6 +156,9 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
         'idempotencyKey': _idempotencyKey('pay-order', orderId),
         if (walletCardId != null)
           'walletCardId': int.tryParse(walletCardId) ?? walletCardId,
+        if (childWalletCardId != null)
+          'childWalletCardId':
+              int.tryParse(childWalletCardId) ?? childWalletCardId,
       },
     );
     return _paymentResult(unwrapApiMap(response.data));
