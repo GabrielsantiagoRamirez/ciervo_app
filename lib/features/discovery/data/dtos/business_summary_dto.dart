@@ -18,15 +18,28 @@ class BusinessSummaryDto {
 
   factory BusinessSummaryDto.fromJson(Map<String, dynamic> json) {
     return BusinessSummaryDto(
-      id: _string(json, const ['businessId', 'id']),
-      name: _string(json, const ['name', 'businessName', 'title']),
-      category: _string(json, const ['category', 'categoryName', 'type']),
+      id: _string(json, const ['businessId', 'BusinessId', 'id']),
+      name: _string(json, const [
+        'name',
+        'businessName',
+        'title',
+        'nombre',
+        'Nombre',
+      ]),
+      category: _string(json, const [
+        'category',
+        'categoryName',
+        'type',
+        'categoria',
+        'Categoria',
+      ]),
       rating: _double(json, const ['rating', 'score']),
       distanceKm: _double(json, const ['distanceKm', 'distance', 'kilometers']),
       imageUrl: _mediaUrl(json),
       businessCategoryId: _intOrNull(
         json['businessCategoryId'] ??
             json['categoryId'] ??
+            json['CategoryId'] ??
             json['businessCategory']?['id'],
       ),
       priceLevel: _string(json, const ['priceLevel', 'priceRange']),
@@ -144,7 +157,10 @@ class BusinessSummaryDto {
         if (id.isNotEmpty) return id;
       }
     }
-    final gallery = json['gallery'] ?? json['galleryImages'];
+    final gallery = json['gallery'] ??
+        json['galleryImages'] ??
+        json['imagenes'] ??
+        json['Imagenes'];
     if (gallery is List && gallery.isNotEmpty) {
       final first = gallery.first;
       if (first is String) return first;

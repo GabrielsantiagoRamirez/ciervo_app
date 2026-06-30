@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_spacing.dart';
 import '../../features/chat/domain/entities/chat_message.dart';
+import 'location_map_preview.dart';
 
 class ChatLocationCard extends StatelessWidget {
   const ChatLocationCard({required this.payload, super.key});
@@ -32,21 +33,12 @@ class ChatLocationCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
+          LocationMapPreview(
+            latitude: payload.latitude,
+            longitude: payload.longitude,
             height: 100,
-            decoration: BoxDecoration(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(14)),
-              gradient: LinearGradient(
-                colors: [
-                  colors.primary.withValues(alpha: 0.35),
-                  colors.primaryContainer.withValues(alpha: 0.5),
-                ],
-              ),
-            ),
-            child: const Center(
-              child: Icon(Icons.location_on, size: 40, color: Colors.redAccent),
-            ),
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(14)),
           ),
           Padding(
             padding: const EdgeInsets.all(AppSpacing.sm),

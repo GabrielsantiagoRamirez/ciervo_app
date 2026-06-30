@@ -305,19 +305,20 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
                   CircleAvatar(
                     radius: 34,
                     backgroundColor: colorScheme.primary,
-                    child: profile.photoUrl == null
-                        ? Text(
-                            profile.initials,
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: colorScheme.onPrimary,
-                            ),
-                          )
-                        : ClipOval(
+                    child: profile.hasPhoto
+                        ? ClipOval(
                             child: ProfilePhotoImage(
+                              key: ValueKey(profile.photoUrl),
                               photoRef: profile.photoUrl,
                               width: 68,
                               height: 68,
                               fallback: Text(profile.initials),
+                            ),
+                          )
+                        : Text(
+                            profile.initials,
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              color: colorScheme.onPrimary,
                             ),
                           ),
                   ),

@@ -130,20 +130,21 @@ class _EditProfileViewState extends State<_EditProfileView> {
                               radius: 42,
                               backgroundColor:
                                   Theme.of(context).colorScheme.primary,
-                              child: profile.photoUrl == null
-                                  ? Text(
-                                      profile.initials,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headlineSmall,
-                                    )
-                                  : ClipOval(
+                              child: profile.hasPhoto
+                                  ? ClipOval(
                                       child: ProfilePhotoImage(
+                                        key: ValueKey(profile.photoUrl),
                                         photoRef: profile.photoUrl,
                                         width: 84,
                                         height: 84,
                                         fallback: Text(profile.initials),
                                       ),
+                                    )
+                                  : Text(
+                                      profile.initials,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .headlineSmall,
                                     ),
                             ),
                             Positioned(

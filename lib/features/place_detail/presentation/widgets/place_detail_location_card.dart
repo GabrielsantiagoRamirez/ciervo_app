@@ -6,6 +6,7 @@ import '../../../../core/theme/app_component_styles.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/location_map_preview.dart';
 
 class PlaceDetailLocationCard extends StatelessWidget {
   const PlaceDetailLocationCard({
@@ -48,17 +49,38 @@ class PlaceDetailLocationCard extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
+            if (canOpenMap)
+              LocationMapPreview(
+                latitude: latitude!,
+                longitude: longitude!,
+                height: 150,
+                borderRadius: AppRadii.card,
+              )
+            else
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: colorScheme.surface,
+                  borderRadius: AppRadii.card,
+                ),
+                child: Center(
+                  child: Icon(
+                    Icons.location_on,
+                    size: 44,
+                    color: colorScheme.primary.withValues(alpha: 0.85),
+                  ),
+                ),
+              ),
             DecoratedBox(
               decoration: BoxDecoration(
-                color: colorScheme.surface,
                 borderRadius: AppRadii.card,
-              ),
-            ),
-            Center(
-              child: Icon(
-                Icons.location_on,
-                size: 44,
-                color: colorScheme.primary.withValues(alpha: 0.85),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    colorScheme.surface.withValues(alpha: 0.92),
+                  ],
+                ),
               ),
             ),
             Positioned(

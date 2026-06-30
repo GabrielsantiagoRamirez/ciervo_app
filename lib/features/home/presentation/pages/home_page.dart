@@ -308,8 +308,8 @@ class _DiscoveryResults extends StatelessWidget {
   }) {
     return HomePlace(
       id: business.id,
-      name: business.name,
-      category: business.category.isEmpty ? 'Experiencia' : business.category,
+      name: business.name.isNotEmpty ? business.name : 'Negocio',
+      category: business.category.isEmpty ? 'General' : business.category,
       rating: business.rating,
       priceLevel: business.priceLevel,
       distanceKm: business.distanceKm,

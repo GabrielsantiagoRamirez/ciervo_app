@@ -59,4 +59,9 @@ class UserProfile {
     final value = '$first$last'.toUpperCase();
     return value.isEmpty ? 'C' : value;
   }
+
+  bool get hasPhoto {
+    final ref = photoUrl?.trim();
+    return ref != null && ref.isNotEmpty;
+  }
 }

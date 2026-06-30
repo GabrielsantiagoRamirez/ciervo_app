@@ -30,10 +30,17 @@ class ProfileCubit extends Cubit<ProfileState> {
           profile.ciervoUserCode,
           ciervoIdResult,
         );
+        final previousPhoto = state.profile?.photoUrl?.trim();
+        final incomingPhoto = profile.photoUrl?.trim();
+        final mergedProfile = (incomingPhoto != null && incomingPhoto.isNotEmpty)
+            ? profile
+            : (previousPhoto != null && previousPhoto.isNotEmpty)
+                ? profile.copyWith(photoUrl: previousPhoto)
+                : profile;
         emit(
           ProfileState(
             status: ProfileStatus.loaded,
-            profile: profile,
+            profile: mergedProfile,
             ciervoUserCode: code,
           ),
         );
@@ -134,7 +141,6 @@ class ProfileCubit extends Cubit<ProfileState> {
           status: ProfileStatus.loaded,
           profile: current.copyWith(photoUrl: photoRef),
         ));
-        loadProfile();
       },
       failure: (error) => emit(state.copyWith(
         status: ProfileStatus.loaded,

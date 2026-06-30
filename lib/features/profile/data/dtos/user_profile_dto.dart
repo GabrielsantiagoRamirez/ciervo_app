@@ -24,10 +24,11 @@ class UserProfileDto {
 
     return UserProfileDto(
       id: _string(source, const ['id', 'clientId', 'userId']),
-      firstName: _string(source, const ['firstName', 'name', 'nombre']),
+      firstName: _string(source, const ['firstName', 'name', 'nombre', 'Name']),
       lastName: _string(source, const [
         'lastName',
         'lastname',
+        'Lastname',
         'surname',
         'apellido',
       ]),
@@ -52,7 +53,9 @@ class UserProfileDto {
       ]),
       photoUrl: _optionalString(source, const [
         'photoUrl',
+        'PhotoUrl',
         'profilePhotoUrl',
+        'ProfilePhotoUrl',
         'avatarUrl',
         'photoMediaId',
         'profilePhotoMediaId',

@@ -92,10 +92,10 @@ class _LoginViewState extends State<_LoginView> {
                     ),
                     child: Column(
                       children: [
-                        Icon(
-                          Icons.nightlight_round,
-                          size: 56,
-                          color: Theme.of(context).colorScheme.primary,
+                        Image.asset(
+                          'assets/notifications/ciervo_logo_gold.png',
+                          height: 72,
+                          fit: BoxFit.contain,
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         Text(

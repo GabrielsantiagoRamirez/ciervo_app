@@ -25,6 +25,7 @@ class ProfilePhotoImage extends StatelessWidget {
     if (ref.startsWith('http')) {
       return Image.network(
         ref,
+        key: ValueKey(ref),
         width: width,
         height: height,
         fit: BoxFit.cover,
@@ -33,6 +34,7 @@ class ProfilePhotoImage extends StatelessWidget {
       );
     }
     return AuthenticatedMediaImage(
+      key: ValueKey(ref),
       mediaId: ref,
       thumbnail: true,
       width: width,
