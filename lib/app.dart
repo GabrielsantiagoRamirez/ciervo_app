@@ -37,6 +37,7 @@ class _CiervoAppState extends State<CiervoApp> {
     _sessionManager = getIt<SessionManager>();
     _badgesCubit = getIt<NotificationBadgesCubit>()..refresh();
     getIt<CiervoPushService>().bindNavigator(rootNavigatorKey);
+    unawaited(getIt<CiervoPushService>().initialize());
     _router = createAppRouter(
       _sessionManager,
       context.read<ExperienceModeCubit>(),

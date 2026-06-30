@@ -294,6 +294,22 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
   });
 
   @override
+  Future<Result<DeliverySettlementAccountDetails?>> settlementAccount() async {
+    try {
+      final response =
+          await _client.dio.get<dynamic>('/api/delivery/settlement-account');
+      final data = unwrapApiMap(response.data);
+      if (data.isEmpty) return const Success(null);
+      return Success(_settlementAccountDetails(data));
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 404) return const Success(null);
+      return Failure(ErrorMapper.fromObject(error));
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
   Future<Result<List<DeliverySettlement>>> settlements() => _guard(
     () async => unwrapApiList(
       (await _client.dio.get<dynamic>('/api/delivery/settlements')).data,
@@ -366,6 +382,17 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
         account['maskedMercadoPago'] ??
             account['mercadoPagoMasked'] ??
             account['mercadoPago'],
+      ),
+      maskedVehiclePlate: _stringOrNull(
+        json['maskedVehiclePlate'] ?? json['vehiclePlateMasked'],
+      ),
+      vehiclePhotoMediaId: _stringOrNull(
+        json['vehiclePhotoMediaId'] ?? json['vehiclePhotoId'],
+      ),
+      kycApproved: json['kycApproved'] == true || json['isKycApproved'] == true,
+      canGoOnline: json['canGoOnline'] is bool ? json['canGoOnline'] as bool : null,
+      onlineBlockReason: _stringOrNull(
+        json['onlineBlockReason'] ?? json['availabilityBlockReason'],
       ),
       lastLatitude: _double(json['lastLatitude'] ?? json['latitude']),
       lastLongitude: _double(json['lastLongitude'] ?? json['longitude']),
@@ -496,6 +523,27 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
         ),
         currency: (json['currency'] ?? json['currencyCode'])?.toString(),
       );
+
+  static DeliverySettlementAccountDetails _settlementAccountDetails(
+    Map<String, dynamic> json,
+  ) => DeliverySettlementAccountDetails(
+    status: '${json['status'] ?? json['verificationStatus'] ?? 'Sin registrar'}',
+    settlementMethod: _stringOrNull(json['settlementMethod']),
+    maskedAccountNumber: _stringOrNull(
+      json['maskedAccountNumber'] ?? json['accountNumberMasked'],
+    ),
+    maskedDocumentNumber: _stringOrNull(
+      json['maskedDocumentNumber'] ?? json['documentNumberMasked'],
+    ),
+    maskedPhone: _stringOrNull(json['maskedPhone'] ?? json['phoneMasked']),
+    maskedMercadoPago: _stringOrNull(
+      json['maskedMercadoPago'] ?? json['mercadoPagoMasked'],
+    ),
+    maskedVehiclePlate: _stringOrNull(json['maskedVehiclePlate']),
+    rejectionReason: _stringOrNull(json['rejectionReason']),
+    bankName: _stringOrNull(json['bankName'] ?? json['bank']),
+    accountType: _stringOrNull(json['accountType']),
+  );
 
   static List<DeliveryOrderItem> _items(dynamic value) {
     if (value is! List) return const [];

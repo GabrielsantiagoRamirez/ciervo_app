@@ -8,6 +8,7 @@ import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/notifications/notification_deep_link.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../wallet/presentation/widgets/ciervo_digital_card.dart';
+import '../../../../core/utils/display_labels.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
@@ -321,8 +322,8 @@ class NotificationPreferencesPage extends StatefulWidget {
 
 class _NotificationPreferencesPageState
     extends State<NotificationPreferencesPage> {
-  late Future<Map<String, dynamic>> _preferences;
-  final _values = <String, bool>{};
+  late Future<List<_NotificationChannelPref>> _preferences;
+  final _channels = <_NotificationChannelPref>[];
   bool _saving = false;
 
   @override
@@ -331,14 +332,14 @@ class _NotificationPreferencesPageState
     _preferences = _load();
   }
 
-  Future<Map<String, dynamic>> _load() async {
+  Future<List<_NotificationChannelPref>> _load() async {
     final result = await getIt<NotificationsRepository>().preferences();
     return result.when(
       success: (value) {
-        _values
+        _channels
           ..clear()
-          ..addAll(_boolMap(value));
-        return value;
+          ..addAll(_parseChannels(value));
+        return List<_NotificationChannelPref>.from(_channels);
       },
       failure: (error) => throw error,
     );
@@ -347,7 +348,7 @@ class _NotificationPreferencesPageState
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Preferencias')),
-    body: FutureBuilder<Map<String, dynamic>>(
+    body: FutureBuilder<List<_NotificationChannelPref>>(
       future: _preferences,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
@@ -363,12 +364,13 @@ class _NotificationPreferencesPageState
             ),
           );
         }
-        if (_values.isEmpty) {
+        if (_channels.isEmpty) {
           return const Padding(
             padding: EdgeInsets.all(AppSpacing.lg),
             child: CiervoEmptyState(
               title: 'Sin preferencias disponibles',
-              description: 'Backend aun no devolvio canales configurables.',
+              description:
+                  'Aún no hay canales de notificación configurados para tu cuenta.',
               icon: Icons.tune,
             ),
           );
@@ -376,27 +378,19 @@ class _NotificationPreferencesPageState
         return ListView(
           padding: const EdgeInsets.all(AppSpacing.lg),
           children: [
-            ..._groupedPreferenceKeys(_values.keys).entries.map(
-              (entry) => CiervoCard(
+            ..._channels.map(
+              (channel) => CiervoCard(
                 padding: const EdgeInsets.all(AppSpacing.md),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      entry.key,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    ...entry.value.map(
-                      (key) => SwitchListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(_label(key)),
-                        value: _values[key] ?? false,
-                        onChanged: (value) =>
-                            setState(() => _values[key] = value),
-                      ),
-                    ),
-                  ],
+                child: SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(channel.name),
+                  subtitle: channel.description == null
+                      ? null
+                      : Text(channel.description!),
+                  value: channel.enabled,
+                  onChanged: channel.configurable
+                      ? (value) => setState(() => channel.enabled = value)
+                      : null,
                 ),
               ),
             ),
@@ -404,7 +398,7 @@ class _NotificationPreferencesPageState
             FilledButton.icon(
               onPressed: _saving ? null : _save,
               icon: const Icon(Icons.save_outlined),
-              label: Text(_saving ? 'Guardando' : 'Guardar preferencias'),
+              label: Text(_saving ? 'Guardando…' : 'Guardar preferencias'),
             ),
           ],
         );
@@ -414,8 +408,13 @@ class _NotificationPreferencesPageState
 
   Future<void> _save() async {
     setState(() => _saving = true);
+    final payload = {
+      'channels': _channels
+          .map((channel) => {'code': channel.code, 'enabled': channel.enabled})
+          .toList(),
+    };
     final result =
-        await getIt<NotificationsRepository>().updatePreferences(_values);
+        await getIt<NotificationsRepository>().updatePreferences(payload);
     if (!mounted) return;
     setState(() => _saving = false);
     result.when(
@@ -429,6 +428,52 @@ class _NotificationPreferencesPageState
   }
 }
 
+class _NotificationChannelPref {
+  _NotificationChannelPref({
+    required this.code,
+    required this.name,
+    required this.enabled,
+    this.description,
+    this.configurable = true,
+  });
+
+  final String code;
+  final String name;
+  bool enabled;
+  final String? description;
+  final bool configurable;
+}
+
+List<_NotificationChannelPref> _parseChannels(Map<String, dynamic> source) {
+  final raw = source['channels'];
+  if (raw is List) {
+    return raw
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .map(
+          (item) => _NotificationChannelPref(
+            code: '${item['code'] ?? ''}',
+            name: '${item['name'] ?? item['code'] ?? 'Canal'}',
+            enabled: item['enabled'] == true,
+            description: item['description']?.toString(),
+            configurable: item['configurable'] != false,
+          ),
+        )
+        .where((channel) => channel.code.isNotEmpty)
+        .toList();
+  }
+  return _boolMap(source)
+      .entries
+      .map(
+        (entry) => _NotificationChannelPref(
+          code: entry.key,
+          name: DisplayLabels.notificationPreference(entry.key),
+          enabled: entry.value,
+        ),
+      )
+      .toList();
+}
+
 Map<String, bool> _boolMap(Map<String, dynamic> source) {
   final result = <String, bool>{};
   for (final entry in source.entries) {
@@ -436,14 +481,6 @@ Map<String, bool> _boolMap(Map<String, dynamic> source) {
     if (value is bool) result[entry.key] = value;
   }
   return result;
-}
-
-String _label(String key) {
-  final spaced = key.replaceAllMapped(
-    RegExp(r'([a-z])([A-Z])'),
-    (match) => '${match.group(1)} ${match.group(2)}',
-  );
-  return spaced.replaceAll('_', ' ');
 }
 
 Map<String, List<String>> _groupedPreferenceKeys(Iterable<String> keys) {

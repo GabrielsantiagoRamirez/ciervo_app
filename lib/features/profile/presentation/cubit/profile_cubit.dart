@@ -63,12 +63,17 @@ class ProfileCubit extends Cubit<ProfileState> {
       fileName: fileName,
     );
     result.when(
-      success: (url) => emit(ProfileState(
-        status: ProfileStatus.saved,
-        profile: current.copyWith(photoUrl: url),
-      )),
+      success: (upload) {
+        final photoUrl = upload.photoUrl ?? current.photoUrl;
+        emit(state.copyWith(
+          status: ProfileStatus.loaded,
+          profile: current.copyWith(photoUrl: photoUrl),
+        ));
+        loadProfile();
+      },
       failure: (error) => emit(state.copyWith(
-        status: ProfileStatus.failure,
+        status: ProfileStatus.loaded,
+        profile: current,
         errorMessage: UserErrorMessage.from(error),
       )),
     );

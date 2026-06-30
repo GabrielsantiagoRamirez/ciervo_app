@@ -1,17 +1,27 @@
+import '../utils/display_labels.dart';
 import 'app_exception.dart';
 
 abstract final class UserErrorMessage {
   static String from(Object error) {
     if (error is! AppException) {
-      return 'Ocurrio un error inesperado.';
+      return 'Ocurrió un error inesperado.';
     }
 
     final statusCode = error.statusCode;
-    final code = error.code?.toLowerCase();
+    final code = error.code?.toUpperCase();
     final message = error.message.toLowerCase();
+    final sanitized = DisplayLabels.sanitizeBackendMessage(error.message);
+
+    final codeMessage = switch (code) {
+      'FILE_TOO_LARGE' => 'La imagen supera el tamaño permitido.',
+      'INVALID_FILE_TYPE' => 'Formato de imagen no permitido.',
+      'USER_NOT_PARTICIPANT' => 'No tienes acceso a esta conversación.',
+      _ => null,
+    };
+    if (codeMessage != null) return codeMessage;
 
     if (statusCode == 401) {
-      return 'Credenciales invalidas o sesion expirada.';
+      return 'Credenciales inválidas o sesión expirada.';
     }
     if (statusCode == 429) {
       return 'Demasiados intentos. Espera unos segundos e intenta de nuevo.';
@@ -24,7 +34,7 @@ abstract final class UserErrorMessage {
       return 'No tienes permiso o no estas relacionado con este recurso.';
     }
     if (statusCode == 404) {
-      return 'El recurso solicitado no existe.';
+      return 'Esta función estará disponible cuando el servidor se actualice.';
     }
     if (statusCode == 400) {
       if (message.contains('subscribe-intents')) {
@@ -40,9 +50,7 @@ abstract final class UserErrorMessage {
           message.contains('plan not found')) {
         return 'Plan no encontrado.';
       }
-      return error.message.isNotEmpty
-          ? error.message
-          : 'Revisa los datos ingresados e intenta nuevamente.';
+      return sanitized;
     }
     if (statusCode == 403 &&
         (message.contains('limite') ||
@@ -53,15 +61,16 @@ abstract final class UserErrorMessage {
           : 'Limite de plan alcanzado.';
     }
     if (message.contains('network') || message.contains('conexion')) {
-      return 'No pudimos conectar con el servidor. Revisa tu conexion.';
+      return 'No pudimos conectar con el servidor. Revisa tu conexión.';
     }
     if (message.contains('could not be converted') ||
         message.contains('system.text.json') ||
         message.contains('json path') ||
-        message.contains('validation errors')) {
-      return 'Revisa los datos ingresados e intenta nuevamente.';
+        message.contains('validation errors') ||
+        message.contains('field is required')) {
+      return sanitized;
     }
 
-    return error.message;
+    return sanitized;
   }
 }

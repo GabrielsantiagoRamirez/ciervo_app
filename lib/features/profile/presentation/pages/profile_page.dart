@@ -418,7 +418,7 @@ class _AccountActions extends StatelessWidget {
         children: [
           _ActionTile(
             icon: Icons.verified_user_outlined,
-            title: 'Verificacion KYC',
+            title: 'Verificación de identidad',
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(builder: (_) => const KycPage()),
             ),
@@ -494,7 +494,9 @@ class _AccountActions extends StatelessWidget {
             icon: Icons.redeem_outlined,
             title: 'Mis Beneficios',
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const QrWalletPage()),
+              MaterialPageRoute<void>(
+                builder: (_) => const QrWalletPage(initialTabIndex: 3),
+              ),
             ),
           ),
           _ActionTile(

@@ -23,6 +23,7 @@ abstract interface class KidsRepository {
     List<String> businessIds,
   );
   Future<Result<List<dynamic>>> allowedCategories(String childId);
+  Future<Result<List<dynamic>>> categoryCandidates(String childId);
   Future<Result<void>> saveAllowedCategories(
     String childId,
     List<int> categoryIds,

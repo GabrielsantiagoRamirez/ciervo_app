@@ -18,7 +18,7 @@ class ChildProfileDto {
 
   factory ChildProfileDto.fromJson(Map<String, dynamic> json) {
     return ChildProfileDto(
-      id: _string(json, const ['id', 'childId', 'childProfileId']),
+      id: _string(json, const ['kidId', 'id', 'childId', 'childProfileId']),
       firstName: _string(json, const ['firstName', 'name']),
       lastName: _string(json, const ['lastName', 'lastname']),
       birthDate: DateTime.tryParse(_string(json, const ['birthDate'])),

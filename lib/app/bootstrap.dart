@@ -5,7 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../core/crash/crash_reporting_service.dart';
 import '../core/di/service_locator.dart';
-import '../core/notifications/ciervo_push_service.dart';
 import '../core/experience/experience_mode_cubit.dart';
 import '../core/session/session_manager.dart';
 import '../core/storage/secure_storage.dart';
@@ -19,8 +18,18 @@ Future<void> bootstrap() async {
       await configureDependencies();
       Bloc.observer = AppBlocObserver();
 
-      await getIt<SessionManager>().restore();
-      await getIt<CiervoPushService>().initialize();
+      try {
+        await getIt<SessionManager>().restore();
+      } catch (error, stackTrace) {
+        debugPrint('[bootstrap] session restore failed: $error');
+        if (getIt.isRegistered<CrashReportingService>()) {
+          getIt<CrashReportingService>().recordError(
+            error,
+            stackTrace,
+            fatal: false,
+          );
+        }
+      }
 
       runApp(
         BlocProvider(

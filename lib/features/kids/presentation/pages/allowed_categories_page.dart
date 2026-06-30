@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
+import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../domain/repositories/kids_repository.dart';
 import '../cubit/kids_cubit.dart';
 import '../cubit/kids_state.dart';
@@ -15,7 +16,7 @@ class AllowedCategoriesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => BlocProvider(
     create: (_) =>
-        KidsCubit(getIt<KidsRepository>())..loadAllowedCategories(childId),
+        KidsCubit(getIt<KidsRepository>())..loadCategoryCandidates(childId),
     child: _CategoriesView(childId: childId),
   );
 }
@@ -59,7 +60,7 @@ class _CategoriesViewState extends State<_CategoriesView> {
       }
       final saving = state.status == KidsStatus.actionLoading;
       return Scaffold(
-        appBar: AppBar(title: const Text('Categorias permitidas')),
+        appBar: AppBar(title: const Text('Categorías permitidas')),
         body: AbsorbPointer(
           absorbing: saving,
           child: ListView(
@@ -67,6 +68,13 @@ class _CategoriesViewState extends State<_CategoriesView> {
             children: [
               if (state.status == KidsStatus.loading)
                 const Center(child: CircularProgressIndicator())
+              else if (categories.isEmpty)
+                const CiervoEmptyState(
+                  title: 'Sin categorías disponibles',
+                  description:
+                      'No encontramos categorías para configurar. Intenta más tarde.',
+                  icon: Icons.category_outlined,
+                )
               else
                 ...categories.map((category) {
                   final id = int.tryParse(

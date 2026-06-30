@@ -7,6 +7,7 @@ import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_brand_loader.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
+import '../../../../core/utils/display_labels.dart';
 import '../../data/booking_repository.dart';
 import '../../domain/entities/booking.dart';
 import '../../../qr_wallet/domain/entities/ciervo_qr_item.dart';
@@ -84,14 +85,31 @@ class _ReservationsPageState extends State<ReservationsPage> {
         }
         return RefreshIndicator(
           onRefresh: () async => setState(_reload),
-          child: ListView.separated(
+          child: ListView(
             padding: const EdgeInsets.all(AppSpacing.md),
-            itemCount: bookings.length,
-            separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
-            itemBuilder: (_, index) => _BookingCard(
-              booking: bookings[index],
-              onRefresh: () => setState(_reload),
-            ),
+            children: _groupedBookings(bookings)
+                .expand((group) => [
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          top: AppSpacing.sm,
+                          bottom: AppSpacing.xs,
+                        ),
+                        child: Text(
+                          group.key,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ),
+                      ...group.value.map(
+                        (booking) => Padding(
+                          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                          child: _BookingCard(
+                            booking: booking,
+                            onRefresh: () => setState(_reload),
+                          ),
+                        ),
+                      ),
+                    ])
+                .toList(),
           ),
         );
       },
@@ -171,9 +189,14 @@ class _BookingDetails extends StatelessWidget {
     children: [
       Text(booking.publicCode, style: Theme.of(context).textTheme.titleMedium),
       const SizedBox(height: AppSpacing.xs),
-      _line('Estado', booking.status),
+      _line('Estado', DisplayLabels.bookingStatus(booking.status)),
       _line('Fecha', _date(booking.bookingDate)),
-      _line('Negocio', booking.businessName ?? 'Sin informacion'),
+      _line('Negocio', booking.businessName ?? 'Sin información'),
+      if ((booking.city ?? '').isNotEmpty)
+        _line('Ciudad', booking.city!),
+      if ((booking.categoryName ?? '').isNotEmpty)
+        _line('Categoría', booking.categoryName!),
+      if ((booking.time ?? '').isNotEmpty) _line('Hora', booking.time!),
       _line('Tipo', booking.bookingType),
       _line('Personas', '${booking.peopleCount}'),
       _line(
@@ -207,6 +230,24 @@ class _BookingDetails extends StatelessWidget {
   );
   String _date(DateTime? value) =>
       value == null
-          ? 'Sin informacion'
+          ? 'Sin información'
           : value.toLocal().toString().substring(0, 16);
+}
+
+List<MapEntry<String, List<Booking>>> _groupedBookings(List<Booking> bookings) {
+  final sorted = [...bookings]
+    ..sort((a, b) {
+      final ad = a.bookingDate ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final bd = b.bookingDate ?? DateTime.fromMillisecondsSinceEpoch(0);
+      return bd.compareTo(ad);
+    });
+  final groups = <String, List<Booking>>{};
+  for (final booking in sorted) {
+    final date = booking.bookingDate;
+    final key = date == null
+        ? 'Sin fecha'
+        : '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+    groups.putIfAbsent(key, () => []).add(booking);
+  }
+  return groups.entries.toList();
 }

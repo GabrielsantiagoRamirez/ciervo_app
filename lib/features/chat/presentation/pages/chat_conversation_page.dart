@@ -4,6 +4,8 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/location/location_service.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/utils/image_upload_validator.dart';
+import '../../../../shared/widgets/chat_location_card.dart';
 import '../../../../shared/widgets/ciervo_brand_loader.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../media/presentation/authenticated_media_image.dart';
@@ -223,6 +225,16 @@ class _ConversationViewState extends State<_ConversationView> {
   Future<void> _pickAndSendMedia(BuildContext context) async {
     final media = await ImagePicker().pickMedia();
     if (media == null || !context.mounted) return;
+    final validationError = ImageUploadValidator.validate(
+      path: media.path,
+      fileName: media.name,
+    );
+    if (validationError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(validationError)),
+      );
+      return;
+    }
     context.read<ChatCubit>().sendMedia(media.path, media.name);
   }
 
@@ -260,7 +272,7 @@ class _MessageContent extends StatelessWidget {
       return _GiftCard(payload: message.giftPayload!);
     }
     if (message.locationPayload != null) {
-      return _LocationCard(payload: message.locationPayload!);
+      return ChatLocationCard(payload: message.locationPayload!);
     }
     final attachment = message.attachmentUrl;
     if (attachment == null || attachment.isEmpty) return Text(message.body);
@@ -335,29 +347,6 @@ class _BookingReceiptCard extends StatelessWidget {
   Widget _line(String label, String value) => Padding(
     padding: const EdgeInsets.only(top: 3),
     child: Text('$label: $value'),
-  );
-}
-
-class _LocationCard extends StatelessWidget {
-  const _LocationCard({required this.payload});
-  final ChatLocationPayload payload;
-
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const Row(
-        children: [
-          Icon(Icons.location_on_outlined, size: 20),
-          SizedBox(width: 8),
-          Text('Ubicacion'),
-        ],
-      ),
-      if (payload.label != null) Text(payload.label!),
-      Text(
-        '${payload.latitude.toStringAsFixed(5)}, ${payload.longitude.toStringAsFixed(5)}',
-      ),
-    ],
   );
 }
 

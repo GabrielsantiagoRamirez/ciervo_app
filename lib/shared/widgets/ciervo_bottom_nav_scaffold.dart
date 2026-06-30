@@ -54,6 +54,7 @@ class _CiervoBottomNavScaffoldState extends State<CiervoBottomNavScaffold> {
                 elevation: 8,
                 shadowColor: Colors.black38,
                 color: Theme.of(context).colorScheme.surface,
+                surfaceTintColor: Colors.transparent,
                 borderRadius: BorderRadius.circular(24),
                 clipBehavior: Clip.antiAlias,
                 child: NavigationBar(

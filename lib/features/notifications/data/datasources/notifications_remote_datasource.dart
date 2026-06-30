@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 
 import '../../../../core/network/api_response_unwrapper.dart';
@@ -18,8 +19,8 @@ abstract interface class NotificationsRemoteDataSource {
   Future<void> deleteAllNotifications();
   Future<Map<String, dynamic>> preferences();
   Future<void> updatePreferences(Map<String, dynamic> preferences);
-  Future<void> registerFcmToken(String token);
-  Future<void> unregisterFcmToken(String token);
+  Future<void> registerFcmToken(String token, {String? deviceId});
+  Future<void> unregisterFcmToken(String token, {String? deviceId});
   Future<void> unregisterAllFcmTokens();
 }
 
@@ -87,19 +88,45 @@ class DioNotificationsRemoteDataSource implements NotificationsRemoteDataSource 
   }
 
   @override
-  Future<void> registerFcmToken(String token) async {
-    await _client.dio.post<void>(
-      '/api/notifications/fcm/register',
-      data: {'token': token, 'platform': _platformLabel()},
-    );
+  Future<void> registerFcmToken(String token, {String? deviceId}) async {
+    final id = deviceId ?? token;
+    try {
+      await _client.dio.post<void>(
+        '/api/devices/register',
+        data: {
+          'fcmToken': token,
+          'platform': _platformLabel(),
+          'deviceId': id,
+          'appVersion': '1.0.0',
+        },
+      );
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 404) {
+        await _client.dio.post<void>(
+          '/api/notifications/fcm/register',
+          data: {'token': token, 'platform': _platformLabel()},
+        );
+        return;
+      }
+      rethrow;
+    }
   }
 
   @override
-  Future<void> unregisterFcmToken(String token) async {
-    await _client.dio.post<void>(
-      '/api/notifications/fcm/unregister',
-      data: {'token': token},
-    );
+  Future<void> unregisterFcmToken(String token, {String? deviceId}) async {
+    final id = deviceId ?? token;
+    try {
+      await _client.dio.delete<void>('/api/devices/$id');
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 404) {
+        await _client.dio.post<void>(
+          '/api/notifications/fcm/unregister',
+          data: {'token': token},
+        );
+        return;
+      }
+      rethrow;
+    }
   }
 
   @override

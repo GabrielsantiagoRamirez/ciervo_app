@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+
 import '../../../../core/network/api_response_unwrapper.dart';
 import '../../../../core/network/network_client.dart';
 import '../dtos/child_profile_dto.dart';
@@ -14,6 +16,8 @@ abstract interface class KidsRemoteDataSource {
   Future<List<dynamic>> allowedBusinesses(String childId);
   Future<void> saveAllowedBusinesses(String childId, List<String> businessIds);
   Future<List<dynamic>> allowedCategories(String childId);
+  Future<List<dynamic>> categoryCandidates(String childId);
+  Future<List<dynamic>> businessCandidates(String childId);
   Future<void> saveAllowedCategories(String childId, List<int> categoryIds);
   Future<Map<String, dynamic>> spendingLimits(String childId);
   Future<Map<String, dynamic>> updateSpendingLimits(
@@ -81,6 +85,30 @@ class DioKidsRemoteDataSource implements KidsRemoteDataSource {
   @override
   Future<void> deleteChild(String childId) async {
     await _client.dio.delete<void>('/api/guardians/children/$childId');
+  }
+
+  @override
+  Future<List<dynamic>> categoryCandidates(String childId) async {
+    try {
+      return await _list('/api/kids/$childId/category-candidates');
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 404) {
+        return allowedCategories(childId);
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<dynamic>> businessCandidates(String childId) async {
+    try {
+      return await _list('/api/kids/$childId/business-candidates');
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 404) {
+        return const [];
+      }
+      rethrow;
+    }
   }
 
   @override

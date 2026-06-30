@@ -12,12 +12,17 @@ class DeliveryProfile {
     this.lastLatitude,
     this.lastLongitude,
     this.vehicleType,
+    this.maskedVehiclePlate,
+    this.vehiclePhotoMediaId,
     this.settlementAccountVerificationStatus,
     this.settlementAccountRejectionReason,
     this.maskedAccountNumber,
     this.maskedDocumentNumber,
     this.maskedPhone,
     this.maskedMercadoPago,
+    this.kycApproved,
+    this.canGoOnline,
+    this.onlineBlockReason,
   });
   final String status;
   final bool isOnline;
@@ -26,16 +31,24 @@ class DeliveryProfile {
   final double? lastLatitude;
   final double? lastLongitude;
   final String? vehicleType;
+  final String? maskedVehiclePlate;
+  final String? vehiclePhotoMediaId;
   final String? settlementAccountVerificationStatus;
   final String? settlementAccountRejectionReason;
   final String? maskedAccountNumber;
   final String? maskedDocumentNumber;
   final String? maskedPhone;
   final String? maskedMercadoPago;
-  bool get isApproved => status == 'Approved';
-  bool get canWorkOnline => isApproved && isSettlementAccountVerified;
+  final bool? kycApproved;
+  final bool? canGoOnline;
+  final String? onlineBlockReason;
+  bool get isApproved =>
+      status == 'Approved' || status.toLowerCase() == 'approved';
+  bool get canWorkOnline =>
+      isApproved && isSettlementAccountVerified && (canGoOnline ?? true);
   bool get needsSettlementAccountReview =>
       isApproved && !isSettlementAccountVerified;
+  bool get needsKyc => kycApproved == false;
 }
 
 class DeliveryOrder {
@@ -241,34 +254,70 @@ class AvailableDeliveryOrder {
 
 class DeliverySettlementAccount {
   const DeliverySettlementAccount({
-    required this.bank,
-    required this.accountType,
-    required this.accountNumber,
-    required this.holderName,
-    required this.documentNumber,
-    this.walletProvider,
-    this.walletNumber,
+    required this.countryCode,
+    required this.settlementMethod,
+    this.bankId,
+    this.accountType,
+    this.accountNumber,
+    this.holderName,
+    this.documentNumber,
+    this.phoneNumber,
+    this.walletIdentifier,
   });
 
-  final String bank;
-  final String accountType;
-  final String accountNumber;
-  final String holderName;
-  final String documentNumber;
-  final String? walletProvider;
-  final String? walletNumber;
+  final String countryCode;
+  final String settlementMethod;
+  final String? bankId;
+  final String? accountType;
+  final String? accountNumber;
+  final String? holderName;
+  final String? documentNumber;
+  final String? phoneNumber;
+  final String? walletIdentifier;
 
   Map<String, dynamic> toJson() => {
-    'bank': bank,
-    'accountType': accountType,
-    'accountNumber': accountNumber,
-    'holderName': holderName,
-    'documentNumber': documentNumber,
-    if (walletProvider != null && walletProvider!.trim().isNotEmpty)
-      'walletProvider': walletProvider!.trim(),
-    if (walletNumber != null && walletNumber!.trim().isNotEmpty)
-      'walletNumber': walletNumber!.trim(),
+    'countryCode': countryCode,
+    'settlementMethod': settlementMethod,
+    if (bankId != null && bankId!.isNotEmpty) 'bankId': bankId,
+    if (accountType != null && accountType!.isNotEmpty)
+      'accountType': accountType,
+    if (accountNumber != null && accountNumber!.isNotEmpty)
+      'accountNumber': accountNumber,
+    if (holderName != null && holderName!.isNotEmpty)
+      'holderName': holderName,
+    if (documentNumber != null && documentNumber!.isNotEmpty)
+      'documentNumber': documentNumber,
+    if (phoneNumber != null && phoneNumber!.isNotEmpty)
+      'phoneNumber': phoneNumber,
+    if (walletIdentifier != null && walletIdentifier!.isNotEmpty)
+      'walletIdentifier': walletIdentifier,
   };
+}
+
+class DeliverySettlementAccountDetails {
+  const DeliverySettlementAccountDetails({
+    required this.status,
+    this.settlementMethod,
+    this.maskedAccountNumber,
+    this.maskedDocumentNumber,
+    this.maskedPhone,
+    this.maskedMercadoPago,
+    this.maskedVehiclePlate,
+    this.rejectionReason,
+    this.bankName,
+    this.accountType,
+  });
+
+  final String status;
+  final String? settlementMethod;
+  final String? maskedAccountNumber;
+  final String? maskedDocumentNumber;
+  final String? maskedPhone;
+  final String? maskedMercadoPago;
+  final String? maskedVehiclePlate;
+  final String? rejectionReason;
+  final String? bankName;
+  final String? accountType;
 }
 
 class DeliverySettlement {

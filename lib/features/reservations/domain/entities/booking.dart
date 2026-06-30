@@ -11,6 +11,10 @@ class Booking {
     this.businessId,
     this.bookingDate,
     this.businessName,
+    this.categoryName,
+    this.city,
+    this.time,
+    this.businessLogoUrl,
     this.totalAmount,
     this.qrId,
     this.qrPayload,
@@ -27,6 +31,10 @@ class Booking {
   final int? businessId;
   final DateTime? bookingDate;
   final String? businessName;
+  final String? categoryName;
+  final String? city;
+  final String? time;
+  final String? businessLogoUrl;
   final num? totalAmount;
   final String? qrId;
   final String? qrPayload;

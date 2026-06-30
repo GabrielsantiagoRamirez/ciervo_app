@@ -56,6 +56,19 @@ abstract final class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: AppComponentStyles.primaryButton(colorScheme),
       ),
+      tabBarTheme: TabBarThemeData(
+        dividerColor: Colors.transparent,
+        indicatorColor: AppColors.primary,
+        labelColor: AppColors.dayText,
+        unselectedLabelColor: AppColors.dayTextMuted,
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: AppColors.daySurface,
+        indicatorColor: AppColors.primary.withValues(alpha: 0.2),
+        surfaceTintColor: Colors.transparent,
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
+      ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.transparent,
@@ -113,6 +126,19 @@ abstract final class AppTheme {
       inputDecorationTheme: AppComponentStyles.inputDecorationTheme(colorScheme, true),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: AppComponentStyles.primaryButton(colorScheme),
+      ),
+      tabBarTheme: TabBarThemeData(
+        dividerColor: Colors.transparent,
+        indicatorColor: AppColors.primary,
+        labelColor: AppColors.textPrimary,
+        unselectedLabelColor: AppColors.textMuted,
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: AppColors.surfaceHigh,
+        indicatorColor: AppColors.primary.withValues(alpha: 0.2),
+        surfaceTintColor: Colors.transparent,
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         type: BottomNavigationBarType.fixed,

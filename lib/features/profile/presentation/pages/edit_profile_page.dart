@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/input_validators.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
+import '../../../media/presentation/authenticated_media_image.dart';
 import '../../domain/entities/user_profile.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../cubit/profile_cubit.dart';
@@ -35,6 +37,9 @@ class _EditProfileView extends StatefulWidget {
 }
 
 class _EditProfileViewState extends State<_EditProfileView> {
+  static const _maxPhotoBytes = 5 * 1024 * 1024;
+  static const _extensions = {'jpg', 'jpeg', 'png', 'webp'};
+
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _firstName;
   late final TextEditingController _lastName;
@@ -62,7 +67,9 @@ class _EditProfileViewState extends State<_EditProfileView> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<ProfileCubit, ProfileState>(
-      listenWhen: (previous, current) => previous.status != current.status,
+      listenWhen: (previous, current) =>
+          previous.status != current.status ||
+          previous.profile?.photoUrl != current.profile?.photoUrl,
       listener: (context, state) async {
         if (state.status == ProfileStatus.saved) {
           await showDialog<void>(
@@ -83,6 +90,12 @@ class _EditProfileViewState extends State<_EditProfileView> {
           if (!context.mounted) return;
           Navigator.of(context).pop(true);
         }
+        if (state.status == ProfileStatus.loaded &&
+            state.profile?.photoUrl != widget.profile.photoUrl) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Foto actualizada correctamente.')),
+          );
+        }
         if (state.status == ProfileStatus.failure &&
             state.errorMessage != null) {
           ScaffoldMessenger.of(
@@ -91,7 +104,8 @@ class _EditProfileViewState extends State<_EditProfileView> {
         }
       },
       builder: (context, state) {
-        final saving = state.isSaving;
+        final saving = state.isSaving || state.status == ProfileStatus.uploadingPhoto;
+        final profile = state.profile ?? widget.profile;
         return Scaffold(
           appBar: AppBar(title: const Text('Editar perfil')),
           body: AbsorbPointer(
@@ -104,6 +118,44 @@ class _EditProfileViewState extends State<_EditProfileView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      Center(
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            CircleAvatar(
+                              radius: 42,
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.primary,
+                              child: profile.photoUrl == null
+                                  ? Text(
+                                      profile.initials,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .headlineSmall,
+                                    )
+                                  : ClipOval(
+                                      child: AuthenticatedMediaImage(
+                                        mediaId: profile.photoUrl!,
+                                        thumbnail: true,
+                                        width: 84,
+                                        height: 84,
+                                        errorWidget: Text(profile.initials),
+                                      ),
+                                    ),
+                            ),
+                            Positioned(
+                              right: -4,
+                              bottom: -4,
+                              child: IconButton.filledTonal(
+                                tooltip: 'Cambiar foto',
+                                onPressed: saving ? null : _pickPhoto,
+                                icon: const Icon(Icons.camera_alt_outlined),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
                       _field(
                         controller: _firstName,
                         label: 'Nombre',
@@ -173,6 +225,29 @@ class _EditProfileViewState extends State<_EditProfileView> {
         keyboardType: keyboardType,
         decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
       ),
+    );
+  }
+
+  Future<void> _pickPhoto() async {
+    final photo = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 92,
+    );
+    if (photo == null || !mounted) return;
+    final extension = photo.name.split('.').last.toLowerCase();
+    final length = await photo.length();
+    if (!_extensions.contains(extension) || length > _maxPhotoBytes) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Usa JPG, JPEG, PNG o WEBP de máximo 5 MB.'),
+        ));
+      }
+      return;
+    }
+    if (!mounted) return;
+    await context.read<ProfileCubit>().uploadPhoto(
+      path: photo.path,
+      fileName: photo.name,
     );
   }
 

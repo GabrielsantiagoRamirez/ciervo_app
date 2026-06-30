@@ -163,8 +163,9 @@ class _AllowedBusinessesViewState extends State<_AllowedBusinessesView> {
                   const Center(child: CircularProgressIndicator())
                 else if (filtered.isEmpty)
                   const CiervoEmptyState(
-                    title: 'No hay comercios disponibles',
-                    description: 'Prueba con otros filtros.',
+                    title: 'Aún no hay comercios disponibles',
+                    description:
+                        'Todavía no hay comercios para configurar en este menor.',
                     icon: Icons.storefront_outlined,
                   )
                 else

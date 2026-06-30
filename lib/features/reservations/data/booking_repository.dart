@@ -80,8 +80,14 @@ Booking _bookingFromJson(Map<String, dynamic> json) => Booking(
   peopleCount: _int(json['peopleCount']),
   currency: '${json['currency'] ?? 'COP'}',
   businessId: _intOrNull(json['businessId'] ?? json['business']?['id']),
-  bookingDate: DateTime.tryParse('${json['bookingDate'] ?? ''}'),
+  bookingDate: DateTime.tryParse(
+    '${json['bookingDate'] ?? json['date'] ?? ''}',
+  ),
   businessName: _name(json['businessName'] ?? json['business']),
+  categoryName: _name(json['categoryName'] ?? json['category']),
+  city: _name(json['city']),
+  time: _name(json['time'] ?? json['bookingTime']),
+  businessLogoUrl: _name(json['businessLogoUrl'] ?? json['logoUrl']),
   totalAmount: _num(json['totalAmount'] ?? json['amount']),
   qrId: _name(json['qrId'] ?? json['universalQrId']),
   qrPayload: _name(

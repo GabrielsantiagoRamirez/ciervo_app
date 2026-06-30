@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/utils/display_labels.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../chat/domain/repositories/chat_repository.dart';
 import '../../../chat/presentation/cubit/chat_cubit.dart';
 import '../../../chat/presentation/cubit/chat_state.dart';
 import '../../../chat/presentation/pages/chat_conversation_page.dart';
+import '../../../users/presentation/pages/user_search_page.dart';
 
 class VakupliPage extends StatelessWidget {
   const VakupliPage({super.key});
@@ -24,6 +26,13 @@ class _ChatList extends StatelessWidget {
   Widget build(BuildContext context) => BlocBuilder<ChatCubit, ChatState>(
     builder: (context, state) => Scaffold(
       appBar: AppBar(title: const Text('Chat')),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const UserSearchPage()),
+        ),
+        icon: const Icon(Icons.person_search_outlined),
+        label: const Text('Buscar'),
+      ),
       body: RefreshIndicator(
         onRefresh: context.read<ChatCubit>().loadConversations,
         child: switch (state.status) {
@@ -62,7 +71,7 @@ class _ChatList extends StatelessWidget {
                 ),
                 title: Text(conversation.title),
                 subtitle: conversation.lastMessage == null
-                    ? Text(conversation.type)
+                    ? Text(DisplayLabels.conversationType(conversation.type))
                     : Text(
                         conversation.lastMessage!,
                         maxLines: 1,

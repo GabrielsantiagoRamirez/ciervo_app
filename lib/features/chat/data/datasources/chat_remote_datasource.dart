@@ -22,6 +22,20 @@ class ChatRemoteDataSource {
         )).data,
       );
 
+  Future<Map<String, dynamic>> createUserConversation({
+    required String participantUserId,
+  }) async =>
+      unwrapApiMap(
+        (await _client.dio.post<dynamic>(
+          '/api/chat/conversations',
+          data: {
+            'type': 'Direct',
+            'participantUserId':
+                int.tryParse(participantUserId) ?? participantUserId,
+          },
+        )).data,
+      );
+
   Future<Map<String, dynamic>> createBusinessConversation({
     required int businessId,
     required String title,

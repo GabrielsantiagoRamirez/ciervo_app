@@ -168,6 +168,25 @@ class KidsCubit extends Cubit<KidsState> {
     );
   }
 
+  Future<void> loadCategoryCandidates(String childId) async {
+    emit(state.copyWith(status: KidsStatus.loading, clearMessages: true));
+    final result = await _repository.categoryCandidates(childId);
+    result.when(
+      success: (items) => emit(
+        state.copyWith(
+          status: KidsStatus.loaded,
+          overview: {...state.overview, 'allowedCategories': items},
+        ),
+      ),
+      failure: (error) => emit(
+        state.copyWith(
+          status: KidsStatus.failure,
+          errorMessage: UserErrorMessage.from(error),
+        ),
+      ),
+    );
+  }
+
   Future<void> loadAllowedCategories(String childId) async {
     emit(state.copyWith(status: KidsStatus.loading, clearMessages: true));
     final result = await _repository.allowedCategories(childId);

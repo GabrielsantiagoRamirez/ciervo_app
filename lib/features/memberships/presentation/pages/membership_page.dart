@@ -10,6 +10,7 @@ import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
+import '../../../../core/utils/display_labels.dart';
 import '../../../payments/domain/repositories/payments_repository.dart';
 import '../../data/memberships_repository.dart';
 import '../../domain/entities/membership_plan.dart';
@@ -244,7 +245,8 @@ class _MembershipPageState extends State<MembershipPage>
                 padding: EdgeInsets.all(AppSpacing.lg),
                 child: CiervoEmptyState(
                   title: 'Sin planes disponibles',
-                  description: 'Backend no devolvio planes de membresia.',
+                  description:
+                      'Por ahora no hay planes de membresía disponibles en tu país.',
                   icon: Icons.workspace_premium_outlined,
                 ),
               );
@@ -321,11 +323,9 @@ class _MyMembership extends StatelessWidget {
               _line('Plan actual', current.name),
               _line(
                 'Estado',
-                '${membership['status'] ?? current.status ?? 'Activo'}',
-              ),
-              _line(
-                'Plan backend',
-                '${membership['planName'] ?? membership['planCode'] ?? current.name}',
+                DisplayLabels.membershipStatus(
+                  '${membership['status'] ?? current.status ?? 'Activo'}',
+                ),
               ),
               _line('Vence', _date(current.expiresAt)),
               _line(
@@ -406,7 +406,7 @@ class _BenefitsView extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Beneficios MVP',
+                'Beneficios de tu plan',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: AppSpacing.sm),
@@ -513,6 +513,12 @@ class _PlanCard extends StatelessWidget {
                 ),
                 if (highlighted || plan.isCurrent)
                   const Chip(label: Text('Actual')),
+                if (plan.isRecommended)
+                  Chip(
+                    label: const Text('Recomendado'),
+                    backgroundColor:
+                        Theme.of(context).colorScheme.primaryContainer,
+                  ),
               ],
             ),
             const SizedBox(height: AppSpacing.xs),
@@ -529,7 +535,8 @@ class _PlanCard extends StatelessWidget {
               Text(plan.description),
             ],
             if (plan.paymentProvider != null &&
-                plan.paymentProvider!.isNotEmpty) ...[
+                plan.paymentProvider!.isNotEmpty &&
+                plan.paymentProvider!.toLowerCase() != 'mercadopago') ...[
               const SizedBox(height: AppSpacing.xs),
               Text('Proveedor: ${plan.paymentProvider}'),
             ],

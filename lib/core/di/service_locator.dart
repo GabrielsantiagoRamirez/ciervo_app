@@ -43,6 +43,8 @@ import '../../features/family_chat/data/family_chat_repository.dart';
 import '../../features/kids/data/datasources/kids_remote_datasource.dart';
 import '../../features/kids/data/repositories/kids_repository_impl.dart';
 import '../../features/kids/domain/repositories/kids_repository.dart';
+import '../../features/catalogs/data/catalog_repository.dart';
+import '../../features/users/data/user_search_repository.dart';
 import '../../features/kyc/data/kyc_repository.dart';
 import '../../features/location/data/client_location_repository.dart';
 import '../../features/media/data/media_repository.dart';
@@ -248,6 +250,12 @@ Future<void> configureDependencies() async {
     )
     ..registerLazySingleton<KidsRepository>(
       () => KidsRepositoryImpl(getIt<KidsRemoteDataSource>()),
+    )
+    ..registerLazySingleton<CatalogRepository>(
+      () => CatalogRepository(getIt<NetworkClient>()),
+    )
+    ..registerLazySingleton<UserSearchRepository>(
+      () => UserSearchRepository(getIt<NetworkClient>()),
     )
     ..registerLazySingleton<KycRepository>(
       () => KycRepository(getIt<NetworkClient>()),

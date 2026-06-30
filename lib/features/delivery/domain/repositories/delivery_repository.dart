@@ -56,6 +56,7 @@ abstract interface class DeliveryRepository {
   Future<Result<void>> updateSettlementAccount(
     DeliverySettlementAccount account,
   );
+  Future<Result<DeliverySettlementAccountDetails?>> settlementAccount();
   Future<Result<List<DeliverySettlement>>> settlements();
 }
 

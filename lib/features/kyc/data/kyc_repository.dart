@@ -30,20 +30,34 @@ class KycRepository {
 
   Future<Result<KycSubmission?>> me() => _guard(() async {
     final response = await _client.dio.get<dynamic>('/api/kyc/me');
-    final data = unwrapApiMap(response.data);
-    if (data.isEmpty) return null;
-    return _fromJson(data);
+    final raw = unwrapApiResponse(response.data);
+    if (raw == null) return null;
+    if (raw is List) {
+      if (raw.isEmpty) return null;
+      final first = raw.first;
+      if (first is Map<String, dynamic>) return _fromJson(first);
+      if (first is Map) return _fromJson(Map<String, dynamic>.from(first));
+      return null;
+    }
+    if (raw is Map<String, dynamic>) {
+      if (raw.isEmpty) return null;
+      return _fromJson(raw);
+    }
+    if (raw is Map) return _fromJson(Map<String, dynamic>.from(raw));
+    return null;
   });
 
   Future<Result<void>> submit({
     required String documentType,
     required String documentNumber,
     String? notes,
+    String subjectRole = 'Client',
   }) =>
       _guard(() async {
         await _client.dio.post<dynamic>(
           '/api/kyc/submit',
           data: {
+            'subjectRole': subjectRole,
             'documentType': documentType,
             'documentNumber': documentNumber,
             if (notes != null && notes.isNotEmpty) 'notes': notes,
@@ -62,7 +76,7 @@ class KycRepository {
 
 KycSubmission _fromJson(Map<String, dynamic> json) => KycSubmission(
   id: '${json['id'] ?? json['kycId'] ?? ''}',
-  status: '${json['status'] ?? json['approvalStatus'] ?? 'Pending'}',
+  status: '${json['status'] ?? json['approvalStatus'] ?? 'NotSubmitted'}',
   documentType: _s(json['documentType']),
   documentNumber: _s(json['documentNumber'] ?? json['identityDocument']),
   rejectionReason: _s(json['rejectionReason'] ?? json['reason']),

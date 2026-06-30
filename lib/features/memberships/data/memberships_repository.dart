@@ -1,4 +1,5 @@
 import '../../../core/errors/error_mapper.dart';
+import '../../../core/utils/display_labels.dart';
 import '../../../core/network/api_response_unwrapper.dart';
 import '../../../core/network/network_client.dart';
 import '../../../core/result/result.dart';
@@ -83,8 +84,15 @@ MembershipPlan _planFromJson(Map<String, dynamic> json) {
   return MembershipPlan(
     id: _string(json, const ['id', 'planId']),
     code: code.isEmpty ? _string(json, const ['name']).toUpperCase() : code,
-    name: _string(json, const ['name', 'displayName']),
-    description: _string(json, const ['description', 'summary']),
+    name: _string(json, const ['displayName', 'name']).isEmpty
+        ? DisplayLabels.planName(code: code)
+        : DisplayLabels.planName(
+            code: code,
+            name: _string(json, const ['displayName', 'name']),
+          ),
+    description: _string(json, const ['description', 'summary']).isEmpty
+        ? DisplayLabels.planDescription(code)
+        : _string(json, const ['description', 'summary']),
     priceUsd: _double(json, const ['priceUsd', 'price']),
     baseCurrency: _string(json, const ['baseCurrency']).isEmpty
         ? 'USD'
@@ -119,6 +127,8 @@ MembershipPlan _planFromJson(Map<String, dynamic> json) {
       _string(json, const ['expiresAt', 'expirationDate', 'validUntil']),
     ),
     sortOrder: _int(json['sortOrder'] ?? _fallbackSort(code)),
+    period: _stringOrNull(json, const ['period', 'billingPeriod']),
+    isRecommended: _bool(json, const ['isRecommended', 'recommended']),
   );
 }
 

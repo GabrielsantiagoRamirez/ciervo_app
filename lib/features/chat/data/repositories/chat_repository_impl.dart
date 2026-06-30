@@ -56,6 +56,17 @@ class ChatRepositoryImpl implements ChatRepository {
   );
 
   @override
+  Future<Result<ChatConversation>> createUserConversation({
+    required String participantUserId,
+  }) => _guard(
+    () async => conversationFromJson(
+      await _remote.createUserConversation(
+        participantUserId: participantUserId,
+      ),
+    ),
+  );
+
+  @override
   Future<Result<ChatMessage>> sendText(String id, String body) =>
       _guard(() async => messageFromJson(await _remote.sendText(id, body)));
 

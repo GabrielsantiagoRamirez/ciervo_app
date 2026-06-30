@@ -77,6 +77,7 @@ class ChatLocationPayload {
     required this.latitude,
     required this.longitude,
     this.label,
+    this.mapsUrl,
   });
 
   factory ChatLocationPayload.fromJson(Map<String, dynamic> json) {
@@ -84,12 +85,14 @@ class ChatLocationPayload {
       latitude: _double(json['latitude'] ?? json['lat']) ?? 0,
       longitude: _double(json['longitude'] ?? json['lng'] ?? json['lon']) ?? 0,
       label: json['label']?.toString() ?? json['address']?.toString(),
+      mapsUrl: json['mapsUrl']?.toString() ?? json['googleMapsUrl']?.toString(),
     );
   }
 
   final double latitude;
   final double longitude;
   final String? label;
+  final String? mapsUrl;
 }
 
 class ChatSharePayload {

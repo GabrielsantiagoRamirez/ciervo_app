@@ -1,4 +1,5 @@
 import '../../../../core/result/result.dart';
+import '../entities/profile_photo_upload_result.dart';
 import '../entities/user_profile.dart';
 
 abstract interface class ProfileRepository {
@@ -11,7 +12,7 @@ abstract interface class ProfileRepository {
     required String phone,
   });
 
-  Future<Result<String>> uploadPhoto({
+  Future<Result<ProfilePhotoUploadResult>> uploadPhoto({
     required String path,
     required String fileName,
   });

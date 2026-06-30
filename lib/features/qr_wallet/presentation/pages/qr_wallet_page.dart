@@ -14,7 +14,9 @@ import '../../domain/entities/ciervo_qr_item.dart';
 import '../widgets/ciervo_qr_card.dart';
 
 class QrWalletPage extends StatefulWidget {
-  const QrWalletPage({super.key});
+  const QrWalletPage({this.initialTabIndex = 0, super.key});
+
+  final int initialTabIndex;
 
   @override
   State<QrWalletPage> createState() => _QrWalletPageState();
@@ -28,7 +30,11 @@ class _QrWalletPageState extends State<QrWalletPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(
+      length: 4,
+      vsync: this,
+      initialIndex: widget.initialTabIndex.clamp(0, 3),
+    );
     _load();
   }
 
@@ -88,10 +94,11 @@ class _QrWalletPageState extends State<QrWalletPage>
       bottom: TabBar(
         controller: _tabController,
         isScrollable: true,
+        tabAlignment: TabAlignment.start,
         tabs: const [
           Tab(text: 'Activos'),
           Tab(text: 'Entradas'),
-          Tab(text: 'Tarjetas regalo'),
+          Tab(text: 'Regalo'),
           Tab(text: 'Beneficios'),
         ],
       ),

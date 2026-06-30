@@ -21,13 +21,17 @@ class SessionManager {
   Stream<SessionState> get stream => _controller.stream;
 
   Future<void> restore() async {
-    final accessToken = await _storage.read(_accessTokenKey);
-    final refreshToken = await _storage.read(_refreshTokenKey);
-    _emit(
-      accessToken != null && refreshToken != null
-          ? const SessionState.authenticated()
-          : const SessionState.unauthenticated(),
-    );
+    try {
+      final accessToken = await _storage.read(_accessTokenKey);
+      final refreshToken = await _storage.read(_refreshTokenKey);
+      _emit(
+        accessToken != null && refreshToken != null
+            ? const SessionState.authenticated()
+            : const SessionState.unauthenticated(),
+      );
+    } catch (_) {
+      _emit(const SessionState.unauthenticated());
+    }
   }
 
   Future<String?> accessToken() => _storage.read(_accessTokenKey);

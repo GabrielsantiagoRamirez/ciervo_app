@@ -1,5 +1,6 @@
 import '../../../../core/errors/error_mapper.dart';
 import '../../../../core/result/result.dart';
+import '../../domain/entities/profile_photo_upload_result.dart';
 import '../../domain/entities/user_profile.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../datasources/profile_remote_datasource.dart';
@@ -43,15 +44,21 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
-  Future<Result<String>> uploadPhoto({
+  Future<Result<ProfilePhotoUploadResult>> uploadPhoto({
     required String path,
     required String fileName,
   }) async {
     try {
-      return Success(await _remoteDataSource.uploadPhoto(
+      final upload = await _remoteDataSource.uploadPhoto(
         path: path,
         fileName: fileName,
-      ));
+      );
+      return Success(
+        ProfilePhotoUploadResult(
+          mediaId: upload.mediaId,
+          photoUrl: upload.photoUrl,
+        ),
+      );
     } catch (error) {
       return Failure(ErrorMapper.fromObject(error));
     }

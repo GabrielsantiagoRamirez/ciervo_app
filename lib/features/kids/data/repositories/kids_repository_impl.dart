@@ -85,7 +85,16 @@ class KidsRepositoryImpl implements KidsRepository {
     int? categoryId,
   }) async {
     try {
-      return Success(await _remoteDataSource.allowedBusinesses(childId));
+      return Success(await _remoteDataSource.businessCandidates(childId));
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
+  Future<Result<List<dynamic>>> categoryCandidates(String childId) async {
+    try {
+      return Success(await _remoteDataSource.categoryCandidates(childId));
     } catch (error) {
       return Failure(ErrorMapper.fromObject(error));
     }

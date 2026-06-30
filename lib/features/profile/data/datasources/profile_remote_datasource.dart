@@ -5,11 +5,22 @@ import '../../../../core/network/network_client.dart';
 import '../dtos/update_profile_request_dto.dart';
 import '../dtos/user_profile_dto.dart';
 
+class ProfilePhotoUpload {
+  const ProfilePhotoUpload({required this.mediaId, this.photoUrl});
+
+  final String mediaId;
+  final String? photoUrl;
+}
+
 abstract interface class ProfileRemoteDataSource {
   Future<UserProfileDto> getMe();
 
   Future<UserProfileDto> updateMe(UpdateProfileRequestDto request);
-  Future<String> uploadPhoto({required String path, required String fileName});
+
+  Future<ProfilePhotoUpload> uploadPhoto({
+    required String path,
+    required String fileName,
+  });
 }
 
 class DioProfileRemoteDataSource implements ProfileRemoteDataSource {
@@ -52,7 +63,7 @@ class DioProfileRemoteDataSource implements ProfileRemoteDataSource {
   }
 
   @override
-  Future<String> uploadPhoto({
+  Future<ProfilePhotoUpload> uploadPhoto({
     required String path,
     required String fileName,
   }) async {
@@ -65,8 +76,11 @@ class DioProfileRemoteDataSource implements ProfileRemoteDataSource {
     final data = unwrapApiMap(response.data);
     final mediaId = data['mediaId'] ?? data['id'] ?? data['photoMediaId'];
     if (mediaId == null || mediaId.toString().isEmpty) {
-      throw const FormatException('El servidor no devolvio el ID de la foto.');
+      throw const FormatException('El servidor no devolvió el ID de la foto.');
     }
-    return mediaId.toString();
+    return ProfilePhotoUpload(
+      mediaId: mediaId.toString(),
+      photoUrl: data['photoUrl']?.toString(),
+    );
   }
 }

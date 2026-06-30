@@ -151,12 +151,17 @@ class _SearchViewState extends State<_SearchView> {
                   HomeDiscoveryStatus.loading => const SliverToBoxAdapter(
                       child: CiervoLoadingState(itemCount: 4),
                     ),
-                  HomeDiscoveryStatus.empty => const SliverToBoxAdapter(
+                  HomeDiscoveryStatus.empty => SliverToBoxAdapter(
                       child: CiervoEmptyState(
-                        title: 'Sin resultados',
-                        description:
-                            'No encontramos coincidencias para tu busqueda.',
-                        icon: Icons.search_off_rounded,
+                        title: _category == 'turismo'
+                            ? 'Turismo en fase piloto'
+                            : 'Sin resultados',
+                        description: _category == 'turismo'
+                            ? 'Turismo está en fase piloto. Pronto encontrarás más experiencias.'
+                            : 'No encontramos coincidencias para tu búsqueda.',
+                        icon: _category == 'turismo'
+                            ? Icons.travel_explore_outlined
+                            : Icons.search_off_rounded,
                       ),
                     ),
                   HomeDiscoveryStatus.failure => SliverToBoxAdapter(

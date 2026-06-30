@@ -8,15 +8,19 @@ class TransportCard {
     required this.id,
     required this.status,
     this.cardNumber,
+    this.publicCode,
     this.balance,
     this.currency,
+    this.moduleStatus,
   });
 
   final String id;
   final String status;
   final String? cardNumber;
+  final String? publicCode;
   final num? balance;
   final String? currency;
+  final String? moduleStatus;
 }
 
 class TransportRepository {
@@ -36,7 +40,7 @@ class TransportRepository {
     await _client.dio.post<dynamic>('/api/transport/cards');
   });
 
-  Future<Result<Map<String, dynamic>>> validateMock(String cardId) =>
+  Future<Result<Map<String, dynamic>>> validate(String cardId) =>
       _guard(() async {
         final response = await _client.dio.post<dynamic>(
           '/api/transport/validate',
@@ -65,11 +69,13 @@ class TransportRepository {
 TransportCard _cardFromJson(Map<String, dynamic> json) => TransportCard(
   id: '${json['id'] ?? json['cardId'] ?? ''}',
   status: '${json['status'] ?? 'Active'}',
-  cardNumber: _s(json['cardNumber'] ?? json['number']),
+  cardNumber: _s(json['cardNumber'] ?? json['number'] ?? json['publicCode']),
+  publicCode: _s(json['publicCode']),
   balance: json['balance'] is num
       ? json['balance'] as num
       : num.tryParse('${json['balance'] ?? ''}'),
   currency: _s(json['currency']),
+  moduleStatus: _s(json['moduleStatus']),
 );
 
 String? _s(dynamic value) =>

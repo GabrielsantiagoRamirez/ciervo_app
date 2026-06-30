@@ -17,6 +17,9 @@ abstract interface class ChatRepository {
     int? reservationId,
     int? orderId,
   });
+  Future<Result<ChatConversation>> createUserConversation({
+    required String participantUserId,
+  });
   Future<Result<ChatMessage>> sendText(String id, String body);
   Future<Result<ChatMessage>> sendMedia(String id, String path, String fileName);
   Future<Result<ChatMessage>> sendTypedMessage(

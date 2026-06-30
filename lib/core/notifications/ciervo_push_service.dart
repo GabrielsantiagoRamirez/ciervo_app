@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -33,7 +34,24 @@ class CiervoPushService {
   void bindNavigator(GlobalKey<NavigatorState> key) => _navigatorKey = key;
 
   Future<void> initialize() async {
+    try {
+      await _initializeInternal().timeout(const Duration(seconds: 12));
+    } on TimeoutException {
+      debugPrint('[FCM] Inicializacion cancelada por tiempo de espera.');
+    } catch (error) {
+      debugPrint('[FCM] Inicializacion fallida: $error');
+    }
+  }
+
+  Future<void> _initializeInternal() async {
     await _initLocalNotifications();
+
+    if (!_hasValidFirebaseOptions()) {
+      debugPrint(
+        '[FCM] Firebase omitido: ejecuta flutterfire configure para FCM real.',
+      );
+      return;
+    }
 
     try {
       await Firebase.initializeApp(
@@ -61,8 +79,16 @@ class CiervoPushService {
     if (initial != null) _handleOpenedPayload(initial.data);
 
     messaging.onTokenRefresh.listen(_registerToken);
-    final token = await messaging.getToken();
+    final token = await messaging.getToken().timeout(const Duration(seconds: 8));
     if (token != null) await _registerToken(token);
+  }
+
+  bool _hasValidFirebaseOptions() {
+    const placeholder = 'REPLACE_WITH_FLUTTERFIRE';
+    final options = DefaultFirebaseOptions.currentPlatform;
+    return options.apiKey != placeholder &&
+        options.appId != placeholder &&
+        options.messagingSenderId != placeholder;
   }
 
   Future<void> _initLocalNotifications() async {
