@@ -1,4 +1,5 @@
 import '../../../../core/result/result.dart';
+import '../../data/dtos/account_lookup_dto.dart';
 import '../../data/dtos/firebase_auth_dtos.dart';
 import '../entities/auth_session.dart';
 
@@ -36,6 +37,11 @@ abstract interface class AuthRepository {
 
   Future<Result<VerificationSyncResult>> firebaseSyncVerification({
     required String firebaseIdToken,
+  });
+
+  Future<Result<AccountLookupResult>> lookupAccount({
+    String? email,
+    String? phone,
   });
 
   Future<Result<void>> logout();

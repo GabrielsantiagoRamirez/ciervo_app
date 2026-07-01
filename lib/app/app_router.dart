@@ -6,8 +6,6 @@ import '../core/session/session_state.dart';
 import '../core/experience/experience_mode_cubit.dart';
 import '../features/kid_auth/presentation/pages/kid_register_flow_page.dart';
 import '../features/kid_auth/presentation/pages/kid_login_page.dart';
-import '../features/auth/presentation/pages/firebase_login_page.dart';
-import '../features/auth/presentation/pages/firebase_register_page.dart';
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/register_page.dart';
 import '../features/auth/presentation/pages/splash_page.dart';
@@ -83,11 +81,11 @@ GoRouter createAppRouter(
       ),
       GoRoute(
         path: AppRoutePaths.firebaseLogin,
-        builder: (context, state) => const FirebaseLoginPage(),
+        redirect: (_, state) => AppRoutePaths.login,
       ),
       GoRoute(
         path: AppRoutePaths.firebaseRegister,
-        builder: (context, state) => const FirebaseRegisterPage(),
+        redirect: (_, state) => AppRoutePaths.register,
       ),
       GoRoute(
         path: AppRoutePaths.register,

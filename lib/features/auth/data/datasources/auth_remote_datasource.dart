@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../../../core/network/api_response_unwrapper.dart';
 import '../../../../core/network/network_client.dart';
+import '../dtos/account_lookup_dto.dart';
 import '../dtos/auth_session_dto.dart';
 import '../dtos/firebase_auth_dtos.dart';
 import '../dtos/login_request_dto.dart';
@@ -31,6 +32,11 @@ abstract interface class AuthRemoteDataSource {
 
   Future<VerificationSyncResult> firebaseSyncVerification({
     required String firebaseIdToken,
+  });
+
+  Future<AccountLookupResult> lookupAccount({
+    String? email,
+    String? phone,
   });
 }
 
@@ -125,5 +131,21 @@ class DioAuthRemoteDataSource implements AuthRemoteDataSource {
       options: Options(extra: const {'skipAuth': true}),
     );
     return VerificationSyncResult.fromJson(unwrapApiMap(response.data));
+  }
+
+  @override
+  Future<AccountLookupResult> lookupAccount({
+    String? email,
+    String? phone,
+  }) async {
+    final response = await _client.dio.post<Map<String, dynamic>>(
+      '/api/auth/account-lookup',
+      data: {
+        if (email != null && email.trim().isNotEmpty) 'email': email.trim(),
+        if (phone != null && phone.trim().isNotEmpty) 'phone': phone.trim(),
+      },
+      options: Options(extra: const {'skipAuth': true}),
+    );
+    return AccountLookupResult.fromJson(unwrapApiMap(response.data));
   }
 }

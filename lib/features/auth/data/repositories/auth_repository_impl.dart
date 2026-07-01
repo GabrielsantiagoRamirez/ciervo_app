@@ -10,6 +10,7 @@ import '../../../../core/session/session_manager.dart';
 import '../../domain/entities/auth_session.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
+import '../dtos/account_lookup_dto.dart';
 import '../dtos/firebase_auth_dtos.dart';
 import '../dtos/login_request_dto.dart';
 import '../dtos/register_request_dto.dart';
@@ -160,6 +161,20 @@ class AuthRepositoryImpl implements AuthRepository {
         await _remoteDataSource.firebaseSyncVerification(
           firebaseIdToken: firebaseIdToken,
         ),
+      );
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
+  Future<Result<AccountLookupResult>> lookupAccount({
+    String? email,
+    String? phone,
+  }) async {
+    try {
+      return Success(
+        await _remoteDataSource.lookupAccount(email: email, phone: phone),
       );
     } catch (error) {
       return Failure(ErrorMapper.fromObject(error));

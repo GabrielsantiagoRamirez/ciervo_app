@@ -283,6 +283,50 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
     }
   }
 
+  Future<bool> registerWithEmailAccount({
+    required String email,
+    required String password,
+    required String firstName,
+    required String lastName,
+    required String countryCode,
+    required String phoneNational,
+    required String identityDocument,
+    required String documentType,
+    String? city,
+  }) async {
+    emit(state.copyWith(status: FirebaseAuthStatus.loading, clearError: true));
+    try {
+      final e164 = PhoneCountry.toE164(
+        countryCode: countryCode,
+        nationalNumber: phoneNational,
+      );
+      emit(
+        state.copyWith(
+          countryCode: countryCode,
+          phoneE164: e164,
+        ),
+      );
+      await _firebaseAuth.createUserWithEmail(email: email, password: password);
+      await _firebaseAuth.sendEmailVerification();
+      return firebaseRegisterProfile(
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        identityDocument: identityDocument,
+        documentType: documentType,
+        city: city,
+      );
+    } catch (error) {
+      emit(
+        state.copyWith(
+          status: FirebaseAuthStatus.failure,
+          errorMessage: UserErrorMessage.from(ErrorMapper.fromObject(error)),
+        ),
+      );
+      return false;
+    }
+  }
+
   Future<bool> loginWithEmail({
     required String email,
     required String password,
