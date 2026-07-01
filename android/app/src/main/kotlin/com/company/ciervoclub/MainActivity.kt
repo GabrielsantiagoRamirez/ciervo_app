@@ -1,4 +1,4 @@
-package com.example.ciervo_clud
+package com.company.ciervoclub
 
 import io.flutter.embedding.android.FlutterActivity
 

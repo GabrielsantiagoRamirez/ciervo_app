@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.ciervo_clud"
+    namespace = "com.company.ciervoclub"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
