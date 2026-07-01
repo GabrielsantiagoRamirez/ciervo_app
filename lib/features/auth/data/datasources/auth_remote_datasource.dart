@@ -18,11 +18,15 @@ abstract interface class AuthRemoteDataSource {
   Future<FirebaseCheckUserResult> firebaseCheckUser({
     required String firebaseIdToken,
     String? phone,
+    String? email,
+    String? countryCode,
   });
 
   Future<AuthSessionDto> firebaseLogin({
     required String firebaseIdToken,
     String? phone,
+    String? email,
+    String? countryCode,
   });
 
   Future<AuthSessionDto> firebaseRegister({
@@ -32,11 +36,15 @@ abstract interface class AuthRemoteDataSource {
 
   Future<VerificationSyncResult> firebaseSyncVerification({
     required String firebaseIdToken,
+    String? phone,
+    String? email,
+    String? countryCode,
   });
 
   Future<AccountLookupResult> lookupAccount({
     String? email,
     String? phone,
+    String? countryCode,
   });
 
   Future<void> sendEmailVerificationCode(String email);
@@ -45,6 +53,27 @@ abstract interface class AuthRemoteDataSource {
     required String email,
     required String code,
   });
+}
+
+Map<String, dynamic> _firebaseContactPayload({
+  String? phone,
+  String? email,
+  String? countryCode,
+}) {
+  final data = <String, dynamic>{};
+  final phoneText = phone?.trim();
+  final emailText = email?.trim();
+  final country = countryCode?.trim().toUpperCase();
+  if (phoneText != null && phoneText.isNotEmpty) {
+    data['phone'] = phoneText;
+  }
+  if (emailText != null && emailText.isNotEmpty) {
+    data['email'] = emailText;
+  }
+  if (country != null && country.isNotEmpty) {
+    data['countryCode'] = country;
+  }
+  return data;
 }
 
 class DioAuthRemoteDataSource implements AuthRemoteDataSource {
@@ -87,12 +116,18 @@ class DioAuthRemoteDataSource implements AuthRemoteDataSource {
   Future<FirebaseCheckUserResult> firebaseCheckUser({
     required String firebaseIdToken,
     String? phone,
+    String? email,
+    String? countryCode,
   }) async {
     final response = await _client.dio.post<Map<String, dynamic>>(
       '/api/auth/firebase/check-user',
       data: {
         'firebaseIdToken': firebaseIdToken,
-        if (phone != null && phone.isNotEmpty) 'phone': phone,
+        ..._firebaseContactPayload(
+          phone: phone,
+          email: email,
+          countryCode: countryCode,
+        ),
       },
       options: Options(extra: const {'skipAuth': true}),
     );
@@ -103,12 +138,18 @@ class DioAuthRemoteDataSource implements AuthRemoteDataSource {
   Future<AuthSessionDto> firebaseLogin({
     required String firebaseIdToken,
     String? phone,
+    String? email,
+    String? countryCode,
   }) async {
     final response = await _client.dio.post<Map<String, dynamic>>(
       '/api/auth/firebase/login',
       data: {
         'firebaseIdToken': firebaseIdToken,
-        if (phone != null && phone.isNotEmpty) 'phone': phone,
+        ..._firebaseContactPayload(
+          phone: phone,
+          email: email,
+          countryCode: countryCode,
+        ),
       },
       options: Options(extra: const {'skipAuth': true}),
     );
@@ -131,10 +172,20 @@ class DioAuthRemoteDataSource implements AuthRemoteDataSource {
   @override
   Future<VerificationSyncResult> firebaseSyncVerification({
     required String firebaseIdToken,
+    String? phone,
+    String? email,
+    String? countryCode,
   }) async {
     final response = await _client.dio.post<Map<String, dynamic>>(
       '/api/auth/firebase/sync-verification',
-      data: {'firebaseIdToken': firebaseIdToken},
+      data: {
+        'firebaseIdToken': firebaseIdToken,
+        ..._firebaseContactPayload(
+          phone: phone,
+          email: email,
+          countryCode: countryCode,
+        ),
+      },
       options: Options(extra: const {'skipAuth': true}),
     );
     return VerificationSyncResult.fromJson(unwrapApiMap(response.data));
@@ -144,13 +195,15 @@ class DioAuthRemoteDataSource implements AuthRemoteDataSource {
   Future<AccountLookupResult> lookupAccount({
     String? email,
     String? phone,
+    String? countryCode,
   }) async {
     final response = await _client.dio.post<Map<String, dynamic>>(
       '/api/auth/account-lookup',
-      data: {
-        if (email != null && email.trim().isNotEmpty) 'email': email.trim(),
-        if (phone != null && phone.trim().isNotEmpty) 'phone': phone.trim(),
-      },
+      data: _firebaseContactPayload(
+        email: email,
+        phone: phone,
+        countryCode: countryCode,
+      ),
       options: Options(extra: const {'skipAuth': true}),
     );
     return AccountLookupResult.fromJson(unwrapApiMap(response.data));

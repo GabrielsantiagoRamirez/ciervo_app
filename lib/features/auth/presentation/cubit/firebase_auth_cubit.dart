@@ -65,16 +65,19 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
     required String nationalNumber,
     bool resend = false,
   }) async {
+    final national = _digitsOnly(nationalNumber);
     final e164 = PhoneCountry.toE164(
       countryCode: countryCode,
-      nationalNumber: nationalNumber,
+      nationalNumber: national,
     );
     emit(
       state.copyWith(
         status: FirebaseAuthStatus.loading,
         countryCode: countryCode,
         phoneE164: e164,
+        phoneNational: national,
         clearError: true,
+        clearAuthMeta: true,
       ),
     );
     try {
@@ -91,7 +94,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
           );
         },
         onCompleted: (credential) async {
-          await _completePhoneCredential(credential, e164);
+          await _completePhoneCredential(credential);
         },
         onFailed: (error) {
           emit(
@@ -129,7 +132,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
         verificationId: verificationId,
         smsCode: smsCode,
       );
-      await _afterPhoneSignIn(credential, state.phoneE164 ?? '');
+      await _afterPhoneSignIn(credential);
     } catch (error) {
       emit(
         state.copyWith(
@@ -140,16 +143,13 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
     }
   }
 
-  Future<void> _completePhoneCredential(
-    PhoneAuthCredential credential,
-    String phone,
-  ) async {
+  Future<void> _completePhoneCredential(PhoneAuthCredential credential) async {
     emit(state.copyWith(status: FirebaseAuthStatus.loading, clearError: true));
     try {
       final userCredential = await FirebaseAuth.instance.signInWithCredential(
         credential,
       );
-      await _afterPhoneSignIn(userCredential, phone);
+      await _afterPhoneSignIn(userCredential);
     } catch (error) {
       emit(
         state.copyWith(
@@ -160,50 +160,52 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
     }
   }
 
-  Future<void> _afterPhoneSignIn(UserCredential credential, String phone) async {
+  Future<void> _afterPhoneSignIn(UserCredential credential) async {
     final token = await _firebaseAuth.freshIdToken();
     final check = await _authRepository.firebaseCheckUser(
       firebaseIdToken: token,
-      phone: phone,
+      phone: state.phoneNational,
+      countryCode: state.countryCode,
     );
     check.when(
       success: (result) {
-        if (result.exists) {
-          emit(
-            state.copyWith(
-              status: FirebaseAuthStatus.phoneVerified,
-              userExists: true,
-            ),
-          );
-        } else {
-          emit(
-            state.copyWith(
-              status: FirebaseAuthStatus.phoneVerified,
-              userExists: false,
-            ),
-          );
-        }
+        emit(
+          state.copyWith(
+            status: FirebaseAuthStatus.phoneVerified,
+            userExists: result.exists,
+            requiresFirebaseLink: result.requiresFirebaseLink,
+          ),
+        );
       },
       failure: (error) => emit(
         state.copyWith(
           status: FirebaseAuthStatus.phoneVerified,
           userExists: false,
+          requiresFirebaseLink: false,
           errorMessage: _mapError(error),
         ),
       ),
     );
   }
 
-  Future<bool> firebaseLoginExisting() async {
+  Future<bool> firebaseLoginExisting({String? email}) async {
     emit(state.copyWith(status: FirebaseAuthStatus.loading, clearError: true));
     final token = await _firebaseAuth.freshIdToken();
     final result = await _authRepository.firebaseLogin(
       firebaseIdToken: token,
-      phone: state.phoneE164,
+      phone: state.phoneNational,
+      email: email,
+      countryCode: state.countryCode,
     );
     return result.when(
-      success: (_) {
-        emit(state.copyWith(status: FirebaseAuthStatus.success));
+      success: (session) {
+        emit(
+          state.copyWith(
+            status: FirebaseAuthStatus.success,
+            authAction: session.authAction,
+            linkedLegacy: session.isLegacyLink,
+          ),
+        );
         return true;
       },
       failure: (error) {
@@ -240,11 +242,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
           );
           return false;
         }
-        if (password != null && password.isNotEmpty) {
-          await _firebaseAuth.linkEmailToCurrentUser(trimmedEmail);
-        } else {
-          await _firebaseAuth.linkEmailToCurrentUser(trimmedEmail);
-        }
+        await _firebaseAuth.linkEmailToCurrentUser(trimmedEmail);
         await _firebaseAuth.sendEmailVerification();
       }
       final token = await _firebaseAuth.freshIdToken();
@@ -252,10 +250,10 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
           ? state.countryCode
           : CountryRegistration.inferFromPhone(state.phoneE164 ?? '');
       final profile = <String, dynamic>{
-        'phone': state.phoneE164,
+        'phone': state.phoneNational ?? state.phoneE164,
+        'countryCode': countryCode,
         'name': firstName.trim(),
         'lastname': lastName.trim(),
-        'countryCode': countryCode,
         'documentType': documentType,
         'identityDocument': identityDocument.trim(),
         if (trimmedEmail.isNotEmpty) 'email': trimmedEmail,
@@ -268,11 +266,22 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
         profile: profile,
       );
       return result.when(
-        success: (_) {
-          emit(state.copyWith(status: FirebaseAuthStatus.success));
+        success: (session) {
+          emit(
+            state.copyWith(
+              status: FirebaseAuthStatus.success,
+              authAction: session.authAction ?? 'register',
+              linkedLegacy: session.isLegacyLink,
+            ),
+          );
           return true;
         },
         failure: (error) {
+          final message = _mapError(error).toLowerCase();
+          if (message.contains('firebase/login') ||
+              message.contains('usa firebase/login')) {
+            return firebaseLoginExisting(email: trimmedEmail.isEmpty ? null : trimmedEmail);
+          }
           emit(
             state.copyWith(
               status: FirebaseAuthStatus.failure,
@@ -306,14 +315,16 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
   }) async {
     emit(state.copyWith(status: FirebaseAuthStatus.loading, clearError: true));
     try {
+      final national = _digitsOnly(phoneNational);
       final e164 = PhoneCountry.toE164(
         countryCode: countryCode,
-        nationalNumber: phoneNational,
+        nationalNumber: national,
       );
       emit(
         state.copyWith(
           countryCode: countryCode,
           phoneE164: e164,
+          phoneNational: national,
         ),
       );
       await _firebaseAuth.createUserWithEmail(email: email, password: password);
@@ -347,11 +358,19 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
       final token = await _firebaseAuth.freshIdToken();
       final result = await _authRepository.firebaseLogin(
         firebaseIdToken: token,
-        phone: _firebaseAuth.phoneNumber,
+        email: email.trim(),
+        phone: state.phoneNational,
+        countryCode: state.countryCode,
       );
       return result.when(
-        success: (_) {
-          emit(state.copyWith(status: FirebaseAuthStatus.success));
+        success: (session) {
+          emit(
+            state.copyWith(
+              status: FirebaseAuthStatus.success,
+              authAction: session.authAction,
+              linkedLegacy: session.isLegacyLink,
+            ),
+          );
           return true;
         },
         failure: (error) {
@@ -375,13 +394,16 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
     }
   }
 
-  Future<bool> syncVerification() async {
+  Future<bool> syncVerification({String? email}) async {
     emit(state.copyWith(status: FirebaseAuthStatus.loading, clearError: true));
     try {
       await _firebaseAuth.reloadUser();
       final token = await _firebaseAuth.freshIdToken();
       final result = await _authRepository.firebaseSyncVerification(
         firebaseIdToken: token,
+        phone: state.phoneNational,
+        email: email,
+        countryCode: state.countryCode,
       );
       return result.when(
         success: (_) {
@@ -426,6 +448,9 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
       return false;
     }
   }
+
+  String _digitsOnly(String value) =>
+      value.replaceAll(RegExp(r'\D'), '');
 
   String _mapError(Object error) {
     if (error is FirebaseAuthException) {

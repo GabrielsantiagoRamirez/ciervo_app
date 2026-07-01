@@ -15,6 +15,7 @@ import '../../../../core/utils/input_validators.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../widgets/auth_email_verification_step.dart';
+import '../widgets/auth_sms_code_field.dart';
 import '../../data/dtos/account_lookup_dto.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../cubit/auth_cubit.dart';
@@ -30,8 +31,6 @@ enum _EmailStep {
   registerPassword,
   registerProfile,
 }
-
-enum _PhoneAuthIntent { login, register }
 
 /// Pantalla única de acceso: teléfono (Firebase SMS) o correo (lookup + login/registro).
 class UnifiedAuthPage extends StatelessWidget {
@@ -85,7 +84,6 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
   String _phoneCountryCode = CountryRegistration.defaultCountryCode();
   bool _smsSent = false;
   int _phoneStep = 0;
-  _PhoneAuthIntent _phoneAuthIntent = _PhoneAuthIntent.login;
   bool _phoneLookupLoading = false;
 
   // Correo
@@ -131,82 +129,33 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
     super.dispose();
   }
 
+  String _nationalPhoneDigits() =>
+      _phoneController.text.replaceAll(RegExp(r'\D'), '');
+
+  void _showFirebaseAuthSuccess(BuildContext context, FirebaseAuthState state) {
+    final message = switch (state.authAction) {
+      'link_legacy' => 'Cuenta vinculada correctamente.',
+      'register' => 'Cuenta creada correctamente.',
+      _ => 'Sesión iniciada.',
+    };
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
   Future<void> _handlePhoneVerified(
     BuildContext context,
     FirebaseAuthState state,
   ) async {
-    if (state.userExists && _phoneAuthIntent == _PhoneAuthIntent.register) {
-      final login = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Número ya registrado'),
-          content: const Text(
-            'Este teléfono ya tiene una cuenta en Ciervo. '
-            '¿Quieres iniciar sesión con ella?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Usar otro número'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Iniciar sesión'),
-            ),
-          ],
-        ),
-      );
-      if (!context.mounted) return;
-      if (login == true) {
-        final ok = await context.read<FirebaseAuthCubit>().firebaseLoginExisting();
-        if (ok && context.mounted) context.go(AppRoutes.root);
-      } else {
-        context.read<FirebaseAuthCubit>().restartPhoneFlow();
-        setState(() {
-          _phoneStep = 0;
-          _smsSent = false;
-          _smsController.clear();
-        });
-      }
-      return;
-    }
-
-    if (!state.userExists && _phoneAuthIntent == _PhoneAuthIntent.login) {
-      final create = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Cuenta no encontrada'),
-          content: const Text(
-            'No hay una cuenta con este número. ¿Quieres crear una nueva?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancelar'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Crear cuenta'),
-            ),
-          ],
-        ),
-      );
-      if (!context.mounted) return;
-      if (create == true) {
-        setState(() {
-          _phoneAuthIntent = _PhoneAuthIntent.register;
-          _phoneStep = 2;
-        });
-      }
-      return;
-    }
-
-    if (state.userExists) {
+    if (state.shouldFirebaseLogin) {
       final ok = await context.read<FirebaseAuthCubit>().firebaseLoginExisting();
-      if (ok && context.mounted) context.go(AppRoutes.root);
-    } else {
-      setState(() => _phoneStep = 2);
+      if (ok && context.mounted) {
+        // Navegación en listener success + toast authAction.
+      }
+      return;
     }
+    if (!context.mounted) return;
+    setState(() => _phoneStep = 2);
   }
 
   Future<void> _startPhoneSmsFlow(BuildContext context) async {
@@ -215,7 +164,7 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
       return;
     }
 
-    final national = _phoneController.text.trim();
+    final national = _nationalPhoneDigits();
     if (national.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Ingresa tu número de teléfono.')),
@@ -227,9 +176,13 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
       countryCode: _phoneCountryCode,
       nationalNumber: national,
     );
+    final phoneLabel = PhoneCountry.formatForDisplay(e164);
 
     setState(() => _phoneLookupLoading = true);
-    final result = await getIt<AuthRepository>().lookupAccount(phone: e164);
+    final result = await getIt<AuthRepository>().lookupAccount(
+      phone: national,
+      countryCode: _phoneCountryCode,
+    );
     if (!mounted) return;
     setState(() => _phoneLookupLoading = false);
 
@@ -241,14 +194,40 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
 
     if (!context.mounted) return;
 
-    if (lookup?.isPhoneTaken == true) {
-      final login = await showDialog<bool>(
+    if (lookup?.isLegacyLogin == true) {
+      final useSms = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Número ya registrado'),
+          title: const Text('Cuenta con contraseña'),
           content: Text(
-            'El número $e164 ya tiene cuenta en Ciervo. '
-            'Inicia sesión con el código SMS.',
+            'El número $phoneLabel tiene cuenta CIERVO con contraseña. '
+            'Puedes iniciar sesión en la pestaña Correo o continuar con SMS para vincular Firebase.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Usar correo'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Continuar con SMS'),
+            ),
+          ],
+        ),
+      );
+      if (!context.mounted) return;
+      if (useSms != true) {
+        _tabs.animateTo(1);
+        return;
+      }
+    } else if (lookup?.shouldLinkLegacy == true) {
+      final proceed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Vincular tu cuenta'),
+          content: Text(
+            'Ya tienes cuenta CIERVO con $phoneLabel. '
+            'Tras verificar el SMS vincularemos tu acceso con Firebase.',
           ),
           actions: [
             TextButton(
@@ -257,20 +236,41 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Iniciar sesión'),
+              child: const Text('Continuar'),
             ),
           ],
         ),
       );
-      if (login != true || !context.mounted) return;
-      _phoneAuthIntent = _PhoneAuthIntent.login;
-    } else if (lookup?.isPhoneFree == true) {
-      final confirm = await showDialog<bool>(
+      if (proceed != true || !context.mounted) return;
+    } else if (lookup?.exists == true) {
+      final proceed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Iniciar sesión'),
+          content: Text(
+            'Encontramos tu cuenta con $phoneLabel. '
+            'Te enviaremos un código SMS para entrar.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Enviar código'),
+            ),
+          ],
+        ),
+      );
+      if (proceed != true || !context.mounted) return;
+    } else {
+      final proceed = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
           title: const Text('Crear cuenta'),
           content: Text(
-            'No encontramos cuenta con $e164. '
+            'No encontramos cuenta con $phoneLabel. '
             '¿Quieres crear una cuenta nueva?',
           ),
           actions: [
@@ -280,38 +280,12 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Crear cuenta'),
+              child: const Text('Continuar'),
             ),
           ],
         ),
       );
-      if (confirm != true || !context.mounted) return;
-      _phoneAuthIntent = _PhoneAuthIntent.register;
-    } else if (lookup?.exists == true) {
-      final intent = await showDialog<_PhoneAuthIntent>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Número registrado'),
-          content: Text(
-            'El número $e164 ya tiene cuenta en Ciervo. '
-            '¿Qué deseas hacer?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, _PhoneAuthIntent.register),
-              child: const Text('Crear cuenta nueva'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx, _PhoneAuthIntent.login),
-              child: const Text('Vincular / iniciar sesión'),
-            ),
-          ],
-        ),
-      );
-      if (intent == null || !context.mounted) return;
-      _phoneAuthIntent = intent;
-    } else {
-      _phoneAuthIntent = _PhoneAuthIntent.register;
+      if (proceed != true || !context.mounted) return;
     }
 
     context.read<FirebaseAuthCubit>().sendPhoneCode(
@@ -550,7 +524,8 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
             if (state.status == FirebaseAuthStatus.phoneVerified) {
               _handlePhoneVerified(context, state);
             }
-            if (state.status == FirebaseAuthStatus.success && _tabs.index == 0) {
+            if (state.status == FirebaseAuthStatus.success) {
+              _showFirebaseAuthSuccess(context, state);
               context.go(AppRoutes.root);
             }
           },
@@ -752,11 +727,20 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text('Código SMS', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: AppSpacing.md),
-          TextField(
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Ingresa el código de 6 dígitos que enviamos a tu teléfono.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          AuthSmsCodeField(
             controller: _smsController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'Código de 6 dígitos'),
+            enabled: !state.isLoading,
+            onCompleted: state.isLoading
+                ? null
+                : (code) => context
+                    .read<FirebaseAuthCubit>()
+                    .confirmPhoneCode(code),
           ),
           const SizedBox(height: AppSpacing.lg),
           CiervoButton(

@@ -101,11 +101,15 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Result<AuthSession>> firebaseLogin({
     required String firebaseIdToken,
     String? phone,
+    String? email,
+    String? countryCode,
   }) async {
     try {
       final dto = await _remoteDataSource.firebaseLogin(
         firebaseIdToken: firebaseIdToken,
         phone: phone,
+        email: email,
+        countryCode: countryCode,
       );
       final session = dto.toDomain();
       _logAuthDecision(session.tokens.accessToken);
@@ -139,12 +143,16 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Result<FirebaseCheckUserResult>> firebaseCheckUser({
     required String firebaseIdToken,
     String? phone,
+    String? email,
+    String? countryCode,
   }) async {
     try {
       return Success(
         await _remoteDataSource.firebaseCheckUser(
           firebaseIdToken: firebaseIdToken,
           phone: phone,
+          email: email,
+          countryCode: countryCode,
         ),
       );
     } catch (error) {
@@ -155,11 +163,17 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Result<VerificationSyncResult>> firebaseSyncVerification({
     required String firebaseIdToken,
+    String? phone,
+    String? email,
+    String? countryCode,
   }) async {
     try {
       return Success(
         await _remoteDataSource.firebaseSyncVerification(
           firebaseIdToken: firebaseIdToken,
+          phone: phone,
+          email: email,
+          countryCode: countryCode,
         ),
       );
     } catch (error) {
@@ -171,10 +185,15 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Result<AccountLookupResult>> lookupAccount({
     String? email,
     String? phone,
+    String? countryCode,
   }) async {
     try {
       return Success(
-        await _remoteDataSource.lookupAccount(email: email, phone: phone),
+        await _remoteDataSource.lookupAccount(
+          email: email,
+          phone: phone,
+          countryCode: countryCode,
+        ),
       );
     } catch (error) {
       return Failure(ErrorMapper.fromObject(error));

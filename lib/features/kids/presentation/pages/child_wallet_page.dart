@@ -11,6 +11,7 @@ import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
 import '../../domain/repositories/kids_repository.dart';
 import '../utils/child_wallet_card_view.dart';
+import '../../../family_payments/presentation/pages/kid_payment_source_page.dart';
 import 'child_business_payment_page.dart';
 
 class ChildWalletPage extends StatefulWidget {
@@ -266,6 +267,26 @@ class _ChildWalletPageState extends State<ChildWalletPage> {
                         MaterialPageRoute<void>(
                           builder: (_) => ChildBusinessPaymentPage(
                             childId: widget.childId,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  CiervoCard(
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.credit_card_outlined),
+                      title: const Text('Fuente de pago'),
+                      subtitle: const Text(
+                        'Tarjeta del tutor cuando no hay saldo Kids.',
+                      ),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => KidPaymentSourcePage(
+                            kidId: widget.childId,
+                            kidName: 'Menor',
                           ),
                         ),
                       ),

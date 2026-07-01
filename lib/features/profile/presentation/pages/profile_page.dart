@@ -26,6 +26,8 @@ import '../../../transport/presentation/pages/transport_page.dart';
 import '../../../kyc/presentation/pages/kyc_page.dart';
 import '../../../wallet/presentation/pages/wallet_page.dart';
 import '../../../wallet/presentation/pages/payment_requests_page.dart';
+import '../../../family_payments/presentation/pages/family_payment_methods_page.dart';
+import '../../../family_payments/presentation/pages/parent_payment_history_page.dart';
 import '../../../financial_history/presentation/pages/financial_history_page.dart';
 import '../../../receipts/presentation/pages/receipts_page.dart';
 import '../../../cashback/presentation/pages/cashback_page.dart';
@@ -564,6 +566,24 @@ class _AccountActions extends StatelessWidget {
             title: 'Mi Wallet',
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(builder: (_) => const WalletPage()),
+            ),
+          ),
+          _ActionTile(
+            icon: Icons.credit_card,
+            title: 'Métodos de pago familiar',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const FamilyPaymentMethodsPage(),
+              ),
+            ),
+          ),
+          _ActionTile(
+            icon: Icons.receipt_long_outlined,
+            title: 'Historial pagos familiares',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const ParentPaymentHistoryPage(),
+              ),
             ),
           ),
           _ActionTile(

@@ -17,6 +17,9 @@ import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
 import '../../../family_chat/presentation/pages/family_chat_page.dart';
+import '../../../family_payments/presentation/pages/family_payment_methods_page.dart';
+import '../../../family_payments/presentation/pages/kid_parental_rules_hub_page.dart';
+import '../../../family_payments/presentation/pages/parent_payment_history_page.dart';
 import '../../domain/entities/child_profile.dart';
 import '../../domain/repositories/kids_repository.dart';
 import '../cubit/kids_cubit.dart';
@@ -81,6 +84,26 @@ class _KidsView extends StatelessWidget {
                   onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
                       builder: (_) => const GuardianPayForMePage(),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.credit_card),
+                  label: const Text('Métodos de pago'),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const FamilyPaymentMethodsPage(),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.receipt_long_outlined),
+                  label: const Text('Historial pagos familiares'),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const ParentPaymentHistoryPage(),
                     ),
                   ),
                 ),
@@ -391,6 +414,19 @@ class KidsDetailPage extends StatelessWidget {
                         onPressed: () => Navigator.of(context).push(
                           MaterialPageRoute<void>(
                             builder: (_) => ChildWalletPage(childId: childId),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      OutlinedButton.icon(
+                        icon: const Icon(Icons.rule_folder_outlined),
+                        label: const Text('Reglas parentales y pagos'),
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => KidParentalRulesHubPage(
+                              kidId: childId,
+                              kidName: child.fullName,
+                            ),
                           ),
                         ),
                       ),

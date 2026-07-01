@@ -91,6 +91,10 @@ import '../../features/payments/data/datasources/payments_remote_datasource.dart
 import '../../features/payments/data/repositories/payments_repository_impl.dart';
 import '../../features/payments/domain/repositories/payments_repository.dart';
 import '../../features/wallet/data/datasources/payment_approvals_remote_datasource.dart';
+import '../../features/family_payments/data/datasources/family_payments_remote_datasource.dart';
+import '../../features/family_payments/data/repositories/family_payments_repository_impl.dart';
+import '../../features/family_payments/data/services/mercado_pago_card_tokenizer.dart';
+import '../../features/family_payments/domain/repositories/family_payments_repository.dart';
 import '../../features/wallet/data/datasources/wallet_remote_datasource.dart';
 import '../../features/wallet/data/repositories/wallet_repository_impl.dart';
 import '../../features/wallet/domain/repositories/wallet_repository.dart';
@@ -262,6 +266,15 @@ Future<void> configureDependencies() async {
     )
     ..registerLazySingleton<PaymentsRepository>(
       () => PaymentsRepositoryImpl(getIt<PaymentsRemoteDataSource>()),
+    )
+    ..registerLazySingleton<FamilyPaymentsRemoteDataSource>(
+      () => DioFamilyPaymentsRemoteDataSource(getIt<NetworkClient>()),
+    )
+    ..registerLazySingleton<FamilyPaymentsRepository>(
+      () => FamilyPaymentsRepositoryImpl(getIt<FamilyPaymentsRemoteDataSource>()),
+    )
+    ..registerLazySingleton<MercadoPagoCardTokenizer>(
+      MercadoPagoCardTokenizer.new,
     )
     ..registerLazySingleton<WalletRemoteDataSource>(
       () => DioWalletRemoteDataSource(getIt<NetworkClient>()),

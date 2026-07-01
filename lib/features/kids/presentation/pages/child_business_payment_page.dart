@@ -12,6 +12,8 @@ import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
+import '../../../family_payments/data/dtos/family_payment_dtos.dart';
+import '../../../family_payments/presentation/pages/family_payment_navigation.dart';
 import '../../../receipts/domain/entities/action_confirmation.dart';
 import '../../../receipts/presentation/pages/action_confirmation_page.dart';
 import '../../domain/entities/child_profile.dart';
@@ -233,6 +235,12 @@ class _ChildBusinessPaymentPageState extends State<ChildBusinessPaymentPage> {
 
     await result.when(
       success: (payload) async {
+        final detail = FamilyPaymentRecordDto.fromJson(payload).toDetailDomain();
+        if (detail.usedParentCard) {
+          await showFamilyPaymentResultDialog(context, payment: detail);
+          if (mounted) _load();
+          return;
+        }
         final confirmation = ActionConfirmation.fromJson(
           payload,
           fallbackTitle: 'Pago Kids confirmado',

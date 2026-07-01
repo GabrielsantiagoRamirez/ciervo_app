@@ -10,6 +10,8 @@ class AuthSessionDto {
     this.fullName,
     this.roleId,
     this.accountKind,
+    this.authAction,
+    this.linkedLegacy = false,
   });
 
   factory AuthSessionDto.fromJson(Map<String, dynamic> json) {
@@ -46,6 +48,8 @@ class AuthSessionDto {
           _optionalString(source, const ['roleId', 'role']),
       accountKind: _optionalString(userMap, const ['accountKind']) ??
           _optionalString(source, const ['accountKind']),
+      authAction: _optionalString(source, const ['authAction']),
+      linkedLegacy: source['linkedLegacy'] == true,
     );
   }
 
@@ -56,12 +60,16 @@ class AuthSessionDto {
   final String? fullName;
   final String? roleId;
   final String? accountKind;
+  final String? authAction;
+  final bool linkedLegacy;
 
   AuthSession toDomain() {
     return AuthSession(
       tokens: AuthTokens(accessToken: accessToken, refreshToken: refreshToken),
       userId: userId,
       email: email,
+      authAction: authAction,
+      linkedLegacy: linkedLegacy,
     );
   }
 

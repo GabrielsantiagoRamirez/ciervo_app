@@ -23,6 +23,8 @@ abstract interface class AuthRepository {
   Future<Result<AuthSession>> firebaseLogin({
     required String firebaseIdToken,
     String? phone,
+    String? email,
+    String? countryCode,
   });
 
   Future<Result<AuthSession>> firebaseRegister({
@@ -33,15 +35,21 @@ abstract interface class AuthRepository {
   Future<Result<FirebaseCheckUserResult>> firebaseCheckUser({
     required String firebaseIdToken,
     String? phone,
+    String? email,
+    String? countryCode,
   });
 
   Future<Result<VerificationSyncResult>> firebaseSyncVerification({
     required String firebaseIdToken,
+    String? phone,
+    String? email,
+    String? countryCode,
   });
 
   Future<Result<AccountLookupResult>> lookupAccount({
     String? email,
     String? phone,
+    String? countryCode,
   });
 
   Future<Result<void>> sendEmailVerificationCode(String email);

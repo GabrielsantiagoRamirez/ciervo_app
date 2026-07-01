@@ -67,7 +67,7 @@ class _FirebaseLoginPageState extends State<FirebaseLoginPage>
           if (state.status == FirebaseAuthStatus.codeSent) {
             setState(() => _smsSent = true);
           }
-          if (state.status == FirebaseAuthStatus.phoneVerified && state.userExists) {
+          if (state.status == FirebaseAuthStatus.phoneVerified && state.shouldFirebaseLogin) {
             context.read<FirebaseAuthCubit>().firebaseLoginExisting().then((ok) {
               if (ok && context.mounted) context.go(AppRoutes.root);
             });

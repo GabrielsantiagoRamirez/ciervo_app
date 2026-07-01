@@ -76,7 +76,7 @@ class _FirebaseRegisterViewState extends State<_FirebaseRegisterView> {
           setState(() => _step = 1);
         }
         if (state.status == FirebaseAuthStatus.phoneVerified) {
-          if (state.userExists) {
+          if (state.shouldFirebaseLogin) {
             final ok = await context.read<FirebaseAuthCubit>().firebaseLoginExisting();
             if (ok && context.mounted) context.go(AppRoutes.root);
           } else {

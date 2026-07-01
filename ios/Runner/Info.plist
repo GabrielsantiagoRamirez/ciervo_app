@@ -4,6 +4,8 @@
 <dict>
 	<key>NSContactsUsageDescription</key>
 	<string>Ciervo usa tus contactos para encontrar amigos que ya tienen cuenta en la app.</string>
+	<key>GMSApiKey</key>
+	<string>$(GOOGLE_MAPS_API_KEY)</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Ciervo necesita acceso a tus fotos para actualizar tu imagen de perfil.</string>
 	<key>NSCameraUsageDescription</key>

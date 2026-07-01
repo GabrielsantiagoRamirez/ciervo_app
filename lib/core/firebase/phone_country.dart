@@ -37,6 +37,28 @@ abstract final class PhoneCountry {
     }
     return '$dial$digits';
   }
+
+  /// Formato legible para UI: `+57 321 4291986`, `+56 9 12345678`.
+  static String formatForDisplay(String e164) {
+    final normalized = e164.trim();
+    final digits = normalized.replaceAll(RegExp(r'\D'), '');
+    if (digits.isEmpty) return normalized;
+
+    for (final option in options) {
+      final dialDigits = option.dialCode.replaceAll('+', '');
+      if (!digits.startsWith(dialDigits)) continue;
+      final national = digits.substring(dialDigits.length);
+      if (option.countryCode == 'CO' && national.length == 10) {
+        return '${option.dialCode} ${national.substring(0, 3)} ${national.substring(3)}';
+      }
+      if (option.countryCode == 'CL' && national.length == 9) {
+        return '${option.dialCode} ${national.substring(0, 1)} ${national.substring(1)}';
+      }
+      return '${option.dialCode} $national';
+    }
+
+    return normalized.startsWith('+') ? normalized : '+$digits';
+  }
 }
 
 class PhoneCountryOption {

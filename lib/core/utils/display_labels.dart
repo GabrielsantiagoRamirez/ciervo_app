@@ -476,6 +476,44 @@ abstract final class DisplayLabels {
     return const Color(0xFF757575);
   }
 
+  static String familyCardStatus(String? status) {
+    if (status == null || status.isEmpty) return 'Activa';
+    final key = status.toLowerCase().replaceAll('_', '');
+    return switch (key) {
+      'active' || 'verified' || 'approved' => 'Activa',
+      'pending' || 'pendingverification' || 'validating' => 'Validando',
+      'frozen' => 'Congelada',
+      'inactive' || 'disabled' => 'Inactiva',
+      'rejected' || 'failed' => 'Rechazada',
+      'removed' || 'deleted' => 'Eliminada',
+      _ => _humanize(status),
+    };
+  }
+
+  static String familyPaymentStatus(String? status) {
+    if (status == null || status.isEmpty) return 'Pendiente';
+    final key = status.toLowerCase().replaceAll('_', '');
+    return switch (key) {
+      'completed' || 'approved' || 'paid' || 'succeeded' => 'Completado',
+      'pending' || 'processing' => 'Pendiente',
+      'pendingparent' || 'awaitingapproval' => 'Esperando tutor',
+      'rejected' || 'declined' => 'Rechazado',
+      'refunded' => 'Reembolsado',
+      'failed' => 'Fallido',
+      _ => _humanize(status),
+    };
+  }
+
+  static String familyFundingSource(String? source) {
+    if (source == null || source.isEmpty) return 'Wallet Kids';
+    final key = source.toLowerCase().replaceAll('_', '');
+    return switch (key) {
+      'wallet' || 'kidwallet' || 'kidswallet' => 'Wallet Kids',
+      'parentcard' || 'familycard' || 'guardiancard' => 'Tarjeta del tutor',
+      _ => _humanize(source),
+    };
+  }
+
   static String _humanize(String value) {
     if (value.contains('_')) {
       return value

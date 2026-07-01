@@ -11,6 +11,8 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../kid_me/data/kid_me_repository.dart';
+import '../../../family_payments/data/dtos/family_payment_dtos.dart';
+import '../../../family_payments/presentation/pages/family_payment_navigation.dart';
 import '../../../kid_pay_for_me/presentation/pages/kid_pay_for_me_request_page.dart';
 
 class KidNfcPayPage extends StatefulWidget {
@@ -154,9 +156,24 @@ class _KidNfcPayPageState extends State<KidNfcPayPage> {
             status.contains('completed') ||
             status.contains('paid')) {
           _pollTimer?.cancel();
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Pago NFC confirmado.')),
-          );
+          final payment = session['payment'];
+          if (payment is Map) {
+            final detail = FamilyPaymentRecordDto.fromJson(
+              Map<String, dynamic>.from(payment),
+            ).toDetailDomain();
+            showFamilyPaymentResultDialog(context, payment: detail);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  (session['usedParentCard'] == true ||
+                          session['parentCardUsed'] == true)
+                      ? 'Pago autorizado por tu tutor'
+                      : 'Pago realizado',
+                ),
+              ),
+            );
+          }
           Navigator.of(context).pop(true);
         } else if (status.contains('cancel') || status.contains('expir')) {
           _pollTimer?.cancel();

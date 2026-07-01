@@ -15,6 +15,7 @@ import '../../features/secure_shipment/presentation/pages/secure_shipment_detail
 import '../../features/secure_shipment/presentation/pages/secure_shipment_list_page.dart';
 import '../../features/wallet/presentation/pages/payment_requests_page.dart';
 import '../../features/wallet/presentation/pages/wallet_page.dart';
+import '../../features/family_payments/presentation/pages/family_payment_navigation.dart';
 
 /// Navega desde una notificacion (in-app o push) a la pantalla correspondiente.
 class NotificationDeepLink {
@@ -32,6 +33,9 @@ class NotificationDeepLink {
     BuildContext context,
     Map<String, dynamic> data,
   ) {
+    if (FamilyPaymentNavigation.openFromPayload(context, data)) {
+      return true;
+    }
     final deepLink = data['deepLink']?.toString();
     if (deepLink != null && deepLink.isNotEmpty) {
       return _openPath(context, deepLink, null);
@@ -59,6 +63,10 @@ class NotificationDeepLink {
   ) {
     final path = link.startsWith('/') ? link : '/$link';
     final lower = path.toLowerCase();
+
+    if (FamilyPaymentNavigation.openFromDeepLink(context, path)) {
+      return true;
+    }
 
     if (lower.contains('/chat') || lower.contains('/conversations/')) {
       final id = _segmentId(path);
@@ -170,14 +178,29 @@ class NotificationDeepLink {
       }
       return true;
     }
-    if (text.contains('payment_request') ||
+    if (text.contains('payment.pending_parent') ||
+        text.contains('payment.requested') ||
+        text.contains('payment_request') ||
         text.contains('pay_for_me') ||
         text.contains('paga por mi')) {
+      if (FamilyPaymentNavigation.openFromPayload(context, data)) {
+        return true;
+      }
       _push(context, const PaymentRequestsPage());
       return true;
     }
     if (text.contains('approval.requested') ||
-        text.contains('payment_approval')) {
+        text.contains('payment_approval') ||
+        text.contains('payment.approved') ||
+        text.contains('payment.rejected') ||
+        text.contains('payment.completed') ||
+        text.contains('card.added') ||
+        text.contains('card.removed') ||
+        text.contains('limits.updated') ||
+        text.contains('rules.updated')) {
+      if (FamilyPaymentNavigation.openFromPayload(context, data)) {
+        return true;
+      }
       _push(context, const PaymentRequestsPage());
       return true;
     }
