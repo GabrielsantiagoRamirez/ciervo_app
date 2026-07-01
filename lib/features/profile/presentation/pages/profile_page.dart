@@ -39,6 +39,7 @@ import '../widgets/profile_photo_image.dart';
 import '../../domain/entities/user_profile.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../../../wallet/domain/repositories/wallet_repository.dart';
+import '../widgets/email_verification_sheet.dart';
 import '../cubit/profile_cubit.dart';
 import '../cubit/profile_state.dart';
 import 'edit_profile_page.dart';
@@ -393,8 +394,10 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
                 ActionChip(
                   avatar: const Icon(Icons.mark_email_unread_outlined, size: 18),
                   label: const Text('Verificar correo'),
-                  onPressed: () =>
-                      context.read<ProfileCubit>().syncFirebaseVerification(),
+                  onPressed: () => showEmailVerificationSheet(
+                    context,
+                    email: profile.email,
+                  ),
                 ),
               _InfoChip(
                 icon: Icons.verified_user_outlined,

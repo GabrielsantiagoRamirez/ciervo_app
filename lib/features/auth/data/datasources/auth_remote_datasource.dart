@@ -38,6 +38,13 @@ abstract interface class AuthRemoteDataSource {
     String? email,
     String? phone,
   });
+
+  Future<void> sendEmailVerificationCode(String email);
+
+  Future<void> verifyEmailCode({
+    required String email,
+    required String code,
+  });
 }
 
 class DioAuthRemoteDataSource implements AuthRemoteDataSource {
@@ -147,5 +154,31 @@ class DioAuthRemoteDataSource implements AuthRemoteDataSource {
       options: Options(extra: const {'skipAuth': true}),
     );
     return AccountLookupResult.fromJson(unwrapApiMap(response.data));
+  }
+
+  @override
+  Future<void> sendEmailVerificationCode(String email) async {
+    final response = await _client.dio.post<Map<String, dynamic>>(
+      '/api/auth/send-verification-code',
+      data: {'email': email.trim()},
+      options: Options(extra: const {'skipAuth': true}),
+    );
+    unwrapApiResponse(response.data);
+  }
+
+  @override
+  Future<void> verifyEmailCode({
+    required String email,
+    required String code,
+  }) async {
+    final response = await _client.dio.post<Map<String, dynamic>>(
+      '/api/auth/verify-code',
+      data: {
+        'email': email.trim(),
+        'code': code.trim(),
+      },
+      options: Options(extra: const {'skipAuth': true}),
+    );
+    unwrapApiResponse(response.data);
   }
 }

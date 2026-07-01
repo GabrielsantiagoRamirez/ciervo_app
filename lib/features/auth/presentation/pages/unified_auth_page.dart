@@ -156,11 +156,32 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
           _autoDetectPassword = true;
           _useFirebasePassword = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'No pudimos verificar el correo. Ingresa tu contraseña o crea una cuenta nueva.',
+        if (!mounted) return;
+        showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('No encontramos tu correo'),
+            content: const Text(
+              'Puedes iniciar sesión con tu contraseña si ya tienes cuenta, '
+              'o crear una cuenta nueva con este correo.',
             ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Usar contraseña'),
+              ),
+              FilledButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  setState(() {
+                    _emailStep = _EmailStep.registerPassword;
+                    _useFirebasePassword = true;
+                    _autoDetectPassword = false;
+                  });
+                },
+                child: const Text('Crear cuenta'),
+              ),
+            ],
           ),
         );
       },
@@ -322,45 +343,76 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
         ),
       ],
       child: Scaffold(
+        resizeToAvoidBottomInset: true,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: SafeArea(
-          child: responsivePage(
-            context: context,
-            scrollable: false,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _header(context),
-                const SizedBox(height: AppSpacing.md),
-                TabBar(
-                  controller: _tabs,
-                  tabs: const [
-                    Tab(text: 'Teléfono'),
-                    Tab(text: 'Correo'),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final keyboardOpen =
+                  MediaQuery.viewInsetsOf(context).bottom > 0;
+              return Padding(
+                padding: pagePaddingOf(context),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (keyboardOpen)
+                      _compactHeader(context)
+                    else
+                      _header(context),
+                    if (!keyboardOpen) const SizedBox(height: AppSpacing.md),
+                    TabBar(
+                      controller: _tabs,
+                      tabs: const [
+                        Tab(text: 'Teléfono'),
+                        Tab(text: 'Correo'),
+                      ],
+                    ),
+                    Expanded(
+                      child: TabBarView(
+                        controller: _tabs,
+                        children: [
+                          _phoneTab(context),
+                          _emailTab(context),
+                        ],
+                      ),
+                    ),
+                    if (!keyboardOpen)
+                      Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.md),
+                        child: CiervoButton(
+                          label: 'Soy hijo/a',
+                          variant: CiervoButtonVariant.secondary,
+                          icon: Icons.child_care_outlined,
+                          onPressed: () => context.go(AppRoutes.kidLogin),
+                        ),
+                      ),
                   ],
                 ),
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabs,
-                    children: [
-                      _phoneTab(context),
-                      _emailTab(context),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: CiervoButton(
-                    label: 'Soy hijo/a',
-                    variant: CiervoButtonVariant.secondary,
-                    icon: Icons.child_care_outlined,
-                    onPressed: () => context.go(AppRoutes.kidLogin),
-                  ),
-                ),
-              ],
-            ),
+              );
+            },
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _compactHeader(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset(
+            'assets/notifications/ciervo_logo_gold.png',
+            height: 36,
+            fit: BoxFit.contain,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Text(
+            'Ciervo Club',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+        ],
       ),
     );
   }
@@ -407,6 +459,7 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
     final state = context.watch<FirebaseAuthCubit>().state;
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       children: [
         if (state.latitude != null)
           CiervoCard(
@@ -583,6 +636,7 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
 
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       children: [
         if (_emailStep == _EmailStep.enterEmail) _emailEnterStep(context, loading),
         if (_emailStep == _EmailStep.enterPassword) _emailPasswordStep(context, loading),

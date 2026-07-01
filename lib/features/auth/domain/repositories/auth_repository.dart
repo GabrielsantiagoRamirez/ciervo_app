@@ -44,5 +44,12 @@ abstract interface class AuthRepository {
     String? phone,
   });
 
+  Future<Result<void>> sendEmailVerificationCode(String email);
+
+  Future<Result<void>> verifyEmailCode({
+    required String email,
+    required String code,
+  });
+
   Future<Result<void>> logout();
 }

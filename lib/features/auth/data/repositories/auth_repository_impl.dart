@@ -181,6 +181,29 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  @override
+  Future<Result<void>> sendEmailVerificationCode(String email) async {
+    try {
+      await _remoteDataSource.sendEmailVerificationCode(email);
+      return const Success(null);
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
+  Future<Result<void>> verifyEmailCode({
+    required String email,
+    required String code,
+  }) async {
+    try {
+      await _remoteDataSource.verifyEmailCode(email: email, code: code);
+      return const Success(null);
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
   void _logAuthDecision(String accessToken) {
     final claims = AuthTokenClaims.fromJwt(accessToken);
     debugPrint('[AUTH] JWT recibido: $accessToken');

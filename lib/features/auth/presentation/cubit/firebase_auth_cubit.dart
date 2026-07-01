@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/country/country_registration.dart';
 import '../../../../core/errors/error_mapper.dart';
 import '../../../../core/errors/user_error_message.dart';
+import '../../../../core/firebase/firebase_auth_errors.dart';
 import '../../../../core/firebase/firebase_auth_service.dart';
 import '../../../../core/firebase/phone_country.dart';
 import '../../../../core/location/app_location.dart';
@@ -53,7 +54,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
       emit(
         state.copyWith(
           status: FirebaseAuthStatus.initial,
-          errorMessage: UserErrorMessage.from(ErrorMapper.fromObject(error)),
+          errorMessage: _mapError(error),
         ),
       );
     }
@@ -96,7 +97,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
           emit(
             state.copyWith(
               status: FirebaseAuthStatus.failure,
-              errorMessage: error.message ?? 'No se pudo enviar el SMS.',
+              errorMessage: FirebaseAuthErrors.userMessage(error),
             ),
           );
         },
@@ -105,7 +106,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
       emit(
         state.copyWith(
           status: FirebaseAuthStatus.failure,
-          errorMessage: UserErrorMessage.from(ErrorMapper.fromObject(error)),
+          errorMessage: _mapError(error),
         ),
       );
     }
@@ -133,7 +134,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
       emit(
         state.copyWith(
           status: FirebaseAuthStatus.failure,
-          errorMessage: UserErrorMessage.from(ErrorMapper.fromObject(error)),
+          errorMessage: _mapError(error),
         ),
       );
     }
@@ -153,7 +154,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
       emit(
         state.copyWith(
           status: FirebaseAuthStatus.failure,
-          errorMessage: UserErrorMessage.from(ErrorMapper.fromObject(error)),
+          errorMessage: _mapError(error),
         ),
       );
     }
@@ -187,7 +188,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
         state.copyWith(
           status: FirebaseAuthStatus.phoneVerified,
           userExists: false,
-          errorMessage: UserErrorMessage.from(ErrorMapper.fromObject(error)),
+          errorMessage: _mapError(error),
         ),
       ),
     );
@@ -209,7 +210,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
         emit(
           state.copyWith(
             status: FirebaseAuthStatus.failure,
-            errorMessage: UserErrorMessage.from(ErrorMapper.fromObject(error)),
+            errorMessage: _mapError(error),
           ),
         );
         return false;
@@ -266,7 +267,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
           emit(
             state.copyWith(
               status: FirebaseAuthStatus.failure,
-              errorMessage: UserErrorMessage.from(ErrorMapper.fromObject(error)),
+              errorMessage: FirebaseAuthErrors.userMessage(error),
             ),
           );
           return false;
@@ -276,7 +277,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
       emit(
         state.copyWith(
           status: FirebaseAuthStatus.failure,
-          errorMessage: UserErrorMessage.from(ErrorMapper.fromObject(error)),
+          errorMessage: _mapError(error),
         ),
       );
       return false;
@@ -320,7 +321,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
       emit(
         state.copyWith(
           status: FirebaseAuthStatus.failure,
-          errorMessage: UserErrorMessage.from(ErrorMapper.fromObject(error)),
+          errorMessage: _mapError(error),
         ),
       );
       return false;
@@ -348,7 +349,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
           emit(
             state.copyWith(
               status: FirebaseAuthStatus.failure,
-              errorMessage: UserErrorMessage.from(ErrorMapper.fromObject(error)),
+              errorMessage: FirebaseAuthErrors.userMessage(error),
             ),
           );
           return false;
@@ -358,7 +359,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
       emit(
         state.copyWith(
           status: FirebaseAuthStatus.failure,
-          errorMessage: UserErrorMessage.from(ErrorMapper.fromObject(error)),
+          errorMessage: _mapError(error),
         ),
       );
       return false;
@@ -382,7 +383,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
           emit(
             state.copyWith(
               status: FirebaseAuthStatus.failure,
-              errorMessage: UserErrorMessage.from(ErrorMapper.fromObject(error)),
+              errorMessage: FirebaseAuthErrors.userMessage(error),
             ),
           );
           return false;
@@ -392,7 +393,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
       emit(
         state.copyWith(
           status: FirebaseAuthStatus.failure,
-          errorMessage: UserErrorMessage.from(ErrorMapper.fromObject(error)),
+          errorMessage: _mapError(error),
         ),
       );
       return false;
@@ -406,10 +407,17 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
     } catch (error) {
       emit(
         state.copyWith(
-          errorMessage: UserErrorMessage.from(ErrorMapper.fromObject(error)),
+          errorMessage: _mapError(error),
         ),
       );
       return false;
     }
+  }
+
+  String _mapError(Object error) {
+    if (error is FirebaseAuthException) {
+      return FirebaseAuthErrors.userMessage(error);
+    }
+    return UserErrorMessage.from(ErrorMapper.fromObject(error));
   }
 }

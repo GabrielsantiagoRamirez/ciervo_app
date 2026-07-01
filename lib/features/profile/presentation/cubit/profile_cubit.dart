@@ -1,7 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
-import '../../../../core/errors/error_mapper.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/firebase/firebase_auth_service.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
@@ -154,20 +153,56 @@ class ProfileCubit extends Cubit<ProfileState> {
     );
   }
 
-  Future<void> syncFirebaseVerification() async {
-    emit(state.copyWith(status: ProfileStatus.loading, clearError: true));
-    final firebase = getIt<FirebaseAuthService>();
-    final auth = getIt<AuthRepository>();
-    if (!firebase.isSignedIn) {
+  Future<void> verifyEmailWithCode(String code) async {
+    final email = state.profile?.email.trim();
+    if (email == null || email.isEmpty) {
       emit(
         state.copyWith(
-          status: ProfileStatus.loaded,
-          errorMessage:
-              'Para sincronizar la verificación, inicia sesión con Firebase en este dispositivo.',
+          errorMessage: 'No encontramos un correo en tu perfil.',
         ),
       );
       return;
     }
+    emit(state.copyWith(status: ProfileStatus.loading, clearError: true));
+    final auth = getIt<AuthRepository>();
+    final result = await auth.verifyEmailCode(email: email, code: code);
+    await result.when(
+      success: (_) async {
+        await _syncFirebaseVerificationIfAvailable();
+        await loadProfile();
+      },
+      failure: (error) async {
+        emit(
+          state.copyWith(
+            status: ProfileStatus.loaded,
+            errorMessage: UserErrorMessage.from(error),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> openEmailVerification() async {
+    final email = state.profile?.email.trim();
+    if (email == null || email.isEmpty) {
+      emit(
+        state.copyWith(
+          errorMessage: 'Agrega un correo en tu perfil antes de verificar.',
+        ),
+      );
+      return;
+    }
+    emit(state.copyWith(clearError: true));
+  }
+
+  Future<void> syncFirebaseVerification() async {
+    await _syncFirebaseVerificationIfAvailable();
+  }
+
+  Future<void> _syncFirebaseVerificationIfAvailable() async {
+    final firebase = getIt<FirebaseAuthService>();
+    final auth = getIt<AuthRepository>();
+    if (!firebase.isSignedIn) return;
     try {
       if (!firebase.isEmailVerified) {
         await firebase.sendEmailVerification();
@@ -183,32 +218,17 @@ class ProfileCubit extends Cubit<ProfileState> {
               state.copyWith(
                 status: ProfileStatus.loaded,
                 profile: current.copyWith(
-                  emailVerified: sync.emailVerified,
-                  phoneVerified: sync.phoneVerified,
+                  emailVerified: sync.emailVerified || current.emailVerified,
+                  phoneVerified: sync.phoneVerified || current.phoneVerified,
                   countryCode: sync.countryCode ?? current.countryCode,
                 ),
+                clearError: true,
               ),
             );
-          } else {
-            await loadProfile();
           }
         },
-        failure: (error) async {
-          emit(
-            state.copyWith(
-              status: ProfileStatus.loaded,
-              errorMessage: UserErrorMessage.from(error),
-            ),
-          );
-        },
+        failure: (_) {},
       );
-    } catch (error) {
-      emit(
-        state.copyWith(
-          status: ProfileStatus.loaded,
-          errorMessage: UserErrorMessage.from(ErrorMapper.fromObject(error)),
-        ),
-      );
-    }
+    } catch (_) {}
   }
 }
