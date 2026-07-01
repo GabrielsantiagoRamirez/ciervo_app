@@ -6,6 +6,8 @@ import '../core/session/session_state.dart';
 import '../core/experience/experience_mode_cubit.dart';
 import '../features/kid_auth/presentation/pages/kid_register_flow_page.dart';
 import '../features/kid_auth/presentation/pages/kid_login_page.dart';
+import '../features/auth/presentation/pages/firebase_login_page.dart';
+import '../features/auth/presentation/pages/firebase_register_page.dart';
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/register_page.dart';
 import '../features/auth/presentation/pages/splash_page.dart';
@@ -19,6 +21,8 @@ abstract final class AppRoutePaths {
   static const login = '/login';
   static const kidLogin = '/kid-login';
   static const kidRegister = '/kid-register';
+  static const firebaseLogin = '/firebase-login';
+  static const firebaseRegister = '/firebase-register';
   static const register = '/register';
   static const experienceMode = '/experience-mode';
 }
@@ -41,6 +45,8 @@ GoRouter createAppRouter(
       final isAuthRoute = location == AppRoutePaths.login ||
           location == AppRoutePaths.kidLogin ||
           location == AppRoutePaths.kidRegister ||
+          location == AppRoutePaths.firebaseLogin ||
+          location == AppRoutePaths.firebaseRegister ||
           location == AppRoutePaths.register;
       final isSplash = location == AppRoutePaths.splash;
 
@@ -74,6 +80,14 @@ GoRouter createAppRouter(
       GoRoute(
         path: AppRoutePaths.kidRegister,
         builder: (context, state) => const KidRegisterFlowPage(),
+      ),
+      GoRoute(
+        path: AppRoutePaths.firebaseLogin,
+        builder: (context, state) => const FirebaseLoginPage(),
+      ),
+      GoRoute(
+        path: AppRoutePaths.firebaseRegister,
+        builder: (context, state) => const FirebaseRegisterPage(),
       ),
       GoRoute(
         path: AppRoutePaths.register,

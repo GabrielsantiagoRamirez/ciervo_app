@@ -1,4 +1,5 @@
 import '../../../../core/result/result.dart';
+import '../../data/dtos/firebase_auth_dtos.dart';
 import '../entities/auth_session.dart';
 
 abstract interface class AuthRepository {
@@ -16,6 +17,25 @@ abstract interface class AuthRepository {
     required String identityDocument,
     required String documentType,
     required String countryCode,
+  });
+
+  Future<Result<AuthSession>> firebaseLogin({
+    required String firebaseIdToken,
+    String? phone,
+  });
+
+  Future<Result<AuthSession>> firebaseRegister({
+    required String firebaseIdToken,
+    required Map<String, dynamic> profile,
+  });
+
+  Future<Result<FirebaseCheckUserResult>> firebaseCheckUser({
+    required String firebaseIdToken,
+    String? phone,
+  });
+
+  Future<Result<VerificationSyncResult>> firebaseSyncVerification({
+    required String firebaseIdToken,
   });
 
   Future<Result<void>> logout();

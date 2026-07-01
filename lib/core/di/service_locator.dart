@@ -10,6 +10,7 @@ import '../network/network_client.dart';
 import '../permissions/app_permission_service.dart';
 import '../session/session_manager.dart';
 import '../storage/secure_storage.dart';
+import '../firebase/firebase_auth_service.dart';
 import '../location/location_service.dart';
 import '../kids/selected_kid_context.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
@@ -106,6 +107,7 @@ Future<void> configureDependencies() async {
     ..registerLazySingleton<LocationService>(
       () => GeolocatorLocationService(getIt<SecureStorage>()),
     )
+    ..registerLazySingleton<FirebaseAuthService>(FirebaseAuthService.new)
     ..registerLazySingleton<AppPermissionService>(
       () => DeviceAppPermissionService(getIt<LocationService>()),
     )

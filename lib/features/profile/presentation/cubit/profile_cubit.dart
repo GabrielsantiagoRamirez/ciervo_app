@@ -1,6 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/di/service_locator.dart';
+import '../../../../core/errors/error_mapper.dart';
 import '../../../../core/errors/user_error_message.dart';
+import '../../../../core/firebase/firebase_auth_service.dart';
+import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../../../core/result/result.dart';
 import '../../../wallet/domain/entities/ciervo_wallet_identity.dart';
 import '../../../wallet/domain/repositories/wallet_repository.dart';
@@ -148,5 +152,63 @@ class ProfileCubit extends Cubit<ProfileState> {
         errorMessage: UserErrorMessage.from(error),
       )),
     );
+  }
+
+  Future<void> syncFirebaseVerification() async {
+    emit(state.copyWith(status: ProfileStatus.loading, clearError: true));
+    final firebase = getIt<FirebaseAuthService>();
+    final auth = getIt<AuthRepository>();
+    if (!firebase.isSignedIn) {
+      emit(
+        state.copyWith(
+          status: ProfileStatus.loaded,
+          errorMessage:
+              'Para sincronizar la verificación, inicia sesión con Firebase en este dispositivo.',
+        ),
+      );
+      return;
+    }
+    try {
+      if (!firebase.isEmailVerified) {
+        await firebase.sendEmailVerification();
+      }
+      await firebase.reloadUser();
+      final token = await firebase.freshIdToken();
+      final result = await auth.firebaseSyncVerification(firebaseIdToken: token);
+      await result.when(
+        success: (sync) async {
+          final current = state.profile;
+          if (current != null) {
+            emit(
+              state.copyWith(
+                status: ProfileStatus.loaded,
+                profile: current.copyWith(
+                  emailVerified: sync.emailVerified,
+                  phoneVerified: sync.phoneVerified,
+                  countryCode: sync.countryCode ?? current.countryCode,
+                ),
+              ),
+            );
+          } else {
+            await loadProfile();
+          }
+        },
+        failure: (error) async {
+          emit(
+            state.copyWith(
+              status: ProfileStatus.loaded,
+              errorMessage: UserErrorMessage.from(error),
+            ),
+          );
+        },
+      );
+    } catch (error) {
+      emit(
+        state.copyWith(
+          status: ProfileStatus.loaded,
+          errorMessage: UserErrorMessage.from(ErrorMapper.fromObject(error)),
+        ),
+      );
+    }
   }
 }

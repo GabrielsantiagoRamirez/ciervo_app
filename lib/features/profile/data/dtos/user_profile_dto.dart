@@ -16,6 +16,9 @@ class UserProfileDto {
     this.locationUpdatedAt,
     this.city,
     this.countryCode,
+    this.emailVerified = false,
+    this.phoneVerified = false,
+    this.authProvider,
   });
 
   factory UserProfileDto.fromJson(Map<String, dynamic> json) {
@@ -66,7 +69,10 @@ class UserProfileDto {
       currentLongitude: _double(source['currentLongitude']),
       locationUpdatedAt: DateTime.tryParse('${source['locationUpdatedAt'] ?? ''}'),
       city: _optionalString(source, const ['city']),
-      countryCode: _optionalString(source, const ['countryCode']),
+      countryCode: _optionalString(source, const ['countryCode', 'CountryCode']),
+      emailVerified: _bool(source, const ['emailVerified', 'EmailVerified']),
+      phoneVerified: _bool(source, const ['phoneVerified', 'PhoneVerified']),
+      authProvider: _optionalString(source, const ['authProvider', 'AuthProvider']),
     );
   }
 
@@ -84,6 +90,9 @@ class UserProfileDto {
   final DateTime? locationUpdatedAt;
   final String? city;
   final String? countryCode;
+  final bool emailVerified;
+  final bool phoneVerified;
+  final String? authProvider;
 
   UserProfile toDomain() {
     return UserProfile(
@@ -101,6 +110,9 @@ class UserProfileDto {
       locationUpdatedAt: locationUpdatedAt,
       city: city,
       countryCode: countryCode,
+      emailVerified: emailVerified,
+      phoneVerified: phoneVerified,
+      authProvider: authProvider,
     );
   }
 
@@ -120,4 +132,13 @@ class UserProfileDto {
 
   static double? _double(dynamic value) =>
       value is num ? value.toDouble() : double.tryParse('${value ?? ''}');
+
+  static bool _bool(Map<String, dynamic> json, List<String> keys) {
+    for (final key in keys) {
+      final value = json[key];
+      if (value is bool) return value;
+      if (value != null) return value.toString().toLowerCase() == 'true';
+    }
+    return false;
+  }
 }

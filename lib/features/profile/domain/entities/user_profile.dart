@@ -14,6 +14,9 @@ class UserProfile {
     this.locationUpdatedAt,
     this.city,
     this.countryCode,
+    this.emailVerified = false,
+    this.phoneVerified = false,
+    this.authProvider,
   });
 
   final String id;
@@ -30,23 +33,36 @@ class UserProfile {
   final DateTime? locationUpdatedAt;
   final String? city;
   final String? countryCode;
+  final bool emailVerified;
+  final bool phoneVerified;
+  final String? authProvider;
 
-  UserProfile copyWith({String? photoUrl}) => UserProfile(
-    id: id,
-    firstName: firstName,
-    lastName: lastName,
-    email: email,
-    phone: phone,
-    ciervoUserCode: ciervoUserCode,
-    identityDocument: identityDocument,
-    documentType: documentType,
-    photoUrl: photoUrl ?? this.photoUrl,
-    currentLatitude: currentLatitude,
-    currentLongitude: currentLongitude,
-    locationUpdatedAt: locationUpdatedAt,
-    city: city,
-    countryCode: countryCode,
-  );
+  UserProfile copyWith({
+    String? photoUrl,
+    bool? emailVerified,
+    bool? phoneVerified,
+    String? countryCode,
+    String? ciervoUserCode,
+  }) =>
+      UserProfile(
+        id: id,
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        phone: phone,
+        ciervoUserCode: ciervoUserCode ?? this.ciervoUserCode,
+        identityDocument: identityDocument,
+        documentType: documentType,
+        photoUrl: photoUrl ?? this.photoUrl,
+        currentLatitude: currentLatitude,
+        currentLongitude: currentLongitude,
+        locationUpdatedAt: locationUpdatedAt,
+        city: city,
+        countryCode: countryCode ?? this.countryCode,
+        emailVerified: emailVerified ?? this.emailVerified,
+        phoneVerified: phoneVerified ?? this.phoneVerified,
+        authProvider: authProvider,
+      );
 
   String get fullName {
     final value = '$firstName $lastName'.trim();
@@ -64,4 +80,7 @@ class UserProfile {
     final ref = photoUrl?.trim();
     return ref != null && ref.isNotEmpty;
   }
+
+  bool get isFirebaseAuth =>
+      (authProvider ?? '').toLowerCase().contains('firebase');
 }

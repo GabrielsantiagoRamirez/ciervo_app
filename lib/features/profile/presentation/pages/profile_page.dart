@@ -363,11 +363,39 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
                     ? 'Telefono pendiente'
                     : profile.phone,
               ),
+              _InfoChip(
+                icon: profile.phoneVerified
+                    ? Icons.verified_outlined
+                    : Icons.phone_iphone_outlined,
+                label: profile.phoneVerified
+                    ? 'Teléfono verificado'
+                    : 'Teléfono sin verificar',
+              ),
+              _InfoChip(
+                icon: profile.emailVerified
+                    ? Icons.mark_email_read_outlined
+                    : Icons.mark_email_unread_outlined,
+                label: profile.emailVerified
+                    ? 'Email verificado'
+                    : 'Email sin verificar',
+              ),
+              if ((profile.countryCode ?? '').isNotEmpty)
+                _InfoChip(
+                  icon: Icons.public_outlined,
+                  label: profile.countryCode!,
+                ),
               _ProfileCiervoIdChip(
                 code: widget.ciervoUserCode,
                 loading: widget.loadingCiervoId,
                 onRetry: () => context.read<ProfileCubit>().refreshCiervoId(),
               ),
+              if (!profile.emailVerified)
+                ActionChip(
+                  avatar: const Icon(Icons.mark_email_unread_outlined, size: 18),
+                  label: const Text('Verificar correo'),
+                  onPressed: () =>
+                      context.read<ProfileCubit>().syncFirebaseVerification(),
+                ),
               _InfoChip(
                 icon: Icons.verified_user_outlined,
                 label: _profileStatus(profile),

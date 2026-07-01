@@ -278,9 +278,15 @@ class _RegisterViewState extends State<_RegisterView> {
                           ),
                           const SizedBox(height: AppSpacing.lg),
                           CiervoButton(
+                            label: 'Crear cuenta con teléfono',
+                            icon: Icons.phone_android_outlined,
+                            onPressed: () => context.go(AppRoutes.firebaseRegister),
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          CiervoButton(
                             label: state.isLoading
                                 ? 'Creando cuenta'
-                                : 'Registrarme',
+                                : 'Registrarme (clasico)',
                             icon: Icons.app_registration,
                             state: state.isLoading
                                 ? CiervoButtonState.loading

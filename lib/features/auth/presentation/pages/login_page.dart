@@ -165,9 +165,15 @@ class _LoginViewState extends State<_LoginView> {
                           ),
                           const SizedBox(height: AppSpacing.lg),
                           CiervoButton(
+                            label: 'Iniciar con teléfono o correo',
+                            icon: Icons.verified_user_outlined,
+                            onPressed: () => context.go(AppRoutes.firebaseLogin),
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          CiervoButton(
                             label: state.isLoading
                                 ? 'Validando acceso'
-                                : 'Iniciar sesion',
+                                : 'Iniciar sesion (clasico)',
                             icon: Icons.login,
                             state: state.isLoading
                                 ? CiervoButtonState.loading

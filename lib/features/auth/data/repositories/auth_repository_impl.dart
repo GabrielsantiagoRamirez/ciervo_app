@@ -10,6 +10,7 @@ import '../../../../core/session/session_manager.dart';
 import '../../domain/entities/auth_session.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
+import '../dtos/firebase_auth_dtos.dart';
 import '../dtos/login_request_dto.dart';
 import '../dtos/register_request_dto.dart';
 
@@ -90,6 +91,76 @@ class AuthRepositoryImpl implements AuthRepository {
       _logAuthDecision(session.tokens.accessToken);
       await _sessionManager.saveTokens(session.tokens);
       return Success(session);
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
+  Future<Result<AuthSession>> firebaseLogin({
+    required String firebaseIdToken,
+    String? phone,
+  }) async {
+    try {
+      final dto = await _remoteDataSource.firebaseLogin(
+        firebaseIdToken: firebaseIdToken,
+        phone: phone,
+      );
+      final session = dto.toDomain();
+      _logAuthDecision(session.tokens.accessToken);
+      await _sessionManager.saveTokens(session.tokens);
+      return Success(session);
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
+  Future<Result<AuthSession>> firebaseRegister({
+    required String firebaseIdToken,
+    required Map<String, dynamic> profile,
+  }) async {
+    try {
+      final dto = await _remoteDataSource.firebaseRegister(
+        firebaseIdToken: firebaseIdToken,
+        profile: profile,
+      );
+      final session = dto.toDomain();
+      _logAuthDecision(session.tokens.accessToken);
+      await _sessionManager.saveTokens(session.tokens);
+      return Success(session);
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
+  Future<Result<FirebaseCheckUserResult>> firebaseCheckUser({
+    required String firebaseIdToken,
+    String? phone,
+  }) async {
+    try {
+      return Success(
+        await _remoteDataSource.firebaseCheckUser(
+          firebaseIdToken: firebaseIdToken,
+          phone: phone,
+        ),
+      );
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
+  Future<Result<VerificationSyncResult>> firebaseSyncVerification({
+    required String firebaseIdToken,
+  }) async {
+    try {
+      return Success(
+        await _remoteDataSource.firebaseSyncVerification(
+          firebaseIdToken: firebaseIdToken,
+        ),
+      );
     } catch (error) {
       return Failure(ErrorMapper.fromObject(error));
     }
