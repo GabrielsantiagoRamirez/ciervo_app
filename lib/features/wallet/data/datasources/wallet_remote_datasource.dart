@@ -26,6 +26,7 @@ abstract interface class WalletRemoteDataSource {
     required double amount,
     required String description,
     String? walletCardId,
+    String currency = 'COP',
   });
   Future<PaymentRequestDto> requestMoney({
     String? payerUserId,
@@ -34,11 +35,14 @@ abstract interface class WalletRemoteDataSource {
     required String description,
     String? chatConversationId,
     int? businessId,
+    int? bookingId,
+    String currency = 'COP',
   });
   Future<RechargeIntentDto> rechargeByCiervoId({
     required String targetCiervoUserCode,
     required double amount,
     String? description,
+    String currency = 'COP',
   });
   Future<List<PaymentRequestDto>> paymentRequestsInbox();
   Future<List<PaymentRequestDto>> paymentRequestsSent();
@@ -169,13 +173,14 @@ class DioWalletRemoteDataSource implements WalletRemoteDataSource {
     required double amount,
     required String description,
     String? walletCardId,
+    String currency = 'COP',
   }) async {
     final response = await _client.dio.post<Map<String, dynamic>>(
       '/api/wallet/transfer',
       data: {
         'targetCiervoUserCode': targetCiervoUserCode,
         'amount': amount,
-        'currency': 'COP',
+        'currency': currency,
         'idempotencyKey': _idempotencyKey('transfer', targetCiervoUserCode),
         'description': description,
         if (walletCardId != null) 'walletCardId': int.tryParse(walletCardId) ?? walletCardId,
@@ -192,14 +197,18 @@ class DioWalletRemoteDataSource implements WalletRemoteDataSource {
     required String description,
     String? chatConversationId,
     int? businessId,
+    int? bookingId,
+    String currency = 'COP',
   }) async {
     final seed = payerCiervoUserCode ?? payerUserId ?? 'unknown';
     final data = <String, dynamic>{
       'amount': amount,
-      'currency': 'COP',
+      'currency': currency,
       'description': description,
-      'purpose': 'PayForMe',
-      'idempotencyKey': _idempotencyKey('pay-for-me', seed),
+      'purpose': bookingId != null ? 'ReservationPayment' : 'PayForMe',
+      'idempotencyKey': bookingId != null
+          ? _idempotencyKey('pay-for-me-reserva', '$bookingId')
+          : _idempotencyKey('pay-for-me', seed),
     };
     if (payerCiervoUserCode != null && payerCiervoUserCode.isNotEmpty) {
       data['payerCiervoUserCode'] = payerCiervoUserCode;
@@ -209,6 +218,9 @@ class DioWalletRemoteDataSource implements WalletRemoteDataSource {
     }
     if (businessId != null) {
       data['businessId'] = businessId;
+    }
+    if (bookingId != null) {
+      data['bookingId'] = bookingId;
     }
     if (chatConversationId != null && chatConversationId.isNotEmpty) {
       data['chatConversationId'] =
@@ -226,13 +238,14 @@ class DioWalletRemoteDataSource implements WalletRemoteDataSource {
     required String targetCiervoUserCode,
     required double amount,
     String? description,
+    String currency = 'COP',
   }) async {
     final response = await _client.dio.post<Map<String, dynamic>>(
       '/api/wallet/recharge-by-ciervo-id',
       data: {
         'targetCiervoUserCode': targetCiervoUserCode,
         'amount': amount,
-        'currency': 'COP',
+        'currency': currency,
         'description': description ?? 'Recarga CIERVO',
         'idempotencyKey': _idempotencyKey('recharge-cid', targetCiervoUserCode),
       },

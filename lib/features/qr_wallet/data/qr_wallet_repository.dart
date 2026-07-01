@@ -44,14 +44,56 @@ class QrWalletRepository {
     return _list(response.data).map(_benefitFromJson).toList();
   });
 
-  Future<Result<int?>> rewardPoints() => _guard(() async {
-    final response = await _client.dio.get<dynamic>('/api/rewards/me/points');
-    final data = unwrapApiResponse(response.data);
-    if (data is num) return data.toInt();
-    if (data is Map<String, dynamic>) {
-      return _intOrNull(data['points'] ?? data['balance'] ?? data['total']);
+  Future<Result<CiervoQrItem?>> validateToken(String token) => _guard(() async {
+    final response = await _client.dio.post<dynamic>(
+      '/api/qr/validate',
+      data: {'token': token},
+    );
+    final data = unwrapApiMap(response.data);
+    final benefit = data['benefit'];
+    if (benefit is Map<String, dynamic>) {
+      return _benefitFromJson({
+        ...benefit,
+        'token': token,
+        'qrPayload': token,
+      });
     }
-    return _intOrNull(data);
+    if (data.isNotEmpty) return _qrFromJson(data);
+    return null;
+  });
+
+  Future<Result<CiervoQrItem?>> redeemToken(String token) => _guard(() async {
+    final response = await _client.dio.post<dynamic>(
+      '/api/qr/redeem',
+      data: {'token': token},
+    );
+    final data = unwrapApiMap(response.data);
+    if (data.isEmpty) return null;
+    return _benefitFromJson(data);
+  });
+
+  Future<Result<List<CiervoQrItem>>> publicBenefits(int businessId) =>
+      _guard(() async {
+        final response = await _client.dio.get<dynamic>(
+          '/api/businesses/$businessId/benefits/public',
+        );
+        return _list(response.data)
+            .map(
+              (item) => _catalogBenefitFromJson({
+                ...item,
+                'qrPayload': item['qrToken'] ?? item['token'],
+              }, 'rewards'),
+            )
+            .toList();
+      });
+
+  Future<Result<int?>> rewardPoints() => _guard(() async {
+    final response =
+        await _client.dio.get<dynamic>('/api/wallet/loyalty/summary');
+    final data = unwrapApiMap(response.data);
+    return _intOrNull(
+      data['pointsAvailable'] ?? data['points'] ?? data['balance'],
+    );
   });
 
   Future<Result<List<CiervoQrItem>>> rewardsCatalog() => _guard(() async {

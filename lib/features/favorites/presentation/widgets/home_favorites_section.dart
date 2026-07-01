@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/experience/experience_mode_cubit.dart';
 import '../../../../core/location/location_service.dart';
+import '../../../../core/sync/home_feed_refresh.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_brand_loader.dart';
@@ -33,11 +34,20 @@ class HomeFavoritesSection extends StatefulWidget {
 
 class _HomeFavoritesSectionState extends State<HomeFavoritesSection> {
   late Future<_FavoritesPreview> _preview;
+  late VoidCallback _onExternalRefresh;
 
   @override
   void initState() {
     super.initState();
     _preview = _load();
+    _onExternalRefresh = () => setState(() => _preview = _load());
+    HomeFeedRefresh.instance.addListener(_onExternalRefresh);
+  }
+
+  @override
+  void dispose() {
+    HomeFeedRefresh.instance.removeListener(_onExternalRefresh);
+    super.dispose();
   }
 
   Future<_FavoritesPreview> _load() async {

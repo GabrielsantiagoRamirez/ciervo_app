@@ -58,7 +58,7 @@ class KidsCubit extends Cubit<KidsState> {
     );
   }
 
-  Future<void> saveChild({
+  Future<Object?> saveChild({
     String? childId,
     required Map<String, dynamic> data,
   }) async {
@@ -66,7 +66,7 @@ class KidsCubit extends Cubit<KidsState> {
     final result = childId == null
         ? await _repository.createChild(data)
         : await _repository.updateChild(childId, data);
-    result.when(
+    return result.when(
       success: (_) {
         emit(
           state.copyWith(
@@ -76,13 +76,17 @@ class KidsCubit extends Cubit<KidsState> {
                 : 'Menor actualizado.',
           ),
         );
+        return null;
       },
-      failure: (error) => emit(
-        state.copyWith(
-          status: KidsStatus.loaded,
-          errorMessage: UserErrorMessage.from(error),
-        ),
-      ),
+      failure: (error) {
+        emit(
+          state.copyWith(
+            status: KidsStatus.loaded,
+            errorMessage: UserErrorMessage.from(error),
+          ),
+        );
+        return error;
+      },
     );
   }
 

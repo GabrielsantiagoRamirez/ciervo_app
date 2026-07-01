@@ -29,6 +29,7 @@ abstract interface class WalletRepository {
     required double amount,
     required String description,
     String? walletCardId,
+    String currency = 'COP',
   });
   Future<Result<PaymentRequest>> requestMoney({
     String? payerUserId,
@@ -37,11 +38,14 @@ abstract interface class WalletRepository {
     required String description,
     String? chatConversationId,
     int? businessId,
+    int? bookingId,
+    String currency = 'COP',
   });
   Future<Result<RechargeIntent>> rechargeByCiervoId({
     required String targetCiervoUserCode,
     required double amount,
     String? description,
+    String currency = 'COP',
   });
   Future<Result<List<PaymentRequest>>> paymentRequestsInbox();
   Future<Result<List<PaymentRequest>>> paymentRequestsSent();

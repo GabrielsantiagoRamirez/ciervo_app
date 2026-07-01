@@ -4,6 +4,7 @@ import '../../../core/network/api_response_unwrapper.dart';
 import '../../../core/network/network_client.dart';
 import '../../../core/result/result.dart';
 import '../domain/entities/membership_plan.dart';
+import '../domain/entities/plan_limit.dart';
 
 class MembershipsRepository {
   const MembershipsRepository(this._client);
@@ -36,6 +37,18 @@ class MembershipsRepository {
           (await _client.dio.get<dynamic>('/api/memberships/benefits')).data,
         ),
       );
+
+  Future<Result<Map<String, PlanLimit>>> limits() => _guard(() async {
+        final response =
+            await _client.dio.get<dynamic>('/api/memberships/me/limits');
+        final raw = unwrapApiMap(response.data);
+        return raw.map(
+          (key, value) => MapEntry(
+            key,
+            PlanLimit.fromJson(value),
+          ),
+        );
+      });
 
   Future<Result<List<Map<String, dynamic>>>> invoices() => _guard(() async {
         final response = await _client.dio.get<dynamic>(

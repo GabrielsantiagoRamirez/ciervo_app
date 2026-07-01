@@ -10,6 +10,7 @@ import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
+import '../../../../shared/widgets/insufficient_balance_dialog.dart';
 import '../../../financial_history/presentation/pages/financial_history_page.dart';
 import '../../../notifications/presentation/pages/notifications_page.dart';
 import '../../../payments/presentation/pages/payments_history_page.dart';
@@ -130,6 +131,14 @@ class _WalletView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _BalanceSummary(state: state),
+          const SizedBox(height: AppSpacing.md),
+          LowBalanceBanner(
+            balance: state.cards.fold<double>(
+              0,
+              (sum, card) => sum + card.availableBalance,
+            ),
+            currency: state.cards.firstOrNull?.currency ?? 'COP',
+          ),
           const SizedBox(height: AppSpacing.lg),
           _QuickActions(state: state),
           WalletNfcSection(selectedCard: state.selectedCard),

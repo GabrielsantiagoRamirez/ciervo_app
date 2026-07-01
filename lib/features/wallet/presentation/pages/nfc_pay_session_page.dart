@@ -6,6 +6,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../loyalty/loyalty_purchase_helper.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../receipts/domain/entities/action_confirmation.dart';
@@ -93,6 +94,17 @@ class _NfcPaySessionPageState extends State<NfcPaySessionPage> {
     if (success) {
       final session = _session;
       final now = DateTime.now();
+      final amount = session.amount;
+      if (amount != null && amount > 0) {
+        unawaited(
+          processLoyaltyAfterPurchase(
+            context,
+            amount: amount,
+            businessId: session.businessId,
+            transactionId: '${session.receiptId ?? session.id}',
+          ),
+        );
+      }
       unawaited(
         showCiervoPaymentReceipt(
           context,

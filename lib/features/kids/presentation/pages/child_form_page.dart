@@ -3,7 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/country/country_registration.dart';
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/membership_upgrade_dialog.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../domain/entities/child_profile.dart';
@@ -126,7 +128,9 @@ class _ChildFormViewState extends State<_ChildFormView> {
           if (!context.mounted) return;
           Navigator.of(context).pop(true);
         }
-        if (state.errorMessage != null && state.status == KidsStatus.loaded) {
+        if (state.errorMessage != null &&
+            state.status == KidsStatus.loaded &&
+            widget.child != null) {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(SnackBar(content: Text(state.errorMessage!)));
@@ -310,12 +314,12 @@ class _ChildFormViewState extends State<_ChildFormView> {
     );
   }
 
-  void _save() {
+  Future<void> _save() async {
     if (!_formKey.currentState!.validate() || _birthDate == null) return;
     final date = _birthDate!;
     final isoDate =
         '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-    context.read<KidsCubit>().saveChild(
+    final error = await context.read<KidsCubit>().saveChild(
       childId: widget.child?.id,
       data: {
         'firstName': _firstName.text.trim(),
@@ -328,5 +332,12 @@ class _ChildFormViewState extends State<_ChildFormView> {
         'isPrimaryGuardian': _isPrimaryGuardian,
       },
     );
+    if (error != null && mounted) {
+      if (!await handlePlanLimitError(context, error)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(UserErrorMessage.from(error))),
+        );
+      }
+    }
   }
 }

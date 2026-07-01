@@ -2,13 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/result/result.dart';
 import '../../../../core/errors/user_error_message.dart';
+import '../../../../core/widgets/membership_upgrade_dialog.dart';
 import '../../../../core/location/location_service.dart';
+import '../../../../core/session/auth_token_claims.dart';
+import '../../../../core/session/session_manager.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/utils/display_labels.dart';
 import '../../../../shared/widgets/chat_location_card.dart';
+import '../../../chat/domain/entities/chat_button.dart';
 import '../../../chat/domain/entities/chat_conversation.dart';
 import '../../../chat/domain/entities/chat_message.dart';
-import '../../../media/presentation/authenticated_media_image.dart';
+import '../../../chat/domain/repositories/chat_repository.dart';
+import '../../../chat/presentation/widgets/chat_buttons_bar.dart';
+import '../../../chat/presentation/widgets/chat_message_image.dart';
 import '../../data/family_chat_repository.dart';
 
 class FamilyConversationPage extends StatefulWidget {
@@ -24,31 +32,53 @@ class _FamilyConversationPageState extends State<FamilyConversationPage> {
   static const _extensions = {'jpg', 'jpeg', 'png', 'webp'};
 
   final _repository = getIt<FamilyChatRepository>();
+  final _chatRepository = getIt<ChatRepository>();
   final _controller = TextEditingController();
   List<ChatMessage> _messages = const [];
+  List<ChatButton> _chatButtons = const [];
   bool _loading = true;
   bool _sending = false;
+  bool _isKidSession = false;
   String? _error;
 
   @override
   void initState() {
     super.initState();
+    _loadSessionKind();
     _open();
+  }
+
+  Future<void> _loadSessionKind() async {
+    final token = await getIt<SessionManager>().accessToken();
+    if (!mounted || token == null) return;
+    setState(() {
+      _isKidSession = AuthTokenClaims.fromJwt(token).routeKind == 'Kid';
+    });
   }
 
   Future<void> _open() async {
     await _repository.markRead(widget.conversation.id);
-    final result = await _repository.messages(widget.conversation.id);
+    final results = await Future.wait([
+      _repository.messages(widget.conversation.id),
+      _chatRepository.buttons(),
+    ]);
     if (!mounted) return;
-    result.when(
+    final messagesResult = results[0] as Result<List<ChatMessage>>;
+    final buttonsResult = results[1] as Result<List<ChatButton>>;
+    messagesResult.when(
       success: (messages) => setState(() {
         _messages = messages;
         _loading = false;
+        _error = null;
       }),
       failure: (error) => setState(() {
         _error = UserErrorMessage.from(error);
         _loading = false;
       }),
+    );
+    buttonsResult.when(
+      success: (buttons) => setState(() => _chatButtons = buttons),
+      failure: (_) {},
     );
   }
 
@@ -130,8 +160,11 @@ class _FamilyConversationPageState extends State<FamilyConversationPage> {
     }
   }
 
-  void _showError(Object error) =>
+  void _showError(Object error) async {
+    if (!await handlePlanLimitError(context, error)) {
       _showMessage(UserErrorMessage.from(error));
+    }
+  }
 
   void _showMessage(String text) =>
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
@@ -187,41 +220,61 @@ class _FamilyConversationPageState extends State<FamilyConversationPage> {
                   },
                 ),
               ),
-              SafeArea(
-                top: false,
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        onPressed: _sending ? null : _sendImage,
-                        icon: const Icon(Icons.image_outlined),
-                        tooltip: 'Enviar imagen',
-                      ),
-                      IconButton(
-                        onPressed: _sending ? null : _sendLocation,
-                        icon: const Icon(Icons.location_on_outlined),
-                        tooltip: 'Enviar ubicación',
-                      ),
-                      Expanded(
-                        child: TextField(
-                          controller: _controller,
-                          enabled: !_sending,
-                          textInputAction: TextInputAction.send,
-                          onSubmitted: (_) => _sendText(),
-                          decoration: const InputDecoration(
-                            hintText: 'Escribe un mensaje',
-                          ),
+              if (widget.conversation.canSend)
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ChatButtonsBar(
+                      buttons: _chatButtons,
+                      conversationId: widget.conversation.id,
+                      enabled: !_sending,
+                      familyKidMode: _isKidSession,
+                      onActionCompleted: _open,
+                    ),
+                    SafeArea(
+                      top: false,
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.sm),
+                        child: Row(
+                          children: [
+                            IconButton(
+                              onPressed: _sending ? null : _sendImage,
+                              icon: const Icon(Icons.image_outlined),
+                              tooltip: 'Enviar imagen',
+                            ),
+                            IconButton(
+                              onPressed: _sending ? null : _sendLocation,
+                              icon: const Icon(Icons.location_on_outlined),
+                              tooltip: 'Enviar ubicación',
+                            ),
+                            Expanded(
+                              child: TextField(
+                                controller: _controller,
+                                enabled: !_sending,
+                                textInputAction: TextInputAction.send,
+                                onSubmitted: (_) => _sendText(),
+                                decoration: const InputDecoration(
+                                  hintText: 'Escribe un mensaje',
+                                ),
+                              ),
+                            ),
+                            IconButton.filled(
+                              onPressed: _sending ? null : _sendText,
+                              icon: const Icon(Icons.send_rounded),
+                            ),
+                          ],
                         ),
                       ),
-                      IconButton.filled(
-                        onPressed: _sending ? null : _sendText,
-                        icon: const Icon(Icons.send_rounded),
-                      ),
-                    ],
+                    ),
+                  ],
+                )
+              else
+                const Padding(
+                  padding: EdgeInsets.all(AppSpacing.md),
+                  child: Text(
+                    'Esta conversación está cerrada y no acepta mensajes.',
                   ),
                 ),
-              ),
             ],
           ),
   );
@@ -234,8 +287,27 @@ class _FamilyMessageBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (message.paymentPayload != null) {
+      return _FamilyPaymentCard(payload: message.paymentPayload!);
+    }
+    if (message.giftPayload != null) {
+      return _FamilyGiftCard(payload: message.giftPayload!);
+    }
     if (message.locationPayload != null) {
       return ChatLocationCard(payload: message.locationPayload!);
+    }
+    if (message.isImageMessage) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ChatMessageImage(message: message),
+          if (message.body.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(message.body),
+          ],
+        ],
+      );
     }
     final attachment = message.attachmentUrl;
     if (attachment != null && attachment.isNotEmpty) {
@@ -243,18 +315,7 @@ class _FamilyMessageBody extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: attachment.startsWith('http')
-                ? Image.network(attachment, width: 220, fit: BoxFit.cover)
-                : AuthenticatedMediaImage(
-                    mediaId: attachment,
-                    thumbnail: true,
-                    width: 220,
-                    height: 160,
-                    errorWidget: const Icon(Icons.broken_image_outlined),
-                  ),
-          ),
+          ChatMessageImage(message: message),
           if (message.body.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.xs),
             Text(message.body),
@@ -264,4 +325,50 @@ class _FamilyMessageBody extends StatelessWidget {
     }
     return Text(message.body);
   }
+}
+
+class _FamilyPaymentCard extends StatelessWidget {
+  const _FamilyPaymentCard({required this.payload});
+
+  final ChatPaymentPayload payload;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Row(
+        children: [
+          Icon(Icons.request_page_outlined, size: 20),
+          SizedBox(width: 8),
+          Text('Solicitud de pago'),
+        ],
+      ),
+      Text('${payload.currency} ${payload.amount.toStringAsFixed(0)}'),
+      Text('Estado: ${DisplayLabels.bookingStatus(payload.status)}'),
+      if (payload.description != null) Text(payload.description!),
+    ],
+  );
+}
+
+class _FamilyGiftCard extends StatelessWidget {
+  const _FamilyGiftCard({required this.payload});
+
+  final ChatGiftPayload payload;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Row(
+        children: [
+          Icon(Icons.card_giftcard_outlined, size: 20),
+          SizedBox(width: 8),
+          Text('Regalo'),
+        ],
+      ),
+      Text(payload.giftType),
+      Text('${payload.currency} ${payload.amount.toStringAsFixed(0)}'),
+      if (payload.description != null) Text(payload.description!),
+    ],
+  );
 }

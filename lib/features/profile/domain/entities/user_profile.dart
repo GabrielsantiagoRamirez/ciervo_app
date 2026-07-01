@@ -9,6 +9,10 @@ class UserProfile {
     this.identityDocument,
     this.documentType,
     this.photoUrl,
+    this.imageUrl,
+    this.thumbnailUrl,
+    this.storagePath,
+    this.photoUpdatedAt,
     this.currentLatitude,
     this.currentLongitude,
     this.locationUpdatedAt,
@@ -28,6 +32,10 @@ class UserProfile {
   final String? identityDocument;
   final String? documentType;
   final String? photoUrl;
+  final String? imageUrl;
+  final String? thumbnailUrl;
+  final String? storagePath;
+  final DateTime? photoUpdatedAt;
   final double? currentLatitude;
   final double? currentLongitude;
   final DateTime? locationUpdatedAt;
@@ -39,6 +47,10 @@ class UserProfile {
 
   UserProfile copyWith({
     String? photoUrl,
+    String? imageUrl,
+    String? thumbnailUrl,
+    String? storagePath,
+    DateTime? photoUpdatedAt,
     bool? emailVerified,
     bool? phoneVerified,
     String? countryCode,
@@ -54,6 +66,10 @@ class UserProfile {
         identityDocument: identityDocument,
         documentType: documentType,
         photoUrl: photoUrl ?? this.photoUrl,
+        imageUrl: imageUrl ?? this.imageUrl,
+        thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
+        storagePath: storagePath ?? this.storagePath,
+        photoUpdatedAt: photoUpdatedAt ?? this.photoUpdatedAt,
         currentLatitude: currentLatitude,
         currentLongitude: currentLongitude,
         locationUpdatedAt: locationUpdatedAt,
@@ -77,8 +93,16 @@ class UserProfile {
   }
 
   bool get hasPhoto {
-    final ref = photoUrl?.trim();
+    final ref = displayImageUrl?.trim();
     return ref != null && ref.isNotEmpty;
+  }
+
+  String? get displayImageUrl {
+    for (final candidate in [imageUrl, photoUrl, thumbnailUrl]) {
+      final text = candidate?.trim();
+      if (text != null && text.isNotEmpty) return text;
+    }
+    return null;
   }
 
   bool get isFirebaseAuth =>

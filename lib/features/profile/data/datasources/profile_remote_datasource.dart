@@ -6,10 +6,19 @@ import '../dtos/update_profile_request_dto.dart';
 import '../dtos/user_profile_dto.dart';
 
 class ProfilePhotoUpload {
-  const ProfilePhotoUpload({required this.mediaId, this.photoUrl});
+  const ProfilePhotoUpload({
+    required this.mediaId,
+    this.photoUrl,
+    this.imageUrl,
+    this.storagePath,
+    this.photoUpdatedAt,
+  });
 
   final String mediaId;
   final String? photoUrl;
+  final String? imageUrl;
+  final String? storagePath;
+  final DateTime? photoUpdatedAt;
 }
 
 abstract interface class ProfileRemoteDataSource {
@@ -20,6 +29,13 @@ abstract interface class ProfileRemoteDataSource {
   Future<ProfilePhotoUpload> uploadPhoto({
     required String path,
     required String fileName,
+  });
+
+  Future<ProfilePhotoUpload> registerPhotoFromFirebase({
+    required String imageUrl,
+    required String storagePath,
+    String? thumbnailUrl,
+    String? mediaType,
   });
 }
 
@@ -97,6 +113,41 @@ class DioProfileRemoteDataSource implements ProfileRemoteDataSource {
       );
       return UserProfileDto.fromJson(unwrapApiMap(response.data));
     }
+  }
+
+  @override
+  Future<ProfilePhotoUpload> registerPhotoFromFirebase({
+    required String imageUrl,
+    required String storagePath,
+    String? thumbnailUrl,
+    String? mediaType,
+  }) async {
+    final response = await _client.dio.post<Map<String, dynamic>>(
+      '/api/users/me/photo/register',
+      data: {
+        'imageUrl': imageUrl,
+        'storagePath': storagePath,
+        if (thumbnailUrl != null && thumbnailUrl.isNotEmpty)
+          'thumbnailUrl': thumbnailUrl,
+        if (mediaType != null && mediaType.isNotEmpty) 'mediaType': mediaType,
+      },
+    );
+    final data = unwrapApiMap(response.data);
+    final value = data['value'] is Map ? data['value'] as Map : data;
+    final mediaId = value['mediaId'] ??
+        value['MediaId'] ??
+        value['id'] ??
+        value['photoMediaId'] ??
+        storagePath;
+    return ProfilePhotoUpload(
+      mediaId: mediaId.toString(),
+      photoUrl: value['photoUrl']?.toString() ?? imageUrl,
+      imageUrl: value['imageUrl']?.toString() ?? imageUrl,
+      storagePath: value['storagePath']?.toString() ?? storagePath,
+      photoUpdatedAt: DateTime.tryParse(
+        '${value['photoUpdatedAt'] ?? value['updatedAt'] ?? ''}',
+      ),
+    );
   }
 
   @override

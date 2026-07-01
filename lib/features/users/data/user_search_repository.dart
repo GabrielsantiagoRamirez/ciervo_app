@@ -54,4 +54,36 @@ class UserSearchRepository {
       return Failure(ErrorMapper.fromObject(error));
     }
   }
+
+  Future<Result<List<UserSearchResult>>> searchByPhones({
+    required List<String> phones,
+    String? country,
+  }) async {
+    try {
+      final response = await _client.dio.post<dynamic>(
+        '/api/users/search/by-phones',
+        data: {
+          'phones': phones,
+          if (country != null && country.isNotEmpty) 'country': country,
+        },
+      );
+      final value = unwrapApiResponse(response.data);
+      final itemsRaw = value is Map
+          ? (value['items'] ?? value['Items'] ?? value)
+          : value;
+      final items = (itemsRaw is List ? itemsRaw : unwrapApiList(response.data))
+          .whereType<Map>()
+          .map((item) => UserSearchResult.fromJson(Map<String, dynamic>.from(item)))
+          .where((user) => user.userId.isNotEmpty)
+          .toList();
+      return Success(items);
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 404) {
+        return const Success([]);
+      }
+      return Failure(ErrorMapper.fromObject(error));
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
 }

@@ -9,6 +9,7 @@ import '../../../../shared/widgets/ciervo_brand_loader.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../core/utils/display_labels.dart';
 import '../../data/booking_repository.dart';
+import '../../../wallet/presentation/pages/request_money_page.dart';
 import '../../domain/entities/booking.dart';
 import '../../../qr_wallet/domain/entities/ciervo_qr_item.dart';
 import '../../../qr_wallet/presentation/widgets/ciervo_qr_card.dart';
@@ -204,6 +205,23 @@ class _BookingDetails extends StatelessWidget {
         booking.totalAmount == null ? 'Por definir' : '${booking.totalAmount}',
       ),
       _line('Moneda', booking.currency),
+      if (booking.totalAmount != null && booking.totalAmount! > 0) ...[
+        const SizedBox(height: AppSpacing.sm),
+        FilledButton.icon(
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => RequestMoneyPage(
+                bookingId: booking.id,
+                businessId: booking.businessId,
+                initialAmount: booking.totalAmount?.toDouble(),
+                initialCurrency: booking.currency,
+              ),
+            ),
+          ),
+          icon: const Icon(Icons.chat_outlined),
+          label: const Text('Pedir pago en chat'),
+        ),
+      ],
       const SizedBox(height: AppSpacing.md),
       CiervoQrCard(
         onRefresh: onRefresh,

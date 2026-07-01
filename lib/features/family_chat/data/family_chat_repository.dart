@@ -4,6 +4,7 @@ import '../../../core/errors/error_mapper.dart';
 import '../../../core/network/api_response_unwrapper.dart';
 import '../../../core/network/network_client.dart';
 import '../../../core/result/result.dart';
+import '../../chat/data/chat_image_uploader.dart';
 import '../../chat/data/dtos/chat_dtos.dart';
 import '../../chat/domain/entities/chat_conversation.dart';
 import '../../chat/domain/entities/chat_message.dart';
@@ -74,6 +75,24 @@ class FamilyChatRepository {
     required String path,
     required String fileName,
   }) => _guard(() async {
+    final uploaded = await const ChatImageUploader().uploadForConversation(
+      conversationId: id,
+      localPath: path,
+    );
+    if (uploaded != null) {
+      final response = await _client.dio.post<dynamic>(
+        '/api/family/conversations/$id/messages',
+        data: {
+          'messageType': 'Image',
+          'body': '',
+          'mediaUrl': uploaded.mediaUrl,
+          'storagePath': uploaded.storagePath,
+          'mediaType': uploaded.mediaType,
+          'attachmentUrl': uploaded.mediaUrl,
+        },
+      );
+      return messageFromJson(unwrapApiMap(response.data));
+    }
     final response = await _client.dio.post<dynamic>(
       '/api/family/conversations/$id/messages/media',
       data: FormData.fromMap({

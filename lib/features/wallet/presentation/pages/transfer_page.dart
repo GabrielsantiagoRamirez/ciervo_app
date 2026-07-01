@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
+import '../../../../shared/widgets/currency_selector.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../domain/entities/wallet_card.dart';
 import '../../domain/repositories/wallet_repository.dart';
@@ -23,12 +24,16 @@ class _TransferPageState extends State<TransferPage> {
   final _codeController = TextEditingController();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
+  String _currency = 'COP';
 
   @override
   void initState() {
     super.initState();
     if (widget.initialCiervoCode != null) {
       _codeController.text = widget.initialCiervoCode!;
+    }
+    if (widget.card?.currency.isNotEmpty == true) {
+      _currency = widget.card!.currency;
     }
   }
 
@@ -95,6 +100,11 @@ class _TransferPageState extends State<TransferPage> {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.md),
+                    CurrencySelector(
+                      value: _currency,
+                      onChanged: (value) => setState(() => _currency = value),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
                     TextField(
                       controller: _descriptionController,
                       decoration: const InputDecoration(
@@ -148,7 +158,7 @@ class _TransferPageState extends State<TransferPage> {
       builder: (context) => AlertDialog(
         title: const Text('Confirmar transferencia'),
         content: Text(
-          'Enviar COP ${amount.toStringAsFixed(0)} a ${_codeController.text.trim()}',
+          'Enviar $_currency ${amount.toStringAsFixed(0)} a ${_codeController.text.trim()}',
         ),
         actions: [
           TextButton(
@@ -168,6 +178,7 @@ class _TransferPageState extends State<TransferPage> {
       amount: amount,
       description: _descriptionController.text.trim(),
       walletCardId: widget.card?.id,
+      currency: _currency,
     );
   }
 }

@@ -40,6 +40,7 @@ import '../../domain/entities/user_profile.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../../../wallet/domain/repositories/wallet_repository.dart';
 import '../widgets/email_verification_sheet.dart';
+import '../widgets/phone_verification_sheet.dart';
 import '../cubit/profile_cubit.dart';
 import '../cubit/profile_state.dart';
 import 'edit_profile_page.dart';
@@ -309,8 +310,13 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
                     child: profile.hasPhoto
                         ? ClipOval(
                             child: ProfilePhotoImage(
-                              key: ValueKey(profile.photoUrl),
-                              photoRef: profile.photoUrl,
+                              key: ValueKey(
+                                '${profile.displayImageUrl}_${profile.photoUpdatedAt?.millisecondsSinceEpoch}',
+                              ),
+                              photoRef: profile.displayImageUrl,
+                              imageUrl: profile.imageUrl ?? profile.photoUrl,
+                              storagePath: profile.storagePath,
+                              photoUpdatedAt: profile.photoUpdatedAt,
                               width: 68,
                               height: 68,
                               fallback: Text(profile.initials),
@@ -336,23 +342,22 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      profile.fullName,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: AppSpacing.xxs),
-                    Text(
-                      profile.email,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
+                child: Text(
+                  profile.fullName,
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
             ],
           ),
+          if (profile.email.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              profile.email,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
           const SizedBox(height: AppSpacing.md),
           Wrap(
             spacing: AppSpacing.sm,
@@ -390,13 +395,22 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
                 loading: widget.loadingCiervoId,
                 onRetry: () => context.read<ProfileCubit>().refreshCiervoId(),
               ),
-              if (!profile.emailVerified)
+              if (!profile.emailVerified && profile.email.isNotEmpty)
                 ActionChip(
                   avatar: const Icon(Icons.mark_email_unread_outlined, size: 18),
                   label: const Text('Verificar correo'),
                   onPressed: () => showEmailVerificationSheet(
                     context,
                     email: profile.email,
+                  ),
+                ),
+              if (!profile.phoneVerified && profile.phone.isNotEmpty)
+                ActionChip(
+                  avatar: const Icon(Icons.phone_iphone_outlined, size: 18),
+                  label: const Text('Verificar teléfono'),
+                  onPressed: () => showPhoneVerificationSheet(
+                    context,
+                    phone: profile.phone,
                   ),
                 ),
               _InfoChip(

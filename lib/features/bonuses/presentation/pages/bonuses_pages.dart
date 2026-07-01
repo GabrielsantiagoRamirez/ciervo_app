@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/location/location_service.dart';
+import '../../../../core/sync/home_feed_refresh.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_brand_loader.dart';
@@ -31,11 +32,20 @@ class HomeBonusesSection extends StatefulWidget {
 
 class _HomeBonusesSectionState extends State<HomeBonusesSection> {
   late Future<List<Bonus>> _items;
+  late VoidCallback _onExternalRefresh;
 
   @override
   void initState() {
     super.initState();
     _items = _load();
+    _onExternalRefresh = () => setState(() => _items = _load());
+    HomeFeedRefresh.instance.addListener(_onExternalRefresh);
+  }
+
+  @override
+  void dispose() {
+    HomeFeedRefresh.instance.removeListener(_onExternalRefresh);
+    super.dispose();
   }
 
   Future<List<Bonus>> _load() async {

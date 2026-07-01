@@ -2,6 +2,13 @@ import '../utils/display_labels.dart';
 import 'app_exception.dart';
 
 abstract final class UserErrorMessage {
+  static bool isPlanLimitError(Object error) {
+    if (error is! AppException) return false;
+    final code = error.code?.toUpperCase();
+    final message = error.message.toUpperCase();
+    return code == 'PLAN_LIMIT_REACHED' || message.contains('PLAN_LIMIT_REACHED');
+  }
+
   static String from(Object error) {
     if (error is! AppException) {
       return 'Ocurrió un error inesperado.';
@@ -11,6 +18,10 @@ abstract final class UserErrorMessage {
     final code = error.code?.toUpperCase();
     final message = error.message.toLowerCase();
     final sanitized = DisplayLabels.sanitizeBackendMessage(error.message);
+
+    if (isPlanLimitError(error)) {
+      return 'Tu plan actual no incluye esta función. Mejora tu membresía.';
+    }
 
     final codeMessage = switch (code) {
       'FILE_TOO_LARGE' => 'La imagen supera el tamaño permitido.',
@@ -27,6 +38,12 @@ abstract final class UserErrorMessage {
     }
     if (statusCode == 429) {
       return 'Demasiados intentos. Espera unos segundos e intenta de nuevo.';
+    }
+    if (statusCode == 403 &&
+        (message.contains('limite') ||
+            message.contains('límite') ||
+            message.contains('plan_limit'))) {
+      return 'Tu plan actual no incluye esta función. Mejora tu membresía.';
     }
     if (statusCode == 403 || code?.contains('blocked') == true) {
       if (error.message.isNotEmpty &&
@@ -56,14 +73,6 @@ abstract final class UserErrorMessage {
         return 'Plan no encontrado.';
       }
       return sanitized;
-    }
-    if (statusCode == 403 &&
-        (message.contains('limite') ||
-            message.contains('límite') ||
-            message.contains('plan_limit'))) {
-      return error.message.isNotEmpty
-          ? error.message
-          : 'Limite de plan alcanzado.';
     }
     if (message.contains('network') || message.contains('conexion')) {
       return 'No pudimos conectar con el servidor. Revisa tu conexión.';

@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/country/country_registration.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_brand_loader.dart';
+import '../../../../shared/widgets/currency_selector.dart';
 import '../../domain/repositories/wallet_repository.dart';
 import '../cubit/wallet_cubit.dart';
 import '../cubit/wallet_state.dart';
@@ -25,6 +27,7 @@ class _RechargeByCiervoIdPageState extends State<RechargeByCiervoIdPage> {
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
   String? _lastIntentId;
+  String _currency = 'COP';
 
   @override
   void initState() {
@@ -78,6 +81,33 @@ class _RechargeByCiervoIdPageState extends State<RechargeByCiervoIdPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          Container(
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primaryContainer
+                                  .withValues(alpha: 0.45),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  Icons.info_outline,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                                const SizedBox(width: AppSpacing.sm),
+                                Expanded(
+                                  child: Text(
+                                    'Esta recarga solo funciona para personas que ya tienen la app de Ciervo y un ID activo.',
+                                    style: Theme.of(context).textTheme.bodySmall,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
                           TextField(
                             controller: _codeController,
                             decoration: const InputDecoration(
@@ -86,12 +116,18 @@ class _RechargeByCiervoIdPageState extends State<RechargeByCiervoIdPage> {
                             ),
                           ),
                           const SizedBox(height: AppSpacing.md),
+                          CurrencySelector(
+                            value: _currency,
+                            onChanged: (value) => setState(() => _currency = value),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
                           TextField(
                             controller: _amountController,
                             keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               hintText: 'Monto',
-                              prefixIcon: Icon(Icons.attach_money),
+                              prefixIcon: const Icon(Icons.attach_money),
+                              suffixText: _currency,
                             ),
                           ),
                           const SizedBox(height: AppSpacing.md),
@@ -161,6 +197,7 @@ class _RechargeByCiervoIdPageState extends State<RechargeByCiervoIdPage> {
     context.read<WalletCubit>().rechargeByCiervoId(
       targetCiervoUserCode: code,
       amount: amount,
+      currency: _currency,
       description: _descriptionController.text.trim().isEmpty
           ? 'Recarga CIERVO'
           : _descriptionController.text.trim(),

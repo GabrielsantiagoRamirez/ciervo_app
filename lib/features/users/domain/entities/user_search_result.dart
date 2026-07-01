@@ -8,6 +8,8 @@ class UserSearchResult {
     this.photoUrl,
     this.distanceKm,
     this.canStartConversation = true,
+    this.phoneMasked,
+    this.matchedByPhone = false,
   });
 
   final String userId;
@@ -18,6 +20,8 @@ class UserSearchResult {
   final String? photoUrl;
   final double? distanceKm;
   final bool canStartConversation;
+  final String? phoneMasked;
+  final bool matchedByPhone;
 
   String? get distanceLabel {
     if (distanceKm == null) return null;
@@ -41,6 +45,8 @@ class UserSearchResult {
         ),
         distanceKm: _distance(json['distanceKm'] ?? json['DistanceKm']),
         canStartConversation: json['canStartConversation'] != false,
+        phoneMasked: _optional(json['phoneMasked']),
+        matchedByPhone: json['matchedByPhone'] == true,
       );
 
   static String _name(Map<String, dynamic> json) {

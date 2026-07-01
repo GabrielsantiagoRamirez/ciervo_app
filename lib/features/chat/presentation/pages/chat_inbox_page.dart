@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/membership_upgrade_dialog.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
+import '../../../memberships/presentation/cubit/membership_cubit.dart';
 import '../../../users/presentation/pages/user_search_page.dart';
 import '../../../vakupli/data/vakupli_repository.dart';
 import '../../../vakupli/presentation/pages/vakupli_page.dart';
@@ -74,18 +77,34 @@ class _ChatInboxPageState extends State<ChatInboxPage> {
     if (mounted) _load();
   }
 
+  Future<void> _openUserSearch() async {
+    final membership = context.read<MembershipCubit>().state;
+    if (!membership.canUsePrivateChat()) {
+      await showMembershipUpgradeDialog(
+        context,
+        featureLabel: 'chat privado con cualquier usuario CIERVO',
+      );
+      return;
+    }
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const UserSearchPage()),
+    );
+    if (mounted) _load();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final canPrivateChat = context.watch<MembershipCubit>().state.canUsePrivateChat();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Chats'),
         actions: [
           IconButton(
-            tooltip: 'Buscar personas',
+            tooltip: canPrivateChat
+                ? 'Buscar personas'
+                : 'Chat privado no incluido en tu plan',
             icon: const Icon(Icons.person_search_outlined),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const UserSearchPage()),
-            ),
+            onPressed: canPrivateChat ? _openUserSearch : _openUserSearch,
           ),
           IconButton(
             tooltip: 'Planes Vakupli',
@@ -97,17 +116,15 @@ class _ChatInboxPageState extends State<ChatInboxPage> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const UserSearchPage()),
-        ),
-        icon: const Icon(Icons.add_comment_outlined),
-        label: const Text('Nuevo'),
+        onPressed: _openUserSearch,
+        icon: Icon(canPrivateChat ? Icons.add_comment_outlined : Icons.lock_outline),
+        label: Text(canPrivateChat ? 'Nuevo' : 'Mejorar plan'),
       ),
-      body: _buildBody(),
+      body: _buildBody(canPrivateChat),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(bool canPrivateChat) {
     if (_loading) {
       return const CiervoLoadingState(message: 'Cargando conversaciones');
     }
@@ -124,10 +141,8 @@ class _ChatInboxPageState extends State<ChatInboxPage> {
         description:
             'Busca personas, escribe a un negocio o crea un plan Vakupli.',
         icon: Icons.chat_bubble_outline,
-        actionLabel: 'Buscar personas',
-        onAction: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const UserSearchPage()),
-        ),
+        actionLabel: canPrivateChat ? 'Buscar personas' : 'Ver planes',
+        onAction: _openUserSearch,
       );
     }
 

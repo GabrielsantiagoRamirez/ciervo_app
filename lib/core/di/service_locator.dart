@@ -50,17 +50,24 @@ import '../../features/kid_auth/data/datasources/kid_auth_remote_datasource.dart
 import '../../features/kid_auth/data/repositories/kid_auth_repository_impl.dart';
 import '../../features/kid_me/data/kid_me_repository.dart';
 import '../../features/catalogs/data/catalog_repository.dart';
-import '../../features/users/data/user_search_repository.dart';
+import '../../features/exchange/data/exchange_rate_repository.dart';
 import '../../features/kyc/data/kyc_repository.dart';
+import '../../features/users/data/user_search_repository.dart';
 import '../../features/location/data/client_location_repository.dart';
 import '../../features/media/data/media_repository.dart';
 import '../../features/memberships/data/memberships_repository.dart';
+import '../../features/memberships/presentation/cubit/membership_cubit.dart';
+import '../../features/loyalty/data/loyalty_repository.dart';
+import '../firebase/firebase_storage_service.dart';
 import '../../features/notifications/data/datasources/notifications_remote_datasource.dart';
 import '../../features/notifications/data/repositories/notifications_repository_impl.dart';
 import '../../features/notifications/domain/repositories/notifications_repository.dart';
 import '../../features/notifications/presentation/cubit/notification_badges_cubit.dart';
 import '../notifications/notifications_sync.dart';
 import '../notifications/ciervo_push_service.dart';
+import '../geo/geo_repository.dart';
+import '../contacts/contacts_matcher.dart';
+import '../notifications/notification_events_listener.dart';
 import '../../features/place_detail/data/business_detail_repository.dart';
 import '../../features/place_detail/data/review_repository.dart';
 import '../../features/profile/data/datasources/profile_remote_datasource.dart';
@@ -217,6 +224,15 @@ Future<void> configureDependencies() async {
     ..registerLazySingleton<MembershipsRepository>(
       () => MembershipsRepository(getIt<NetworkClient>()),
     )
+    ..registerLazySingleton<MembershipCubit>(
+      () => MembershipCubit(getIt<MembershipsRepository>()),
+    )
+    ..registerLazySingleton<FirebaseStorageService>(
+      FirebaseStorageService.new,
+    )
+    ..registerLazySingleton<LoyaltyRepository>(
+      () => LoyaltyRepository(getIt<NetworkClient>()),
+    )
     ..registerLazySingleton<ProductCategoriesRepository>(
       () => ProductCategoriesRepository(getIt<NetworkClient>()),
     )
@@ -299,6 +315,25 @@ Future<void> configureDependencies() async {
     )
     ..registerLazySingleton<UserSearchRepository>(
       () => UserSearchRepository(getIt<NetworkClient>()),
+    )
+    ..registerLazySingleton<GeoRepository>(
+      () => GeoRepository(getIt<NetworkClient>()),
+    )
+    ..registerLazySingleton<ExchangeRateRepository>(
+      () => ExchangeRateRepository(getIt<NetworkClient>()),
+    )
+    ..registerLazySingleton<ContactsMatcher>(
+      () => ContactsMatcher(
+        getIt<UserSearchRepository>(),
+        getIt<AppPermissionService>(),
+      ),
+    )
+    ..registerLazySingleton<NotificationEventsListener>(
+      () => NotificationEventsListener(
+        getIt<AppConfig>(),
+        getIt<SessionManager>(),
+        getIt<NotificationsSync>(),
+      ),
     )
     ..registerLazySingleton<KycRepository>(
       () => KycRepository(getIt<NetworkClient>()),

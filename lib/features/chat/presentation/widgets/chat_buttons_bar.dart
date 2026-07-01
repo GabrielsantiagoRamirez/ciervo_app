@@ -11,6 +11,8 @@ class ChatButtonsBar extends StatelessWidget {
     this.enabled = true,
     this.businessId,
     this.businessName,
+    this.familyKidMode = false,
+    this.onActionCompleted,
     super.key,
   });
 
@@ -19,18 +21,20 @@ class ChatButtonsBar extends StatelessWidget {
   final bool enabled;
   final int? businessId;
   final String? businessName;
+  final bool familyKidMode;
+  final Future<void> Function()? onActionCompleted;
 
   @override
   Widget build(BuildContext context) {
     final visible = buttons.visibleOnMobile();
-    if (visible.isEmpty) return const SizedBox.shrink();
+    final effective = visible.isNotEmpty ? visible : _fallbackButtons();
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
       child: Row(
         children: [
-          for (final button in visible) ...[
+          for (final button in effective) ...[
             ActionChip(
               avatar: Icon(
                 iconForChatButton(button.code),
@@ -39,13 +43,17 @@ class ChatButtonsBar extends StatelessWidget {
               label: Text(button.label),
               onPressed: !enabled
                   ? null
-                  : () => handleChatButtonTap(
-                      context,
-                      button: button,
-                      conversationId: conversationId,
-                      businessId: businessId,
-                      businessName: businessName,
-                    ),
+                  : () async {
+                      await handleChatButtonTap(
+                        context,
+                        button: button,
+                        conversationId: conversationId,
+                        businessId: businessId,
+                        businessName: businessName,
+                        familyKidMode: familyKidMode,
+                      );
+                      await onActionCompleted?.call();
+                    },
               backgroundColor: button.visibility.isEnabled
                   ? null
                   : Theme.of(context).colorScheme.surfaceContainerHighest,
@@ -56,4 +64,22 @@ class ChatButtonsBar extends StatelessWidget {
       ),
     );
   }
+
+  List<ChatButton> _fallbackButtons() => const [
+        ChatButton(
+          code: 'pay',
+          label: 'Pagar',
+          visibility: ChatButtonVisibility.productionReady,
+        ),
+        ChatButton(
+          code: 'pay_for_me',
+          label: 'Paga por mí',
+          visibility: ChatButtonVisibility.productionReady,
+        ),
+        ChatButton(
+          code: 'gift',
+          label: 'Regalo',
+          visibility: ChatButtonVisibility.productionReady,
+        ),
+      ];
 }

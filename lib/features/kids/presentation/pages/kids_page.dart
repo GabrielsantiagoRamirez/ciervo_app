@@ -6,6 +6,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/kids/selected_kid_context.dart';
+import '../../../../core/utils/display_labels.dart';
+import '../../../../core/widgets/membership_upgrade_dialog.dart';
+import '../../../memberships/presentation/cubit/membership_cubit.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -362,7 +365,10 @@ class KidsDetailPage extends StatelessWidget {
                                 ),
                               );
                           if (updated == true && context.mounted) {
-                            context.read<KidsCubit>().loadChild(childId);
+                            await context.read<KidsCubit>().loadChild(childId);
+                            if (context.mounted) {
+                              context.read<KidsCubit>().loadChildren();
+                            }
                           }
                         },
                       ),
@@ -544,7 +550,7 @@ class _DetailsCard extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         Text('Nombre: ${child.fullName}'),
         Text('Edad: ${child.age ?? 'No registrada'}'),
-        Text('Relación: ${child.relationshipType}'),
+        Text('Relación: ${DisplayLabels.guardianRelationship(child.relationshipType)}'),
         Text(
           'Documento: ${child.documentType ?? ''} ${child.documentNumber ?? 'No registrado'}',
         ),
@@ -598,6 +604,15 @@ class _PermissionCard extends StatelessWidget {
 }
 
 Future<void> _openChildForm(BuildContext context) async {
+  final membership = context.read<MembershipCubit>().state;
+  final childrenCount = context.read<KidsCubit>().state.children.length;
+  if (membership.isLoaded && !membership.canAddKidProfile(childrenCount)) {
+    await showMembershipUpgradeDialog(
+      context,
+      featureLabel: DisplayLabels.membershipFeatureLabel('kids.profiles.max'),
+    );
+    return;
+  }
   final updated = await Navigator.of(
     context,
   ).push<bool>(MaterialPageRoute(builder: (_) => const ChildFormPage()));

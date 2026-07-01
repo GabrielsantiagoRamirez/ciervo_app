@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../financial_history/presentation/pages/financial_history_page.dart';
 import '../../../notifications/domain/entities/notification_badges.dart';
@@ -16,6 +17,7 @@ import '../cubit/wallet_cubit.dart';
 import '../cubit/wallet_state.dart';
 import '../utils/nfc_navigation.dart';
 import 'ciervo_digital_card.dart';
+import 'exchange_rate_banner.dart';
 import '../../../bonuses/presentation/widgets/wallet_available_bonuses_section.dart';
 import '../../../secure_shipment/presentation/pages/secure_shipment_list_page.dart';
 import 'wallet_nfc_section.dart';
@@ -122,6 +124,7 @@ class _PremiumWalletDashboardState extends State<PremiumWalletDashboard> {
                         }
                       },
               ),
+              const ExchangeRateBanner(),
               const SizedBox(height: AppSpacing.xl),
               _QuickActionsRow(
                 card: card,

@@ -8,6 +8,7 @@ import '../../../../core/utils/input_validators.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../widgets/profile_photo_image.dart';
+import '../widgets/email_verification_sheet.dart';
 import '../../domain/entities/user_profile.dart';
 import '../../../wallet/domain/repositories/wallet_repository.dart';
 import '../../domain/repositories/profile_repository.dart';
@@ -183,6 +184,13 @@ class _EditProfileViewState extends State<_EditProfileView> {
                         label: 'Correo electrónico',
                         icon: Icons.mail_outline,
                         keyboardType: TextInputType.emailAddress,
+                        readOnly: widget.profile.emailVerified,
+                        helperText: widget.profile.emailVerified
+                            ? 'Verificado. Para cambiarlo debes volver a confirmarlo.'
+                            : null,
+                        onTap: widget.profile.emailVerified
+                            ? () => _promptVerifiedFieldChange(context, 'correo')
+                            : null,
                         validator: (value) =>
                             InputValidators.email(value ?? ''),
                       ),
@@ -191,6 +199,13 @@ class _EditProfileViewState extends State<_EditProfileView> {
                         label: 'Teléfono',
                         icon: Icons.phone_outlined,
                         keyboardType: TextInputType.phone,
+                        readOnly: widget.profile.phoneVerified,
+                        helperText: widget.profile.phoneVerified
+                            ? 'Verificado. Para cambiarlo debes volver a confirmarlo.'
+                            : null,
+                        onTap: widget.profile.phoneVerified
+                            ? () => _promptVerifiedFieldChange(context, 'teléfono')
+                            : null,
                         validator: (value) =>
                             InputValidators.phone(value ?? ''),
                       ),
@@ -214,12 +229,53 @@ class _EditProfileViewState extends State<_EditProfileView> {
     );
   }
 
+  Future<void> _promptVerifiedFieldChange(
+    BuildContext context,
+    String fieldLabel,
+  ) async {
+    final proceed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Cambiar $fieldLabel'),
+        content: Text(
+          'Tu $fieldLabel está verificado. Si lo cambias, deberás confirmarlo nuevamente.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Cambiar y verificar'),
+          ),
+        ],
+      ),
+    );
+    if (proceed != true || !mounted) return;
+    if (fieldLabel == 'correo') {
+      setState(() => _email.clear());
+      await showEmailVerificationSheet(context, email: _email.text.trim());
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Edita el teléfono, guarda y confirma el código SMS en inicio de sesión.',
+          ),
+        ),
+      );
+    }
+  }
+
   Widget _field({
     required TextEditingController controller,
     required String label,
     required IconData icon,
     required String? Function(String?) validator,
     TextInputType? keyboardType,
+    bool readOnly = false,
+    String? helperText,
+    VoidCallback? onTap,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -227,7 +283,13 @@ class _EditProfileViewState extends State<_EditProfileView> {
         controller: controller,
         validator: validator,
         keyboardType: keyboardType,
-        decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
+        readOnly: readOnly,
+        onTap: onTap,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon),
+          helperText: helperText,
+        ),
       ),
     );
   }

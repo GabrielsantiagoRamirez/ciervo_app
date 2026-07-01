@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../core/crash/crash_reporting_service.dart';
 import '../core/di/service_locator.dart';
+import '../features/memberships/presentation/cubit/membership_cubit.dart';
 import '../core/experience/experience_mode_cubit.dart';
 import '../core/session/session_manager.dart';
 import '../core/storage/secure_storage.dart';
@@ -137,8 +138,15 @@ class _BootstrapRootState extends State<_BootstrapRoot> {
           );
         }
 
-        return BlocProvider(
-          create: (_) => ExperienceModeCubit(getIt<SecureStorage>())..restore(),
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(
+              create: (_) => ExperienceModeCubit(getIt<SecureStorage>())..restore(),
+            ),
+            BlocProvider.value(
+              value: getIt<MembershipCubit>(),
+            ),
+          ],
           child: const CiervoApp(),
         );
       },

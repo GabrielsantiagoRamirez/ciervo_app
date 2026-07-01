@@ -137,12 +137,17 @@ class ProfileCubit extends Cubit<ProfileState> {
     );
     result.when(
       success: (upload) {
-        final photoRef = (upload.photoUrl != null && upload.photoUrl!.isNotEmpty)
-            ? upload.photoUrl
-            : upload.mediaId;
+        final photoRef = upload.imageUrl ??
+            upload.photoUrl ??
+            upload.mediaId;
         emit(state.copyWith(
           status: ProfileStatus.loaded,
-          profile: current.copyWith(photoUrl: photoRef),
+          profile: current.copyWith(
+            photoUrl: photoRef,
+            imageUrl: upload.imageUrl ?? upload.photoUrl,
+            storagePath: upload.storagePath,
+            photoUpdatedAt: upload.photoUpdatedAt ?? DateTime.now(),
+          ),
         ));
       },
       failure: (error) => emit(state.copyWith(

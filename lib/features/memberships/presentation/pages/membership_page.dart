@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/di/service_locator.dart';
@@ -12,6 +12,7 @@ import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
 import '../../../../core/utils/display_labels.dart';
 import '../../../payments/domain/repositories/payments_repository.dart';
+import '../cubit/membership_cubit.dart';
 import '../../data/memberships_repository.dart';
 import '../../domain/entities/membership_plan.dart';
 
@@ -133,6 +134,7 @@ class _MembershipPageState extends State<MembershipPage>
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Plan ${plan.name} activado.')),
           );
+          context.read<MembershipCubit>().load();
           setState(_load);
         },
         failure: (error) {
@@ -176,6 +178,7 @@ class _MembershipPageState extends State<MembershipPage>
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('Plan ${plan.name} activado.')),
               );
+              context.read<MembershipCubit>().load();
               setState(_load);
             } else if (finalIntent.isRejected) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -420,7 +423,12 @@ class _BenefitsView extends StatelessWidget {
                 if (limits.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.sm),
                   Text('Límites', style: Theme.of(context).textTheme.titleSmall),
-                  ...limits.entries.map((e) => Text('${e.key}: ${e.value}')),
+                  ...limits.entries.map(
+                    (e) => Text(
+                      '${DisplayLabels.membershipLimitLabel(e.key)}: '
+                      '${DisplayLabels.membershipLimitValue(e.value)}',
+                    ),
+                  ),
                 ],
               ],
             ],
@@ -555,7 +563,12 @@ class _PlanCard extends StatelessWidget {
             if (plan.limits.isNotEmpty) ...[
               const SizedBox(height: AppSpacing.sm),
               Text('Límites', style: Theme.of(context).textTheme.titleSmall),
-              ...plan.limits.entries.map((entry) => Text('${entry.key}: ${entry.value}')),
+              ...plan.limits.entries.map(
+                (entry) => Text(
+                  '${DisplayLabels.membershipLimitLabel(entry.key)}: '
+                  '${DisplayLabels.membershipLimitValue(entry.value)}',
+                ),
+              ),
             ],
             if (actionLabel != null) ...[
               const SizedBox(height: AppSpacing.md),

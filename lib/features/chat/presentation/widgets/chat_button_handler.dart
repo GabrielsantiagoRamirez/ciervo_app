@@ -48,6 +48,7 @@ Future<void> handleChatButtonTap(
   String? businessName,
   String? initialTargetCiervoCode,
   String? initialTargetUserId,
+  bool familyKidMode = false,
 }) async {
   if (!button.visibility.isEnabled) {
     final message = button.message?.trim();
@@ -96,6 +97,7 @@ Future<void> handleChatButtonTap(
             chatConversationId: conversationId,
             businessId: businessId,
             initialPayerCiervoCode: initialTargetCiervoCode,
+            payerOptional: familyKidMode,
           ),
         ),
       );

@@ -37,6 +37,10 @@ abstract interface class ChatRepository {
     String? body,
     String? metadataJson,
     String? attachmentUrl,
+    String? mediaUrl,
+    String? thumbnailUrl,
+    String? storagePath,
+    String? mediaType,
   });
   Future<Result<List<ChatButton>>> buttons();
   Future<Result<void>> markAsRead(String id);

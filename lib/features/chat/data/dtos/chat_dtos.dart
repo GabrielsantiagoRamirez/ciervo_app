@@ -23,18 +23,44 @@ ChatConversation conversationFromJson(Map<String, dynamic> json) =>
       ),
     );
 
-ChatMessage messageFromJson(Map<String, dynamic> json) => ChatMessage(
-  id: '${json['id'] ?? json['messageId'] ?? ''}',
-  body: json['body']?.toString() ?? '',
-  messageType: '${json['messageType'] ?? 'Text'}',
-  isMine: json['isOwnMessage'] == true,
-  senderName: json['senderRole']?.toString(),
-  sentAt: DateTime.tryParse('${json['sentAt'] ?? json['createdAt'] ?? ''}'),
-  attachmentUrl:
-      (json['attachmentMediaId'] ?? json['mediaId'] ?? json['attachmentUrl'])
-          ?.toString(),
-  metadataJson: json['metadataJson']?.toString(),
-);
+ChatMessage messageFromJson(Map<String, dynamic> json) {
+  final mediaUrl = _optionalString(json, const [
+    'mediaUrl',
+    'imageUrl',
+    'MediaUrl',
+  ]);
+  final attachment = _optionalString(json, const [
+    'attachmentMediaId',
+    'mediaId',
+    'attachmentUrl',
+  ]);
+  final updatedRaw =
+      json['updatedAt'] ?? json['createdAt'] ?? json['sentAt'];
+  return ChatMessage(
+    id: '${json['id'] ?? json['messageId'] ?? ''}',
+    body: json['body']?.toString() ?? '',
+    messageType: '${json['messageType'] ?? json['type'] ?? 'Text'}',
+    isMine: json['isOwnMessage'] == true,
+    senderName: json['senderRole']?.toString(),
+    sentAt: DateTime.tryParse('${json['sentAt'] ?? json['createdAt'] ?? ''}'),
+    attachmentUrl: attachment ?? mediaUrl,
+    mediaUrl: mediaUrl ?? attachment,
+    thumbnailUrl: _optionalString(json, const ['thumbnailUrl', 'ThumbnailUrl']),
+    storagePath: _optionalString(json, const ['storagePath', 'StoragePath']),
+    mediaUpdatedAt: DateTime.tryParse('$updatedRaw'),
+    metadataJson: json['metadataJson']?.toString(),
+  );
+}
+
+String? _optionalString(Map<String, dynamic> json, List<String> keys) {
+  for (final key in keys) {
+    final value = json[key];
+    if (value != null && value.toString().isNotEmpty) {
+      return value.toString();
+    }
+  }
+  return null;
+}
 
 int _int(dynamic value) => value is int ? value : int.tryParse('$value') ?? 0;
 int? _nullableInt(dynamic value) =>

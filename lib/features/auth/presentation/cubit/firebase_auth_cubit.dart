@@ -229,12 +229,21 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
   }) async {
     emit(state.copyWith(status: FirebaseAuthStatus.loading, clearError: true));
     try {
-      if (email.trim().isNotEmpty) {
+      final trimmedEmail = email.trim();
+      if (trimmedEmail.isNotEmpty) {
+        if (!trimmedEmail.contains('@') || !trimmedEmail.contains('.')) {
+          emit(
+            state.copyWith(
+              status: FirebaseAuthStatus.failure,
+              errorMessage: 'Ingresa un correo válido o déjalo vacío.',
+            ),
+          );
+          return false;
+        }
         if (password != null && password.isNotEmpty) {
-          // Email path during register is optional; phone user may link email.
-          await _firebaseAuth.linkEmailToCurrentUser(email);
+          await _firebaseAuth.linkEmailToCurrentUser(trimmedEmail);
         } else {
-          await _firebaseAuth.linkEmailToCurrentUser(email);
+          await _firebaseAuth.linkEmailToCurrentUser(trimmedEmail);
         }
         await _firebaseAuth.sendEmailVerification();
       }
@@ -246,10 +255,10 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
         'phone': state.phoneE164,
         'name': firstName.trim(),
         'lastname': lastName.trim(),
-        'email': email.trim(),
         'countryCode': countryCode,
         'documentType': documentType,
         'identityDocument': identityDocument.trim(),
+        if (trimmedEmail.isNotEmpty) 'email': trimmedEmail,
         if (state.latitude != null) 'latitude': state.latitude,
         if (state.longitude != null) 'longitude': state.longitude,
         if (city != null && city.trim().isNotEmpty) 'city': city.trim(),
@@ -398,6 +407,10 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
       );
       return false;
     }
+  }
+
+  void restartPhoneFlow() {
+    emit(const FirebaseAuthState());
   }
 
   Future<bool> resendEmailVerification() async {

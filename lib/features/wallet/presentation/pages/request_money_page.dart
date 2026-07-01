@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
+import '../../../../shared/widgets/currency_selector.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../domain/entities/payment_request.dart';
 import '../../domain/repositories/wallet_repository.dart';
@@ -15,12 +16,20 @@ class RequestMoneyPage extends StatefulWidget {
     this.initialPayerCiervoCode,
     this.chatConversationId,
     this.businessId,
+    this.bookingId,
+    this.initialAmount,
+    this.initialCurrency,
+    this.payerOptional = false,
     super.key,
   });
 
   final String? initialPayerCiervoCode;
   final String? chatConversationId;
   final int? businessId;
+  final int? bookingId;
+  final double? initialAmount;
+  final String? initialCurrency;
+  final bool payerOptional;
 
   @override
   State<RequestMoneyPage> createState() => _RequestMoneyPageState();
@@ -30,12 +39,23 @@ class _RequestMoneyPageState extends State<RequestMoneyPage> {
   final _codeController = TextEditingController();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
+  String _currency = 'COP';
 
   @override
   void initState() {
     super.initState();
     if (widget.initialPayerCiervoCode != null) {
       _codeController.text = widget.initialPayerCiervoCode!;
+    }
+    if (widget.initialAmount != null) {
+      _amountController.text = widget.initialAmount!.toStringAsFixed(0);
+    }
+    if (widget.initialCurrency != null && widget.initialCurrency!.isNotEmpty) {
+      _currency = widget.initialCurrency!;
+    }
+    if (widget.bookingId != null) {
+      _descriptionController.text =
+          '¿Me ayudas con esta reserva #${widget.bookingId}?';
     }
   }
 
@@ -70,29 +90,37 @@ class _RequestMoneyPageState extends State<RequestMoneyPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    TextField(
-                      controller: _codeController,
-                      decoration: const InputDecoration(
-                        hintText: 'Ciervo ID de quien paga',
-                        prefixIcon: Icon(Icons.alternate_email),
-                      ),
-                      onChanged: (_) => setState(() {}),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    CiervoButton(
-                      label: 'Resolver usuario',
-                      icon: Icons.person_search_outlined,
-                      variant: CiervoButtonVariant.secondary,
-                      onPressed: () => context.read<WalletCubit>().resolveUser(
-                        _codeController.text.trim(),
-                      ),
-                    ),
-                    if (state.resolvedUser != null) ...[
-                      const SizedBox(height: AppSpacing.md),
+                    if (widget.payerOptional) ...[
                       Text(
-                        'Pagador: ${state.resolvedUser!.displayName}',
-                        style: Theme.of(context).textTheme.titleLarge,
+                        'Tu tutor recibirá la solicitud en el chat familiar.',
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
+                      const SizedBox(height: AppSpacing.md),
+                    ] else ...[
+                      TextField(
+                        controller: _codeController,
+                        decoration: const InputDecoration(
+                          hintText: 'Ciervo ID de quien paga',
+                          prefixIcon: Icon(Icons.alternate_email),
+                        ),
+                        onChanged: (_) => setState(() {}),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      CiervoButton(
+                        label: 'Resolver usuario',
+                        icon: Icons.person_search_outlined,
+                        variant: CiervoButtonVariant.secondary,
+                        onPressed: () => context.read<WalletCubit>().resolveUser(
+                          _codeController.text.trim(),
+                        ),
+                      ),
+                      if (state.resolvedUser != null) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        Text(
+                          'Pagador: ${state.resolvedUser!.displayName}',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                      ],
                     ],
                     const SizedBox(height: AppSpacing.md),
                     TextField(
@@ -105,8 +133,12 @@ class _RequestMoneyPageState extends State<RequestMoneyPage> {
                       onChanged: (_) => setState(() {}),
                     ),
                     const SizedBox(height: AppSpacing.md),
+                    CurrencySelector(
+                      value: _currency,
+                      onChanged: (value) => setState(() => _currency = value),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
                     TextField(
-                      controller: _descriptionController,
                       decoration: const InputDecoration(
                         hintText: 'Descripcion',
                         prefixIcon: Icon(Icons.notes_outlined),
@@ -135,8 +167,10 @@ class _RequestMoneyPageState extends State<RequestMoneyPage> {
     if (state.isLoading) return false;
     final amount =
         double.tryParse(_amountController.text.replaceAll(',', '.')) ?? 0;
+    if (amount <= 0) return false;
+    if (widget.payerOptional) return true;
     final code = _codeController.text.trim();
-    return amount > 0 && (code.isNotEmpty || state.resolvedUser != null);
+    return code.isNotEmpty || state.resolvedUser != null;
   }
 
   void _submit(BuildContext context, WalletState state) {
@@ -144,10 +178,14 @@ class _RequestMoneyPageState extends State<RequestMoneyPage> {
         double.tryParse(_amountController.text.replaceAll(',', '.')) ?? 0;
     final code = _codeController.text.trim();
     final payer = state.resolvedUser;
-    if (amount <= 0 || (code.isEmpty && payer == null)) {
+    if (amount <= 0 || (!widget.payerOptional && code.isEmpty && payer == null)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Ingresa Ciervo ID o resuelve usuario y un monto valido.'),
+        SnackBar(
+          content: Text(
+            widget.payerOptional
+                ? 'Ingresa un monto válido.'
+                : 'Ingresa Ciervo ID o resuelve usuario y un monto valido.',
+          ),
         ),
       );
       return;
@@ -162,6 +200,8 @@ class _RequestMoneyPageState extends State<RequestMoneyPage> {
           : _descriptionController.text.trim(),
       chatConversationId: widget.chatConversationId,
       businessId: widget.businessId,
+      bookingId: widget.bookingId,
+      currency: _currency,
     );
   }
 }

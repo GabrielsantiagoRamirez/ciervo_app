@@ -10,6 +10,7 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/ciervo_share.dart';
+import '../../../../shared/widgets/insufficient_balance_dialog.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_chip_tag.dart';
@@ -20,9 +21,14 @@ import '../../../chat/presentation/pages/chat_conversation_page.dart';
 import '../../../delivery/domain/repositories/delivery_repository.dart';
 import '../../../bonuses/presentation/pages/bonus_detail_page.dart';
 import '../../../campaigns/presentation/widgets/paid_campaign_banner_section.dart';
+import '../../../favorites/domain/entities/favorite_filters.dart';
 import '../../../favorites/domain/repositories/favorites_repository.dart';
+import '../../../memberships/presentation/cubit/membership_cubit.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
+import '../../../../core/sync/home_feed_refresh.dart';
+import '../../../../core/utils/display_labels.dart';
+import '../../../../core/widgets/membership_upgrade_dialog.dart';
 import '../../../../core/location/app_location.dart';
 import '../../../../core/result/result.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
@@ -718,9 +724,19 @@ class _ReservationSheetState extends State<_ReservationSheet> {
               : base.confirmationCode,
         );
       },
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) async {
+        final message = UserErrorMessage.from(error);
+        if (message.toLowerCase().contains('saldo')) {
+          await showInsufficientBalanceDialog(
+            context,
+            description: message,
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message)),
+          );
+        }
+      },
     );
   }
 }
@@ -1097,6 +1113,25 @@ class _FavoriteButtonState extends State<_FavoriteButton> {
 
   Future<void> _toggle() async {
     if (_busy) return;
+    if (!_favorite) {
+      final membership = context.read<MembershipCubit>().state;
+      if (membership.isLoaded) {
+        final listResult = await getIt<FavoritesRepository>().list(
+          const FavoriteFilters(pageSize: 200),
+        );
+        final currentCount = listResult.when(
+          success: (items) => items.length,
+          failure: (_) => 0,
+        );
+        if (!membership.canAddFavorite(currentCount)) {
+          await showMembershipUpgradeDialog(
+            context,
+            featureLabel: DisplayLabels.membershipFeatureLabel('favorites.max'),
+          );
+          return;
+        }
+      }
+    }
     setState(() => _busy = true);
     final repository = getIt<FavoritesRepository>();
     final result = _favorite
@@ -1107,6 +1142,7 @@ class _FavoriteButtonState extends State<_FavoriteButton> {
     result.when(
       success: (_) {
         setState(() => _favorite = !_favorite);
+        HomeFeedRefresh.instance.favoritesChanged();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -1115,9 +1151,13 @@ class _FavoriteButtonState extends State<_FavoriteButton> {
           ),
         );
       },
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) async {
+        if (!await handlePlanLimitError(context, error)) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(UserErrorMessage.from(error))),
+          );
+        }
+      },
     );
   }
 

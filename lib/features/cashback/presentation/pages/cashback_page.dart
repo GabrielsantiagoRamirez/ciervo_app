@@ -159,7 +159,8 @@ class _HowToEarn extends StatelessWidget {
     if (rules.isEmpty) {
       return const CiervoEmptyState(
         title: 'Sin reglas visibles',
-        description: 'Las reglas de cashback apareceran aqui cuando backend las devuelva.',
+        description:
+            'Aún no hay reglas de cashback configuradas para tu plan. Revisa más tarde.',
         icon: Icons.savings_outlined,
       );
     }
@@ -206,7 +207,8 @@ class _Transactions extends StatelessWidget {
     if (transactions.isEmpty) {
       return const CiervoEmptyState(
         title: 'Sin historial de puntos',
-        description: 'El historial quedara activo cuando /api/rewards/me/transactions devuelva datos.',
+        description:
+            'Cuando uses Ciervo y acumules puntos, tus movimientos aparecerán aquí.',
         icon: Icons.timeline_outlined,
       );
     }

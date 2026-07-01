@@ -14,5 +14,7 @@ class NotificationsSync {
     }
   }
 
+  void refreshInbox() => notifyInboxMayHaveChanged();
+
   void dispose() => _controller.close();
 }

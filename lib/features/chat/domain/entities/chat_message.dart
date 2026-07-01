@@ -9,6 +9,10 @@ class ChatMessage {
     this.senderName,
     this.sentAt,
     this.attachmentUrl,
+    this.mediaUrl,
+    this.thumbnailUrl,
+    this.storagePath,
+    this.mediaUpdatedAt,
     this.metadataJson,
   });
 
@@ -19,7 +23,24 @@ class ChatMessage {
   final String? senderName;
   final DateTime? sentAt;
   final String? attachmentUrl;
+  final String? mediaUrl;
+  final String? thumbnailUrl;
+  final String? storagePath;
+  final DateTime? mediaUpdatedAt;
   final String? metadataJson;
+
+  bool get isImageMessage {
+    final type = messageType.toLowerCase();
+    return type == 'image' || type == 'file';
+  }
+
+  String? get resolvedImageUrl {
+    for (final candidate in [thumbnailUrl, mediaUrl, attachmentUrl]) {
+      final text = candidate?.trim();
+      if (text != null && text.startsWith('http')) return text;
+    }
+    return mediaUrl ?? attachmentUrl;
+  }
 
   Map<String, dynamic>? get _metadata {
     if (metadataJson == null || metadataJson!.isEmpty) return null;

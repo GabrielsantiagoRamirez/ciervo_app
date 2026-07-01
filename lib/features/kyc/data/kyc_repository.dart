@@ -50,6 +50,10 @@ class KycRepository {
   Future<Result<void>> submit({
     required String documentType,
     required String documentNumber,
+    required String country,
+    required int frontDocumentMediaId,
+    int? backDocumentMediaId,
+    int? selfieMediaId,
     String? notes,
     String subjectRole = 'Client',
   }) =>
@@ -60,6 +64,11 @@ class KycRepository {
             'subjectRole': subjectRole,
             'documentType': documentType,
             'documentNumber': documentNumber,
+            'country': country,
+            'frontDocumentMediaId': frontDocumentMediaId,
+            if (backDocumentMediaId != null)
+              'backDocumentMediaId': backDocumentMediaId,
+            if (selfieMediaId != null) 'selfieMediaId': selfieMediaId,
             if (notes != null && notes.isNotEmpty) 'notes': notes,
           },
         );

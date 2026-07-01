@@ -1,5 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +14,7 @@ import '../../../../core/country/country_context.dart';
 import '../../../../core/experience/experience_mode.dart';
 import '../../../../core/experience/experience_mode_cubit.dart';
 import '../../../../core/location/location_service.dart';
+import '../../../../core/sync/home_feed_refresh.dart';
 import '../../../../core/location/location_permission_status.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -63,18 +66,45 @@ class _HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<_HomeView> {
   late final SelectedKidContext _kidContext;
+  Timer? _autoRefreshTimer;
 
   @override
   void initState() {
     super.initState();
     _kidContext = getIt<SelectedKidContext>();
     _kidContext.addListener(_onKidModeChanged);
+    _autoRefreshTimer = Timer.periodic(
+      const Duration(seconds: 45),
+      (_) => _refreshFeedSections(),
+    );
   }
 
   @override
   void dispose() {
+    _autoRefreshTimer?.cancel();
     _kidContext.removeListener(_onKidModeChanged);
     super.dispose();
+  }
+
+  void _refreshFeedSections() {
+    if (!mounted) return;
+    HomeFeedRefresh.instance.refreshAll();
+    final cubit = context.read<HomeDiscoveryCubit>();
+    final state = cubit.state;
+    if (state.usingLocation) {
+      cubit.loadNearby();
+    } else {
+      cubit.loadGeneral();
+    }
+  }
+
+  Future<void> _onPullRefresh(HomeDiscoveryCubit cubit, bool usingLocation) async {
+    HomeFeedRefresh.instance.refreshAll();
+    if (usingLocation) {
+      await cubit.loadNearby();
+    } else {
+      await cubit.loadGeneral();
+    }
   }
 
   void _onKidModeChanged() {
@@ -113,9 +143,7 @@ class _HomeViewState extends State<_HomeView> {
                 ),
                 Expanded(
                   child: RefreshIndicator(
-                    onRefresh: state.usingLocation
-                        ? cubit.loadNearby
-                        : cubit.loadGeneral,
+                    onRefresh: () => _onPullRefresh(cubit, state.usingLocation),
                     child: CustomScrollView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       slivers: [

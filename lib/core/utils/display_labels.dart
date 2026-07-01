@@ -210,8 +210,140 @@ abstract final class DisplayLabels {
     'CC' => 'Cédula',
     'CE' => 'Cédula de extranjería',
     'PASSPORT' => 'Pasaporte',
+    'RC' => 'Registro civil',
+    'TI' => 'Tarjeta de identidad',
+    'RUN' => 'RUN',
+    'RUT' => 'RUT',
     _ => type,
   };
+
+  static String guardianRelationship(dynamic value) {
+    final key = int.tryParse('$value');
+    return switch (key) {
+      1 => 'Madre',
+      2 => 'Padre',
+      3 => 'Tutor legal',
+      4 => 'Familiar',
+      5 => 'Otro',
+      _ => _humanize('$value'),
+    };
+  }
+
+  static String membershipLimitLabel(String key) {
+    final normalized = key.replaceAll(RegExp(r'[._]'), '').toLowerCase();
+    return switch (normalized) {
+      'privatechat' => 'Chat privado',
+      'favoritesmax' => 'Comercios favoritos',
+      'kidsprofilesmax' => 'Perfiles Kids',
+      'pointsmultiplier' => 'Multiplicador de puntos',
+      'cashbackmultiplier' => 'Multiplicador de cashback',
+      'dailypinlimit' => 'Límite diario de PIN',
+      'virtualcards' => 'Tarjetas virtuales',
+      'physicalcard' => 'Tarjeta física',
+      'nfc' => 'Pagos NFC',
+      'secondaryusers' => 'Usuarios secundarios',
+      'kidslimit' => 'Perfiles Kids',
+      'cashbackpercent' => 'Porcentaje de cashback',
+      'historydays' => 'Días de historial',
+      'prioritysupport' => 'Soporte prioritario',
+      'deliverypreferential' => 'Delivery preferencial',
+      'doubleadmin' => 'Doble administrador',
+      'parentalcontrol' => 'Control parental',
+      'geofences' => 'Geo-cercas',
+      'kidscards' => 'Tarjetas Kids',
+      'premiumtravel' => 'Viajes premium',
+      'concierge' => 'Concierge',
+      'unlimitedcards' => 'Tarjetas ilimitadas',
+      'familymemberslimit' => 'Miembros familiares',
+      'sharedwallet' => 'Wallet compartida',
+      'familybudget' => 'Presupuesto familiar',
+      'approvals' => 'Aprobaciones de pagos',
+      _ => _humanize(key),
+    };
+  }
+
+  static String membershipLimitValue(dynamic value) {
+    if (value == null) return 'Sin límite';
+    if (value is bool) return value ? 'Incluido' : 'No incluido';
+    if (value is num) return value == value.roundToDouble()
+        ? value.toInt().toString()
+        : value.toString();
+    final text = '$value'.toLowerCase();
+    if (text == 'true') return 'Incluido';
+    if (text == 'false') return 'No incluido';
+    if (text == 'null' || text.isEmpty) return 'Sin límite';
+    return '$value';
+  }
+
+  static String membershipFeatureLabel(String key) {
+    final normalized = key.trim();
+    if (normalized.contains('private_chat')) {
+      return 'chat privado con cualquier usuario CIERVO';
+    }
+    if (normalized.contains('favorites.max')) {
+      return 'más comercios favoritos';
+    }
+    if (normalized.contains('kids.profiles.max')) {
+      return 'más perfiles Kids';
+    }
+    if (normalized.contains('points.multiplier')) {
+      return 'más puntos por compra';
+    }
+    if (normalized.contains('cashback.multiplier')) {
+      return 'más cashback';
+    }
+    return membershipLimitLabel(key).toLowerCase();
+  }
+
+  static String membershipLimitDescription(String key, dynamic value) {
+    final normalized = key.replaceAll(RegExp(r'[._]'), '').toLowerCase();
+    if (normalized == 'privatechat') {
+      return value == true || value == 'true'
+          ? 'Chat privado con cualquier usuario CIERVO'
+          : 'Chat privado no incluido';
+    }
+    if (normalized == 'favoritesmax') {
+      final max = membershipLimitValue(value);
+      return max == 'Sin límite'
+          ? 'Comercios favoritos ilimitados'
+          : 'Hasta $max comercios favoritos';
+    }
+    if (normalized == 'kidsprofilesmax') {
+      final max = membershipLimitValue(value);
+      return max == 'Sin límite'
+          ? 'Perfiles Kids ilimitados'
+          : 'Hasta $max perfiles Kids';
+    }
+    if (normalized == 'pointsmultiplier') {
+      final mult = double.tryParse('$value') ?? 1;
+      if (mult <= 1) return 'Puntos estándar';
+      if (mult == mult.roundToDouble()) {
+        return mult == 2
+            ? 'Ganas el doble de puntos'
+            : 'Ganas ${mult.toInt()} veces más puntos';
+      }
+      return 'Multiplicador de puntos ${mult.toStringAsFixed(1)}x';
+    }
+    if (normalized == 'cashbackmultiplier') {
+      final mult = double.tryParse('$value') ?? 1;
+      if (mult <= 1) return 'Cashback estándar';
+      final extra = ((mult - 1) * 100).round();
+      return extra > 0 ? 'Cashback con $extra% extra' : 'Cashback mejorado';
+    }
+    return '${membershipLimitLabel(key)}: ${membershipLimitValue(value)}';
+  }
+
+  static String receiptStatus(String? status) {
+    if (status == null || status.isEmpty) return 'Completado';
+    final key = status.toLowerCase().replaceAll('_', '');
+    return switch (key) {
+      'completed' || 'complete' || 'approved' => 'Completado',
+      'pending' => 'Pendiente',
+      'failed' || 'rejected' => 'Rechazado',
+      'cancelled' || 'canceled' => 'Cancelado',
+      _ => _humanize(status),
+    };
+  }
 
   static String locationSummary({
     required double? latitude,

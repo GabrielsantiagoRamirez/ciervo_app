@@ -182,6 +182,7 @@ class WalletRepositoryImpl implements WalletRepository {
     required double amount,
     required String description,
     String? walletCardId,
+    String currency = 'COP',
   }) async {
     try {
       return Success(
@@ -190,6 +191,7 @@ class WalletRepositoryImpl implements WalletRepository {
           amount: amount,
           description: description,
           walletCardId: walletCardId,
+          currency: currency,
         )).toDomain(),
       );
     } catch (error) {
@@ -205,6 +207,8 @@ class WalletRepositoryImpl implements WalletRepository {
     required String description,
     String? chatConversationId,
     int? businessId,
+    int? bookingId,
+    String currency = 'COP',
   }) async {
     try {
       return Success(
@@ -215,6 +219,8 @@ class WalletRepositoryImpl implements WalletRepository {
           description: description,
           chatConversationId: chatConversationId,
           businessId: businessId,
+          bookingId: bookingId,
+          currency: currency,
         )).toDomain(),
       );
     } catch (error) {
@@ -227,12 +233,14 @@ class WalletRepositoryImpl implements WalletRepository {
     required String targetCiervoUserCode,
     required double amount,
     String? description,
+    String currency = 'COP',
   }) async {
     try {
       final dto = await _remoteDataSource.rechargeByCiervoId(
         targetCiervoUserCode: targetCiervoUserCode,
         amount: amount,
         description: description,
+        currency: currency,
       );
       return Success(dto.toDomain());
     } catch (error) {

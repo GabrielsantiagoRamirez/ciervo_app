@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/contacts/contacts_matcher.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/location/location_service.dart';
@@ -44,6 +45,29 @@ class _UserSearchPageState extends State<UserSearchPage> {
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _matchContacts() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    final result = await getIt<ContactsMatcher>().matchDeviceContacts();
+    if (!mounted) return;
+    result.when(
+      success: (items) => setState(() {
+        _results = items;
+        _loading = false;
+        if (items.isEmpty) {
+          _error = 'No encontramos contactos registrados en Ciervo.';
+        }
+      }),
+      failure: (error) => setState(() {
+        _error = UserErrorMessage.from(error);
+        _loading = false;
+        _results = const [];
+      }),
+    );
   }
 
   Future<void> _search() async {
@@ -233,7 +257,7 @@ class _UserSearchPageState extends State<UserSearchPage> {
           textInputAction: TextInputAction.search,
           onSubmitted: (_) => _search(),
           decoration: InputDecoration(
-            hintText: 'Nombre o usuario',
+            hintText: 'Nombre, teléfono o usuario',
             prefixIcon: const Icon(Icons.search),
             suffixIcon: IconButton(
               icon: const Icon(Icons.arrow_forward),
@@ -249,6 +273,12 @@ class _UserSearchPageState extends State<UserSearchPage> {
               ? null
               : (value) => setState(() => _includeOtherCountries = value),
         ),
+        OutlinedButton.icon(
+          onPressed: _loading ? null : _matchContacts,
+          icon: const Icon(Icons.contacts_outlined),
+          label: const Text('Buscar en mis contactos'),
+        ),
+        const SizedBox(height: AppSpacing.sm),
         if (_loading) const LinearProgressIndicator(),
         if (_error != null) ...[
           const SizedBox(height: AppSpacing.md),
@@ -271,6 +301,8 @@ class _UserSearchPageState extends State<UserSearchPage> {
           final opening = _openingUserId == user.userId;
           final subtitle = [
             if (user.ciervoUserCode != null) user.ciervoUserCode,
+            if (user.phoneMasked != null) user.phoneMasked,
+            if (user.matchedByPhone) 'Contacto del teléfono',
             if (user.distanceLabel != null) user.distanceLabel,
             if (user.distanceKm == null && user.city != null) user.city,
             if (user.country != null) user.country,

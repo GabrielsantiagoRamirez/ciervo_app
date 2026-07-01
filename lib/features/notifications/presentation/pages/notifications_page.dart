@@ -75,10 +75,8 @@ class _NotificationsViewState extends State<_NotificationsView> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: CiervoBrandColors.background,
+    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
     appBar: AppBar(
-      backgroundColor: CiervoBrandColors.background,
-      foregroundColor: CiervoBrandColors.gold,
       title: const Text('CIERVO CLUB'),
       actions: [
         IconButton(
@@ -141,8 +139,8 @@ class _NotificationsViewState extends State<_NotificationsView> {
                     setState(() => _category = entry.key);
                     context.read<NotificationsCubit>().load(category: entry.key);
                   },
-                  selectedColor: CiervoBrandColors.gold.withValues(alpha: 0.25),
-                  checkmarkColor: CiervoBrandColors.gold,
+                  selectedColor: Theme.of(context).colorScheme.primaryContainer,
+                  checkmarkColor: Theme.of(context).colorScheme.primary,
                 ),
               );
             }).toList(),
@@ -152,7 +150,7 @@ class _NotificationsViewState extends State<_NotificationsView> {
           child: BlocBuilder<NotificationsCubit, NotificationsState>(
             builder: (context, state) {
               return RefreshIndicator(
-                color: CiervoBrandColors.gold,
+                color: Theme.of(context).colorScheme.primary,
                 onRefresh: () =>
                     context.read<NotificationsCubit>().load(category: _category),
                 child: Padding(
@@ -225,10 +223,12 @@ class _NotificationsViewState extends State<_NotificationsView> {
                                                             ? FontWeight.w500
                                                             : FontWeight.w700,
                                                         color: item.isRead
-                                                            ? CiervoBrandColors
-                                                                .textMuted
-                                                            : CiervoBrandColors
-                                                                .textPrimary,
+                                                            ? Theme.of(context)
+                                                                .colorScheme
+                                                                .onSurfaceVariant
+                                                            : Theme.of(context)
+                                                                .colorScheme
+                                                                .onSurface,
                                                       ),
                                                 ),
                                               ),
@@ -239,8 +239,10 @@ class _NotificationsViewState extends State<_NotificationsView> {
                                                   margin: const EdgeInsets.only(
                                                     left: AppSpacing.xs,
                                                   ),
-                                                  decoration: const BoxDecoration(
-                                                    color: CiervoBrandColors.gold,
+                                                  decoration: BoxDecoration(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .primary,
                                                     shape: BoxShape.circle,
                                                   ),
                                                 ),
@@ -267,8 +269,10 @@ class _NotificationsViewState extends State<_NotificationsView> {
                                                 DisplayLabels.notificationPreference(
                                                   item.category ?? item.type!,
                                                 ),
-                                                style: const TextStyle(
-                                                  color: CiervoBrandColors.gold,
+                                                style: TextStyle(
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .primary,
                                                   fontSize: 11,
                                                   fontWeight: FontWeight.w600,
                                                 ),
@@ -280,8 +284,10 @@ class _NotificationsViewState extends State<_NotificationsView> {
                                             item.message,
                                             maxLines: 3,
                                             overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                              color: CiervoBrandColors.textMuted,
+                                            style: TextStyle(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
                                               height: 1.35,
                                             ),
                                           ),
@@ -291,8 +297,10 @@ class _NotificationsViewState extends State<_NotificationsView> {
                                             ),
                                             Text(
                                               _formatNotificationDate(item.date!),
-                                              style: const TextStyle(
-                                                color: CiervoBrandColors.textMuted,
+                                              style: TextStyle(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
                                                 fontSize: 12,
                                               ),
                                             ),

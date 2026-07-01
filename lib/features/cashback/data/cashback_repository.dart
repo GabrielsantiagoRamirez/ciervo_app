@@ -15,13 +15,16 @@ class CashbackRepository {
       });
 
   Future<Result<int?>> rewardBalance() => _guard(() async {
-        final response = await _client.dio.get<dynamic>('/api/rewards/me/balance');
-        final value = unwrapApiResponse(response.data);
-        if (value is num) return value.toInt();
-        if (value is Map<String, dynamic>) {
-          return _intOrNull(value['points'] ?? value['balance'] ?? value['total']);
-        }
-        return _intOrNull(value);
+        final response =
+            await _client.dio.get<dynamic>('/api/wallet/loyalty/summary');
+        final value = unwrapApiMap(response.data);
+        return _intOrNull(
+          value['cashbackAvailable'] ??
+              value['cashback'] ??
+              value['pointsAvailable'] ??
+              value['points'] ??
+              value['balance'],
+        );
       });
 
   Future<Result<List<Map<String, dynamic>>>> rewardTransactions() =>

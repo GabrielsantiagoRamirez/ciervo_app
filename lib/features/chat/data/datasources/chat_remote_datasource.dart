@@ -124,15 +124,23 @@ class ChatRemoteDataSource {
     String? body,
     String? metadataJson,
     String? attachmentUrl,
+    String? mediaUrl,
+    String? thumbnailUrl,
+    String? storagePath,
+    String? mediaType,
   }) async =>
       unwrapApiMap(
         (await _client.dio.post<dynamic>(
           '/api/chat/conversations/$id/messages',
           data: {
             'messageType': messageType,
-            'body': body,
-            'attachmentUrl': attachmentUrl,
-            'metadataJson': metadataJson,
+            if (body != null) 'body': body,
+            if (metadataJson != null) 'metadataJson': metadataJson,
+            if (attachmentUrl != null) 'attachmentUrl': attachmentUrl,
+            if (mediaUrl != null) 'mediaUrl': mediaUrl,
+            if (thumbnailUrl != null) 'thumbnailUrl': thumbnailUrl,
+            if (storagePath != null) 'storagePath': storagePath,
+            if (mediaType != null) 'mediaType': mediaType,
           },
         )).data,
       );

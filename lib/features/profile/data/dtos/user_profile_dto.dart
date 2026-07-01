@@ -11,6 +11,10 @@ class UserProfileDto {
     this.identityDocument,
     this.documentType,
     this.photoUrl,
+    this.imageUrl,
+    this.thumbnailUrl,
+    this.storagePath,
+    this.photoUpdatedAt,
     this.currentLatitude,
     this.currentLongitude,
     this.locationUpdatedAt,
@@ -65,6 +69,21 @@ class UserProfileDto {
         'avatarMediaId',
         'mediaId',
       ]),
+      imageUrl: _optionalString(source, const [
+        'imageUrl',
+        'ImageUrl',
+      ]),
+      thumbnailUrl: _optionalString(source, const [
+        'thumbnailUrl',
+        'ThumbnailUrl',
+      ]),
+      storagePath: _optionalString(source, const [
+        'storagePath',
+        'StoragePath',
+      ]),
+      photoUpdatedAt: DateTime.tryParse(
+        '${source['photoUpdatedAt'] ?? source['updatedAt'] ?? ''}',
+      ),
       currentLatitude: _double(source['currentLatitude']),
       currentLongitude: _double(source['currentLongitude']),
       locationUpdatedAt: DateTime.tryParse('${source['locationUpdatedAt'] ?? ''}'),
@@ -85,6 +104,10 @@ class UserProfileDto {
   final String? identityDocument;
   final String? documentType;
   final String? photoUrl;
+  final String? imageUrl;
+  final String? thumbnailUrl;
+  final String? storagePath;
+  final DateTime? photoUpdatedAt;
   final double? currentLatitude;
   final double? currentLongitude;
   final DateTime? locationUpdatedAt;
@@ -105,6 +128,10 @@ class UserProfileDto {
       identityDocument: identityDocument,
       documentType: documentType,
       photoUrl: photoUrl,
+      imageUrl: imageUrl,
+      thumbnailUrl: thumbnailUrl,
+      storagePath: storagePath,
+      photoUpdatedAt: photoUpdatedAt,
       currentLatitude: currentLatitude,
       currentLongitude: currentLongitude,
       locationUpdatedAt: locationUpdatedAt,

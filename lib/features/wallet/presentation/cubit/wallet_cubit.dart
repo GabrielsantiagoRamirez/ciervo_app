@@ -198,6 +198,7 @@ class WalletCubit extends Cubit<WalletState> {
     required double amount,
     required String description,
     String? walletCardId,
+    String currency = 'COP',
   }) async {
     emit(
       state.copyWith(
@@ -211,6 +212,7 @@ class WalletCubit extends Cubit<WalletState> {
       amount: amount,
       description: description,
       walletCardId: walletCardId,
+      currency: currency,
     );
     result.when(
       success: (transfer) {
@@ -240,6 +242,8 @@ class WalletCubit extends Cubit<WalletState> {
     required String description,
     String? chatConversationId,
     int? businessId,
+    int? bookingId,
+    String currency = 'COP',
   }) async {
     emit(
       state.copyWith(status: WalletStatus.actionLoading, clearMessages: true),
@@ -251,6 +255,8 @@ class WalletCubit extends Cubit<WalletState> {
       description: description,
       chatConversationId: chatConversationId,
       businessId: businessId,
+      bookingId: bookingId,
+      currency: currency,
     );
     result.when(
       success: (_) {
@@ -307,6 +313,7 @@ class WalletCubit extends Cubit<WalletState> {
     required String targetCiervoUserCode,
     required double amount,
     String? description,
+    String currency = 'COP',
   }) async {
     emit(
       state.copyWith(
@@ -319,6 +326,7 @@ class WalletCubit extends Cubit<WalletState> {
       targetCiervoUserCode: targetCiervoUserCode,
       amount: amount,
       description: description,
+      currency: currency,
     );
     result.when(
       success: (intent) => emit(

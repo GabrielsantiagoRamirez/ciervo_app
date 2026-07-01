@@ -55,7 +55,10 @@ abstract final class EntryPermissionsPrompt {
               CiervoButton(
                 label: 'Permitir acceso',
                 icon: Icons.check_circle_outline,
-                onPressed: () => Navigator.pop(ctx),
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  await getIt<AppPermissionService>().requestRequiredEntryPermissions();
+                },
               ),
               TextButton(
                 onPressed: () => Navigator.pop(ctx),

@@ -3,10 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/utils/display_labels.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
+import '../../../../shared/widgets/ciervo_payment_receipt.dart';
+import '../../../receipts/domain/entities/action_confirmation.dart';
 import '../../domain/entities/receipt.dart';
 import '../../domain/repositories/receipts_repository.dart';
 import '../cubit/receipts_cubit.dart';
@@ -88,6 +91,10 @@ class _ReceiptTile extends StatelessWidget {
               ),
             ),
             Text('${receipt.currency} ${receipt.amount.toStringAsFixed(0)}'),
+            Text(
+              DisplayLabels.receiptStatus(receipt.status),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
           ],
         ),
       ),
@@ -117,30 +124,26 @@ class ReceiptDetailPage extends StatelessWidget {
                       title: 'Recibo no disponible',
                       description: 'No encontramos el detalle solicitado.',
                     )
-                  : CiervoCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            receipt.title,
-                            style: Theme.of(context).textTheme.headlineMedium,
+                  : ListView(
+                      children: [
+                        CiervoPaymentReceipt(
+                          confirmation: ActionConfirmation(
+                            title: receipt.title,
+                            confirmationCode: receipt.id,
+                            userCiervoCode: receipt.userCiervoCode,
+                            amount: receipt.amount,
+                            currency: receipt.currency,
+                            status: DisplayLabels.receiptStatus(receipt.status),
+                            date: receipt.date?.toIso8601String(),
+                            publicReceiptUrl: receipt.publicReceiptUrl,
+                            shareDescription: receipt.shareDescription ??
+                                receipt.description ??
+                                '¡Gracias por confiar en CIERVO!',
                           ),
-                          const SizedBox(height: AppSpacing.md),
-                          Text(
-                            '${receipt.currency} ${receipt.amount.toStringAsFixed(0)}',
-                            style: Theme.of(context).textTheme.displaySmall,
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          Text('Estado: ${receipt.status}'),
-                          if (receipt.userCiervoCode != null)
-                            Text('Ciervo ID: ${receipt.userCiervoCode}'),
-                          if (receipt.publicReceiptUrl != null)
-                            Text('Recibo: ${receipt.publicReceiptUrl}'),
-                          if (receipt.description != null)
-                            Text(receipt.description!),
-                        ],
-                      ),
+                          referenceLabel: 'Concepto',
+                          referenceValue: receipt.description ?? receipt.title,
+                        ),
+                      ],
                     ),
             );
           },

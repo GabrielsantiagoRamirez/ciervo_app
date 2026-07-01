@@ -13,6 +13,7 @@ import '../../../media/presentation/authenticated_media_image.dart';
 import '../widgets/chat_button_handler.dart';
 import '../widgets/chat_buttons_bar.dart';
 import '../widgets/chat_forward_sheet.dart';
+import '../widgets/chat_message_image.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/repositories/chat_repository.dart';
 import '../cubit/chat_cubit.dart';
@@ -282,6 +283,19 @@ class _MessageContent extends StatelessWidget {
     }
     if (message.locationPayload != null) {
       return ChatLocationCard(payload: message.locationPayload!);
+    }
+    if (message.isImageMessage) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ChatMessageImage(message: message),
+          if (message.body.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(message.body),
+          ],
+        ],
+      );
     }
     final attachment = message.attachmentUrl;
     if (attachment == null || attachment.isEmpty) return Text(message.body);

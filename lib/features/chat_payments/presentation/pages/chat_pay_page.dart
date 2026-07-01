@@ -6,12 +6,13 @@ import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
+import '../../../../shared/widgets/insufficient_balance_dialog.dart';
+import '../../../chat_payments/data/chat_payments_remote_datasource.dart';
+import '../../../loyalty/loyalty_purchase_helper.dart';
 import '../../../receipts/presentation/pages/receipts_page.dart';
 import '../../../wallet/domain/repositories/wallet_repository.dart';
 import '../../../wallet/presentation/cubit/wallet_cubit.dart';
 import '../../../wallet/presentation/cubit/wallet_state.dart';
-import '../../../wallet/presentation/pages/wallet_page.dart';
-import '../../data/chat_payments_remote_datasource.dart';
 
 class ChatPayPage extends StatefulWidget {
   const ChatPayPage({
@@ -202,6 +203,18 @@ class _ChatPayPageState extends State<ChatPayPage> {
         const SnackBar(content: Text('Pago realizado correctamente.')),
       );
 
+      if (_isBusinessPay) {
+        await processLoyaltyAfterPurchase(
+          context,
+          amount: amount,
+          businessId: widget.businessId,
+          paymentIntentId: int.tryParse(
+            '${response['paymentIntentId'] ?? response['intentId'] ?? ''}',
+          ),
+          transactionId: receiptId,
+        );
+      }
+
       if (receiptId != null && receiptId.isNotEmpty) {
         await Navigator.of(context).push(
           MaterialPageRoute<void>(
@@ -226,29 +239,9 @@ class _ChatPayPageState extends State<ChatPayPage> {
   }
 
   Future<void> _showInsufficientBalanceDialog(BuildContext context) async {
-    final recharge = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Saldo insuficiente'),
-        content: const Text(
-          'No tienes saldo suficiente en tu wallet. Recarga con Mercado Pago para continuar.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Ir a wallet'),
-          ),
-        ],
-      ),
+    await showInsufficientBalanceDialog(
+      context,
+      chatConversationId: widget.chatConversationId,
     );
-    if (recharge == true && context.mounted) {
-      await Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const WalletPage()),
-      );
-    }
   }
 }

@@ -3,6 +3,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../location/location_permission_status.dart';
+import '../notifications/notification_presenter.dart';
 import '../location/location_service.dart';
 
 abstract interface class AppPermissionService {
@@ -12,6 +13,9 @@ abstract interface class AppPermissionService {
 
   /// Solicita cámara solo cuando el usuario va a escanear QR o tomar foto.
   Future<bool> requestCameraIfNeeded();
+
+  /// Solicita acceso a contactos para encontrar usuarios CIERVO.
+  Future<bool> requestContactsIfNeeded();
 }
 
 class DeviceAppPermissionService implements AppPermissionService {
@@ -52,6 +56,7 @@ class DeviceAppPermissionService implements AppPermissionService {
   }
 
   Future<void> _requestNotifications() async {
+    await NotificationPresenter.ensureDisplayPermission();
     final status = await Permission.notification.status;
     if (status.isGranted || status.isLimited) return;
     if (status.isPermanentlyDenied) {
@@ -87,5 +92,17 @@ class DeviceAppPermissionService implements AppPermissionService {
     }
     final result = await Permission.camera.request();
     return result.isGranted;
+  }
+
+  @override
+  Future<bool> requestContactsIfNeeded() async {
+    final status = await Permission.contacts.status;
+    if (status.isGranted || status.isLimited) return true;
+    if (status.isPermanentlyDenied) {
+      await openAppSettings();
+      return false;
+    }
+    final result = await Permission.contacts.request();
+    return result.isGranted || result.isLimited;
   }
 }
