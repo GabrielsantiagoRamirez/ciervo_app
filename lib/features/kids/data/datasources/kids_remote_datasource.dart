@@ -64,6 +64,17 @@ abstract interface class KidsRemoteDataSource {
     required String path,
     required String fileName,
   });
+
+  Future<Map<String, dynamic>> createKidAccount({
+    required String childId,
+    required String username,
+    required String pin,
+  });
+
+  Future<void> updateKidPin({
+    required String childId,
+    required String pin,
+  });
 }
 
 class DioKidsRemoteDataSource implements KidsRemoteDataSource {
@@ -348,5 +359,33 @@ class DioKidsRemoteDataSource implements KidsRemoteDataSource {
       return value['items'] as List;
     }
     return const [];
+  }
+
+  @override
+  Future<Map<String, dynamic>> createKidAccount({
+    required String childId,
+    required String username,
+    required String pin,
+  }) async {
+    final response = await _client.dio.post<Map<String, dynamic>>(
+      '/api/guardians/children/$childId/account',
+      data: {
+        'username': username.trim(),
+        'pin': pin,
+        'loginMethod': 'PIN',
+      },
+    );
+    return unwrapApiMap(response.data);
+  }
+
+  @override
+  Future<void> updateKidPin({
+    required String childId,
+    required String pin,
+  }) async {
+    await _client.dio.put<void>(
+      '/api/guardians/children/$childId/account/pin',
+      data: {'pin': pin},
+    );
   }
 }

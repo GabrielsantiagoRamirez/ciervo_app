@@ -11,12 +11,15 @@ class WalletCardDto {
     required this.status,
     required this.isPrimary,
     this.mask,
+    this.isBlocked = false,
   });
 
   factory WalletCardDto.fromJson(Map<String, dynamic> json) {
     final balance = _double(json, const ['balance']);
     final heldBalance = _double(json, const ['heldBalance']);
     final available = _optionalDouble(json, const ['availableBalance']);
+    final blockedAt = _optionalString(json, const ['blockedAt', 'BlockedAt']);
+    final statusId = json['statusId'] ?? json['StatusId'];
     return WalletCardDto(
       id: _string(json, const ['id', 'cardId', 'walletCardId']),
       name: _string(json, const [
@@ -34,6 +37,10 @@ class WalletCardDto {
       status: _statusLabel(json),
       isPrimary: _bool(json, const ['isPrimary', 'primary']),
       mask: _optionalString(json, const ['mask', 'cardMask', 'lastFour']),
+      isBlocked: blockedAt != null ||
+          statusId == 2 ||
+          statusId == '2' ||
+          _statusLabel(json).toLowerCase().contains('block'),
     );
   }
 
@@ -46,6 +53,7 @@ class WalletCardDto {
   final String status;
   final bool isPrimary;
   final String? mask;
+  final bool isBlocked;
 
   WalletCard toDomain() => WalletCard(
     id: id,
@@ -57,6 +65,7 @@ class WalletCardDto {
     status: status,
     isPrimary: isPrimary,
     mask: mask,
+    isBlocked: isBlocked,
   );
 
   static List<WalletCardDto> listFrom(dynamic value) {

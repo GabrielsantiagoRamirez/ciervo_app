@@ -99,7 +99,10 @@ class DioWalletRemoteDataSource implements WalletRemoteDataSource {
 
   @override
   Future<void> block(String cardId) async {
-    await _client.dio.post<void>('/api/wallet/cards/$cardId/block');
+    await _client.dio.post<void>(
+      '/api/wallet/cards/$cardId/block',
+      data: const <String, dynamic>{},
+    );
   }
 
   @override

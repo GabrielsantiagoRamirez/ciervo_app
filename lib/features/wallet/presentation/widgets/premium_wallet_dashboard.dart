@@ -128,7 +128,7 @@ class _PremiumWalletDashboardState extends State<PremiumWalletDashboard> {
                 palette: palette,
                 onBlock: card == null
                     ? null
-                    : () => context.read<WalletCubit>().block(card.id),
+                    : () => _confirmBlockCard(context, card),
               ),
               const SizedBox(height: AppSpacing.md),
               WalletNfcSection(selectedCard: card),
@@ -191,6 +191,39 @@ class _PremiumWalletDashboardState extends State<PremiumWalletDashboard> {
     );
     if (saved == true && mounted) {
       setState(() => _displayAlias = controller.text.trim());
+    }
+  }
+
+  Future<void> _confirmBlockCard(BuildContext context, WalletCard card) async {
+    final cubit = context.read<WalletCubit>();
+    final isBlocked = card.isBlocked;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(isBlocked ? 'Desbloquear tarjeta' : 'Bloquear tarjeta'),
+        content: Text(
+          isBlocked
+              ? '¿Quieres desbloquear "${card.name}"? Podrás volver a usarla para pagos y recargas.'
+              : '¿Quieres bloquear "${card.name}"? No podrás usarla hasta desbloquearla.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(isBlocked ? 'Desbloquear' : 'Bloquear'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && context.mounted) {
+      if (isBlocked) {
+        await cubit.unblock(card.id);
+      } else {
+        await cubit.block(card.id);
+      }
     }
   }
 }
@@ -393,8 +426,10 @@ class _QuickActionsRow extends StatelessWidget {
                 ),
         ),
         _CircleAction(
-          label: 'Bloquear tarjeta',
-          icon: Icons.lock_outline,
+          label: card?.isBlocked == true ? 'Desbloquear' : 'Bloquear tarjeta',
+          icon: card?.isBlocked == true
+              ? Icons.lock_open_outlined
+              : Icons.lock_outline,
           palette: palette,
           onTap: onBlock,
         ),

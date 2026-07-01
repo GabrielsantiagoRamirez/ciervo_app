@@ -9,6 +9,7 @@ class WalletCard {
     required this.status,
     required this.isPrimary,
     this.mask,
+    this.isBlocked = false,
   });
 
   final String id;
@@ -20,8 +21,7 @@ class WalletCard {
   final String status;
   final bool isPrimary;
   final String? mask;
-
-  bool get isBlocked => status.toLowerCase().contains('block');
+  final bool isBlocked;
 
   bool get isInactive =>
       status.toLowerCase().contains('inactive') ||

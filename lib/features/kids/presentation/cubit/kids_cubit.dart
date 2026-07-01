@@ -322,4 +322,66 @@ class KidsCubit extends Cubit<KidsState> {
       },
     );
   }
+
+  Future<bool> createKidAccount({
+    required String childId,
+    required String username,
+    required String pin,
+  }) async {
+    emit(state.copyWith(status: KidsStatus.actionLoading, clearMessages: true));
+    final result = await _repository.createKidAccount(
+      childId: childId,
+      username: username,
+      pin: pin,
+    );
+    return result.when(
+      success: (_) async {
+        await loadChild(childId);
+        emit(
+          state.copyWith(
+            status: KidsStatus.loaded,
+            successMessage: 'Cuenta de acceso creada. Usuario: $username',
+          ),
+        );
+        return true;
+      },
+      failure: (error) {
+        emit(
+          state.copyWith(
+            status: KidsStatus.loaded,
+            errorMessage: UserErrorMessage.from(error),
+          ),
+        );
+        return false;
+      },
+    );
+  }
+
+  Future<bool> updateKidPin({
+    required String childId,
+    required String pin,
+  }) async {
+    emit(state.copyWith(status: KidsStatus.actionLoading, clearMessages: true));
+    final result = await _repository.updateKidPin(childId: childId, pin: pin);
+    return result.when(
+      success: (_) {
+        emit(
+          state.copyWith(
+            status: KidsStatus.loaded,
+            successMessage: 'PIN actualizado correctamente.',
+          ),
+        );
+        return true;
+      },
+      failure: (error) {
+        emit(
+          state.copyWith(
+            status: KidsStatus.loaded,
+            errorMessage: UserErrorMessage.from(error),
+          ),
+        );
+        return false;
+      },
+    );
+  }
 }

@@ -16,10 +16,17 @@ import '../../data/user_search_repository.dart';
 import '../../domain/entities/user_search_result.dart';
 
 class UserSearchPage extends StatefulWidget {
-  const UserSearchPage({this.selectMode = false, super.key});
+  const UserSearchPage({
+    this.selectMode = false,
+    this.pickRecipient = false,
+    super.key,
+  });
 
   /// Si es true, devuelve el userId seleccionado con Navigator.pop.
   final bool selectMode;
+
+  /// Si es true, devuelve el [UserSearchResult] al tocar una persona.
+  final bool pickRecipient;
 
   @override
   State<UserSearchPage> createState() => _UserSearchPageState();
@@ -210,7 +217,13 @@ class _UserSearchPageState extends State<UserSearchPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: Text(widget.selectMode ? 'Invitar amigo' : 'Buscar personas'),
+      title: Text(
+        widget.pickRecipient
+            ? 'Elegir destinatario'
+            : widget.selectMode
+                ? 'Invitar amigo'
+                : 'Buscar personas',
+      ),
     ),
     body: ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -304,6 +317,21 @@ class _UserSearchPageState extends State<UserSearchPage> {
                     : const Icon(Icons.block, size: 20),
             onTap: user.canStartConversation && !opening
                 ? () {
+                    if (widget.pickRecipient) {
+                      if (user.ciervoUserCode == null ||
+                          user.ciervoUserCode!.trim().isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Esta persona aún no tiene CIERVO ID público.',
+                            ),
+                          ),
+                        );
+                        return;
+                      }
+                      Navigator.of(context).pop(user);
+                      return;
+                    }
                     if (widget.selectMode) {
                       Navigator.of(context).pop(user.userId);
                       return;

@@ -343,4 +343,36 @@ class KidsRepositoryImpl implements KidsRepository {
       return Failure(ErrorMapper.fromObject(error));
     }
   }
+
+  @override
+  Future<Result<Map<String, dynamic>>> createKidAccount({
+    required String childId,
+    required String username,
+    required String pin,
+  }) async {
+    try {
+      return Success(
+        await _remoteDataSource.createKidAccount(
+          childId: childId,
+          username: username,
+          pin: pin,
+        ),
+      );
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
+  Future<Result<void>> updateKidPin({
+    required String childId,
+    required String pin,
+  }) async {
+    try {
+      await _remoteDataSource.updateKidPin(childId: childId, pin: pin);
+      return const Success<void>(null);
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
 }

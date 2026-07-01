@@ -68,4 +68,15 @@ abstract interface class KidsRepository {
     required String path,
     required String fileName,
   });
+
+  Future<Result<Map<String, dynamic>>> createKidAccount({
+    required String childId,
+    required String username,
+    required String pin,
+  });
+
+  Future<Result<void>> updateKidPin({
+    required String childId,
+    required String pin,
+  });
 }

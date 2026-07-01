@@ -55,7 +55,7 @@ class QrWalletRepository {
   });
 
   Future<Result<List<CiervoQrItem>>> rewardsCatalog() => _guard(() async {
-    final response = await _client.dio.get<dynamic>('/api/rewards');
+    final response = await _client.dio.get<dynamic>('/api/rewards/catalog');
     return _list(response.data)
         .map((item) => _catalogBenefitFromJson(item, 'rewards'))
         .toList();

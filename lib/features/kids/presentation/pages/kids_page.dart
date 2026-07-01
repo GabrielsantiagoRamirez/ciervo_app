@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
@@ -27,6 +28,7 @@ import 'child_form_page.dart';
 import 'link_child_page.dart';
 import 'package:image_picker/image_picker.dart';
 import '../widgets/child_profile_avatar.dart';
+import '../widgets/kid_login_access_card.dart';
 
 class KidsPage extends StatelessWidget {
   const KidsPage({super.key});
@@ -242,6 +244,38 @@ class _ChildCard extends StatelessWidget {
           Text(
             '${child.age == null ? 'Edad no registrada' : '${child.age} años'}${document.isEmpty ? '' : ' · $document'}',
           ),
+          if (child.kidUsername != null && child.kidUsername!.trim().isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Usuario acceso: ${child.kidUsername}',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Copiar usuario',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: child.kidUsername!.trim()));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Usuario copiado.')),
+                    );
+                  },
+                  icon: const Icon(Icons.copy_outlined, size: 18),
+                ),
+              ],
+            ),
+          ] else if (!child.hasKidAccount)
+            Text(
+              'Sin cuenta de acceso — créala en Gestionar.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+            ),
           Text('Comercios permitidos: ${child.allowedBusinessesCount}'),
           Text('Categorías permitidas: ${child.allowedCategoriesCount}'),
           const SizedBox(height: AppSpacing.sm),
@@ -294,6 +328,8 @@ class KidsDetailPage extends StatelessWidget {
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     children: [
                       _DetailsCard(child: child, childId: childId),
+                      const SizedBox(height: AppSpacing.md),
+                      KidLoginAccessCard(child: child, childId: childId),
                       const SizedBox(height: AppSpacing.md),
                       _PermissionCard(
                         title: 'Categorías permitidas',
@@ -512,8 +548,6 @@ class _DetailsCard extends StatelessWidget {
         Text(
           'Documento: ${child.documentType ?? ''} ${child.documentNumber ?? 'No registrado'}',
         ),
-        if (child.kidUsername != null && child.kidUsername!.isNotEmpty)
-          Text('Usuario Kids: ${child.kidUsername}'),
         if (child.kidsPublicId != null && child.kidsPublicId!.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.sm),
           Text('Código para compartir: ${child.kidsPublicId}'),

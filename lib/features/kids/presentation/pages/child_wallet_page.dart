@@ -10,6 +10,7 @@ import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
 import '../../domain/repositories/kids_repository.dart';
+import '../utils/child_wallet_card_view.dart';
 import 'child_business_payment_page.dart';
 
 class ChildWalletPage extends StatefulWidget {
@@ -23,10 +24,11 @@ class ChildWalletPage extends StatefulWidget {
 class _ChildWalletPageState extends State<ChildWalletPage> {
   final _repository = getIt<KidsRepository>();
   Map<String, dynamic>? _wallet;
-  List<Map<String, dynamic>> _cards = const [];
+  List<ChildWalletCardView> _cards = const [];
   List<Map<String, dynamic>> _history = const [];
   bool _loading = true;
   String? _error;
+  String? _highlightCardId;
 
   @override
   void initState() {
@@ -44,38 +46,78 @@ class _ChildWalletPageState extends State<ChildWalletPage> {
     final history = await _repository.childWalletHistory(widget.childId);
     if (!mounted) return;
     String? error;
-    wallet.when(failure: (e) => error = UserErrorMessage.from(e), success: (v) => _wallet = v);
+    Map<String, dynamic>? walletData;
+    wallet.when(
+      failure: (e) => error = UserErrorMessage.from(e),
+      success: (v) => walletData = v,
+    );
+
+    var parsedCards = <ChildWalletCardView>[];
     cards.when(
-      success: (items) => _cards = items.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList(),
+      success: (items) {
+        parsedCards = ChildWalletCardView.listFrom(items);
+      },
       failure: (e) => error ??= UserErrorMessage.from(e),
     );
+    if (parsedCards.isEmpty && walletData != null) {
+      parsedCards = ChildWalletCardView.listFrom(walletData);
+    }
+
+    final historyItems = <Map<String, dynamic>>[];
     history.when(
-      success: (items) => _history = items.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList(),
+      success: (items) {
+        historyItems.addAll(
+          items.whereType<Map>().map((e) => Map<String, dynamic>.from(e)),
+        );
+      },
       failure: (e) => error ??= UserErrorMessage.from(e),
     );
+
     setState(() {
       _loading = false;
+      _wallet = walletData;
+      _cards = parsedCards;
+      _history = historyItems;
       _error = error;
     });
   }
 
-  String get _currency =>
+  String get _walletCurrency =>
       _wallet?['currency']?.toString() ??
       CountryRegistration.currencyForCountry(
         _wallet?['countryCode']?.toString() ?? 'CO',
       );
 
-  Future<void> _recharge(String cardId) async {
-    final currency = _currency;
+  Future<void> _recharge(ChildWalletCardView card) async {
+    if (card.id.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No pudimos identificar la tarjeta.')),
+      );
+      return;
+    }
+    final currency = card.currency.isNotEmpty ? card.currency : _walletCurrency;
     final controller = TextEditingController();
     final amount = await showDialog<double?>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Recargar wallet del menor'),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(labelText: 'Monto ($currency)'),
+        title: Text('Recargar ${card.displayName}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Tarjeta #${card.id}', style: Theme.of(context).textTheme.bodySmall),
+            const SizedBox(height: AppSpacing.sm),
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(labelText: 'Monto ($currency)'),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'Se debitará de tu tarjeta principal como tutor.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
@@ -92,15 +134,15 @@ class _ChildWalletPageState extends State<ChildWalletPage> {
     if (amount == null || amount <= 0) return;
     final result = await _repository.rechargeChildWallet(
       childId: widget.childId,
-      cardId: cardId,
+      cardId: card.id,
       amount: amount,
-      currency: _currency,
+      currency: currency,
     );
     if (!mounted) return;
     result.when(
       success: (_) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Recarga enviada.')),
+          SnackBar(content: Text('Recarga de $currency ${amount.toStringAsFixed(0)} enviada.')),
         );
         _load();
       },
@@ -111,14 +153,19 @@ class _ChildWalletPageState extends State<ChildWalletPage> {
   }
 
   Future<void> _createCard() async {
-    final nameController = TextEditingController(text: 'Tarjeta Kids');
+    final nameController = TextEditingController(
+      text: 'Tarjeta Kids ${_cards.length + 1}',
+    );
     final created = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Nueva tarjeta Kids'),
         content: TextField(
           controller: nameController,
-          decoration: const InputDecoration(labelText: 'Nombre de la tarjeta'),
+          decoration: const InputDecoration(
+            labelText: 'Nombre de la tarjeta',
+            helperText: 'Usa un nombre distinto para identificarla fácilmente.',
+          ),
         ),
         actions: [
           TextButton(
@@ -138,13 +185,21 @@ class _ChildWalletPageState extends State<ChildWalletPage> {
     final result = await _repository.createChildWalletCard(
       childId: widget.childId,
       displayName: displayName,
-      currency: _currency,
+      currency: _walletCurrency,
     );
     if (!mounted) return;
     result.when(
-      success: (_) {
+      success: (data) {
+        final createdCard = ChildWalletCardView.fromMap(data);
+        setState(() => _highlightCardId = createdCard.id.isNotEmpty ? createdCard.id : null);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tarjeta creada.')),
+          SnackBar(
+            content: Text(
+              createdCard.id.isNotEmpty
+                  ? 'Tarjeta "$displayName" creada (ID #${createdCard.id}).'
+                  : 'Tarjeta "$displayName" creada.',
+            ),
+          ),
         );
         _load();
       },
@@ -156,6 +211,7 @@ class _ChildWalletPageState extends State<ChildWalletPage> {
 
   @override
   Widget build(BuildContext context) {
+    final currency = _walletCurrency;
     return Scaffold(
       appBar: AppBar(title: const Text('Wallet Kids')),
       body: RefreshIndicator(
@@ -185,12 +241,12 @@ class _ChildWalletPageState extends State<ChildWalletPage> {
                       children: [
                         Text('Saldo disponible', style: Theme.of(context).textTheme.bodySmall),
                         Text(
-                          'COP ${_num(_wallet?['availableBalance'] ?? _wallet?['balance']).toStringAsFixed(0)}',
+                          '$currency ${_num(_wallet?['availableBalance'] ?? _wallet?['balance']).toStringAsFixed(0)}',
                           style: Theme.of(context).textTheme.displaySmall,
                         ),
                         if (_num(_wallet?['heldBalance']) > 0)
                           Text(
-                            'Retenido: COP ${_num(_wallet?['heldBalance']).toStringAsFixed(0)}',
+                            'Retenido: $currency ${_num(_wallet?['heldBalance']).toStringAsFixed(0)}',
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                       ],
@@ -245,14 +301,28 @@ class _ChildWalletPageState extends State<ChildWalletPage> {
                         child: CiervoCard(
                           child: ListTile(
                             contentPadding: EdgeInsets.zero,
-                            title: Text('${card['displayName'] ?? 'Tarjeta Kids'}'),
+                            leading: CircleAvatar(
+                              child: Text(
+                                card.displayName.isNotEmpty
+                                    ? card.displayName.substring(0, 1).toUpperCase()
+                                    : '#',
+                              ),
+                            ),
+                            title: Text(card.displayName),
                             subtitle: Text(
-                              'Disponible: COP ${_num(card['availableBalance'] ?? card['balance']).toStringAsFixed(0)}',
+                              '${card.subtitle}\nDisponible: ${card.currency} ${card.balance.toStringAsFixed(0)}',
                             ),
+                            isThreeLine: true,
                             trailing: IconButton(
-                              icon: const Icon(Icons.add_card_outlined),
-                              onPressed: () => _recharge('${card['id'] ?? card['cardId']}'),
+                              tooltip: 'Recargar tarjeta',
+                              icon: const Icon(Icons.account_balance_wallet_outlined),
+                              onPressed: card.isBlocked
+                                  ? null
+                                  : () => _recharge(card),
                             ),
+                            tileColor: _highlightCardId == card.id
+                                ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.35)
+                                : null,
                           ),
                         ),
                       ),
@@ -276,7 +346,7 @@ class _ChildWalletPageState extends State<ChildWalletPage> {
                             title: Text('${item['description'] ?? item['type'] ?? 'Movimiento'}'),
                             subtitle: Text('${item['createdAt'] ?? ''}'),
                             trailing: Text(
-                              'COP ${_num(item['amount']).toStringAsFixed(0)}',
+                              '$currency ${_num(item['amount']).toStringAsFixed(0)}',
                             ),
                           ),
                         ),
