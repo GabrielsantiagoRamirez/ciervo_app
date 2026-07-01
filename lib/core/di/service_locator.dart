@@ -59,6 +59,7 @@ import '../../features/notifications/data/datasources/notifications_remote_datas
 import '../../features/notifications/data/repositories/notifications_repository_impl.dart';
 import '../../features/notifications/domain/repositories/notifications_repository.dart';
 import '../../features/notifications/presentation/cubit/notification_badges_cubit.dart';
+import '../notifications/notifications_sync.dart';
 import '../notifications/ciervo_push_service.dart';
 import '../../features/place_detail/data/business_detail_repository.dart';
 import '../../features/place_detail/data/review_repository.dart';
@@ -315,6 +316,7 @@ Future<void> configureDependencies() async {
     ..registerLazySingleton<NotificationsRepository>(
       () => NotificationsRepositoryImpl(getIt<NotificationsRemoteDataSource>()),
     )
+    ..registerLazySingleton<NotificationsSync>(NotificationsSync.new)
     ..registerLazySingleton<CiervoPushService>(
       () => CiervoPushService(
         getIt<NotificationsRemoteDataSource>(),

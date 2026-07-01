@@ -9,7 +9,9 @@ import 'core/di/service_locator.dart';
 import 'core/experience/experience_mode.dart';
 import 'core/experience/experience_mode_cubit.dart';
 import 'core/notifications/ciervo_push_service.dart';
+import 'core/notifications/notifications_sync.dart';
 import 'core/permissions/app_permission_service.dart';
+import 'features/onboarding/entry_permissions_prompt.dart';
 import 'core/session/session_manager.dart';
 import 'core/session/session_state.dart';
 import 'core/theme/app_theme.dart';
@@ -31,7 +33,9 @@ class _CiervoAppState extends State<CiervoApp> {
   late final SessionManager _sessionManager;
   late final StreamSubscription<SessionState> _sessionSubscription;
   late final NotificationBadgesCubit _badgesCubit;
+  StreamSubscription<void>? _notificationsSyncSubscription;
   bool _requestingEntryPermissions = false;
+  bool _entryPermissionsHandled = false;
 
   @override
   void initState() {
@@ -47,12 +51,31 @@ class _CiervoAppState extends State<CiervoApp> {
     );
     _sessionSubscription =
         _sessionManager.stream.listen(_onSessionChanged);
+    _notificationsSyncSubscription =
+        getIt<NotificationsSync>().onRefresh.listen((_) {
+      _badgesCubit.refresh();
+    });
     _onSessionChanged(_sessionManager.state);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _ensureEntryPermissions();
+    });
+  }
+
+  Future<void> _ensureEntryPermissions() async {
+    if (_entryPermissionsHandled) return;
+    _entryPermissionsHandled = true;
+    final context = rootNavigatorKey.currentContext;
+    if (context != null) {
+      await EntryPermissionsPrompt.showIfNeeded(context);
+    }
+    await getIt<AppPermissionService>().requestRequiredEntryPermissions();
+    unawaited(getIt<CiervoPushService>().syncTokenIfAuthenticated());
   }
 
   @override
   void dispose() {
     _sessionSubscription.cancel();
+    _notificationsSyncSubscription?.cancel();
     _badgesCubit.close();
     super.dispose();
   }

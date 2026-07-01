@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/di/service_locator.dart';
+import '../../core/utils/ciervo_share.dart';
 import '../../core/kids/selected_kid_context.dart';
 import '../../core/session/auth_token_claims.dart';
 import '../../core/session/session_manager.dart';
@@ -11,6 +12,14 @@ import '../../features/kid_me/data/kid_me_repository.dart';
 import '../../features/profile/domain/repositories/profile_repository.dart';
 import '../../features/wallet/domain/repositories/wallet_repository.dart';
 import '../../features/wallet/presentation/widgets/ciervo_digital_card.dart';
+
+Future<void> shareCiervoId(String id, {String? label}) async {
+  if (id.trim().isEmpty) return;
+  await CiervoShare.shareText(
+    '${label ?? 'CIERVO ID'}: ${id.trim()}',
+    subject: 'CIERVO CLUB',
+  );
+}
 
 Future<void> copyCiervoId(BuildContext context, String id) async {
   if (id.trim().isEmpty) return;

@@ -4,6 +4,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/ciervo_id_qr.dart';
+import '../../core/utils/ciervo_share.dart';
 import 'ciervo_user_id_badge.dart';
 
 Future<void> showCiervoIdQrDialog(
@@ -62,6 +63,13 @@ Future<void> showCiervoIdQrDialog(
         TextButton(
           onPressed: () => copyCiervoId(context, code),
           child: const Text('Copiar ID'),
+        ),
+        TextButton(
+          onPressed: () => CiervoShare.shareText(
+            'Mi CIERVO ID: $code\n${CiervoIdQr.payloadForCode(code)}',
+            subject: 'CIERVO CLUB',
+          ),
+          child: const Text('Compartir'),
         ),
         FilledButton(
           onPressed: () => Navigator.pop(context),

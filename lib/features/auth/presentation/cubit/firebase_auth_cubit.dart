@@ -25,6 +25,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
   Future<void> captureLocation() async {
     emit(state.copyWith(status: FirebaseAuthStatus.loading, clearError: true));
     try {
+      await _locationService.requestPermission();
       AppLocation? location;
       try {
         location = await _locationService.currentLocation();

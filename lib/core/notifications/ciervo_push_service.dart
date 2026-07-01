@@ -1,21 +1,17 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../../firebase_options.dart';
+import '../di/service_locator.dart';
 import '../session/session_manager.dart';
 import '../../features/notifications/data/datasources/notifications_remote_datasource.dart';
-import 'notification_channels.dart';
+import 'firebase_messaging_background.dart';
 import 'notification_deep_link.dart';
-
-@pragma('vm:entry-point')
-Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-}
+import 'notification_presenter.dart';
+import 'notifications_sync.dart';
 
 /// Servicio FCM + notificaciones locales CIERVO CLUB.
 class CiervoPushService {
@@ -24,14 +20,14 @@ class CiervoPushService {
   final NotificationsRemoteDataSource _dataSource;
   final SessionManager _sessionManager;
 
-  final FlutterLocalNotificationsPlugin _local =
-      FlutterLocalNotificationsPlugin();
-
   GlobalKey<NavigatorState>? _navigatorKey;
   bool _firebaseReady = false;
   String? _currentToken;
 
-  void bindNavigator(GlobalKey<NavigatorState> key) => _navigatorKey = key;
+  void bindNavigator(GlobalKey<NavigatorState> key) {
+    _navigatorKey = key;
+    NotificationPresenter.onNotificationTap = _handleOpenedPayload;
+  }
 
   Future<void> initialize() async {
     try {
@@ -44,7 +40,7 @@ class CiervoPushService {
   }
 
   Future<void> _initializeInternal() async {
-    await _initLocalNotifications();
+    await NotificationPresenter.ensureInitialized();
 
     if (!_hasValidFirebaseOptions()) {
       debugPrint(
@@ -66,7 +62,6 @@ class CiervoPushService {
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
     final messaging = FirebaseMessaging.instance;
-    // Permiso de notificaciones: AppPermissionService tras autenticación.
     await messaging.setForegroundNotificationPresentationOptions(
       alert: true,
       badge: true,
@@ -89,30 +84,6 @@ class CiervoPushService {
     return options.apiKey != placeholder &&
         options.appId != placeholder &&
         options.messagingSenderId != placeholder;
-  }
-
-  Future<void> _initLocalNotifications() async {
-    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const ios = DarwinInitializationSettings();
-    await _local.initialize(
-      const InitializationSettings(android: android, iOS: ios),
-      onDidReceiveNotificationResponse: (response) {
-        final payload = response.payload;
-        if (payload == null || payload.isEmpty) return;
-        try {
-          final data = jsonDecode(payload) as Map<String, dynamic>;
-          _openPayload(data);
-        } catch (_) {}
-      },
-    );
-
-    final androidPlugin = _local.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
-    if (androidPlugin != null) {
-      for (final channel in CiervoNotificationChannels.androidChannels()) {
-        await androidPlugin.createNotificationChannel(channel);
-      }
-    }
   }
 
   Future<void> syncTokenIfAuthenticated() async {
@@ -147,41 +118,13 @@ class CiervoPushService {
   }
 
   void _onForegroundMessage(RemoteMessage message) {
-    final notification = message.notification;
-    final data = message.data;
-    final title =
-        notification?.title ?? data['title']?.toString() ?? 'CIERVO CLUB';
-    final body = notification?.body ?? data['body']?.toString() ?? '';
-    final category = data['category']?.toString();
-    final channelId = CiervoNotificationChannels.channelForCategory(category);
-
-    _local.show(
-      message.hashCode,
-      title,
-      body,
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          channelId,
-          'CIERVO CLUB',
-          channelDescription: category ?? 'Notificacion',
-          icon: '@mipmap/ic_launcher',
-          color: const Color(0xFFD4AF37),
-          importance: Importance.high,
-          priority: Priority.high,
-          styleInformation: BigTextStyleInformation(body),
-        ),
-        iOS: const DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-        ),
-      ),
-      payload: jsonEncode(data),
-    );
+    unawaited(NotificationPresenter.showRemoteMessage(message));
+    _notifyInboxRefresh();
   }
 
   void _onOpenedFromPush(RemoteMessage message) {
     _handleOpenedPayload(message.data);
+    _notifyInboxRefresh();
   }
 
   void _handleOpenedPayload(Map<String, dynamic> data) {
@@ -194,5 +137,11 @@ class CiervoPushService {
     final context = _navigatorKey?.currentContext;
     if (context == null) return;
     NotificationDeepLink.openFromPayload(context, data);
+  }
+
+  void _notifyInboxRefresh() {
+    if (getIt.isRegistered<NotificationsSync>()) {
+      getIt<NotificationsSync>().notifyInboxMayHaveChanged();
+    }
   }
 }

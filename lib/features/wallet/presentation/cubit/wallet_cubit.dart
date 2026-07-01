@@ -1,6 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
+import '../../../../core/notifications/notifications_sync.dart';
 import '../../../../core/result/result.dart';
 import '../../domain/entities/recharge_intent.dart';
 import '../../domain/entities/wallet_card.dart';
@@ -121,7 +123,10 @@ class WalletCubit extends Cubit<WalletState> {
             : 'Estado de recarga: ${mapped.statusLabel}',
       ),
     );
-    if (mapped.isSucceeded) await load();
+    if (mapped.isSucceeded) {
+      _refreshNotificationsInbox();
+      await load();
+    }
   }
 
   Future<void> createRechargeIntent(String cardId, double amount) async {
@@ -216,6 +221,7 @@ class WalletCubit extends Cubit<WalletState> {
             successMessage: 'Transferencia realizada.',
           ),
         );
+        _refreshNotificationsInbox();
         load();
       },
       failure: (error) => emit(
@@ -254,6 +260,7 @@ class WalletCubit extends Cubit<WalletState> {
             successMessage: 'Solicitud enviada.',
           ),
         );
+        _refreshNotificationsInbox();
         loadPaymentRequests();
       },
       failure: (error) => emit(
@@ -341,6 +348,7 @@ class WalletCubit extends Cubit<WalletState> {
     result.when(
       success: (_) {
         emit(state.copyWith(successMessage: successMessage));
+        _refreshNotificationsInbox();
         load();
       },
       failure: (error) => emit(
@@ -368,6 +376,7 @@ class WalletCubit extends Cubit<WalletState> {
             successMessage: successMessage,
           ),
         );
+        _refreshNotificationsInbox();
         loadPaymentRequests();
       },
       failure: (error) => emit(
@@ -377,5 +386,11 @@ class WalletCubit extends Cubit<WalletState> {
         ),
       ),
     );
+  }
+
+  void _refreshNotificationsInbox() {
+    if (getIt.isRegistered<NotificationsSync>()) {
+      getIt<NotificationsSync>().notifyInboxMayHaveChanged();
+    }
   }
 }

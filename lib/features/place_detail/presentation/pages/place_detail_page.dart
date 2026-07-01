@@ -9,6 +9,7 @@ import '../../../../core/theme/app_component_styles.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/ciervo_share.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_chip_tag.dart';
@@ -360,10 +361,9 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
       );
       return;
     }
-    await Clipboard.setData(ClipboardData(text: parts.join('\n')));
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Enlace del negocio copiado.')),
+    await CiervoShare.shareText(
+      parts.join('\n'),
+      subject: detail?.shareTitle ?? 'Ciervo Club',
     );
   }
 

@@ -1,10 +1,13 @@
 // ignore_for_file: unnecessary_underscores
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
+import '../../../../core/notifications/notifications_sync.dart';
 import '../../../../core/notifications/notification_deep_link.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../wallet/presentation/widgets/ciervo_digital_card.dart';
@@ -53,6 +56,22 @@ class _NotificationsViewState extends State<_NotificationsView> {
   };
 
   String? _category;
+  StreamSubscription<void>? _syncSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncSubscription = getIt<NotificationsSync>().onRefresh.listen((_) {
+      if (!mounted) return;
+      context.read<NotificationsCubit>().load(category: _category);
+    });
+  }
+
+  @override
+  void dispose() {
+    _syncSubscription?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -182,8 +201,8 @@ class _NotificationsViewState extends State<_NotificationsView> {
                                   children: [
                                     Image.asset(
                                       'assets/notifications/ciervo_logo_gold.png',
-                                      width: 36,
-                                      height: 36,
+                                      width: 40,
+                                      height: 40,
                                     ),
                                     const SizedBox(width: AppSpacing.sm),
                                     Expanded(
@@ -191,24 +210,79 @@ class _NotificationsViewState extends State<_NotificationsView> {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          Text(
-                                            item.title,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleMedium
-                                                ?.copyWith(
-                                                  color: item.isRead
-                                                      ? CiervoBrandColors
-                                                          .textMuted
-                                                      : CiervoBrandColors
-                                                          .textPrimary,
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  item.title,
+                                                  maxLines: 2,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .titleMedium
+                                                      ?.copyWith(
+                                                        fontWeight: item.isRead
+                                                            ? FontWeight.w500
+                                                            : FontWeight.w700,
+                                                        color: item.isRead
+                                                            ? CiervoBrandColors
+                                                                .textMuted
+                                                            : CiervoBrandColors
+                                                                .textPrimary,
+                                                      ),
                                                 ),
+                                              ),
+                                              if (!item.isRead)
+                                                Container(
+                                                  width: 8,
+                                                  height: 8,
+                                                  margin: const EdgeInsets.only(
+                                                    left: AppSpacing.xs,
+                                                  ),
+                                                  decoration: const BoxDecoration(
+                                                    color: CiervoBrandColors.gold,
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                ),
+                                            ],
                                           ),
+                                          if ((item.category ?? item.type)
+                                              ?.isNotEmpty ==
+                                              true) ...[
+                                            const SizedBox(
+                                              height: AppSpacing.xxs,
+                                            ),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 8,
+                                                vertical: 2,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: CiervoBrandColors.gold
+                                                    .withValues(alpha: 0.14),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                              child: Text(
+                                                DisplayLabels.notificationPreference(
+                                                  item.category ?? item.type!,
+                                                ),
+                                                style: const TextStyle(
+                                                  color: CiervoBrandColors.gold,
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                           const SizedBox(height: AppSpacing.xxs),
                                           Text(
                                             item.message,
+                                            maxLines: 3,
+                                            overflow: TextOverflow.ellipsis,
                                             style: const TextStyle(
                                               color: CiervoBrandColors.textMuted,
+                                              height: 1.35,
                                             ),
                                           ),
                                           if (item.date != null) ...[
@@ -216,10 +290,7 @@ class _NotificationsViewState extends State<_NotificationsView> {
                                               height: AppSpacing.xxs,
                                             ),
                                             Text(
-                                              item.date!
-                                                  .toLocal()
-                                                  .toString()
-                                                  .substring(0, 16),
+                                              _formatNotificationDate(item.date!),
                                               style: const TextStyle(
                                                 color: CiervoBrandColors.textMuted,
                                                 fontSize: 12,
@@ -229,15 +300,6 @@ class _NotificationsViewState extends State<_NotificationsView> {
                                         ],
                                       ),
                                     ),
-                                    if (!item.isRead)
-                                      Container(
-                                        width: 8,
-                                        height: 8,
-                                        decoration: const BoxDecoration(
-                                          color: CiervoBrandColors.gold,
-                                          shape: BoxShape.circle,
-                                        ),
-                                      ),
                                   ],
                                 ),
                               ),
@@ -254,6 +316,19 @@ class _NotificationsViewState extends State<_NotificationsView> {
       ],
     ),
   );
+}
+
+String _formatNotificationDate(DateTime date) {
+  final local = date.toLocal();
+  final diff = DateTime.now().difference(local);
+  if (diff.inMinutes < 1) return 'Ahora';
+  if (diff.inHours < 1) return 'Hace ${diff.inMinutes} min';
+  if (diff.inHours < 24) return 'Hace ${diff.inHours} h';
+  final day = local.day.toString().padLeft(2, '0');
+  final month = local.month.toString().padLeft(2, '0');
+  final hour = local.hour.toString().padLeft(2, '0');
+  final minute = local.minute.toString().padLeft(2, '0');
+  return '$day/$month/${local.year} $hour:$minute';
 }
 
 Future<void> _openNotification(
@@ -280,7 +355,12 @@ class _NotificationDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Detalle')),
+    backgroundColor: CiervoBrandColors.background,
+    appBar: AppBar(
+      backgroundColor: CiervoBrandColors.background,
+      foregroundColor: CiervoBrandColors.gold,
+      title: const Text('Detalle'),
+    ),
     body: ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
@@ -288,14 +368,39 @@ class _NotificationDetailPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(item.title, style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: AppSpacing.sm),
-              Text(item.message),
+              Row(
+                children: [
+                  Image.asset(
+                    'assets/notifications/ciervo_logo_gold.png',
+                    width: 44,
+                    height: 44,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      item.title,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                item.message,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      height: 1.4,
+                    ),
+              ),
+              if (item.date != null) ...[
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  _formatNotificationDate(item.date!),
+                  style: const TextStyle(color: CiervoBrandColors.textMuted),
+                ),
+              ],
               const SizedBox(height: AppSpacing.md),
               _detail('Tipo', item.type),
               _detail('Categoría', item.category),
-              _detail('Ruta interna', item.deepLink),
-              _detail('Datos adicionales', item.metadataJson),
             ],
           ),
         ),

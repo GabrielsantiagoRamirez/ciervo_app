@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../core/utils/ciervo_share.dart';
+
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -149,14 +151,28 @@ class _BonusDetailPageState extends State<BonusDetailPage> {
                 borderRadius: BorderRadius.circular(12),
               ),
               title: Text('Codigo: ${bonus.promoCode}'),
-              trailing: IconButton(
-                icon: const Icon(Icons.copy_outlined),
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(text: bonus.promoCode!));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Codigo copiado.')),
-                  );
-                },
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.share_outlined),
+                    tooltip: 'Compartir codigo',
+                    onPressed: () => CiervoShare.shareText(
+                      'Codigo Ciervo Club: ${bonus.promoCode}',
+                      subject: bonus.title,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.copy_outlined),
+                    tooltip: 'Copiar codigo',
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: bonus.promoCode!));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Codigo copiado.')),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           ],

@@ -1,5 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
+import '../../../../core/notifications/notifications_sync.dart';
 import '../../domain/repositories/chat_repository.dart';
 import 'chat_state.dart';
 
@@ -115,6 +117,9 @@ class ChatCubit extends Cubit<ChatState> {
             isSending: false,
           ),
         );
+        if (getIt.isRegistered<NotificationsSync>()) {
+          getIt<NotificationsSync>().notifyInboxMayHaveChanged();
+        }
         return true;
       },
       failure: (error) {
