@@ -256,4 +256,70 @@ class KidsCubit extends Cubit<KidsState> {
       },
     );
   }
+
+  Future<bool> linkChild({
+    required String kidsPublicId,
+    required int relationshipType,
+  }) async {
+    emit(state.copyWith(status: KidsStatus.actionLoading, clearMessages: true));
+    final result = await _repository.linkChild(
+      kidsPublicId: kidsPublicId,
+      relationshipType: relationshipType,
+    );
+    return result.when(
+      success: (profile) {
+        emit(
+          state.copyWith(
+            status: KidsStatus.loaded,
+            successMessage: 'Hijo vinculado: ${profile.fullName}.',
+          ),
+        );
+        loadChildren();
+        return true;
+      },
+      failure: (error) {
+        emit(
+          state.copyWith(
+            status: KidsStatus.loaded,
+            errorMessage: UserErrorMessage.from(error),
+          ),
+        );
+        return false;
+      },
+    );
+  }
+
+  Future<bool> uploadChildPhoto({
+    required String childId,
+    required String path,
+    required String fileName,
+  }) async {
+    emit(state.copyWith(status: KidsStatus.actionLoading, clearMessages: true));
+    final result = await _repository.uploadChildPhoto(
+      childId: childId,
+      path: path,
+      fileName: fileName,
+    );
+    return result.when(
+      success: (profile) {
+        emit(
+          state.copyWith(
+            status: KidsStatus.loaded,
+            selectedChild: profile,
+            successMessage: 'Foto actualizada.',
+          ),
+        );
+        return true;
+      },
+      failure: (error) {
+        emit(
+          state.copyWith(
+            status: KidsStatus.loaded,
+            errorMessage: UserErrorMessage.from(error),
+          ),
+        );
+        return false;
+      },
+    );
+  }
 }

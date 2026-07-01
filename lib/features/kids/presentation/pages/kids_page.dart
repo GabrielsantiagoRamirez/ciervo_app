@@ -24,6 +24,9 @@ import 'child_spending_limits_page.dart';
 import 'child_wallet_page.dart';
 import 'child_business_payment_page.dart';
 import 'child_form_page.dart';
+import 'link_child_page.dart';
+import 'package:image_picker/image_picker.dart';
+import '../widgets/child_profile_avatar.dart';
 
 class KidsPage extends StatelessWidget {
   const KidsPage({super.key});
@@ -102,6 +105,21 @@ class _KidsView extends StatelessWidget {
                     label: 'Agregar menor',
                     icon: Icons.add,
                     onPressed: () => _openChildForm(context),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.link),
+                    label: const Text('Vincular hijo con código'),
+                    onPressed: () async {
+                      final linked = await Navigator.of(context).push<bool>(
+                        MaterialPageRoute(
+                          builder: (_) => const LinkChildPage(),
+                        ),
+                      );
+                      if (linked == true && context.mounted) {
+                        context.read<KidsCubit>().loadChildren();
+                      }
+                    },
                   ),
                 ],
               ],
@@ -204,7 +222,7 @@ class _ChildCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const CircleAvatar(child: Icon(Icons.child_care_outlined)),
+              ChildProfileAvatar(child: child, radius: 24),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
@@ -212,6 +230,11 @@ class _ChildCard extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
+              if (child.hasKidAccount)
+                const Chip(
+                  label: Text('Cuenta Kids'),
+                  visualDensity: VisualDensity.compact,
+                ),
               Chip(label: Text(child.isActive ? 'Activo' : 'Inactivo')),
             ],
           ),
@@ -270,7 +293,7 @@ class KidsDetailPage extends StatelessWidget {
                 : ListView(
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     children: [
-                      _DetailsCard(child: child),
+                      _DetailsCard(child: child, childId: childId),
                       const SizedBox(height: AppSpacing.md),
                       _PermissionCard(
                         title: 'Categorías permitidas',
@@ -441,13 +464,46 @@ class KidsDetailPage extends StatelessWidget {
 }
 
 class _DetailsCard extends StatelessWidget {
-  const _DetailsCard({required this.child});
+  const _DetailsCard({required this.child, required this.childId});
   final ChildProfile child;
+  final String childId;
+
+  Future<void> _pickPhoto(BuildContext context) async {
+    final picker = ImagePicker();
+    final file = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1200,
+      imageQuality: 85,
+    );
+    if (file == null || !context.mounted) return;
+    await context.read<KidsCubit>().uploadChildPhoto(
+          childId: childId,
+          path: file.path,
+          fileName: file.name,
+        );
+  }
+
   @override
   Widget build(BuildContext context) => CiervoCard(
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Row(
+          children: [
+            ChildProfileAvatar(
+              child: child,
+              radius: 32,
+              onRetry: () => context.read<KidsCubit>().loadChild(childId),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            IconButton.filledTonal(
+              tooltip: 'Subir foto',
+              onPressed: () => _pickPhoto(context),
+              icon: const Icon(Icons.camera_alt_outlined),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
         Text('Datos básicos', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: AppSpacing.sm),
         Text('Nombre: ${child.fullName}'),
@@ -456,7 +512,20 @@ class _DetailsCard extends StatelessWidget {
         Text(
           'Documento: ${child.documentType ?? ''} ${child.documentNumber ?? 'No registrado'}',
         ),
+        if (child.kidUsername != null && child.kidUsername!.isNotEmpty)
+          Text('Usuario Kids: ${child.kidUsername}'),
+        if (child.kidsPublicId != null && child.kidsPublicId!.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Text('Código para compartir: ${child.kidsPublicId}'),
+          TextButton.icon(
+            onPressed: () => copyKidsPublicId(context, child.kidsPublicId!),
+            icon: const Icon(Icons.copy_outlined),
+            label: const Text('Copiar código'),
+          ),
+        ],
         Text('Estado del perfil: ${child.isActive ? 'Activo' : 'Inactivo'}'),
+        if (child.hasKidAccount)
+          const Text('Cuenta de acceso Kids: activa'),
         Text('Comercios permitidos: ${child.allowedBusinessesCount}'),
         Text('Categorías permitidas: ${child.allowedCategoriesCount}'),
       ],

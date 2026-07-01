@@ -12,6 +12,12 @@ class ChildProfile {
     this.medicalNotes,
     this.allowedBusinessesCount = 0,
     this.allowedCategoriesCount = 0,
+    this.photoUrl,
+    this.kidsPublicId,
+    this.hasKidAccount = false,
+    this.kidUsername,
+    this.countryCode,
+    this.isPrimaryGuardian = false,
   });
 
   final String id;
@@ -26,6 +32,38 @@ class ChildProfile {
   final String? medicalNotes;
   final int allowedBusinessesCount;
   final int allowedCategoriesCount;
+  final String? photoUrl;
+  final String? kidsPublicId;
+  final bool hasKidAccount;
+  final String? kidUsername;
+  final String? countryCode;
+  final bool isPrimaryGuardian;
 
   String get fullName => '$firstName $lastName'.trim();
+
+  bool get hasPhoto {
+    final ref = photoUrl?.trim();
+    return ref != null && ref.isNotEmpty;
+  }
+
+  ChildProfile copyWith({String? photoUrl}) => ChildProfile(
+        id: id,
+        firstName: firstName,
+        lastName: lastName,
+        relationshipType: relationshipType,
+        isActive: isActive,
+        birthDate: birthDate,
+        age: age,
+        documentType: documentType,
+        documentNumber: documentNumber,
+        medicalNotes: medicalNotes,
+        allowedBusinessesCount: allowedBusinessesCount,
+        allowedCategoriesCount: allowedCategoriesCount,
+        photoUrl: photoUrl ?? this.photoUrl,
+        kidsPublicId: kidsPublicId,
+        hasKidAccount: hasKidAccount,
+        kidUsername: kidUsername,
+        countryCode: countryCode,
+        isPrimaryGuardian: isPrimaryGuardian,
+      );
 }

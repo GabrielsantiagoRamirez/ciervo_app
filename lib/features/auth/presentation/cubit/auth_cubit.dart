@@ -49,6 +49,7 @@ class AuthCubit extends Cubit<AuthState> {
     required String password,
     required String identityDocument,
     required String documentType,
+    required String countryCode,
   }) async {
     emit(
       state.copyWith(
@@ -65,6 +66,7 @@ class AuthCubit extends Cubit<AuthState> {
       password: password,
       identityDocument: identityDocument,
       documentType: documentType,
+      countryCode: countryCode,
     );
 
     result.when(

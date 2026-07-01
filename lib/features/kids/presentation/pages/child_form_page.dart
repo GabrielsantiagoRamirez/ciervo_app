@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/country/country_registration.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
@@ -46,9 +47,11 @@ class _ChildFormViewState extends State<_ChildFormView> {
   String? _documentType;
 
   static const _relationships = <int, String>{
-    1: 'Padre o madre',
-    2: 'Tutor legal',
-    3: 'Familiar responsable',
+    1: 'Madre',
+    2: 'Padre',
+    3: 'Tutor legal',
+    4: 'Familiar',
+    5: 'Otro',
   };
 
   static const _documents = <String, List<DropdownMenuItem<String>>>{
@@ -57,11 +60,8 @@ class _ChildFormViewState extends State<_ChildFormView> {
       DropdownMenuItem(value: 'TI', child: Text('Tarjeta de identidad')),
     ],
     'CL': [
-      DropdownMenuItem(value: 'RUN', child: Text('RUN de menor')),
-      DropdownMenuItem(
-        value: 'CERT_NAC',
-        child: Text('Certificado de nacimiento'),
-      ),
+      DropdownMenuItem(value: 'TI', child: Text('Tarjeta de identidad')),
+      DropdownMenuItem(value: 'RUN', child: Text('RUN')),
     ],
   };
 
@@ -77,7 +77,9 @@ class _ChildFormViewState extends State<_ChildFormView> {
       _birthDate = child.birthDate;
       _relationshipType = int.tryParse(child.relationshipType) ?? 1;
       final existingDocument = child.documentType;
-      if (existingDocument == 'RUN' || existingDocument == 'CERT_NAC') {
+      if (existingDocument == 'RUN' ||
+          existingDocument == 'TI' ||
+          existingDocument == 'CERT_NAC') {
         _countryCode = 'CL';
       }
       _documentType =
@@ -274,17 +276,21 @@ class _ChildFormViewState extends State<_ChildFormView> {
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: FormField<DateTime>(
         initialValue: _birthDate,
-        validator: (_) =>
-            _birthDate == null ? 'Selecciona la fecha de nacimiento.' : null,
+        validator: (_) {
+          if (_birthDate == null) {
+            return 'Selecciona la fecha de nacimiento.';
+          }
+          return CountryRegistration.validateKidsAge(_birthDate!);
+        },
         builder: (field) => InkWell(
           onTap: () async {
             final selected = await showDatePicker(
               context: context,
               initialDate:
                   _birthDate ??
-                  DateTime.now().subtract(const Duration(days: 365 * 8)),
-              firstDate: DateTime(2005),
-              lastDate: DateTime.now(),
+                  DateTime.now().subtract(const Duration(days: 365 * 12)),
+              firstDate: DateTime.now().subtract(const Duration(days: 365 * 26)),
+              lastDate: DateTime.now().subtract(const Duration(days: 365 * 10)),
             );
             if (selected != null) {
               setState(() => _birthDate = selected);

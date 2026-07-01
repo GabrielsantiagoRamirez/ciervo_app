@@ -7,6 +7,7 @@ class RegisterRequestDto {
     required this.password,
     required this.identityDocument,
     required this.documentType,
+    required this.countryCode,
   });
 
   final String firstName;
@@ -16,6 +17,7 @@ class RegisterRequestDto {
   final String password;
   final String identityDocument;
   final String documentType;
+  final String countryCode;
 
   Map<String, dynamic> toJson() {
     return {
@@ -26,6 +28,7 @@ class RegisterRequestDto {
       'password': password,
       'identityDocument': identityDocument.trim(),
       'documentType': documentType.trim(),
+      'countryCode': countryCode.trim().toUpperCase(),
     };
   }
 }

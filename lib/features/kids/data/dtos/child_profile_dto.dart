@@ -14,6 +14,12 @@ class ChildProfileDto {
     this.medicalNotes,
     this.allowedBusinessesCount = 0,
     this.allowedCategoriesCount = 0,
+    this.photoUrl,
+    this.kidsPublicId,
+    this.hasKidAccount = false,
+    this.kidUsername,
+    this.countryCode,
+    this.isPrimaryGuardian = false,
   });
 
   factory ChildProfileDto.fromJson(Map<String, dynamic> json) {
@@ -26,10 +32,20 @@ class ChildProfileDto {
       documentType: _optionalString(json, const ['documentType']),
       documentNumber: _optionalString(json, const ['documentNumber']),
       medicalNotes: _optionalString(json, const ['medicalNotes']),
-      relationshipType: _string(json, const ['relationshipType']),
-      isActive: _bool(json, const ['isActive', 'active']),
+      relationshipType: _relationship(json),
+      isActive: _bool(json, const ['isActive', 'active'], defaultValue: true),
       allowedBusinessesCount: _int(json, const ['allowedBusinessesCount']) ?? 0,
       allowedCategoriesCount: _int(json, const ['allowedCategoriesCount']) ?? 0,
+      photoUrl: _optionalString(json, const [
+        'photoUrl',
+        'PhotoUrl',
+        'profilePhotoUrl',
+      ]),
+      kidsPublicId: _optionalString(json, const ['kidsPublicId', 'KidsPublicId']),
+      hasKidAccount: _bool(json, const ['hasKidAccount', 'HasKidAccount']),
+      kidUsername: _optionalString(json, const ['kidUsername', 'username']),
+      countryCode: _optionalString(json, const ['countryCode', 'CountryCode']),
+      isPrimaryGuardian: _bool(json, const ['isPrimaryGuardian']),
     );
   }
 
@@ -45,21 +61,33 @@ class ChildProfileDto {
   final String? medicalNotes;
   final int allowedBusinessesCount;
   final int allowedCategoriesCount;
+  final String? photoUrl;
+  final String? kidsPublicId;
+  final bool hasKidAccount;
+  final String? kidUsername;
+  final String? countryCode;
+  final bool isPrimaryGuardian;
 
   ChildProfile toDomain() => ChildProfile(
-    id: id,
-    firstName: firstName,
-    lastName: lastName,
-    relationshipType: relationshipType,
-    isActive: isActive,
-    birthDate: birthDate,
-    age: age,
-    documentType: documentType,
-    documentNumber: documentNumber,
-    medicalNotes: medicalNotes,
-    allowedBusinessesCount: allowedBusinessesCount,
-    allowedCategoriesCount: allowedCategoriesCount,
-  );
+        id: id,
+        firstName: firstName,
+        lastName: lastName,
+        relationshipType: relationshipType,
+        isActive: isActive,
+        birthDate: birthDate,
+        age: age,
+        documentType: documentType,
+        documentNumber: documentNumber,
+        medicalNotes: medicalNotes,
+        allowedBusinessesCount: allowedBusinessesCount,
+        allowedCategoriesCount: allowedCategoriesCount,
+        photoUrl: photoUrl,
+        kidsPublicId: kidsPublicId,
+        hasKidAccount: hasKidAccount,
+        kidUsername: kidUsername,
+        countryCode: countryCode,
+        isPrimaryGuardian: isPrimaryGuardian,
+      );
 
   static List<ChildProfileDto> listFrom(dynamic value) {
     final source = value is Map<String, dynamic>
@@ -68,12 +96,18 @@ class ChildProfileDto {
     final items = source is List
         ? source
         : source is Map<String, dynamic> && source['items'] is List
-        ? source['items'] as List
-        : const [];
+            ? source['items'] as List
+            : const [];
     return items
         .whereType<Map<String, dynamic>>()
         .map(ChildProfileDto.fromJson)
         .toList();
+  }
+
+  static String _relationship(Map<String, dynamic> json) {
+    final value = json['relationshipType'];
+    if (value == null) return '';
+    return value.toString();
   }
 
   static String _string(Map<String, dynamic> json, List<String> keys) =>
@@ -97,12 +131,16 @@ class ChildProfileDto {
     return null;
   }
 
-  static bool _bool(Map<String, dynamic> json, List<String> keys) {
+  static bool _bool(
+    Map<String, dynamic> json,
+    List<String> keys, {
+    bool defaultValue = false,
+  }) {
     for (final key in keys) {
       final value = json[key];
       if (value is bool) return value;
       if (value != null) return value.toString().toLowerCase() == 'true';
     }
-    return true;
+    return defaultValue;
   }
 }

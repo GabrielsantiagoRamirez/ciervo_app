@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/country/country_registration.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/layout/responsive_layout.dart';
@@ -58,7 +59,14 @@ class _ChildWalletPageState extends State<ChildWalletPage> {
     });
   }
 
+  String get _currency =>
+      _wallet?['currency']?.toString() ??
+      CountryRegistration.currencyForCountry(
+        _wallet?['countryCode']?.toString() ?? 'CO',
+      );
+
   Future<void> _recharge(String cardId) async {
+    final currency = _currency;
     final controller = TextEditingController();
     final amount = await showDialog<double?>(
       context: context,
@@ -67,7 +75,7 @@ class _ChildWalletPageState extends State<ChildWalletPage> {
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: 'Monto (COP)'),
+          decoration: InputDecoration(labelText: 'Monto ($currency)'),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
@@ -86,6 +94,7 @@ class _ChildWalletPageState extends State<ChildWalletPage> {
       childId: widget.childId,
       cardId: cardId,
       amount: amount,
+      currency: _currency,
     );
     if (!mounted) return;
     result.when(
@@ -129,7 +138,7 @@ class _ChildWalletPageState extends State<ChildWalletPage> {
     final result = await _repository.createChildWalletCard(
       childId: widget.childId,
       displayName: displayName,
-      currency: 'COP',
+      currency: _currency,
     );
     if (!mounted) return;
     result.when(

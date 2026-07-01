@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../../../../core/network/api_response_unwrapper.dart';
 import '../../../../core/network/network_client.dart';
 import '../dtos/child_profile_dto.dart';
+import '../dtos/kids_requests.dart';
 
 abstract interface class KidsRemoteDataSource {
   Future<List<ChildProfileDto>> children();
@@ -43,18 +44,26 @@ abstract interface class KidsRemoteDataSource {
     required String childId,
     required String cardId,
     required double amount,
+    required String currency,
   });
 
   Future<Map<String, dynamic>> payKidsBusiness({
     required String childProfileId,
     required String businessId,
     required double amount,
+    required String currency,
     String? walletCardId,
     String? idempotencyKey,
   });
   Future<List<dynamic>> payForMeRequests();
   Future<void> approvePayForMeRequest(int requestId);
   Future<void> rejectPayForMeRequest(int requestId, {String? reason});
+  Future<ChildProfileDto> linkChild(LinkChildRequest request);
+  Future<ChildPhotoUpload> uploadChildPhoto({
+    required String childId,
+    required String path,
+    required String fileName,
+  });
 }
 
 class DioKidsRemoteDataSource implements KidsRemoteDataSource {
@@ -235,12 +244,13 @@ class DioKidsRemoteDataSource implements KidsRemoteDataSource {
     required String childId,
     required String cardId,
     required double amount,
+    required String currency,
   }) async {
     final response = await _client.dio.post<Map<String, dynamic>>(
       '/api/guardians/children/$childId/wallet/cards/$cardId/recharge',
       data: {
         'amount': amount,
-        'currency': 'COP',
+        'currency': currency,
         'idempotencyKey': 'kid-recharge-$childId-${DateTime.now().microsecondsSinceEpoch}',
       },
     );
@@ -252,6 +262,7 @@ class DioKidsRemoteDataSource implements KidsRemoteDataSource {
     required String childProfileId,
     required String businessId,
     required double amount,
+    required String currency,
     String? walletCardId,
     String? idempotencyKey,
   }) async {
@@ -261,7 +272,7 @@ class DioKidsRemoteDataSource implements KidsRemoteDataSource {
         'childId': int.tryParse(childProfileId) ?? childProfileId,
         'businessId': int.tryParse(businessId) ?? businessId,
         'amount': amount,
-        'currency': 'COP',
+        'currency': currency,
         'idempotencyKey': idempotencyKey ??
             'kids-pay-$childProfileId-${DateTime.now().microsecondsSinceEpoch}',
         if (walletCardId != null)
@@ -290,6 +301,36 @@ class DioKidsRemoteDataSource implements KidsRemoteDataSource {
       data: {
         if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
       },
+    );
+  }
+
+  @override
+  Future<ChildProfileDto> linkChild(LinkChildRequest request) async {
+    final response = await _client.dio.post<Map<String, dynamic>>(
+      '/api/guardians/children/link',
+      data: request.toJson(),
+    );
+    return ChildProfileDto.fromJson(unwrapApiMap(response.data));
+  }
+
+  @override
+  Future<ChildPhotoUpload> uploadChildPhoto({
+    required String childId,
+    required String path,
+    required String fileName,
+  }) async {
+    final response = await _client.dio.post<Map<String, dynamic>>(
+      '/api/guardians/children/$childId/photo',
+      data: FormData.fromMap({
+        'file': await MultipartFile.fromFile(path, filename: fileName),
+      }),
+    );
+    final data = unwrapApiMap(response.data);
+    final mediaId = data['mediaId'] ?? data['MediaId'] ?? data['id'];
+    final photoUrl = data['photoUrl'] ?? data['PhotoUrl'] ?? data['publicUrl'];
+    return ChildPhotoUpload(
+      mediaId: mediaId?.toString() ?? '',
+      photoUrl: photoUrl?.toString(),
     );
   }
 

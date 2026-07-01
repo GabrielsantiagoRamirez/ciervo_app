@@ -15,6 +15,7 @@ abstract interface class AuthRepository {
     required String password,
     required String identityDocument,
     required String documentType,
+    required String countryCode,
   });
 
   Future<Result<void>> logout();

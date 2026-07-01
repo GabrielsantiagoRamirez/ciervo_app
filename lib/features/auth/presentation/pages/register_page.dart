@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/country/country_registration.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/app_routes.dart';
@@ -43,6 +44,7 @@ class _RegisterViewState extends State<_RegisterView> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   String _documentType = 'CC';
+  String _countryCode = CountryRegistration.defaultCountryCode();
   bool _showPassword = false;
   bool _showConfirmPassword = false;
 
@@ -70,6 +72,7 @@ class _RegisterViewState extends State<_RegisterView> {
           password: _passwordController.text,
           identityDocument: _documentController.text,
           documentType: _documentType,
+          countryCode: _countryCode,
         );
   }
 
@@ -144,19 +147,63 @@ class _RegisterViewState extends State<_RegisterView> {
                             keyboardType: TextInputType.phone,
                             validator: (value) =>
                                 InputValidators.phone(value ?? ''),
+                            onChanged: (value) {
+                              final inferred =
+                                  CountryRegistration.inferFromPhone(value);
+                              if (inferred != _countryCode) {
+                                setState(() {
+                                  _countryCode = inferred;
+                                  final options = CountryRegistration
+                                      .adultDocumentOptions(_countryCode);
+                                  _documentType = options.first.code;
+                                });
+                              }
+                            },
                             decoration: const InputDecoration(
-                              hintText: 'Telefono',
+                              hintText: 'Telefono (+57 o +56)',
                               prefixIcon: Icon(Icons.phone_outlined),
                             ),
                           ),
                           const SizedBox(height: AppSpacing.md),
                           DropdownButtonFormField<String>(
-                            value: _documentType,
+                            value: _countryCode,
                             items: const [
-                              DropdownMenuItem(value: 'CC', child: Text('Cedula')),
-                              DropdownMenuItem(value: 'CE', child: Text('Cedula extranjeria')),
-                              DropdownMenuItem(value: 'PASSPORT', child: Text('Pasaporte')),
+                              DropdownMenuItem(
+                                value: 'CO',
+                                child: Text('Colombia'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'CL',
+                                child: Text('Chile'),
+                              ),
                             ],
+                            onChanged: (value) {
+                              if (value == null) return;
+                              setState(() {
+                                _countryCode = value;
+                                final options = CountryRegistration
+                                    .adultDocumentOptions(_countryCode);
+                                _documentType = options.first.code;
+                              });
+                            },
+                            decoration: const InputDecoration(
+                              hintText: 'Pais',
+                              prefixIcon: Icon(Icons.public_outlined),
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          DropdownButtonFormField<String>(
+                            value: _documentType,
+                            items: CountryRegistration.adultDocumentOptions(
+                              _countryCode,
+                            )
+                                .map(
+                                  (option) => DropdownMenuItem(
+                                    value: option.code,
+                                    child: Text(option.label),
+                                  ),
+                                )
+                                .toList(),
                             onChanged: (value) {
                               if (value != null) {
                                 setState(() => _documentType = value);

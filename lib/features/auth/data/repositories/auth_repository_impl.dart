@@ -68,6 +68,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required String password,
     required String identityDocument,
     required String documentType,
+    required String countryCode,
   }) async {
     try {
       await _remoteDataSource.register(
@@ -79,6 +80,7 @@ class AuthRepositoryImpl implements AuthRepository {
           password: password,
           identityDocument: identityDocument,
           documentType: documentType,
+          countryCode: countryCode,
         ),
       );
       final dto = await _remoteDataSource.login(

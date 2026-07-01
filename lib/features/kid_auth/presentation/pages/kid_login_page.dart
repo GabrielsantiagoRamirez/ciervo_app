@@ -118,6 +118,15 @@ class _KidLoginPageState extends State<KidLoginPage> {
                         : CiervoButtonState.normal,
                     onPressed: _loading ? null : _submit,
                   ),
+                  const SizedBox(height: AppSpacing.sm),
+                  CiervoButton(
+                    label: 'Crear cuenta',
+                    variant: CiervoButtonVariant.secondary,
+                    icon: Icons.person_add_alt_1,
+                    onPressed: _loading
+                        ? null
+                        : () => context.go(AppRoutes.kidRegister),
+                  ),
                 ],
               ),
             ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../media/presentation/authenticated_media_image.dart';
+import '../../../../shared/widgets/ciervo_network_image.dart';
 
 class ProfilePhotoImage extends StatelessWidget {
   const ProfilePhotoImage({
@@ -23,14 +24,12 @@ class ProfilePhotoImage extends StatelessWidget {
       return fallback ?? const SizedBox.shrink();
     }
     if (ref.startsWith('http')) {
-      return Image.network(
-        ref,
-        key: ValueKey(ref),
+      return CiervoNetworkImage(
+        url: ref,
         width: width,
         height: height,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) =>
-            fallback ?? const Icon(Icons.broken_image_outlined),
+        fallback: fallback ?? const Icon(Icons.broken_image_outlined),
       );
     }
     return AuthenticatedMediaImage(

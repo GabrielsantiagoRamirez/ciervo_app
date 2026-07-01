@@ -40,6 +40,7 @@ abstract interface class KidsRepository {
     required String childId,
     required String cardId,
     required double amount,
+    String? currency,
   });
   Future<Result<Map<String, dynamic>>> createChildWalletCard({
     required String childId,
@@ -52,8 +53,19 @@ abstract interface class KidsRepository {
     required double amount,
     String? walletCardId,
     String? idempotencyKey,
+    String? currency,
   });
   Future<Result<List<dynamic>>> payForMeRequests();
   Future<Result<void>> approvePayForMeRequest(int requestId);
   Future<Result<void>> rejectPayForMeRequest(int requestId, {String? reason});
+  Future<Result<ChildProfile>> linkChild({
+    required String kidsPublicId,
+    required int relationshipType,
+    bool isPrimaryGuardian = false,
+  });
+  Future<Result<ChildProfile>> uploadChildPhoto({
+    required String childId,
+    required String path,
+    required String fileName,
+  });
 }

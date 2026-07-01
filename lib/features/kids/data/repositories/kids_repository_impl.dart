@@ -3,6 +3,7 @@ import '../../../../core/result/result.dart';
 import '../../domain/entities/child_profile.dart';
 import '../../domain/repositories/kids_repository.dart';
 import '../datasources/kids_remote_datasource.dart';
+import '../dtos/kids_requests.dart';
 
 class KidsRepositoryImpl implements KidsRepository {
   const KidsRepositoryImpl(this._remoteDataSource);
@@ -206,6 +207,7 @@ class KidsRepositoryImpl implements KidsRepository {
     required String childId,
     required String cardId,
     required double amount,
+    String? currency,
   }) async {
     try {
       return Success(
@@ -213,6 +215,7 @@ class KidsRepositoryImpl implements KidsRepository {
           childId: childId,
           cardId: cardId,
           amount: amount,
+          currency: currency ?? 'COP',
         ),
       );
     } catch (error) {
@@ -246,6 +249,7 @@ class KidsRepositoryImpl implements KidsRepository {
     required double amount,
     String? walletCardId,
     String? idempotencyKey,
+    String? currency,
   }) async {
     try {
       return Success(
@@ -253,6 +257,7 @@ class KidsRepositoryImpl implements KidsRepository {
           childProfileId: childProfileId,
           businessId: businessId,
           amount: amount,
+          currency: currency ?? 'COP',
           walletCardId: walletCardId,
           idempotencyKey: idempotencyKey,
         ),
@@ -289,6 +294,51 @@ class KidsRepositoryImpl implements KidsRepository {
     try {
       await _remoteDataSource.rejectPayForMeRequest(requestId, reason: reason);
       return const Success<void>(null);
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
+  Future<Result<ChildProfile>> linkChild({
+    required String kidsPublicId,
+    required int relationshipType,
+    bool isPrimaryGuardian = false,
+  }) async {
+    try {
+      return Success(
+        (await _remoteDataSource.linkChild(
+          LinkChildRequest(
+            kidsPublicId: kidsPublicId,
+            relationshipType: relationshipType,
+            isPrimaryGuardian: isPrimaryGuardian,
+          ),
+        )).toDomain(),
+      );
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
+  Future<Result<ChildProfile>> uploadChildPhoto({
+    required String childId,
+    required String path,
+    required String fileName,
+  }) async {
+    try {
+      final upload = await _remoteDataSource.uploadChildPhoto(
+        childId: childId,
+        path: path,
+        fileName: fileName,
+      );
+      final profile = await _remoteDataSource.child(childId);
+      final domain = profile.toDomain();
+      final photoUrl = upload.photoUrl?.trim();
+      if (photoUrl != null && photoUrl.isNotEmpty) {
+        return Success(domain.copyWith(photoUrl: photoUrl));
+      }
+      return Success(domain);
     } catch (error) {
       return Failure(ErrorMapper.fromObject(error));
     }
