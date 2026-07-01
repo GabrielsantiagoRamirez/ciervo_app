@@ -35,8 +35,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
         emit(
           state.copyWith(
             status: FirebaseAuthStatus.initial,
-            errorMessage:
-                'No pudimos obtener tu ubicación. Puedes continuar, pero el país puede inferirse del teléfono.',
+            clearError: true,
           ),
         );
         return;

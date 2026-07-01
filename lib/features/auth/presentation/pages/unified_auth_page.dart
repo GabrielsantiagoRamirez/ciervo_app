@@ -38,11 +38,17 @@ class UnifiedAuthPage extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => AuthCubit(getIt<AuthRepository>())),
         BlocProvider(
-          create: (_) => FirebaseAuthCubit(
-            getIt<AuthRepository>(),
-            getIt<FirebaseAuthService>(),
-            getIt<LocationService>(),
-          )..captureLocation(),
+          create: (_) {
+            final cubit = FirebaseAuthCubit(
+              getIt<AuthRepository>(),
+              getIt<FirebaseAuthService>(),
+              getIt<LocationService>(),
+            );
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              cubit.captureLocation();
+            });
+            return cubit;
+          },
         ),
       ],
       child: _UnifiedAuthView(startEmailRegistration: startEmailRegistration),
@@ -289,7 +295,7 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
         BlocListener<FirebaseAuthCubit, FirebaseAuthState>(
           listener: (context, state) {
             if (state.errorMessage != null &&
-                state.status != FirebaseAuthStatus.phoneVerified) {
+                state.status == FirebaseAuthStatus.failure) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(state.errorMessage!)),
               );
@@ -316,9 +322,11 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
         ),
       ],
       child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: SafeArea(
           child: responsivePage(
             context: context,
+            scrollable: false,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [

@@ -10,6 +10,7 @@ import '../core/experience/experience_mode_cubit.dart';
 import '../core/session/session_manager.dart';
 import '../core/storage/secure_storage.dart';
 import '../core/utils/app_bloc_observer.dart';
+import '../core/version/app_version_service.dart';
 import '../features/auth/presentation/pages/splash_page.dart';
 import '../firebase_options.dart';
 import '../app.dart';
@@ -40,6 +41,7 @@ class _BootstrapRootState extends State<_BootstrapRoot> {
     await runZonedGuarded<Future<void>>(
       () async {
         await configureDependencies();
+        unawaited(getIt<AppVersionService>().load());
         await _initializeFirebase();
         Bloc.observer = AppBlocObserver();
 
