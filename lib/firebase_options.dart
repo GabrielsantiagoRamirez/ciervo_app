@@ -2,8 +2,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
-/// Ejecuta `flutterfire configure` con el proyecto ciervoclub-70a3c
-/// y reemplaza este archivo con la salida generada.
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
@@ -20,19 +18,19 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'REPLACE_WITH_FLUTTERFIRE',
-    appId: 'REPLACE_WITH_FLUTTERFIRE',
-    messagingSenderId: 'REPLACE_WITH_FLUTTERFIRE',
+    apiKey: 'AIzaSyCUOhcLeB1so8jWnZL3rC-qLAmcjmgKaAM',
+    appId: '1:613568140358:android:c9ee0545900befc2916647',
+    messagingSenderId: '613568140358',
     projectId: 'ciervoclub-70a3c',
-    storageBucket: 'ciervoclub-70a3c.appspot.com',
+    storageBucket: 'ciervoclub-70a3c.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'REPLACE_WITH_FLUTTERFIRE',
-    appId: 'REPLACE_WITH_FLUTTERFIRE',
-    messagingSenderId: 'REPLACE_WITH_FLUTTERFIRE',
+    apiKey: 'AIzaSyCUOhcLeB1so8jWnZL3rC-qLAmcjmgKaAM',
+    appId: '1:613568140358:android:c9ee0545900befc2916647',
+    messagingSenderId: '613568140358',
     projectId: 'ciervoclub-70a3c',
-    storageBucket: 'ciervoclub-70a3c.appspot.com',
-    iosBundleId: 'com.example.ciervoClud',
+    storageBucket: 'ciervoclub-70a3c.firebasestorage.app',
+    iosBundleId: 'com.company.ciervoclub',
   );
 }

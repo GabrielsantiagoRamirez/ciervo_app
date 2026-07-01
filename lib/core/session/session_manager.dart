@@ -50,6 +50,8 @@ class SessionManager {
     _emit(const SessionState.unauthenticated());
   }
 
+  void markUnauthenticated() => _emit(const SessionState.unauthenticated());
+
   void dispose() {
     _controller.close();
   }

@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "613568140358",
+    "project_id": "ciervoclub-70a3c",
+    "storage_bucket": "ciervoclub-70a3c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:613568140358:android:c9ee0545900befc2916647",
+        "android_client_info": {
+          "package_name": "com.company.ciervoclub"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "613568140358-19ip3777a6j6naopih5k930746hcc9pc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.company.ciervoclub",
+            "certificate_hash": "87e0222704f0de89e52b2933dd620047aa69a6ee"
+          }
+        },
+        {
+          "client_id": "613568140358-fio9sg78tfu2qkcbn33ljs34enkar98g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCUOhcLeB1so8jWnZL3rC-qLAmcjmgKaAM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "613568140358-fio9sg78tfu2qkcbn33ljs34enkar98g.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

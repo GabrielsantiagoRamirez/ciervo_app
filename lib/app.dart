@@ -13,6 +13,7 @@ import 'core/permissions/app_permission_service.dart';
 import 'core/session/session_manager.dart';
 import 'core/session/session_state.dart';
 import 'core/theme/app_theme.dart';
+import 'features/auth/presentation/pages/splash_page.dart';
 import 'features/notifications/presentation/cubit/notification_badges_cubit.dart';
 import 'shared/widgets/ciervo_user_id_badge.dart';
 
@@ -95,8 +96,9 @@ class _CiervoAppState extends State<CiervoApp> {
                 : ThemeMode.dark,
             routerConfig: _router,
             builder: (context, child) {
-              if (child == null) return const SizedBox.shrink();
-              return CiervoUserIdOverlay(child: child);
+              return CiervoUserIdOverlay(
+                child: child ?? const SplashPage(),
+              );
             },
           );
         },

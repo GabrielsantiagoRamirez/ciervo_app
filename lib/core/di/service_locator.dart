@@ -99,7 +99,13 @@ Future<void> configureDependencies() async {
     ..registerSingleton<AppConfig>(config)
     ..registerLazySingleton<AppLogger>(() => AppLogger(getIt<AppConfig>()))
     ..registerLazySingleton<SecureStorage>(
-      () => FlutterSecureStorageAdapter(const FlutterSecureStorage()),
+      () => FlutterSecureStorageAdapter(
+        const FlutterSecureStorage(
+          aOptions: AndroidOptions(
+            encryptedSharedPreferences: true,
+          ),
+        ),
+      ),
     )
     ..registerLazySingleton<SessionManager>(
       () => SessionManager(getIt<SecureStorage>()),
