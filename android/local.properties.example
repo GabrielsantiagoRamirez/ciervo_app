@@ -1,0 +1,9 @@
+# Copia este archivo a android/local.properties (no se versiona).
+# Flutter ya escribe sdk.dir y flutter.sdk al ejecutar `flutter pub get`.
+
+sdk.dir=/path/to/Android/sdk
+flutter.sdk=/path/to/flutter
+
+# Google Maps SDK for Android (geocerca Ciervo Kids, mapas nativos).
+# Obtén la key en Google Cloud Console (Maps SDK for Android habilitado).
+GOOGLE_MAPS_API_KEY=YOUR_GOOGLE_MAPS_API_KEY_HERE
