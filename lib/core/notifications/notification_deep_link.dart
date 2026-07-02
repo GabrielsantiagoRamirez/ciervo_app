@@ -8,7 +8,7 @@ import '../../features/delivery/presentation/pages/customer_order_detail_page.da
 import '../../features/delivery/presentation/pages/customer_orders_page.dart';
 import '../../features/notifications/domain/entities/app_notification.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
-import '../../features/qr_wallet/presentation/pages/qr_wallet_page.dart';
+import '../../features/qr_hub/presentation/pages/qr_hub_page.dart';
 import '../../features/reservations/presentation/pages/reservations_page.dart';
 import '../../features/vakupli/presentation/pages/vakupli_page.dart';
 import '../../features/secure_shipment/presentation/pages/secure_shipment_detail_page.dart';
@@ -129,7 +129,7 @@ class NotificationDeepLink {
         lower.contains('/coupon') ||
         lower.contains('/reward') ||
         lower.contains('/qr')) {
-      _push(context, const QrWalletPage());
+      _push(context, const QrHubPage());
       return true;
     }
     if (lower.contains('/profile') ||
@@ -259,7 +259,7 @@ class NotificationDeepLink {
         text.contains('promo') ||
         text.contains('coupon') ||
         text.contains('reward')) {
-      _push(context, const QrWalletPage());
+      _push(context, const QrHubPage());
       return true;
     }
     if (text.contains('security') ||

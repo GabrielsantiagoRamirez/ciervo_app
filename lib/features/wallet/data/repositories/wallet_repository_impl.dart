@@ -116,6 +116,7 @@ class WalletRepositoryImpl implements WalletRepository {
         CiervoWalletIdentity(
           userId: userId.isEmpty ? code : userId,
           ciervoUserCode: code,
+          qrPayload: _optionalString(json['qrPayload']),
         ),
       );
     } catch (error) {
@@ -135,6 +136,12 @@ class WalletRepositoryImpl implements WalletRepository {
       if (value != null && value.isNotEmpty) return value;
     }
     return '';
+  }
+
+  static String? _optionalString(dynamic value) {
+    if (value == null) return null;
+    final text = value.toString().trim();
+    return text.isEmpty ? null : text;
   }
 
   @override

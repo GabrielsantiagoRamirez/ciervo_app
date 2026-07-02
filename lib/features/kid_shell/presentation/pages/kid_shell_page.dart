@@ -9,7 +9,6 @@ import '../../../../shared/widgets/ciervo_loading_state.dart';
 import '../../../kid_businesses/presentation/pages/kid_businesses_page.dart';
 import '../../../kid_family_chat/presentation/pages/kid_family_page.dart';
 import '../../../kid_pay_for_me/presentation/pages/kid_pay_for_me_list_page.dart';
-import '../../../kid_wallet/presentation/pages/kid_wallet_page.dart';
 import '../../../kid_me/data/kid_me_repository.dart';
 import '../../../kid_profile/presentation/pages/kid_profile_page.dart';
 import '../../../kid_wallet/presentation/pages/kid_wallet_page.dart';

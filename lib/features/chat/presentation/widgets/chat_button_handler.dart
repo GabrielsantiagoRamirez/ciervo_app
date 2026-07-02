@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../delivery/presentation/pages/customer_orders_page.dart';
 import '../../../memberships/presentation/pages/membership_page.dart';
-import '../../../qr_wallet/presentation/pages/qr_wallet_page.dart';
+import '../../../qr_hub/presentation/pages/qr_hub_page.dart';
 import '../../../transport/presentation/pages/transport_page.dart';
 import '../../../chat_payments/presentation/pages/chat_gift_page.dart';
 import '../../../chat_payments/presentation/pages/chat_pay_page.dart';
@@ -145,7 +145,7 @@ Future<void> handleChatButtonTap(
       return;
     case 'qr':
       await Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const QrWalletPage()),
+        MaterialPageRoute<void>(builder: (_) => const QrHubPage()),
       );
       return;
     case 'memberships':

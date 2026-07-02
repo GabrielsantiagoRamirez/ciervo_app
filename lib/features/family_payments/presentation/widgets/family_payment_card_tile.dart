@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/card_brand_detector.dart';
+import '../../../../shared/widgets/card_brand_logo.dart';
 import '../../../../core/utils/display_labels.dart';
 import '../../domain/entities/family_payment_card.dart';
 
@@ -21,11 +23,17 @@ class FamilyPaymentCardTile extends StatelessWidget {
     return ListTile(
       onTap: onTap,
       contentPadding: EdgeInsets.zero,
-      leading: CircleAvatar(
-        backgroundColor: colors.primaryContainer,
-        child: Icon(
-          _brandIcon(card.brand),
-          color: colors.onPrimaryContainer,
+      leading: SizedBox(
+        width: 48,
+        height: 48,
+        child: Center(
+          child: CardBrandDetector.fromBrandString(card.brand) ==
+                  CardBrand.unknown
+              ? Icon(Icons.payment, color: colors.onPrimaryContainer)
+              : CardBrandLogo(
+                  brand: CardBrandDetector.fromBrandString(card.brand),
+                  height: 26,
+                ),
         ),
       ),
       title: Text(
@@ -63,12 +71,5 @@ class FamilyPaymentCardTile extends StatelessWidget {
       ),
       trailing: trailing ?? const Icon(Icons.chevron_right),
     );
-  }
-
-  IconData _brandIcon(String brand) {
-    final normalized = brand.toLowerCase();
-    if (normalized.contains('visa')) return Icons.credit_card;
-    if (normalized.contains('master')) return Icons.credit_card;
-    return Icons.payment;
   }
 }

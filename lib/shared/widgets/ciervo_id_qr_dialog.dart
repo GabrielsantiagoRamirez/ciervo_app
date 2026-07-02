@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../../core/di/service_locator.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/ciervo_id_qr.dart';
 import '../../core/utils/ciervo_share.dart';
+import '../../features/wallet/domain/repositories/wallet_repository.dart';
 import 'ciervo_user_id_badge.dart';
 
 Future<void> showCiervoIdQrDialog(
   BuildContext context, {
   required String ciervoUserCode,
   String? displayName,
+  String? qrPayload,
 }) async {
   final code = ciervoUserCode.trim().toUpperCase();
   if (code.isEmpty) return;
+  final payload = qrPayload ?? CiervoIdQr.payloadForCode(code);
 
   await showDialog<void>(
     context: context,
@@ -29,7 +33,7 @@ Future<void> showCiervoIdQrDialog(
               borderRadius: BorderRadius.circular(16),
             ),
             child: QrImageView(
-              data: CiervoIdQr.payloadForCode(code),
+              data: payload,
               version: QrVersions.auto,
               size: 200,
               eyeStyle: const QrEyeStyle(
@@ -53,7 +57,7 @@ Future<void> showCiervoIdQrDialog(
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'Pide que escaneen este código para pagarte o enviarte un regalo.',
+            'Pide que escaneen este codigo para pagarte o enviarte un regalo.',
             style: Theme.of(context).textTheme.bodySmall,
             textAlign: TextAlign.center,
           ),
@@ -66,7 +70,7 @@ Future<void> showCiervoIdQrDialog(
         ),
         TextButton(
           onPressed: () => CiervoShare.shareText(
-            'Mi CIERVO ID: $code\n${CiervoIdQr.payloadForCode(code)}',
+            'Mi CIERVO ID: $code\n$payload',
             subject: 'CIERVO CLUB',
           ),
           child: const Text('Compartir'),
@@ -81,13 +85,21 @@ Future<void> showCiervoIdQrDialog(
 }
 
 Future<void> showMyCiervoIdQrDialog(BuildContext context) async {
-  final code = await resolveCiervoUserCodeForSession();
+  final identityResult = await getIt<WalletRepository>().myCiervoId();
   if (!context.mounted) return;
-  if (code == null || code.isEmpty) {
+  final identity = identityResult.when(
+    success: (value) => value,
+    failure: (_) => null,
+  );
+  if (identity == null) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('No pudimos cargar tu CIERVO ID.')),
     );
     return;
   }
-  await showCiervoIdQrDialog(context, ciervoUserCode: code);
+  await showCiervoIdQrDialog(
+    context,
+    ciervoUserCode: identity.ciervoUserCode,
+    qrPayload: identity.qrPayload,
+  );
 }

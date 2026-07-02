@@ -31,6 +31,7 @@ import '../../../family_payments/presentation/pages/parent_payment_history_page.
 import '../../../financial_history/presentation/pages/financial_history_page.dart';
 import '../../../receipts/presentation/pages/receipts_page.dart';
 import '../../../cashback/presentation/pages/cashback_page.dart';
+import '../../../qr_hub/presentation/pages/qr_hub_page.dart';
 import '../../../qr_wallet/presentation/pages/qr_wallet_page.dart';
 import '../../../reservations/presentation/pages/reservations_page.dart';
 import '../../../delivery/presentation/pages/delivery_page.dart';
@@ -682,9 +683,9 @@ class _AccountActions extends StatelessWidget {
           ),
           _ActionTile(
             icon: Icons.qr_code_2_outlined,
-            title: 'Mis QR',
+            title: 'QR Ciervo',
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const QrWalletPage()),
+              MaterialPageRoute<void>(builder: (_) => const QrHubPage()),
             ),
           ),
           _ActionTile(

@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/layout/responsive_layout.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../shared/widgets/card_number_field.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../payments/domain/repositories/payments_repository.dart';
@@ -67,18 +68,17 @@ class _AddFamilyCardPageState extends State<AddFamilyCardPage> {
         ),
       );
 
-      final month = int.tryParse(_monthController.text.trim());
-      final year = int.tryParse(_yearController.text.trim());
-      if (month == null || year == null) {
-        throw MercadoPagoTokenizationException('Fecha de expiración inválida.');
-      }
+      final expiration = MercadoPagoCardExpiration.parse(
+        _monthController.text,
+        _yearController.text,
+      );
 
       final cardToken = await getIt<MercadoPagoCardTokenizer>().createCardToken(
         publicKey: publicKey,
         cardNumber: _numberController.text,
         securityCode: _cvvController.text,
-        expirationMonth: month,
-        expirationYear: year,
+        expirationMonth: expiration.month,
+        expirationYear: expiration.year,
         cardholderName: _nameController.text,
         identificationType: 'CC',
         identificationNumber: _documentController.text.trim(),
@@ -187,15 +187,7 @@ class _AddFamilyCardPageState extends State<AddFamilyCardPage> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                TextField(
-                  controller: _numberController,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: const InputDecoration(
-                    labelText: 'Número de tarjeta',
-                    prefixIcon: Icon(Icons.credit_card),
-                  ),
-                ),
+                CardNumberField(controller: _numberController),
                 const SizedBox(height: AppSpacing.md),
                 Row(
                   children: [
@@ -203,7 +195,11 @@ class _AddFamilyCardPageState extends State<AddFamilyCardPage> {
                       child: TextField(
                         controller: _monthController,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Mes'),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(2),
+                        ],
+                        decoration: const InputDecoration(labelText: 'Mes (MM)'),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
@@ -211,7 +207,11 @@ class _AddFamilyCardPageState extends State<AddFamilyCardPage> {
                       child: TextField(
                         controller: _yearController,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Año'),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(4),
+                        ],
+                        decoration: const InputDecoration(labelText: 'Año (YY)'),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),

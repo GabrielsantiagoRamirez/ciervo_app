@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
-import '../../../../core/layout/responsive_layout.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../shared/widgets/ciervo_card.dart';
-import '../../../../shared/widgets/ciervo_empty_state.dart';
-import '../../../../shared/widgets/ciervo_loading_state.dart';
+import '../../../../shared/widgets/ciervo_brand_loader.dart';
+import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../kid_me/data/kid_me_repository.dart';
+import '../widgets/kid_premium_wallet_dashboard.dart';
 
 class KidWalletPage extends StatefulWidget {
   const KidWalletPage({super.key});
@@ -19,6 +17,7 @@ class KidWalletPage extends StatefulWidget {
 class _KidWalletPageState extends State<KidWalletPage> {
   final _repository = getIt<KidMeRepository>();
   Map<String, dynamic>? _wallet;
+  Map<String, dynamic>? _profile;
   bool _loading = true;
   String? _error;
 
@@ -33,13 +32,28 @@ class _KidWalletPageState extends State<KidWalletPage> {
       _loading = true;
       _error = null;
     });
-    final result = await _repository.wallet();
+
+    final walletResult = await _repository.wallet();
+    final profileResult = await _repository.profile();
+
     if (!mounted) return;
-    result.when(
-      success: (data) => setState(() {
-        _wallet = data;
-        _loading = false;
-      }),
+
+    walletResult.when(
+      success: (wallet) {
+        profileResult.when(
+          success: (profile) => setState(() {
+            _wallet = wallet;
+            _profile = profile;
+            _loading = false;
+          }),
+          failure: (error) => setState(() {
+            _wallet = wallet;
+            _profile = null;
+            _loading = false;
+            _error = UserErrorMessage.from(error);
+          }),
+        );
+      },
       failure: (error) => setState(() {
         _error = UserErrorMessage.from(error);
         _loading = false;
@@ -50,85 +64,41 @@ class _KidWalletPageState extends State<KidWalletPage> {
   double _num(dynamic value) =>
       value is num ? value.toDouble() : double.tryParse('$value') ?? 0;
 
+  List<Map<String, dynamic>> _movements() {
+    final raw = _wallet?['lastMovements'];
+    if (raw is! List) return const [];
+    return raw
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
+  }
+
+  String get _userName {
+    final name = _profile?['name'] ?? _profile?['firstName'] ?? _wallet?['name'];
+    final text = '$name'.trim();
+    return text.isEmpty ? 'amigo' : text.split(' ').first;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final movements = _wallet?['lastMovements'];
-    final items = movements is List ? movements : const [];
-
     return Scaffold(
       appBar: AppBar(title: const Text('Mi wallet')),
-      body: RefreshIndicator(
-        onRefresh: _load,
-        child: _loading
-            ? ListView(
-                padding: pagePaddingOf(context),
-                children: const [CiervoLoadingState(itemCount: 3)],
-              )
-            : _error != null
-            ? ListView(
-                padding: pagePaddingOf(context),
-                children: [
-                  Text(_error!, textAlign: TextAlign.center),
-                  TextButton(onPressed: _load, child: const Text('Reintentar')),
-                ],
-              )
-            : ListView(
-                padding: pagePaddingOf(context),
-                children: [
-                  CiervoCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Saldo',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        Text(
-                          'COP ${_num(_wallet?['balance']).toStringAsFixed(0)}',
-                          style: Theme.of(context).textTheme.displaySmall,
-                        ),
-                        if (_num(_wallet?['heldBalance']) > 0)
-                          Text(
-                            'Retenido: COP ${_num(_wallet?['heldBalance']).toStringAsFixed(0)}',
-                          ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  Text(
-                    'Movimientos',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  if (items.isEmpty)
-                    const CiervoEmptyState(
-                      title: 'Sin movimientos',
-                      description: 'Aún no hay transacciones en tu wallet.',
-                      icon: Icons.receipt_long_outlined,
-                    )
-                  else
-                    ...items.map((item) {
-                      if (item is! Map) return const SizedBox.shrink();
-                      final map = Map<String, dynamic>.from(item);
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                        child: CiervoCard(
-                          child: ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            title: Text(
-                              '${map['description'] ?? map['type'] ?? 'Movimiento'}',
-                            ),
-                            subtitle: Text('${map['createdAt'] ?? ''}'),
-                            trailing: Text(
-                              'COP ${_num(map['amount']).toStringAsFixed(0)}',
-                            ),
-                          ),
-                        ),
-                      );
-                    }),
-                ],
-              ),
-      ),
+      body: _loading
+          ? const CiervoBrandLoader(message: 'Cargando tu wallet')
+          : _error != null && _wallet == null
+              ? CiervoErrorState(
+                  title: 'No pudimos cargar tu wallet',
+                  description: _error!,
+                  onRetry: _load,
+                )
+              : KidPremiumWalletDashboard(
+                  userName: _userName,
+                  balance: _num(_wallet?['balance'] ?? _wallet?['availableBalance']),
+                  heldBalance: _num(_wallet?['heldBalance']),
+                  currency: '${_wallet?['currency'] ?? 'COP'}',
+                  movements: _movements(),
+                  onRefresh: _load,
+                ),
     );
   }
 }

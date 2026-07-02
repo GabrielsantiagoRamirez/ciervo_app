@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../financial_history/presentation/pages/financial_history_page.dart';
 import '../../../notifications/domain/entities/notification_badges.dart';
 import '../../../notifications/presentation/cubit/notification_badges_cubit.dart';
 import '../../../notifications/presentation/pages/notifications_page.dart';
-import '../../../pins/presentation/pages/pins_page.dart';
+import '../../../qr_hub/presentation/pages/qr_hub_page.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../../shared/widgets/ciervo_user_id_badge.dart';
 import '../../domain/entities/wallet_card.dart';
@@ -405,16 +404,12 @@ class _QuickActionsRow extends StatelessWidget {
           ),
         ),
         _CircleAction(
-          label: 'Pagar',
-          icon: Icons.qr_code_2_outlined,
+          label: 'Escanear QR',
+          icon: Icons.qr_code_scanner,
           palette: palette,
-          onTap: card == null
-              ? null
-              : () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => PinsPage(card: card!),
-                  ),
-                ),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const ScanQrPage()),
+          ),
         ),
         _CircleAction(
           label: 'Transferir',
