@@ -16,6 +16,8 @@ abstract final class FirebaseAuthErrors {
       'invalid-email' => 'El correo electrónico no es válido.',
       'email-already-in-use' => 'Ese correo ya está registrado.',
       'wrong-password' => 'Contraseña incorrecta.',
+      'invalid-credential' =>
+        'Correo o contraseña incorrectos. Si tu cuenta es antigua, usa la contraseña de Ciervo Club.',
       'user-not-found' => 'No encontramos una cuenta con esos datos.',
       'network-request-failed' =>
         'No hay conexión. Revisa tu internet e intenta de nuevo.',

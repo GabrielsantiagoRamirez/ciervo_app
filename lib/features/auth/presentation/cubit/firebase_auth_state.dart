@@ -1,6 +1,8 @@
 enum FirebaseAuthStatus {
   initial,
   loading,
+  migrating,
+  emailVerificationPending,
   codeSent,
   phoneVerified,
   success,
@@ -23,6 +25,8 @@ class FirebaseAuthState {
     this.requiresFirebaseLink = false,
     this.authAction,
     this.linkedLegacy = false,
+    this.lookupExists = false,
+    this.lookupRequiresLink = false,
   });
 
   final FirebaseAuthStatus status;
@@ -39,10 +43,18 @@ class FirebaseAuthState {
   final bool requiresFirebaseLink;
   final String? authAction;
   final bool linkedLegacy;
+  final bool lookupExists;
+  final bool lookupRequiresLink;
 
-  bool get isLoading => status == FirebaseAuthStatus.loading;
+  bool get isLoading =>
+      status == FirebaseAuthStatus.loading ||
+      status == FirebaseAuthStatus.migrating;
 
-  bool get shouldFirebaseLogin => userExists || requiresFirebaseLink;
+  bool get isMigrating =>
+      status == FirebaseAuthStatus.migrating || lookupRequiresLink;
+
+  bool get shouldFirebaseLogin =>
+      userExists || requiresFirebaseLink || lookupExists || lookupRequiresLink;
 
   FirebaseAuthState copyWith({
     FirebaseAuthStatus? status,
@@ -61,6 +73,9 @@ class FirebaseAuthState {
     String? authAction,
     bool? linkedLegacy,
     bool clearAuthMeta = false,
+    bool? lookupExists,
+    bool? lookupRequiresLink,
+    bool clearLookup = false,
   }) {
     return FirebaseAuthState(
       status: status ?? this.status,
@@ -77,6 +92,9 @@ class FirebaseAuthState {
       requiresFirebaseLink: requiresFirebaseLink ?? this.requiresFirebaseLink,
       authAction: clearAuthMeta ? null : (authAction ?? this.authAction),
       linkedLegacy: clearAuthMeta ? false : (linkedLegacy ?? this.linkedLegacy),
+      lookupExists: clearLookup ? false : (lookupExists ?? this.lookupExists),
+      lookupRequiresLink:
+          clearLookup ? false : (lookupRequiresLink ?? this.lookupRequiresLink),
     );
   }
 }

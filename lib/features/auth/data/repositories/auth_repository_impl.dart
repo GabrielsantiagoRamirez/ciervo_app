@@ -201,6 +201,21 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Result<void>> validateLegacyCredentials({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      await _remoteDataSource.login(
+        LoginRequestDto(email: email, password: password),
+      );
+      return const Success(null);
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
   Future<Result<void>> sendEmailVerificationCode(String email) async {
     try {
       await _remoteDataSource.sendEmailVerificationCode(email);

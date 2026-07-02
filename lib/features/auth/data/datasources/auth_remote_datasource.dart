@@ -211,9 +211,10 @@ class DioAuthRemoteDataSource implements AuthRemoteDataSource {
 
   @override
   Future<void> sendEmailVerificationCode(String email) async {
+    final trimmed = email.trim();
     final response = await _client.dio.post<Map<String, dynamic>>(
       '/api/auth/send-verification-code',
-      data: {'email': email.trim()},
+      data: {'user': trimmed, 'email': trimmed},
       options: Options(extra: const {'skipAuth': true}),
     );
     unwrapApiResponse(response.data);
@@ -224,10 +225,12 @@ class DioAuthRemoteDataSource implements AuthRemoteDataSource {
     required String email,
     required String code,
   }) async {
+    final trimmedEmail = email.trim();
     final response = await _client.dio.post<Map<String, dynamic>>(
       '/api/auth/verify-code',
       data: {
-        'email': email.trim(),
+        'user': trimmedEmail,
+        'email': trimmedEmail,
         'code': code.trim(),
       },
       options: Options(extra: const {'skipAuth': true}),

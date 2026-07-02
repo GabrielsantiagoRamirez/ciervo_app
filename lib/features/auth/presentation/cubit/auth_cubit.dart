@@ -12,6 +12,7 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> login({
     required String email,
     required String password,
+    bool emitFailure = true,
   }) async {
     emit(
       state.copyWith(
@@ -32,12 +33,23 @@ class AuthCubit extends Cubit<AuthState> {
           clearError: true,
         ),
       ),
-      failure: (error) => emit(
-        state.copyWith(
-          status: AuthSubmissionStatus.failure,
-          errorMessage: UserErrorMessage.from(error),
-        ),
-      ),
+      failure: (error) {
+        if (emitFailure) {
+          emit(
+            state.copyWith(
+              status: AuthSubmissionStatus.failure,
+              errorMessage: UserErrorMessage.from(error),
+            ),
+          );
+        } else {
+          emit(
+            state.copyWith(
+              status: AuthSubmissionStatus.idle,
+              clearError: true,
+            ),
+          );
+        }
+      },
     );
   }
 

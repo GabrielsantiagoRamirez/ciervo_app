@@ -5,6 +5,7 @@ class LoginRequestDto {
   final String password;
 
   Map<String, dynamic> toJson() {
-    return {'email': email.trim(), 'password': password};
+    final trimmed = email.trim();
+    return {'user': trimmed, 'email': trimmed, 'password': password};
   }
 }

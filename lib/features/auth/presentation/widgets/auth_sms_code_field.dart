@@ -22,6 +22,7 @@ class AuthSmsCodeField extends StatefulWidget {
 
 class _AuthSmsCodeFieldState extends State<AuthSmsCodeField> {
   static const _length = 6;
+  static const _boxGap = AppSpacing.xs;
 
   final _focusNode = FocusNode();
 
@@ -29,13 +30,31 @@ class _AuthSmsCodeFieldState extends State<AuthSmsCodeField> {
   void initState() {
     super.initState();
     widget.controller.addListener(_onCodeChanged);
+    _focusNode.addListener(_onFocusChanged);
   }
 
   @override
   void dispose() {
     widget.controller.removeListener(_onCodeChanged);
+    _focusNode.removeListener(_onFocusChanged);
     _focusNode.dispose();
     super.dispose();
+  }
+
+  void _onFocusChanged() => setState(() {});
+
+  void _requestKeyboard() {
+    if (!widget.enabled) return;
+
+    if (_focusNode.hasFocus) {
+      _focusNode.unfocus();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _focusNode.requestFocus();
+      });
+      return;
+    }
+
+    _focusNode.requestFocus();
   }
 
   void _onCodeChanged() {
@@ -65,58 +84,72 @@ class _AuthSmsCodeFieldState extends State<AuthSmsCodeField> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        GestureDetector(
-          onTap: widget.enabled ? () => _focusNode.requestFocus() : null,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: List.generate(_length, (index) {
-              final digit = index < code.length ? code[index] : '';
-              final isActive =
-                  widget.enabled && _focusNode.hasFocus && index == code.length;
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                width: 46,
-                height: 54,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isActive
-                        ? colorScheme.primary
-                        : colorScheme.outline.withValues(alpha: 0.5),
-                    width: isActive ? 2 : 1,
+    return GestureDetector(
+      onTap: _requestKeyboard,
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        height: 54,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(_length, (index) {
+                final digit = index < code.length ? code[index] : '';
+                final isActive = widget.enabled &&
+                    _focusNode.hasFocus &&
+                    index == code.length;
+
+                return Padding(
+                  padding: EdgeInsets.only(left: index == 0 ? 0 : _boxGap),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    width: 46,
+                    height: 54,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isActive
+                            ? colorScheme.primary
+                            : colorScheme.outline.withValues(alpha: 0.5),
+                        width: isActive ? 2 : 1,
+                      ),
+                      color: colorScheme.surfaceContainerHighest,
+                    ),
+                    child: Text(
+                      digit,
+                      style: theme.textTheme.headlineSmall,
+                    ),
                   ),
-                  color: colorScheme.surfaceContainerHighest,
-                ),
-                child: Text(
-                  digit,
-                  style: theme.textTheme.headlineSmall,
-                ),
-              );
-            }),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        SizedBox(
-          height: 0,
-          child: Opacity(
-            opacity: 0,
-            child: TextField(
-              controller: widget.controller,
-              focusNode: _focusNode,
-              enabled: widget.enabled,
-              keyboardType: TextInputType.number,
-              maxLength: _length,
-              autofocus: true,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: const InputDecoration(counterText: ''),
+                );
+              }),
             ),
-          ),
+            Positioned.fill(
+              child: TextField(
+                controller: widget.controller,
+                focusNode: _focusNode,
+                enabled: widget.enabled,
+                keyboardType: TextInputType.number,
+                textInputAction: TextInputAction.done,
+                maxLength: _length,
+                autofocus: true,
+                showCursor: false,
+                enableInteractiveSelection: false,
+                style: const TextStyle(color: Colors.transparent, fontSize: 1),
+                cursorColor: Colors.transparent,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  counterText: '',
+                  contentPadding: EdgeInsets.zero,
+                ),
+                onTap: _requestKeyboard,
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

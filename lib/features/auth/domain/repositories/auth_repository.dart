@@ -52,6 +52,12 @@ abstract interface class AuthRepository {
     String? countryCode,
   });
 
+  /// Valida credenciales legacy sin persistir JWT (solo para migración email).
+  Future<Result<void>> validateLegacyCredentials({
+    required String email,
+    required String password,
+  });
+
   Future<Result<void>> sendEmailVerificationCode(String email);
 
   Future<Result<void>> verifyEmailCode({

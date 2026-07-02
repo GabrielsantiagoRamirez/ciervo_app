@@ -1,3 +1,5 @@
+import '../../domain/entities/auth_flow.dart';
+
 class AccountLookupResult {
   const AccountLookupResult({
     required this.exists,
@@ -53,6 +55,12 @@ class AccountLookupResult {
   bool get isPhoneFree => phoneAvailable == true;
 
   bool get shouldLinkLegacy => exists && requiresFirebaseLink;
+
+  AuthFlow get resolvedFlow {
+    if (!exists) return AuthFlow.registerNew;
+    if (requiresFirebaseLink && !hasFirebaseUid) return AuthFlow.legacyMigration;
+    return AuthFlow.firebaseLogin;
+  }
 }
 
 int? _optionalInt(dynamic value) {

@@ -394,6 +394,7 @@ abstract final class DisplayLabels {
       'documentnumber' => 'Ingresa el número de documento.',
       'vehicletype' => 'Selecciona el tipo de vehículo.',
       'phonenumber' || 'phone' => 'Ingresa tu teléfono.',
+      'user' || 'email' => 'Ingresa tu correo electrónico.',
       'birthdate' => 'Selecciona tu fecha de nacimiento.',
       _ => 'Completa todos los campos obligatorios.',
     };

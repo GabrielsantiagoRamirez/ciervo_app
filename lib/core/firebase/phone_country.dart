@@ -59,6 +59,19 @@ abstract final class PhoneCountry {
 
     return normalized.startsWith('+') ? normalized : '+$digits';
   }
+
+  /// Enmascara un número E.164 para pantalla OTP: `+57 *** *** **86`.
+  static String maskForOtp(String e164) {
+    final digits = e164.replaceAll(RegExp(r'\D'), '');
+    if (digits.length < 2) return '***';
+    final last2 = digits.substring(digits.length - 2);
+    for (final option in options) {
+      final dialDigits = option.dialCode.replaceAll('+', '');
+      if (!digits.startsWith(dialDigits)) continue;
+      return '${option.dialCode} *** *** **$last2';
+    }
+    return '*** *** **$last2';
+  }
 }
 
 class PhoneCountryOption {

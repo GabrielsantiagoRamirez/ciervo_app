@@ -9,6 +9,8 @@ import '../../../../core/firebase/firebase_auth_service.dart';
 import '../../../../core/firebase/phone_country.dart';
 import '../../../../core/location/app_location.dart';
 import '../../../../core/location/location_service.dart';
+import '../../data/dtos/account_lookup_dto.dart';
+import '../../domain/entities/auth_flow.dart';
 import '../../domain/repositories/auth_repository.dart';
 import 'firebase_auth_state.dart';
 
@@ -64,20 +66,26 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
     required String countryCode,
     required String nationalNumber,
     bool resend = false,
+    AccountLookupResult? lookup,
   }) async {
     final national = _digitsOnly(nationalNumber);
     final e164 = PhoneCountry.toE164(
       countryCode: countryCode,
       nationalNumber: national,
     );
+    final isLegacyMigration = lookup?.resolvedFlow == AuthFlow.legacyMigration;
     emit(
       state.copyWith(
-        status: FirebaseAuthStatus.loading,
+        status: isLegacyMigration && !resend
+            ? FirebaseAuthStatus.migrating
+            : FirebaseAuthStatus.loading,
         countryCode: countryCode,
         phoneE164: e164,
         phoneNational: national,
         clearError: true,
         clearAuthMeta: true,
+        lookupExists: lookup?.exists ?? false,
+        lookupRequiresLink: lookup?.requiresFirebaseLink ?? false,
       ),
     );
     try {
@@ -172,16 +180,17 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
         emit(
           state.copyWith(
             status: FirebaseAuthStatus.phoneVerified,
-            userExists: result.exists,
-            requiresFirebaseLink: result.requiresFirebaseLink,
+            userExists: result.exists || state.lookupExists,
+            requiresFirebaseLink:
+                result.requiresFirebaseLink || state.lookupRequiresLink,
           ),
         );
       },
       failure: (error) => emit(
         state.copyWith(
           status: FirebaseAuthStatus.phoneVerified,
-          userExists: false,
-          requiresFirebaseLink: false,
+          userExists: state.lookupExists,
+          requiresFirebaseLink: state.lookupRequiresLink,
           errorMessage: _mapError(error),
         ),
       ),
@@ -348,9 +357,119 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
     }
   }
 
+  /// Flujo B.1: valida contraseña legacy, crea usuario Firebase y envía verificación.
+  Future<bool> migrateLegacyEmailWithPassword({
+    required String email,
+    required String password,
+  }) async {
+    emit(state.copyWith(status: FirebaseAuthStatus.migrating, clearError: true));
+
+    final validation = await _authRepository.validateLegacyCredentials(
+      email: email,
+      password: password,
+    );
+
+    final validated = validation.when(
+      success: (_) => true,
+      failure: (error) {
+        emit(
+          state.copyWith(
+            status: FirebaseAuthStatus.failure,
+            errorMessage: UserErrorMessage.from(error),
+          ),
+        );
+        return false;
+      },
+    );
+    if (!validated) return false;
+
+    try {
+      await _firebaseAuth.signOut();
+      try {
+        await _firebaseAuth.createUserWithEmail(email: email, password: password);
+      } on FirebaseAuthException catch (error) {
+        if (error.code == 'email-already-in-use') {
+          await _firebaseAuth.signInWithEmail(email: email, password: password);
+        } else {
+          rethrow;
+        }
+      }
+      await _firebaseAuth.sendEmailVerification();
+      emit(
+        state.copyWith(
+          status: FirebaseAuthStatus.emailVerificationPending,
+          clearError: true,
+        ),
+      );
+      return true;
+    } catch (error) {
+      emit(
+        state.copyWith(
+          status: FirebaseAuthStatus.failure,
+          errorMessage: _mapError(error),
+        ),
+      );
+      return false;
+    }
+  }
+
+  /// Tras confirmar el correo en Firebase: login y vinculación legacy.
+  Future<bool> completeLegacyEmailMigration({
+    required String email,
+    required String password,
+  }) async {
+    emit(state.copyWith(status: FirebaseAuthStatus.loading, clearError: true));
+    try {
+      if (!_firebaseAuth.isSignedIn) {
+        await _firebaseAuth.signInWithEmail(email: email, password: password);
+      }
+      await _firebaseAuth.reloadUser();
+      if (!_firebaseAuth.isEmailVerified) {
+        emit(
+          state.copyWith(
+            status: FirebaseAuthStatus.emailVerificationPending,
+            errorMessage:
+                'Aún no confirmamos tu correo. Revisa tu bandeja e intenta de nuevo.',
+          ),
+        );
+        return false;
+      }
+
+      final token = await _firebaseAuth.freshIdToken();
+      final check = await _authRepository.firebaseCheckUser(
+        firebaseIdToken: token,
+        email: email.trim(),
+      );
+      final checkOk = check.when(
+        success: (_) => true,
+        failure: (error) {
+          emit(
+            state.copyWith(
+              status: FirebaseAuthStatus.failure,
+              errorMessage: UserErrorMessage.from(error),
+            ),
+          );
+          return false;
+        },
+      );
+      if (!checkOk) return false;
+
+      return firebaseLoginExisting(email: email.trim());
+    } catch (error) {
+      emit(
+        state.copyWith(
+          status: FirebaseAuthStatus.failure,
+          errorMessage: _mapError(error),
+        ),
+      );
+      return false;
+    }
+  }
+
   Future<bool> loginWithEmail({
     required String email,
     required String password,
+    bool emitFailure = true,
   }) async {
     emit(state.copyWith(status: FirebaseAuthStatus.loading, clearError: true));
     try {
@@ -374,22 +493,30 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
           return true;
         },
         failure: (error) {
-          emit(
-            state.copyWith(
-              status: FirebaseAuthStatus.failure,
-              errorMessage: FirebaseAuthErrors.userMessage(error),
-            ),
-          );
+          if (emitFailure) {
+            emit(
+              state.copyWith(
+                status: FirebaseAuthStatus.failure,
+                errorMessage: FirebaseAuthErrors.userMessage(error),
+              ),
+            );
+          } else {
+            emit(state.copyWith(status: FirebaseAuthStatus.initial, clearError: true));
+          }
           return false;
         },
       );
     } catch (error) {
-      emit(
-        state.copyWith(
-          status: FirebaseAuthStatus.failure,
-          errorMessage: _mapError(error),
-        ),
-      );
+      if (emitFailure) {
+        emit(
+          state.copyWith(
+            status: FirebaseAuthStatus.failure,
+            errorMessage: _mapError(error),
+          ),
+        );
+      } else {
+        emit(state.copyWith(status: FirebaseAuthStatus.initial, clearError: true));
+      }
       return false;
     }
   }
@@ -433,6 +560,25 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
 
   void restartPhoneFlow() {
     emit(const FirebaseAuthState());
+  }
+
+  Future<void> resendPhoneCode() async {
+    final national = state.phoneNational;
+    final country = state.countryCode;
+    if (national == null || national.isEmpty) return;
+    await sendPhoneCode(
+      countryCode: country,
+      nationalNumber: national,
+      resend: true,
+      lookup: state.lookupRequiresLink
+          ? AccountLookupResult(
+              exists: state.lookupExists,
+              suggestedFlow: 'firebase_phone',
+              requiresFirebaseLink: state.lookupRequiresLink,
+              hasFirebaseUid: false,
+            )
+          : null,
+    );
   }
 
   Future<bool> resendEmailVerification() async {
