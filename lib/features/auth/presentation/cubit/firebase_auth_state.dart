@@ -53,8 +53,7 @@ class FirebaseAuthState {
   bool get isMigrating =>
       status == FirebaseAuthStatus.migrating || lookupRequiresLink;
 
-  bool get shouldFirebaseLogin =>
-      userExists || requiresFirebaseLink || lookupExists || lookupRequiresLink;
+  bool get shouldFirebaseLogin => userExists || requiresFirebaseLink;
 
   FirebaseAuthState copyWith({
     FirebaseAuthStatus? status,

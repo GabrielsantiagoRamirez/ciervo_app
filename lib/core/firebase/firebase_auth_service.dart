@@ -72,6 +72,16 @@ class FirebaseAuthService {
     await user.sendEmailVerification();
   }
 
+  /// Cierra sesión Firebase antes de un nuevo flujo SMS (evita conflictos de credencial).
+  Future<void> prepareForPhoneAuth() async {
+    if (currentUser != null) {
+      if (kDebugMode) {
+        debugPrint('[AUTH] Cerrando sesión Firebase previa al flujo SMS.');
+      }
+      await signOut();
+    }
+  }
+
   Future<UserCredential> signInWithPhoneCredential({
     required String verificationId,
     required String smsCode,
@@ -80,7 +90,31 @@ class FirebaseAuthService {
       verificationId: verificationId,
       smsCode: smsCode.trim(),
     );
-    return _auth.signInWithCredential(credential);
+    return signInWithCredentialRecovering(credential);
+  }
+
+  /// Login SMS normal con `signInWithCredential` (nunca `linkWithCredential`).
+  Future<UserCredential> signInWithCredentialRecovering(
+    AuthCredential credential,
+  ) async {
+    try {
+      return await _auth.signInWithCredential(credential);
+    } on FirebaseAuthException catch (error) {
+      if (_shouldRetryAfterSignOut(error.code)) {
+        if (kDebugMode) {
+          debugPrint('[AUTH] Reintentando signIn tras signOut (${error.code}).');
+        }
+        await signOut();
+        return _auth.signInWithCredential(credential);
+      }
+      rethrow;
+    }
+  }
+
+  bool _shouldRetryAfterSignOut(String code) {
+    return code == 'credential-already-in-use' ||
+        code == 'provider-already-linked' ||
+        code == 'account-exists-with-different-credential';
   }
 
   Future<UserCredential> signInWithEmail({

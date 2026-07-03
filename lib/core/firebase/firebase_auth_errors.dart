@@ -9,16 +9,25 @@ abstract final class FirebaseAuthErrors {
       'operation-not-allowed' =>
         'La verificación por teléfono no está disponible en este momento. '
             'Prueba ingresar con tu correo electrónico.',
-      'invalid-verification-code' => 'El código SMS no es válido. Revisa e intenta de nuevo.',
-      'session-expired' => 'El código SMS expiró. Solicita uno nuevo.',
+      'invalid-verification-code' =>
+        'Código inválido o vencido. Solicita uno nuevo.',
+      'session-expired' => 'Código inválido o vencido. Solicita uno nuevo.',
       'too-many-requests' =>
         'Demasiados intentos. Espera unos minutos e intenta de nuevo.',
+      'credential-already-in-use' =>
+        'Este número ya está registrado. Iniciaremos sesión con tu código de verificación.',
+      'provider-already-linked' =>
+        'Este número ya está registrado. Iniciaremos sesión con tu código de verificación.',
+      'account-exists-with-different-credential' =>
+        'Este número ya está registrado. Iniciaremos sesión con tu código de verificación.',
       'invalid-email' => 'El correo electrónico no es válido.',
       'email-already-in-use' => 'Ese correo ya está registrado.',
       'wrong-password' => 'Contraseña incorrecta.',
       'invalid-credential' =>
         'Correo o contraseña incorrectos. Si tu cuenta es antigua, usa la contraseña de Ciervo Club.',
       'user-not-found' => 'No encontramos una cuenta con esos datos.',
+      'no-user' => 'No pudimos verificar tu sesión. Intenta nuevamente.',
+      'no-token' => 'No pudimos verificar tu sesión. Intenta nuevamente.',
       'network-request-failed' =>
         'No hay conexión. Revisa tu internet e intenta de nuevo.',
       _ => _sanitize(error.message),

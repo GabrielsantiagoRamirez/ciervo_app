@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/country/country_registration.dart';
+import '../../../../core/auth/auth_pending_registration_store.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/firebase/firebase_auth_service.dart';
 import '../../../../core/firebase/phone_country.dart';
@@ -16,6 +17,7 @@ import '../../../../core/utils/app_routes.dart';
 import '../../../../core/utils/input_validators.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
+import '../widgets/email_verification_info_dialog.dart';
 import '../widgets/email_verification_pending_screen.dart';
 import '../widgets/auth_email_verification_step.dart';
 import '../widgets/migration_splash_widget.dart';
@@ -114,6 +116,7 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
   String _registerCountryCode = CountryRegistration.defaultCountryCode();
   String _documentType = 'CC';
   bool _lookupLoading = false;
+  bool _emailVerificationModalShown = false;
   Timer? _migrationTimeoutTimer;
 
   void _startMigrationTimeoutTimer() {
@@ -136,6 +139,58 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
       length: 2,
       vsync: this,
       initialIndex: widget.startEmailRegistration ? 1 : 0,
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _applyPendingRegistrationIfNeeded();
+      _showStartupMessageIfNeeded();
+    });
+  }
+
+  void _applyPendingRegistrationIfNeeded() {
+    final pending = getIt<AuthPendingRegistrationStore>();
+    if (!pending.hasPending || !mounted) return;
+
+    context.read<FirebaseAuthCubit>().restorePendingPhoneRegistration(
+          phoneNational: pending.phoneNational!,
+          phoneE164: pending.phoneE164 ?? '',
+          countryCode: pending.countryCode ?? CountryRegistration.defaultCountryCode(),
+        );
+    setState(() {
+      _phoneCountryCode =
+          pending.countryCode ?? CountryRegistration.defaultCountryCode();
+      _phoneStep = _PhoneStep.profile;
+    });
+    pending.clear();
+  }
+
+  void _showStartupMessageIfNeeded() {
+    final message = getIt<AuthStartupMessageStore>().consume();
+    if (message == null || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 8),
+      ),
+    );
+  }
+
+  Future<void> _presentEmailVerificationModalIfNeeded({String? email}) async {
+    final firebase = getIt<FirebaseAuthService>();
+    if (firebase.isEmailVerified || _emailVerificationModalShown || !mounted) {
+      return;
+    }
+
+    final resolvedEmail = email ?? _emailController.text.trim();
+    if (resolvedEmail.isEmpty) return;
+
+    _emailVerificationModalShown = true;
+    final cubit = context.read<FirebaseAuthCubit>();
+    await showEmailVerificationInfoDialog(
+      context,
+      email: resolvedEmail,
+      onResend: cubit.resendEmailVerificationWithFeedback,
     );
   }
 
@@ -393,6 +448,7 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
       if (!mounted) return;
       if (ok) {
         setState(() => _emailStep = _EmailStep.emailVerificationPending);
+        await _presentEmailVerificationModalIfNeeded(email: email);
       }
       return;
     }
@@ -457,7 +513,13 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
           documentType: _documentType,
           city: _cityController.text,
         );
-    if (ok && mounted) context.go(AppRoutes.root);
+    if (!mounted) return;
+    if (ok) {
+      await _presentEmailVerificationModalIfNeeded(
+        email: _emailController.text.trim(),
+      );
+      if (mounted) context.go(AppRoutes.root);
+    }
   }
 
   void _routeExistingEmailToLogin() {
@@ -468,6 +530,7 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
     setState(() {
       _emailStep = _EmailStep.enterEmail;
       _lookup = null;
+      _emailVerificationModalShown = false;
       _passwordController.clear();
       _confirmPasswordController.clear();
     });
@@ -519,6 +582,9 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
             }
             if (state.status == FirebaseAuthStatus.emailVerificationPending) {
               setState(() => _emailStep = _EmailStep.emailVerificationPending);
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _presentEmailVerificationModalIfNeeded();
+              });
             }
             if (state.status == FirebaseAuthStatus.success) {
               _showFirebaseAuthSuccess(context, state);
@@ -866,13 +932,15 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
         else if (_emailStep == _EmailStep.emailVerificationPending)
           EmailVerificationPendingScreen(
             email: _emailController.text.trim(),
+            initialResendCooldown:
+                context.read<FirebaseAuthCubit>().emailVerificationResendCooldownSeconds,
             serverError: firebaseState.errorMessage,
             onConfirmed: () => context.read<FirebaseAuthCubit>().completeLegacyEmailMigration(
                   email: _emailController.text.trim(),
                   password: _passwordController.text,
                 ),
             onResend: () =>
-                context.read<FirebaseAuthCubit>().resendEmailVerification(),
+                context.read<FirebaseAuthCubit>().resendEmailVerificationWithFeedback(),
             onChangeEmail: _resetEmailFlow,
           )
         else if (_emailStep == _EmailStep.enterPassword)

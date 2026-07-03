@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../core/crash/crash_reporting_service.dart';
+import '../core/auth/auth_bootstrap_service.dart';
 import '../core/di/service_locator.dart';
 import '../features/memberships/presentation/cubit/membership_cubit.dart';
 import '../core/experience/experience_mode_cubit.dart';
@@ -50,6 +51,9 @@ class _BootstrapRootState extends State<_BootstrapRoot> {
           await getIt<SessionManager>()
               .restore()
               .timeout(const Duration(seconds: 8));
+          await getIt<AuthBootstrapService>()
+              .reconcile()
+              .timeout(const Duration(seconds: 12));
         } on TimeoutException {
           debugPrint('[bootstrap] session restore timeout');
           getIt<SessionManager>().markUnauthenticated();

@@ -7,6 +7,7 @@ import '../../../../core/notifications/ciervo_push_service.dart';
 import '../../../../core/result/result.dart';
 import '../../../../core/session/auth_token_claims.dart';
 import '../../../../core/session/session_manager.dart';
+import '../../../../core/firebase/firebase_auth_service.dart';
 import '../../domain/entities/auth_session.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
@@ -19,11 +20,14 @@ class AuthRepositoryImpl implements AuthRepository {
   const AuthRepositoryImpl({
     required AuthRemoteDataSource remoteDataSource,
     required SessionManager sessionManager,
+    FirebaseAuthService? firebaseAuthService,
   }) : _remoteDataSource = remoteDataSource,
-       _sessionManager = sessionManager;
+       _sessionManager = sessionManager,
+       _firebaseAuthService = firebaseAuthService;
 
   final AuthRemoteDataSource _remoteDataSource;
   final SessionManager _sessionManager;
+  final FirebaseAuthService? _firebaseAuthService;
 
   @override
   Future<Result<AuthSession>> login({
@@ -60,6 +64,9 @@ class AuthRepositoryImpl implements AuthRepository {
       } catch (_) {}
     }
     getIt<SelectedKidContext>().clear();
+    try {
+      await _firebaseAuthService?.signOut();
+    } catch (_) {}
     await _sessionManager.clear();
     return const Success<void>(null);
   }
@@ -253,9 +260,11 @@ class AuthRepositoryImpl implements AuthRepository {
 
   void _logAuthDecision(String accessToken) {
     final claims = AuthTokenClaims.fromJwt(accessToken);
-    debugPrint('[AUTH] JWT recibido: $accessToken');
-    debugPrint('[AUTH] accountKind: ${claims.accountKind}');
-    debugPrint('[AUTH] role: ${claims.role}');
-    debugPrint('[AUTH] businessRoleId: ${claims.businessRoleId}');
+    if (kDebugMode) {
+      debugPrint('[AUTH] JWT recibido len=${accessToken.length}');
+      debugPrint('[AUTH] accountKind: ${claims.accountKind}');
+      debugPrint('[AUTH] role: ${claims.role}');
+      debugPrint('[AUTH] businessRoleId: ${claims.businessRoleId}');
+    }
   }
 }

@@ -16,14 +16,16 @@ class EmailVerificationPendingScreen extends StatefulWidget {
     required this.onResend,
     required this.onChangeEmail,
     this.serverError,
+    this.initialResendCooldown = 0,
     super.key,
   });
 
   final String email;
   final Future<bool> Function() onConfirmed;
-  final Future<bool> Function() onResend;
+  final Future<({bool success, String? errorMessage})> Function() onResend;
   final VoidCallback onChangeEmail;
   final String? serverError;
+  final int initialResendCooldown;
 
   @override
   State<EmailVerificationPendingScreen> createState() =>
@@ -42,7 +44,9 @@ class _EmailVerificationPendingScreenState
   @override
   void initState() {
     super.initState();
-    _startResendCooldown();
+    if (widget.initialResendCooldown > 0) {
+      _startResendCooldown(widget.initialResendCooldown);
+    }
   }
 
   @override
@@ -60,8 +64,8 @@ class _EmailVerificationPendingScreenState
     super.dispose();
   }
 
-  void _startResendCooldown() {
-    setState(() => _resendCooldown = 60);
+  void _startResendCooldown([int seconds = 60]) {
+    setState(() => _resendCooldown = seconds);
     _cooldownTimer?.cancel();
     _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) {
@@ -126,16 +130,17 @@ class _EmailVerificationPendingScreenState
       _localMessage = null;
       _isSuccess = false;
     });
-    final ok = await widget.onResend();
+    final result = await widget.onResend();
     if (!mounted) return;
     setState(() {
       _resending = false;
-      _isSuccess = ok;
-      _localMessage = ok
-          ? 'Te reenviamos el correo de confirmación.'
-          : 'No pudimos reenviar el correo. Intenta en unos segundos.';
+      _isSuccess = result.success;
+      _localMessage = result.success
+          ? 'Te reenviamos el correo de verificación.'
+          : result.errorMessage ??
+              'No pudimos reenviar el correo. Intenta en unos segundos.';
     });
-    if (ok) _startResendCooldown();
+    if (result.success) _startResendCooldown();
   }
 
   @override
@@ -191,7 +196,8 @@ class _EmailVerificationPendingScreenState
                       ),
                       const SizedBox(height: AppSpacing.xxs),
                       Text(
-                        'Abre el enlace de confirmación y luego pulsa "Ya confirmé".',
+                        'Abre el enlace de confirmación y luego pulsa "Ya confirmé". '
+                        'Si no lo encuentras, revisa spam o promociones.',
                         style: textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/di/service_locator.dart';
@@ -7,6 +9,7 @@ import '../../../../core/utils/input_validators.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../domain/repositories/auth_repository.dart';
+import 'email_verification_info_dialog.dart';
 
 /// Verificación de correo durante login/registro (sin sesión activa).
 class AuthEmailVerificationStep extends StatefulWidget {
@@ -35,11 +38,73 @@ class _AuthEmailVerificationStepState extends State<AuthEmailVerificationStep> {
   bool _codeSent = false;
   String? _message;
   bool _isSuccess = false;
+  int _resendCooldown = 0;
+  Timer? _cooldownTimer;
+  bool _infoModalShown = false;
 
   @override
   void dispose() {
     _codeController.dispose();
+    _cooldownTimer?.cancel();
     super.dispose();
+  }
+
+  void _startResendCooldown([int seconds = 60]) {
+    _cooldownTimer?.cancel();
+    setState(() => _resendCooldown = seconds);
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      if (_resendCooldown <= 1) {
+        timer.cancel();
+        setState(() => _resendCooldown = 0);
+      } else {
+        setState(() => _resendCooldown -= 1);
+      }
+    });
+  }
+
+  Future<({bool success, String? errorMessage})> _resendBackendCode() async {
+    if (_resendCooldown > 0) {
+      return (
+        success: false,
+        errorMessage: 'Espera ${_resendCooldown}s antes de reenviar el correo.',
+      );
+    }
+
+    final email = widget.email.trim();
+    final result = await getIt<AuthRepository>().sendEmailVerificationCode(email);
+    return result.when(
+      success: (_) {
+        _startResendCooldown();
+        return (success: true, errorMessage: null);
+      },
+      failure: (error) {
+        final message = UserErrorMessage.from(error);
+        final lower = message.toLowerCase();
+        if (lower.contains('demasiados') || lower.contains('429')) {
+          return (
+            success: false,
+            errorMessage:
+                'Has solicitado varios correos en poco tiempo. '
+                'Intenta nuevamente más tarde.',
+          );
+        }
+        return (success: false, errorMessage: message);
+      },
+    );
+  }
+
+  Future<void> _showVerificationInfoModalIfNeeded() async {
+    if (_infoModalShown || !mounted) return;
+    _infoModalShown = true;
+    await showEmailVerificationInfoDialog(
+      context,
+      email: widget.email.trim(),
+      onResend: _resendBackendCode,
+    );
   }
 
   Future<void> _sendCode() async {
@@ -59,13 +124,16 @@ class _AuthEmailVerificationStepState extends State<AuthEmailVerificationStep> {
     final result =
         await getIt<AuthRepository>().sendEmailVerificationCode(email);
     if (!mounted) return;
+    var sent = false;
     setState(() {
       _sending = false;
       result.when(
         success: (_) {
+          sent = true;
           _codeSent = true;
           _isSuccess = true;
           _message = 'Te enviamos un código a $email.';
+          _startResendCooldown();
         },
         failure: (error) {
           _isSuccess = false;
@@ -73,6 +141,9 @@ class _AuthEmailVerificationStepState extends State<AuthEmailVerificationStep> {
         },
       );
     });
+    if (sent) {
+      await _showVerificationInfoModalIfNeeded();
+    }
   }
 
   Future<void> _verifyCode() async {

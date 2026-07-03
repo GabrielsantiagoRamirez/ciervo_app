@@ -11,6 +11,8 @@ import '../permissions/app_permission_service.dart';
 import '../session/session_manager.dart';
 import '../storage/secure_storage.dart';
 import '../version/app_version_service.dart';
+import '../auth/auth_bootstrap_service.dart';
+import '../auth/auth_pending_registration_store.dart';
 import '../firebase/firebase_auth_service.dart';
 import '../location/location_service.dart';
 import '../kids/selected_kid_context.dart';
@@ -128,6 +130,12 @@ Future<void> configureDependencies() async {
       () => GeolocatorLocationService(getIt<SecureStorage>()),
     )
     ..registerLazySingleton<FirebaseAuthService>(FirebaseAuthService.new)
+    ..registerLazySingleton<AuthPendingRegistrationStore>(
+      AuthPendingRegistrationStore.new,
+    )
+    ..registerLazySingleton<AuthStartupMessageStore>(
+      AuthStartupMessageStore.new,
+    )
     ..registerLazySingleton<AppVersionService>(AppVersionService.new)
     ..registerLazySingleton<AppPermissionService>(
       () => DeviceAppPermissionService(getIt<LocationService>()),
@@ -176,6 +184,17 @@ Future<void> configureDependencies() async {
       () => AuthRepositoryImpl(
         remoteDataSource: getIt<AuthRemoteDataSource>(),
         sessionManager: getIt<SessionManager>(),
+        firebaseAuthService: getIt<FirebaseAuthService>(),
+      ),
+    )
+    ..registerLazySingleton<AuthBootstrapService>(
+      () => AuthBootstrapService(
+        sessionManager: getIt<SessionManager>(),
+        firebaseAuth: getIt<FirebaseAuthService>(),
+        authRepository: getIt<AuthRepository>(),
+        tokenRefresher: getIt<AuthTokenRefresher>(),
+        pendingRegistration: getIt<AuthPendingRegistrationStore>(),
+        startupMessage: getIt<AuthStartupMessageStore>(),
       ),
     )
     ..registerLazySingleton<ProfileRemoteDataSource>(
