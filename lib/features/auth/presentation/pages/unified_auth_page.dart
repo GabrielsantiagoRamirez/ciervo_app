@@ -300,7 +300,11 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
       return;
     }
     setState(() => _lookupLoading = true);
-    final result = await getIt<AuthRepository>().lookupAccount(email: email);
+    final countryCode = context.read<FirebaseAuthCubit>().state.countryCode;
+    final result = await getIt<AuthRepository>().lookupAccount(
+      email: email,
+      countryCode: countryCode,
+    );
     if (!mounted) return;
     setState(() => _lookupLoading = false);
 
@@ -351,6 +355,7 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
       final ok = await cubit.migrateLegacyEmailWithPassword(
         email: email,
         password: password,
+        countryCode: cubit.state.countryCode,
       );
       if (!mounted) return;
       if (ok) {
@@ -444,10 +449,17 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
         ),
         BlocListener<FirebaseAuthCubit, FirebaseAuthState>(
           listener: (context, state) {
+            final onEmailVerificationStep =
+                _emailStep == _EmailStep.emailVerificationPending;
             if (state.errorMessage != null &&
-                state.status == FirebaseAuthStatus.failure) {
+                state.status == FirebaseAuthStatus.failure &&
+                !onEmailVerificationStep) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.errorMessage!)),
+                SnackBar(
+                  content: Text(state.errorMessage!),
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                  behavior: SnackBarBehavior.floating,
+                ),
               );
             }
             if (state.status == FirebaseAuthStatus.codeSent) {
@@ -794,6 +806,7 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
         else if (_emailStep == _EmailStep.emailVerificationPending)
           EmailVerificationPendingScreen(
             email: _emailController.text.trim(),
+            serverError: firebaseState.errorMessage,
             onConfirmed: () => context.read<FirebaseAuthCubit>().completeLegacyEmailMigration(
                   email: _emailController.text.trim(),
                   password: _passwordController.text,

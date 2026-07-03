@@ -15,6 +15,7 @@ class EmailVerificationPendingScreen extends StatefulWidget {
     required this.onConfirmed,
     required this.onResend,
     required this.onChangeEmail,
+    this.serverError,
     super.key,
   });
 
@@ -22,6 +23,7 @@ class EmailVerificationPendingScreen extends StatefulWidget {
   final Future<bool> Function() onConfirmed;
   final Future<bool> Function() onResend;
   final VoidCallback onChangeEmail;
+  final String? serverError;
 
   @override
   State<EmailVerificationPendingScreen> createState() =>
@@ -33,7 +35,7 @@ class _EmailVerificationPendingScreenState
   bool _checking = false;
   bool _resending = false;
   int _resendCooldown = 0;
-  String? _message;
+  String? _localMessage;
   bool _isSuccess = false;
   Timer? _cooldownTimer;
 
@@ -41,6 +43,15 @@ class _EmailVerificationPendingScreenState
   void initState() {
     super.initState();
     _startResendCooldown();
+  }
+
+  @override
+  void didUpdateWidget(covariant EmailVerificationPendingScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.serverError != oldWidget.serverError && widget.serverError != null) {
+      _localMessage = null;
+      _isSuccess = false;
+    }
   }
 
   @override
@@ -66,10 +77,13 @@ class _EmailVerificationPendingScreenState
     });
   }
 
+  String? get _visibleMessage => widget.serverError ?? _localMessage;
+
   Future<void> _pollAndConfirm() async {
     setState(() {
       _checking = true;
-      _message = null;
+      _localMessage = null;
+      _isSuccess = false;
     });
 
     final firebase = getIt<FirebaseAuthService>();
@@ -88,7 +102,7 @@ class _EmailVerificationPendingScreenState
       setState(() {
         _checking = false;
         _isSuccess = false;
-        _message =
+        _localMessage =
             'Aún no confirmamos tu correo. Abre el enlace del mensaje e intenta de nuevo.';
       });
       return;
@@ -98,9 +112,9 @@ class _EmailVerificationPendingScreenState
     if (!mounted) return;
     setState(() {
       _checking = false;
-      if (!ok) {
+      if (!ok && widget.serverError == null) {
         _isSuccess = false;
-        _message = 'No pudimos activar tu cuenta. Intenta de nuevo.';
+        _localMessage = 'No pudimos activar tu cuenta. Intenta de nuevo.';
       }
     });
   }
@@ -109,14 +123,15 @@ class _EmailVerificationPendingScreenState
     if (_resendCooldown > 0 || _resending) return;
     setState(() {
       _resending = true;
-      _message = null;
+      _localMessage = null;
+      _isSuccess = false;
     });
     final ok = await widget.onResend();
     if (!mounted) return;
     setState(() {
       _resending = false;
       _isSuccess = ok;
-      _message = ok
+      _localMessage = ok
           ? 'Te reenviamos el correo de confirmación.'
           : 'No pudimos reenviar el correo. Intenta en unos segundos.';
     });
@@ -126,6 +141,10 @@ class _EmailVerificationPendingScreenState
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final message = _visibleMessage;
+    final isError = message != null && !_isSuccess;
+
     return CiervoCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -135,7 +154,7 @@ class _EmailVerificationPendingScreenState
               Expanded(
                 child: Text(
                   'Confirma tu correo',
-                  style: Theme.of(context).textTheme.titleLarge,
+                  style: textTheme.titleLarge,
                 ),
               ),
               IconButton(
@@ -145,14 +164,43 @@ class _EmailVerificationPendingScreenState
               ),
             ],
           ),
-          Text(widget.email, style: Theme.of(context).textTheme.bodyLarge),
           const SizedBox(height: AppSpacing.sm),
-          Text(
-            'Revisa tu bandeja de entrada y confirma tu cuenta. '
-            'Luego pulsa "Ya confirmé".',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: colorScheme.primaryContainer.withValues(alpha: 0.35),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.mark_email_unread_outlined,
+                  color: colorScheme.primary,
+                  size: 28,
                 ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.email,
+                        style: textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xxs),
+                      Text(
+                        'Abre el enlace de confirmación y luego pulsa "Ya confirmé".',
+                        style: textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: AppSpacing.lg),
           CiervoButton(
@@ -175,13 +223,26 @@ class _EmailVerificationPendingScreenState
                       : 'Reenviar correo',
             ),
           ),
-          if (_message != null) ...[
+          if (message != null) ...[
             const SizedBox(height: AppSpacing.md),
-            Text(
-              _message!,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: _isSuccess ? colorScheme.primary : colorScheme.error,
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: (isError
+                        ? colorScheme.errorContainer
+                        : colorScheme.primaryContainer)
+                    .withValues(alpha: 0.65),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                message,
+                textAlign: TextAlign.center,
+                style: textTheme.bodyMedium?.copyWith(
+                  color: isError
+                      ? colorScheme.onErrorContainer
+                      : colorScheme.onPrimaryContainer,
+                ),
               ),
             ),
           ],

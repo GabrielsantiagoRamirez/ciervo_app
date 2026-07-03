@@ -361,8 +361,18 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
   Future<bool> migrateLegacyEmailWithPassword({
     required String email,
     required String password,
+    String? countryCode,
   }) async {
-    emit(state.copyWith(status: FirebaseAuthStatus.migrating, clearError: true));
+    final resolvedCountry = (countryCode ?? state.countryCode).trim().isNotEmpty
+        ? (countryCode ?? state.countryCode).trim().toUpperCase()
+        : 'CO';
+    emit(
+      state.copyWith(
+        status: FirebaseAuthStatus.migrating,
+        countryCode: resolvedCountry,
+        clearError: true,
+      ),
+    );
 
     final validation = await _authRepository.validateLegacyCredentials(
       email: email,
@@ -419,9 +429,13 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
     required String password,
   }) async {
     emit(state.copyWith(status: FirebaseAuthStatus.loading, clearError: true));
+    final trimmedEmail = email.trim();
+    final countryCode = state.countryCode.trim().isNotEmpty
+        ? state.countryCode.trim().toUpperCase()
+        : 'CO';
     try {
       if (!_firebaseAuth.isSignedIn) {
-        await _firebaseAuth.signInWithEmail(email: email, password: password);
+        await _firebaseAuth.signInWithEmail(email: trimmedEmail, password: password);
       }
       await _firebaseAuth.reloadUser();
       if (!_firebaseAuth.isEmailVerified) {
@@ -438,14 +452,15 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
       final token = await _firebaseAuth.freshIdToken();
       final check = await _authRepository.firebaseCheckUser(
         firebaseIdToken: token,
-        email: email.trim(),
+        email: trimmedEmail,
+        countryCode: countryCode,
       );
       final checkOk = check.when(
         success: (_) => true,
         failure: (error) {
           emit(
             state.copyWith(
-              status: FirebaseAuthStatus.failure,
+              status: FirebaseAuthStatus.emailVerificationPending,
               errorMessage: UserErrorMessage.from(error),
             ),
           );
@@ -454,11 +469,37 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
       );
       if (!checkOk) return false;
 
-      return firebaseLoginExisting(email: email.trim());
+      final result = await _authRepository.firebaseLogin(
+        firebaseIdToken: token,
+        email: trimmedEmail,
+        countryCode: countryCode,
+      );
+      return result.when(
+        success: (session) {
+          emit(
+            state.copyWith(
+              status: FirebaseAuthStatus.success,
+              authAction: session.authAction,
+              linkedLegacy: session.isLegacyLink,
+              clearError: true,
+            ),
+          );
+          return true;
+        },
+        failure: (error) {
+          emit(
+            state.copyWith(
+              status: FirebaseAuthStatus.emailVerificationPending,
+              errorMessage: UserErrorMessage.from(error),
+            ),
+          );
+          return false;
+        },
+      );
     } catch (error) {
       emit(
         state.copyWith(
-          status: FirebaseAuthStatus.failure,
+          status: FirebaseAuthStatus.emailVerificationPending,
           errorMessage: _mapError(error),
         ),
       );

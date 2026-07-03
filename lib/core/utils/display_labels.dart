@@ -372,6 +372,11 @@ abstract final class DisplayLabels {
       return _fieldRequiredMessage(trimmed.split(' ').first);
     }
 
+    if (trimmed.toLowerCase().contains('value cannot be null') ||
+        trimmed.toLowerCase().contains('propertyname')) {
+      return 'No pudimos completar la activación. Intenta de nuevo en unos segundos.';
+    }
+
     if (trimmed.toLowerCase().contains('no se pudo completar la solicitud')) {
       return 'No se pudo completar la solicitud. Verifica tu conexión e intenta de nuevo.';
     }
