@@ -1,4 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
+
+import 'firebase_id_token.dart';
 
 /// Wrapper del SDK Firebase Auth (teléfono + email).
 class FirebaseAuthService {
@@ -22,14 +25,36 @@ class FirebaseAuthService {
         message: 'No hay sesión Firebase activa.',
       );
     }
-    final token = await user.getIdToken(forceRefresh);
-    if (token == null || token.isEmpty) {
-      throw FirebaseAuthException(
-        code: 'no-token',
-        message: 'No se pudo obtener el token de Firebase.',
-      );
+
+    Object? lastError;
+    for (var attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) {
+        await Future<void>.delayed(Duration(milliseconds: 350 * attempt));
+        await user.reload();
+      }
+      try {
+        final result = await user.getIdTokenResult(forceRefresh || attempt > 0);
+        final token = result.token;
+        if (token != null &&
+            token.isNotEmpty &&
+            FirebaseIdToken.isValidIdToken(token)) {
+          if (kDebugMode) {
+            final kid = FirebaseIdToken.decodeHeader(token)['kid'];
+            debugPrint('[AUTH] Firebase ID token kid=$kid len=${token.length}');
+          }
+          return token;
+        }
+        lastError = 'Token sin kid o malformado (intento ${attempt + 1}).';
+      } catch (error) {
+        lastError = error;
+      }
     }
-    return token;
+
+    throw FirebaseAuthException(
+      code: 'no-token',
+      message: 'No se pudo obtener el ID token de Firebase. '
+          '${lastError ?? ''}'.trim(),
+    );
   }
 
   Future<void> reloadUser() async {

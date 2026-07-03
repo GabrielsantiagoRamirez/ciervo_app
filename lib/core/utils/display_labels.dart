@@ -372,6 +372,23 @@ abstract final class DisplayLabels {
       return _fieldRequiredMessage(trimmed.split(' ').first);
     }
 
+    if (trimmed.toLowerCase().contains('credential must be set')) {
+      return 'El servidor no tiene configuradas las credenciales Firebase Admin. '
+          'El equipo backend debe inicializar FirebaseApp en Cloud Run.';
+    }
+
+    if (trimmed.toLowerCase().contains('idx10206') ||
+        trimmed.toLowerCase().contains('unable to validate audience')) {
+      return 'El servidor no pudo validar tu sesión Firebase. '
+          'El equipo backend debe configurar ValidAudience=ciervoclub-70a3c.';
+    }
+
+    if (trimmed.toLowerCase().contains('falta kid en el encabezado') ||
+        trimmed.toLowerCase().contains('firebaseidtoken invalido')) {
+      return 'El servidor rechazó el token de Firebase. '
+          'La app envía un ID token válido; si persiste, el backend debe revisar su verificador JWT.';
+    }
+
     if (trimmed.toLowerCase().contains('value cannot be null') ||
         trimmed.toLowerCase().contains('propertyname')) {
       return 'No pudimos completar la activación. Intenta de nuevo en unos segundos.';

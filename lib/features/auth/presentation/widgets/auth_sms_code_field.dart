@@ -44,15 +44,6 @@ class _AuthSmsCodeFieldState extends State<AuthSmsCodeField> {
 
   void _requestKeyboard() {
     if (!widget.enabled) return;
-
-    if (_focusNode.hasFocus) {
-      _focusNode.unfocus();
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _focusNode.requestFocus();
-      });
-      return;
-    }
-
     _focusNode.requestFocus();
   }
 
@@ -82,83 +73,90 @@ class _AuthSmsCodeFieldState extends State<AuthSmsCodeField> {
     final code = _digitsOnly(widget.controller.text);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final inputTheme = theme.inputDecorationTheme.copyWith(
+      filled: false,
+      fillColor: Colors.transparent,
+      border: InputBorder.none,
+      enabledBorder: InputBorder.none,
+      focusedBorder: InputBorder.none,
+    );
 
     return GestureDetector(
       onTap: _requestKeyboard,
       behavior: HitTestBehavior.opaque,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final gap = AppSpacing.sm;
-          final totalGaps = gap * (_length - 1);
-          final boxSize = ((constraints.maxWidth - totalGaps) / _length)
-              .clamp(40.0, 48.0);
+      child: SizedBox(
+        height: 52,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Row(
+              children: List.generate(_length, (index) {
+                final digit = index < code.length ? code[index] : '';
+                final isActive = widget.enabled &&
+                    _focusNode.hasFocus &&
+                    index == code.length;
 
-          return SizedBox(
-            height: boxSize + 6,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(_length, (index) {
-                    final digit = index < code.length ? code[index] : '';
-                    final isActive = widget.enabled &&
-                        _focusNode.hasFocus &&
-                        index == code.length;
-
-                    return Padding(
-                      padding: EdgeInsets.only(left: index == 0 ? 0 : gap),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 150),
-                        width: boxSize,
-                        height: boxSize,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isActive
-                                ? colorScheme.primary
-                                : colorScheme.outline.withValues(alpha: 0.5),
-                            width: isActive ? 2 : 1,
-                          ),
-                          color: colorScheme.surfaceContainerHighest,
+                return Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      left: index == 0 ? 0 : AppSpacing.xs,
+                    ),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      height: 52,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isActive
+                              ? colorScheme.primary
+                              : colorScheme.outline.withValues(alpha: 0.5),
+                          width: isActive ? 2 : 1,
                         ),
-                        child: Text(
-                          digit,
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                        color: colorScheme.surfaceContainerHighest,
+                      ),
+                      child: Text(
+                        digit,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    );
-                  }),
-                ),
-                Positioned.fill(
-                  child: TextField(
-                    controller: widget.controller,
-                    focusNode: _focusNode,
-                    enabled: widget.enabled,
-                    keyboardType: TextInputType.number,
-                    textInputAction: TextInputAction.done,
-                    maxLength: _length,
-                    autofocus: true,
-                    showCursor: false,
-                    enableInteractiveSelection: false,
-                    style: const TextStyle(color: Colors.transparent, fontSize: 1),
-                    cursorColor: Colors.transparent,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      counterText: '',
-                      contentPadding: EdgeInsets.zero,
                     ),
-                    onTap: _requestKeyboard,
+                  ),
+                );
+              }),
+            ),
+            Positioned.fill(
+              child: Theme(
+                data: theme.copyWith(inputDecorationTheme: inputTheme),
+                child: TextField(
+                  controller: widget.controller,
+                  focusNode: _focusNode,
+                  enabled: widget.enabled,
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.done,
+                  maxLength: _length,
+                  autofocus: true,
+                  showCursor: false,
+                  enableInteractiveSelection: false,
+                  style: const TextStyle(
+                    color: Colors.transparent,
+                    fontSize: 1,
+                    height: 1,
+                  ),
+                  cursorColor: Colors.transparent,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    counterText: '',
+                    contentPadding: EdgeInsets.zero,
+                    isCollapsed: true,
                   ),
                 ),
-              ],
+              ),
             ),
-          );
-        },
+          ],
+        ),
       ),
     );
   }

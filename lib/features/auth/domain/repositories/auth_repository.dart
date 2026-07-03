@@ -52,8 +52,8 @@ abstract interface class AuthRepository {
     String? countryCode,
   });
 
-  /// Valida credenciales legacy sin persistir JWT (solo para migración email).
-  Future<Result<void>> validateLegacyCredentials({
+  /// Valida credenciales legacy sin persistir JWT. Devuelve teléfono si el backend lo incluye.
+  Future<Result<String?>> validateLegacyCredentials({
     required String email,
     required String password,
   });
@@ -66,4 +66,7 @@ abstract interface class AuthRepository {
   });
 
   Future<Result<void>> logout();
+
+  /// Borra tokens locales sin llamar APIs autenticadas (migración Firebase).
+  Future<void> clearLocalSession();
 }

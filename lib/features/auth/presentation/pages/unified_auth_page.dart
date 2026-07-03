@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -96,7 +98,6 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
   String _phoneCountryCode = CountryRegistration.defaultCountryCode();
   _PhoneStep _phoneStep = _PhoneStep.entry;
   bool _phoneLookupLoading = false;
-  DateTime? _migrationStartedAt;
   bool _migrationTimedOut = false;
 
   // Correo
@@ -113,6 +114,20 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
   String _registerCountryCode = CountryRegistration.defaultCountryCode();
   String _documentType = 'CC';
   bool _lookupLoading = false;
+  Timer? _migrationTimeoutTimer;
+
+  void _startMigrationTimeoutTimer() {
+    _migrationTimeoutTimer?.cancel();
+    _migrationTimeoutTimer = Timer(const Duration(seconds: 90), () {
+      if (!mounted || _phoneStep != _PhoneStep.migrationSplash) return;
+      setState(() => _migrationTimedOut = true);
+    });
+  }
+
+  void _cancelMigrationTimeoutTimer() {
+    _migrationTimeoutTimer?.cancel();
+    _migrationTimeoutTimer = null;
+  }
 
   @override
   void initState() {
@@ -126,6 +141,7 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
 
   @override
   void dispose() {
+    _cancelMigrationTimeoutTimer();
     _tabs.dispose();
     _phoneController.dispose();
     _smsController.dispose();
@@ -140,8 +156,10 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
     super.dispose();
   }
 
-  String _nationalPhoneDigits() =>
-      _phoneController.text.replaceAll(RegExp(r'\D'), '');
+  String _nationalPhoneDigits() => PhoneCountry.nationalDigits(
+        countryCode: _phoneCountryCode,
+        rawInput: _phoneController.text,
+      );
 
   void _showFirebaseAuthSuccess(BuildContext context, FirebaseAuthState state) {
     final message = switch (state.authAction) {
@@ -159,7 +177,10 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
     FirebaseAuthState state,
   ) async {
     if (state.shouldFirebaseLogin) {
-      final ok = await context.read<FirebaseAuthCubit>().firebaseLoginExisting();
+      final email = _emailController.text.trim();
+      final ok = await context.read<FirebaseAuthCubit>().firebaseLoginExisting(
+            email: email.contains('@') ? email : null,
+          );
       if (ok && context.mounted) {
         // Navegación en listener success + toast authAction.
       }
@@ -214,11 +235,14 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
     final resolved = lookup!;
     setState(() {
       _migrationTimedOut = false;
-      _migrationStartedAt = DateTime.now();
     });
 
     if (resolved.resolvedFlow == AuthFlow.legacyMigration) {
-      setState(() => _phoneStep = _PhoneStep.migrationSplash);
+      setState(() {
+        _phoneStep = _PhoneStep.migrationSplash;
+        _migrationTimedOut = false;
+      });
+      _startMigrationTimeoutTimer();
       if (!context.mounted) return;
       await context.read<FirebaseAuthCubit>().sendPhoneCode(
             countryCode: _phoneCountryCode,
@@ -281,14 +305,24 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
         );
   }
 
-  void _checkMigrationTimeout() {
-    if (_phoneStep != _PhoneStep.migrationSplash || _migrationStartedAt == null) {
-      return;
-    }
-    final elapsed = DateTime.now().difference(_migrationStartedAt!);
-    if (elapsed.inSeconds >= 90 && !_migrationTimedOut) {
-      setState(() => _migrationTimedOut = true);
-    }
+  void _showPhoneAuthFailure(BuildContext context, String message) {
+    final blocked = message.toLowerCase().contains('blocked') ||
+        message.toLowerCase().contains('demasiados intentos');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 8),
+        action: blocked
+            ? SnackBarAction(
+                label: 'Usar correo',
+                textColor: Colors.white,
+                onPressed: () => _tabs.animateTo(1),
+              )
+            : null,
+      ),
+    );
   }
 
   Future<void> _lookupEmail() async {
@@ -355,7 +389,6 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
       final ok = await cubit.migrateLegacyEmailWithPassword(
         email: email,
         password: password,
-        countryCode: cubit.state.countryCode,
       );
       if (!mounted) return;
       if (ok) {
@@ -403,13 +436,23 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
       );
       return;
     }
+    final registerPhone = PhoneCountry.nationalDigits(
+      countryCode: _registerCountryCode,
+      rawInput: _registerPhoneController.text,
+    );
+    if (registerPhone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ingresa un teléfono válido.')),
+      );
+      return;
+    }
     final ok = await context.read<FirebaseAuthCubit>().registerWithEmailAccount(
           email: _emailController.text.trim(),
           password: _passwordController.text,
           firstName: _firstNameController.text,
           lastName: _lastNameController.text,
           countryCode: _registerCountryCode,
-          phoneNational: _registerPhoneController.text,
+          phoneNational: registerPhone,
           identityDocument: _documentController.text,
           documentType: _documentType,
           city: _cityController.text,
@@ -454,19 +497,22 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
             if (state.errorMessage != null &&
                 state.status == FirebaseAuthStatus.failure &&
                 !onEmailVerificationStep) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.errorMessage!),
-                  backgroundColor: Theme.of(context).colorScheme.error,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
+              _showPhoneAuthFailure(context, state.errorMessage!);
+              if (_phoneStep == _PhoneStep.migrationSplash ||
+                  _phoneStep == _PhoneStep.otp) {
+                setState(() {
+                  _phoneStep = _PhoneStep.entry;
+                  _migrationTimedOut = false;
+                });
+                _cancelMigrationTimeoutTimer();
+              }
             }
             if (state.status == FirebaseAuthStatus.codeSent) {
               setState(() {
                 _phoneStep = _PhoneStep.otp;
                 _migrationTimedOut = false;
               });
+              _cancelMigrationTimeoutTimer();
             }
             if (state.status == FirebaseAuthStatus.phoneVerified) {
               _handlePhoneVerified(context, state);
@@ -487,18 +533,25 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
         body: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
+              final firebaseState = context.watch<FirebaseAuthCubit>().state;
               final keyboardOpen =
                   MediaQuery.viewInsetsOf(context).bottom > 0;
+              final compactHeader = keyboardOpen ||
+                  _phoneStep == _PhoneStep.otp ||
+                  _emailStep == _EmailStep.emailVerificationPending ||
+                  (_emailStep == _EmailStep.enterPassword &&
+                      _lookup?.resolvedFlow == AuthFlow.legacyMigration &&
+                      firebaseState.status == FirebaseAuthStatus.migrating);
               return Padding(
                 padding: pagePaddingOf(context),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (keyboardOpen)
+                    if (compactHeader)
                       _compactHeader(context)
                     else
                       _header(context),
-                    if (!keyboardOpen) const SizedBox(height: AppSpacing.md),
+                    if (!compactHeader) const SizedBox(height: AppSpacing.md),
                     TabBar(
                       controller: _tabs,
                       tabs: const [
@@ -515,7 +568,7 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
                         ],
                       ),
                     ),
-                    if (!keyboardOpen)
+                    if (!compactHeader)
                       Padding(
                         padding: const EdgeInsets.only(top: AppSpacing.md),
                         child: CiervoButton(
@@ -596,13 +649,12 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
 
   Widget _phoneTab(BuildContext context) {
     final state = context.watch<FirebaseAuthCubit>().state;
-    _checkMigrationTimeout();
 
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       children: [
-        if (state.latitude != null)
+        if (state.latitude != null && _phoneStep == _PhoneStep.entry)
           CiervoCard(
             child: ListTile(
               leading: const Icon(Icons.location_on_outlined),
@@ -621,11 +673,12 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
                   state.status == FirebaseAuthStatus.loading,
               showRetry: _migrationTimedOut ||
                   state.status == FirebaseAuthStatus.failure,
+              errorMessage: state.status == FirebaseAuthStatus.failure
+                  ? state.errorMessage
+                  : null,
               onRetry: () {
-                setState(() {
-                  _migrationTimedOut = false;
-                  _migrationStartedAt = DateTime.now();
-                });
+                setState(() => _migrationTimedOut = false);
+                _startMigrationTimeoutTimer();
                 _startPhoneSmsFlow(context);
               },
             ),
@@ -668,7 +721,14 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
             keyboardType: TextInputType.phone,
             decoration: InputDecoration(
               labelText: 'Teléfono',
-              prefixText: '${PhoneCountry.byCountryCode(_phoneCountryCode).dialCode} ',
+              prefixIcon: Padding(
+                padding: const EdgeInsets.only(left: 12, right: 8),
+                child: Text(
+                  PhoneCountry.byCountryCode(_phoneCountryCode).dialCode,
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -905,7 +965,7 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
     final isLegacyMigration =
         _lookup?.resolvedFlow == AuthFlow.legacyMigration;
     final subtitle = isLegacyMigration
-        ? 'Ingresa tu contraseña de Ciervo Club para activar tu cuenta.'
+        ? 'Ingresa tu contraseña de Ciervo Club. Te enviaremos un correo de verificación.'
         : 'Ingresa la contraseña de tu cuenta.';
 
     return CiervoCard(

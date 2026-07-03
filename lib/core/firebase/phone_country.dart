@@ -38,6 +38,19 @@ abstract final class PhoneCountry {
     return '$dial$digits';
   }
 
+  /// Solo dígitos nacionales, sin código de país.
+  static String nationalDigits({
+    required String countryCode,
+    required String rawInput,
+  }) {
+    var digits = rawInput.replaceAll(RegExp(r'\D'), '');
+    final dial = byCountryCode(countryCode).dialCode.replaceAll('+', '');
+    if (digits.startsWith(dial) && digits.length > dial.length) {
+      digits = digits.substring(dial.length);
+    }
+    return digits;
+  }
+
   /// Formato legible para UI: `+57 321 4291986`, `+56 9 12345678`.
   static String formatForDisplay(String e164) {
     final normalized = e164.trim();

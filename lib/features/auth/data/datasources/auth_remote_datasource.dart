@@ -64,15 +64,24 @@ Map<String, dynamic> _firebaseContactPayload({
   final phoneText = phone?.trim();
   final emailText = email?.trim();
   final country = countryCode?.trim().toUpperCase();
+
   if (phoneText != null && phoneText.isNotEmpty) {
-    data['phone'] = phoneText;
+    if (phoneText.startsWith('+')) {
+      // Igual que documentación backend: E.164 sin countryCode extra.
+      data['phone'] = phoneText;
+    } else {
+      final national = phoneText.replaceAll(RegExp(r'\D'), '');
+      data['phone'] = national;
+      if (country != null && country.isNotEmpty) {
+        data['countryCode'] = country;
+      }
+    }
   }
+
   if (emailText != null && emailText.isNotEmpty) {
     data['email'] = emailText;
   }
-  if (country != null && country.isNotEmpty) {
-    data['countryCode'] = country;
-  }
+
   return data;
 }
 

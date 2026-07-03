@@ -31,6 +31,10 @@ abstract final class FirebaseAuthErrors {
     if (text.contains('sign-in provider is disabled')) {
       return 'Este método de acceso no está habilitado. Usa tu correo electrónico.';
     }
+    if (text.toLowerCase().contains('blocked all requests')) {
+      return 'Firebase bloqueó temporalmente los SMS por muchos intentos. '
+          'Usa el tab Correo o espera unos minutos.';
+    }
     return text;
   }
 }

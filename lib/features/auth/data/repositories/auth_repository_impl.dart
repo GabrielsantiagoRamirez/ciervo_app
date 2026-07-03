@@ -53,12 +53,22 @@ class AuthRepositoryImpl implements AuthRepository {
     } catch (_) {
       // Local session must be cleared even if the server-side logout fails.
     }
-    try {
-      await getIt<CiervoPushService>().unregisterAllTokens();
-    } catch (_) {}
+    final hasSession = await _sessionManager.accessToken() != null;
+    if (hasSession) {
+      try {
+        await getIt<CiervoPushService>().unregisterAllTokens();
+      } catch (_) {}
+    }
     getIt<SelectedKidContext>().clear();
     await _sessionManager.clear();
     return const Success<void>(null);
+  }
+
+  /// Limpia JWT local sin llamar APIs que requieren sesión (p. ej. migración Firebase).
+  @override
+  Future<void> clearLocalSession() async {
+    getIt<SelectedKidContext>().clear();
+    await _sessionManager.clear();
   }
 
   @override
@@ -201,15 +211,18 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Result<void>> validateLegacyCredentials({
+  Future<Result<String?>> validateLegacyCredentials({
     required String email,
     required String password,
   }) async {
     try {
-      await _remoteDataSource.login(
+      final dto = await _remoteDataSource.login(
         LoginRequestDto(email: email, password: password),
       );
-      return const Success(null);
+      final phone = dto.phone?.replaceAll(RegExp(r'\D'), '');
+      return Success(
+        phone != null && phone.isNotEmpty ? phone : null,
+      );
     } catch (error) {
       return Failure(ErrorMapper.fromObject(error));
     }

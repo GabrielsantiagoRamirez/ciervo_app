@@ -68,7 +68,10 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
     bool resend = false,
     AccountLookupResult? lookup,
   }) async {
-    final national = _digitsOnly(nationalNumber);
+    final national = PhoneCountry.nationalDigits(
+      countryCode: countryCode,
+      rawInput: nationalNumber,
+    );
     final e164 = PhoneCountry.toE164(
       countryCode: countryCode,
       nationalNumber: national,
@@ -170,10 +173,13 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
 
   Future<void> _afterPhoneSignIn(UserCredential credential) async {
     final token = await _firebaseAuth.freshIdToken();
+    final countryCode = state.countryCode.trim().isNotEmpty
+        ? state.countryCode.trim().toUpperCase()
+        : 'CO';
     final check = await _authRepository.firebaseCheckUser(
       firebaseIdToken: token,
       phone: state.phoneNational,
-      countryCode: state.countryCode,
+      countryCode: countryCode,
     );
     check.when(
       success: (result) {
@@ -200,11 +206,14 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
   Future<bool> firebaseLoginExisting({String? email}) async {
     emit(state.copyWith(status: FirebaseAuthStatus.loading, clearError: true));
     final token = await _firebaseAuth.freshIdToken();
+    final countryCode = state.countryCode.trim().isNotEmpty
+        ? state.countryCode.trim().toUpperCase()
+        : 'CO';
     final result = await _authRepository.firebaseLogin(
       firebaseIdToken: token,
       phone: state.phoneNational,
       email: email,
-      countryCode: state.countryCode,
+      countryCode: countryCode,
     );
     return result.when(
       success: (session) {
@@ -361,18 +370,16 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
   Future<bool> migrateLegacyEmailWithPassword({
     required String email,
     required String password,
-    String? countryCode,
   }) async {
-    final resolvedCountry = (countryCode ?? state.countryCode).trim().isNotEmpty
-        ? (countryCode ?? state.countryCode).trim().toUpperCase()
-        : 'CO';
     emit(
       state.copyWith(
         status: FirebaseAuthStatus.migrating,
-        countryCode: resolvedCountry,
         clearError: true,
       ),
     );
+
+    // Evita JWT legacy viejo sin disparar FCM/logout remoto.
+    await _authRepository.clearLocalSession();
 
     final validation = await _authRepository.validateLegacyCredentials(
       email: email,
@@ -430,12 +437,12 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
   }) async {
     emit(state.copyWith(status: FirebaseAuthStatus.loading, clearError: true));
     final trimmedEmail = email.trim();
-    final countryCode = state.countryCode.trim().isNotEmpty
-        ? state.countryCode.trim().toUpperCase()
-        : 'CO';
     try {
       if (!_firebaseAuth.isSignedIn) {
-        await _firebaseAuth.signInWithEmail(email: trimmedEmail, password: password);
+        await _firebaseAuth.signInWithEmail(
+          email: trimmedEmail,
+          password: password,
+        );
       }
       await _firebaseAuth.reloadUser();
       if (!_firebaseAuth.isEmailVerified) {
@@ -449,11 +456,12 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
         return false;
       }
 
-      final token = await _firebaseAuth.freshIdToken();
+      // ID token con claims actualizados (email_verified).
+      final token = await _firebaseAuth.freshIdToken(forceRefresh: true);
+
       final check = await _authRepository.firebaseCheckUser(
         firebaseIdToken: token,
         email: trimmedEmail,
-        countryCode: countryCode,
       );
       final checkOk = check.when(
         success: (_) => true,
@@ -472,7 +480,6 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
       final result = await _authRepository.firebaseLogin(
         firebaseIdToken: token,
         email: trimmedEmail,
-        countryCode: countryCode,
       );
       return result.when(
         success: (session) {
@@ -515,12 +522,10 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
     emit(state.copyWith(status: FirebaseAuthStatus.loading, clearError: true));
     try {
       await _firebaseAuth.signInWithEmail(email: email, password: password);
-      final token = await _firebaseAuth.freshIdToken();
+      final token = await _firebaseAuth.freshIdToken(forceRefresh: true);
       final result = await _authRepository.firebaseLogin(
         firebaseIdToken: token,
         email: email.trim(),
-        phone: state.phoneNational,
-        countryCode: state.countryCode,
       );
       return result.when(
         success: (session) {

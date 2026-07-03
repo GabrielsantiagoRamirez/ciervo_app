@@ -10,15 +10,17 @@ class MigrationSplashWidget extends StatelessWidget {
     required this.onRetry,
     this.showRetry = false,
     this.isLoading = true,
+    this.errorMessage,
     this.title = 'Verificando tu cuenta',
     this.subtitle =
-        'Por tu seguridad, necesitamos confirmar tu identidad. '
-        'Esto puede tardar uno o dos minutos.',
+        'Tu número ya está en Ciervo Club. Te enviaremos un código SMS '
+        'para confirmar que eres tú.',
   });
 
   final VoidCallback onRetry;
   final bool showRetry;
   final bool isLoading;
+  final String? errorMessage;
   final String title;
   final String subtitle;
 
@@ -50,6 +52,16 @@ class MigrationSplashWidget extends StatelessWidget {
           style: theme.textTheme.bodyMedium,
           textAlign: TextAlign.center,
         ),
+        if (errorMessage != null && errorMessage!.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            errorMessage!,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.error,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
         if (showRetry) ...[
           const SizedBox(height: AppSpacing.xl),
           CiervoButton(

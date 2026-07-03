@@ -44,7 +44,7 @@ class _CiervoAppState extends State<CiervoApp> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _sessionManager = getIt<SessionManager>();
-    _badgesCubit = getIt<NotificationBadgesCubit>()..refresh();
+    _badgesCubit = getIt<NotificationBadgesCubit>();
     getIt<CiervoPushService>().bindNavigator(rootNavigatorKey);
     _router = createAppRouter(
       _sessionManager,
@@ -117,7 +117,8 @@ class _CiervoAppState extends State<CiervoApp> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
+    if (state == AppLifecycleState.resumed &&
+        _sessionManager.state.status == SessionStatus.authenticated) {
       unawaited(getIt<CiervoPushService>().syncTokenIfAuthenticated());
       _badgesCubit.refresh();
     }

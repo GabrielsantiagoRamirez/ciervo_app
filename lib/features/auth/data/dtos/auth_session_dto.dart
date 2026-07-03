@@ -7,6 +7,7 @@ class AuthSessionDto {
     required this.refreshToken,
     this.userId,
     this.email,
+    this.phone,
     this.fullName,
     this.roleId,
     this.accountKind,
@@ -42,6 +43,13 @@ class AuthSessionDto {
           _optionalString(source, const ['userId']),
       email: _optionalString(userMap, const ['email', 'mail']) ??
           _optionalString(source, const ['email']),
+      phone: _optionalString(userMap, const [
+            'phone',
+            'phoneNumber',
+            'mobile',
+            'telefono',
+          ]) ??
+          _optionalString(source, const ['phone', 'phoneNumber']),
       fullName: _optionalString(userMap, const ['fullName', 'name']) ??
           _optionalString(source, const ['fullName', 'name']),
       roleId: _optionalString(userMap, const ['roleId', 'role']) ??
@@ -57,6 +65,7 @@ class AuthSessionDto {
   final String refreshToken;
   final String? userId;
   final String? email;
+  final String? phone;
   final String? fullName;
   final String? roleId;
   final String? accountKind;
