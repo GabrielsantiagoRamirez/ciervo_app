@@ -30,7 +30,9 @@ abstract final class ErrorMapper {
 
     return AppException(
       message: backendMessage ?? _fallbackMessage(error),
-      code: data is Map<String, dynamic> ? data['code']?.toString() : null,
+      code: data is Map<String, dynamic>
+          ? (data['errorCode']?.toString() ?? data['code']?.toString())
+          : null,
       statusCode: response?.statusCode,
       cause: error,
     );

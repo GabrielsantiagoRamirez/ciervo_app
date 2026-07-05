@@ -40,4 +40,11 @@ abstract final class CardBrandDetector {
     if (normalized.contains('master')) return CardBrand.mastercard;
     return CardBrand.unknown;
   }
+
+  /// Código de marca que espera el backend CIERVO (`VISA`, `MASTERCARD`, …).
+  static String apiBrandCode(CardBrand brand) => switch (brand) {
+        CardBrand.visa => 'VISA',
+        CardBrand.mastercard => 'MASTERCARD',
+        CardBrand.unknown => 'UNKNOWN',
+      };
 }

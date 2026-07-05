@@ -1,10 +1,13 @@
 import 'package:dio/dio.dart';
 import 'dart:typed_data';
 
+import '../../../core/di/service_locator.dart';
+import '../../../core/errors/app_exception.dart';
 import '../../../core/errors/error_mapper.dart';
 import '../../../core/network/api_response_unwrapper.dart';
 import '../../../core/network/network_client.dart';
 import '../../../core/result/result.dart';
+import '../../profile/domain/repositories/profile_repository.dart';
 
 class MediaAsset {
   const MediaAsset({required this.id});
@@ -17,20 +20,41 @@ class MediaAsset {
 
 class MediaRepository {
   const MediaRepository(this._client);
+
   final NetworkClient _client;
 
+  /// Sube un archivo al backend.
+  ///
+  /// El backend prod exige `ownerType`, `ownerId` y `mediaType` además de `file`.
   Future<Result<MediaAsset>> upload({
     required String path,
     required String fileName,
+    String? ownerId,
+    String ownerType = 'User',
+    String mediaType = 'Gallery',
   }) => _guard(() async {
+    final resolvedOwnerId = ownerId ?? await _resolveOwnerId();
     final response = await _client.dio.post<dynamic>(
       '/api/media/upload',
       data: FormData.fromMap({
+        'ownerType': ownerType,
+        'ownerId': resolvedOwnerId,
+        'mediaType': mediaType,
         'file': await MultipartFile.fromFile(path, filename: fileName),
       }),
     );
     return MediaAsset.fromJson(unwrapApiMap(response.data));
   });
+
+  Future<String> _resolveOwnerId() async {
+    final result = await getIt<ProfileRepository>().getMe();
+    return result.when(
+      success: (profile) => profile.id,
+      failure: (error) => throw error is AppException
+          ? error
+          : AppException(message: 'No pudimos obtener tu perfil para subir el archivo.'),
+    );
+  }
 
   Future<Result<MediaAsset>> get(String id) => _guard(() async {
     final response = await _client.dio.get<dynamic>('/api/media/$id');

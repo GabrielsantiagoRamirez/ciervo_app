@@ -87,7 +87,11 @@ KycSubmission _fromJson(Map<String, dynamic> json) => KycSubmission(
   id: '${json['id'] ?? json['kycId'] ?? ''}',
   status: '${json['status'] ?? json['approvalStatus'] ?? 'NotSubmitted'}',
   documentType: _s(json['documentType']),
-  documentNumber: _s(json['documentNumber'] ?? json['identityDocument']),
+  documentNumber: _s(
+    json['documentNumber'] ??
+        json['documentNumberMasked'] ??
+        json['identityDocument'],
+  ),
   rejectionReason: _s(json['rejectionReason'] ?? json['reason']),
   submittedAt: DateTime.tryParse('${json['submittedAt'] ?? json['createdAt'] ?? ''}'),
   reviewedAt: DateTime.tryParse('${json['reviewedAt'] ?? json['updatedAt'] ?? ''}'),

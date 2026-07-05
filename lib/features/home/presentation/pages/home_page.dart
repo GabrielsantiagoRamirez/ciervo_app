@@ -39,6 +39,7 @@ import '../widgets/home_place_card.dart';
 import '../widgets/home_search_bar.dart';
 import '../widgets/home_top_bar.dart';
 import '../widgets/location_permission_card.dart';
+import '../../../promotions/presentation/widgets/gold_trial_promotion_sheet.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -79,6 +80,10 @@ class _HomeViewState extends State<_HomeView> {
       const Duration(seconds: 45),
       (_) => _refreshFeedSections(),
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showGoldTrialPromotionIfEligible(context);
+    });
   }
 
   @override

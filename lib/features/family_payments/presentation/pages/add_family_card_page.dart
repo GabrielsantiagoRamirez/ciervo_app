@@ -5,6 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/layout/responsive_layout.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/utils/card_validator.dart';
+import '../../../../core/utils/card_brand_detector.dart';
 import '../../../../shared/widgets/card_number_field.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
@@ -16,14 +18,26 @@ import 'mercado_pago_3ds_page.dart';
 
 enum _AddCardStep { form, validating, authenticating, success, error }
 
-class AddFamilyCardPage extends StatefulWidget {
+class AddFamilyCardPage extends StatelessWidget {
   const AddFamilyCardPage({super.key});
 
   @override
-  State<AddFamilyCardPage> createState() => _AddFamilyCardPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => FamilyPaymentMethodsCubit(getIt<FamilyPaymentsRepository>()),
+      child: const _AddFamilyCardView(),
+    );
+  }
 }
 
-class _AddFamilyCardPageState extends State<AddFamilyCardPage> {
+class _AddFamilyCardView extends StatefulWidget {
+  const _AddFamilyCardView();
+
+  @override
+  State<_AddFamilyCardView> createState() => _AddFamilyCardViewState();
+}
+
+class _AddFamilyCardViewState extends State<_AddFamilyCardView> {
   final _numberController = TextEditingController();
   final _cvvController = TextEditingController();
   final _nameController = TextEditingController();
@@ -33,6 +47,8 @@ class _AddFamilyCardPageState extends State<AddFamilyCardPage> {
   final _documentController = TextEditingController();
   _AddCardStep _step = _AddCardStep.form;
   String? _error;
+  bool _submitting = false;
+  bool _obscureCvv = false;
 
   @override
   void dispose() {
@@ -46,10 +62,41 @@ class _AddFamilyCardPageState extends State<AddFamilyCardPage> {
     super.dispose();
   }
 
+  String? _validateForm() {
+    final numberError = CardValidator.validateCardNumber(_numberController.text);
+    if (numberError != null) return numberError;
+    try {
+      MercadoPagoCardExpiration.parse(
+        _monthController.text,
+        _yearController.text,
+      );
+    } catch (error) {
+      return MercadoPagoTokenizationException.fromObject(error).message;
+    }
+    final cvvError = CardValidator.validateCvv(_cvvController.text);
+    if (cvvError != null) return cvvError;
+    final nameError = CardValidator.validateHolderName(_nameController.text);
+    if (nameError != null) return nameError;
+    if (_documentController.text.trim().isEmpty) {
+      return 'Ingresa el documento del titular.';
+    }
+    return null;
+  }
+
   Future<void> _submit() async {
+    if (_submitting) return;
+    final validationError = _validateForm();
+    if (validationError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(validationError)),
+      );
+      return;
+    }
+
     setState(() {
       _step = _AddCardStep.validating;
       _error = null;
+      _submitting = true;
     });
 
     try {
@@ -63,7 +110,7 @@ class _AddFamilyCardPageState extends State<AddFamilyCardPage> {
           }
           return config.publicKey;
         },
-        failure: (error) => throw MercadoPagoTokenizationException(
+        failure: (_) => throw MercadoPagoTokenizationException(
           'No pudimos obtener la configuración de Mercado Pago.',
         ),
       );
@@ -86,8 +133,21 @@ class _AddFamilyCardPageState extends State<AddFamilyCardPage> {
 
       if (!mounted) return;
       final cubit = context.read<FamilyPaymentMethodsCubit>();
+      final digits = _numberController.text.replaceAll(RegExp(r'\D'), '');
+      final brand = CardBrandDetector.apiBrandCode(
+        CardBrandDetector.detect(digits),
+      );
+      final last4 = digits.length >= 4
+          ? digits.substring(digits.length - 4)
+          : digits;
+
       final flow = await cubit.addCard(
         cardToken: cardToken,
+        brand: brand,
+        last4: last4,
+        expiryMonth: expiration.month,
+        expiryYear: expiration.year,
+        holderName: _nameController.text.trim(),
         alias: _aliasController.text.trim().isEmpty
             ? null
             : _aliasController.text.trim(),
@@ -107,6 +167,7 @@ class _AddFamilyCardPageState extends State<AddFamilyCardPage> {
           setState(() {
             _step = _AddCardStep.error;
             _error = 'No se completó la autenticación 3DS.';
+            _submitting = false;
           });
           return;
         }
@@ -116,13 +177,17 @@ class _AddFamilyCardPageState extends State<AddFamilyCardPage> {
           setState(() {
             _step = _AddCardStep.error;
             _error = 'No pudimos validar la tarjeta.';
+            _submitting = false;
           });
           return;
         }
       }
 
       if (!mounted) return;
-      setState(() => _step = _AddCardStep.success);
+      setState(() {
+        _step = _AddCardStep.success;
+        _submitting = false;
+      });
       await Future<void>.delayed(const Duration(milliseconds: 900));
       if (mounted) Navigator.of(context).pop(true);
     } catch (error) {
@@ -130,42 +195,41 @@ class _AddFamilyCardPageState extends State<AddFamilyCardPage> {
       setState(() {
         _step = _AddCardStep.error;
         _error = MercadoPagoTokenizationException.fromObject(error).message;
+        _submitting = false;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => FamilyPaymentMethodsCubit(getIt<FamilyPaymentsRepository>()),
-      child: Scaffold(
-        appBar: AppBar(title: const Text('Agregar tarjeta')),
-        body: switch (_step) {
-          _AddCardStep.validating => _statusView(
-              context,
-              title: 'Validando...',
-              subtitle: 'Estamos verificando tu tarjeta de forma segura.',
-            ),
-          _AddCardStep.authenticating => _statusView(
-              context,
-              title: 'Autenticando...',
-              subtitle: 'Completa la verificación de tu banco.',
-            ),
-          _AddCardStep.success => _statusView(
-              context,
-              title: 'Tarjeta agregada',
-              subtitle: 'Tu tarjeta quedó lista para pagos familiares.',
-              success: true,
-            ),
-          _AddCardStep.error => _errorView(context),
-          _ => _formView(context),
-        },
-      ),
+    return Scaffold(
+      appBar: AppBar(title: const Text('Agregar tarjeta')),
+      body: switch (_step) {
+        _AddCardStep.validating => _statusView(
+            context,
+            title: 'Validando...',
+            subtitle: 'Estamos verificando tu tarjeta de forma segura.',
+          ),
+        _AddCardStep.authenticating => _statusView(
+            context,
+            title: 'Autenticando...',
+            subtitle: 'Completa la verificación de tu banco.',
+          ),
+        _AddCardStep.success => _statusView(
+            context,
+            title: 'Tarjeta agregada',
+            subtitle: 'Tu tarjeta quedó lista para pagos familiares.',
+            success: true,
+          ),
+        _AddCardStep.error => _errorView(context),
+        _ => _formView(context),
+      },
     );
   }
 
   Widget _formView(BuildContext context) {
     return SingleChildScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: pagePaddingOf(context),
       child: Center(
         child: ConstrainedBox(
@@ -199,7 +263,10 @@ class _AddFamilyCardPageState extends State<AddFamilyCardPage> {
                           FilteringTextInputFormatter.digitsOnly,
                           LengthLimitingTextInputFormatter(2),
                         ],
-                        decoration: const InputDecoration(labelText: 'Mes (MM)'),
+                        decoration: const InputDecoration(
+                          labelText: 'Mes (MM)',
+                          hintText: 'MM',
+                        ),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
@@ -211,16 +278,35 @@ class _AddFamilyCardPageState extends State<AddFamilyCardPage> {
                           FilteringTextInputFormatter.digitsOnly,
                           LengthLimitingTextInputFormatter(4),
                         ],
-                        decoration: const InputDecoration(labelText: 'Año (YY)'),
+                        decoration: const InputDecoration(
+                          labelText: 'Año (AA)',
+                          hintText: 'AA',
+                        ),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: TextField(
                         controller: _cvvController,
-                        obscureText: true,
+                        obscureText: _obscureCvv,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'CVV'),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(4),
+                        ],
+                        decoration: InputDecoration(
+                          labelText: 'CVV',
+                          suffixIcon: IconButton(
+                            tooltip: _obscureCvv ? 'Mostrar CVV' : 'Ocultar CVV',
+                            onPressed: () =>
+                                setState(() => _obscureCvv = !_obscureCvv),
+                            icon: Icon(
+                              _obscureCvv
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -247,7 +333,10 @@ class _AddFamilyCardPageState extends State<AddFamilyCardPage> {
                 CiervoButton(
                   label: 'Agregar tarjeta',
                   icon: Icons.lock_outline,
-                  onPressed: _submit,
+                  state: _submitting
+                      ? CiervoButtonState.loading
+                      : CiervoButtonState.normal,
+                  onPressed: _submitting ? null : _submit,
                 ),
               ],
             ),
@@ -299,14 +388,18 @@ class _AddFamilyCardPageState extends State<AddFamilyCardPage> {
           children: [
             Icon(Icons.error_outline, size: 56, color: Theme.of(context).colorScheme.error),
             const SizedBox(height: AppSpacing.lg),
-            Text('Error', style: Theme.of(context).textTheme.headlineSmall),
+            Text('No pudimos agregar la tarjeta', style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: AppSpacing.sm),
-            Text(_error ?? 'No pudimos agregar la tarjeta.', textAlign: TextAlign.center),
+            Text(_error ?? 'Intenta nuevamente en unos segundos.', textAlign: TextAlign.center),
             const SizedBox(height: AppSpacing.lg),
             CiervoButton(
               label: 'Reintentar',
               icon: Icons.refresh,
-              onPressed: () => setState(() => _step = _AddCardStep.form),
+              onPressed: () => setState(() {
+                _step = _AddCardStep.form;
+                _error = null;
+                _submitting = false;
+              }),
             ),
           ],
         ),

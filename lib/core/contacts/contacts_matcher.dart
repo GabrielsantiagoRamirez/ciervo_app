@@ -1,6 +1,7 @@
 import 'package:flutter_contacts/flutter_contacts.dart';
 
 import '../errors/app_exception.dart';
+import '../errors/error_mapper.dart';
 import '../firebase/phone_country.dart';
 import '../../features/users/domain/entities/user_search_result.dart';
 import '../permissions/app_permission_service.dart';
@@ -45,10 +46,40 @@ class ContactsMatcher {
       return const Success([]);
     }
 
-    return _userSearchRepository.searchByPhones(
-      phones: phones.toList(),
-      country: countryCode,
-    );
+    const batchSize = 100;
+    final phoneList = phones.toList();
+    final merged = <UserSearchResult>[];
+    final seenIds = <String>{};
+
+    for (var offset = 0; offset < phoneList.length; offset += batchSize) {
+      final end = (offset + batchSize > phoneList.length)
+          ? phoneList.length
+          : offset + batchSize;
+      final batch = phoneList.sublist(offset, end);
+      final result = await _userSearchRepository.searchByPhones(
+        phones: batch,
+        country: countryCode,
+      );
+      List<UserSearchResult>? batchItems;
+      Object? batchError;
+      result.when(
+        success: (items) => batchItems = items,
+        failure: (error) => batchError = error,
+      );
+      if (batchError != null) {
+        if (batchError is AppException) {
+          return Failure(batchError as AppException);
+        }
+        return Failure(ErrorMapper.fromObject(batchError!));
+      }
+      for (final user in batchItems!) {
+        if (seenIds.add(user.userId)) {
+          merged.add(user);
+        }
+      }
+    }
+
+    return Success(merged);
   }
 
   String? _normalizePhone(String raw, String countryCode) {

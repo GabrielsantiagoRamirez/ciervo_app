@@ -403,6 +403,19 @@ abstract final class DisplayLabels {
       return 'Revisa los datos ingresados e intenta nuevamente.';
     }
 
+    final lower = trimmed.toLowerCase();
+    if (lower.contains('provider') ||
+        lower.contains('not found') ||
+        lower.contains('dioexception') ||
+        lower.contains('null check operator') ||
+        lower.contains('stacktrace') ||
+        lower.contains('backend define') ||
+        lower.contains('backend decide') ||
+        lower.contains('endpoint legacy') ||
+        lower.contains('mensaje técnico')) {
+      return 'No pudimos completar la acción. Intenta nuevamente.';
+    }
+
     return trimmed;
   }
 

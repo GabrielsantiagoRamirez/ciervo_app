@@ -9,6 +9,11 @@ abstract interface class FamilyPaymentsRepository {
 
   Future<Result<AddFamilyCardResult>> addCard({
     required String cardToken,
+    required String brand,
+    required String last4,
+    required int expiryMonth,
+    required int expiryYear,
+    required String holderName,
     String? alias,
     required String idempotencyKey,
   });

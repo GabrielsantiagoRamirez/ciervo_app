@@ -23,11 +23,21 @@ class FamilyPaymentsRepositoryImpl implements FamilyPaymentsRepository {
   @override
   Future<Result<AddFamilyCardResult>> addCard({
     required String cardToken,
+    required String brand,
+    required String last4,
+    required int expiryMonth,
+    required int expiryYear,
+    required String holderName,
     String? alias,
     required String idempotencyKey,
   }) => _guard(
         () async => (await _remote.addCard(
           cardToken: cardToken,
+          brand: brand,
+          last4: last4,
+          expiryMonth: expiryMonth,
+          expiryYear: expiryYear,
+          holderName: holderName,
           alias: alias,
           idempotencyKey: idempotencyKey,
         ))

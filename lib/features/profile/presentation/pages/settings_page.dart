@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/config/ciervo_legal_urls.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
+import '../../../legal/presentation/pages/legal_privacy_page.dart';
 import '../../../notifications/presentation/pages/notifications_page.dart';
 import '../../../safety/presentation/pages/safety_privacy_page.dart';
 import '../../domain/entities/user_profile.dart';
@@ -40,6 +41,16 @@ class SettingsPage extends StatelessWidget {
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(
                         builder: (_) => const NotificationsPage(),
+                      ),
+                    ),
+                  ),
+                  _tile(
+                    context,
+                    icon: Icons.gavel_outlined,
+                    title: 'Legal y privacidad',
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const LegalPrivacyPage(),
                       ),
                     ),
                   ),

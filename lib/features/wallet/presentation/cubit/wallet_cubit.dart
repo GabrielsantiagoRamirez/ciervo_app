@@ -79,11 +79,17 @@ class WalletCubit extends Cubit<WalletState> {
     'Tarjeta principal actualizada.',
   );
 
-  Future<void> block(String cardId) =>
-      _cardAction(() => _repository.block(cardId), 'Tarjeta bloqueada.');
+  Future<void> block(String cardId) => _cardAction(
+        () => _repository.block(cardId),
+        'Tarjeta bloqueada.',
+        blockCard: true,
+      );
 
-  Future<void> unblock(String cardId) =>
-      _cardAction(() => _repository.unblock(cardId), 'Tarjeta desbloqueada.');
+  Future<void> unblock(String cardId) => _cardAction(
+        () => _repository.unblock(cardId),
+        'Tarjeta desbloqueada.',
+        unblockCard: true,
+      );
 
   Future<void> delete(String cardId) =>
       _cardAction(() => _repository.delete(cardId), 'Tarjeta eliminada.');
@@ -347,24 +353,109 @@ class WalletCubit extends Cubit<WalletState> {
 
   Future<void> _cardAction(
     Future<Result<void>> Function() action,
-    String successMessage,
-  ) async {
+    String successMessage, {
+    bool blockCard = false,
+    bool unblockCard = false,
+  }) async {
+    final selectedId = state.selectedCard?.id;
     emit(
       state.copyWith(status: WalletStatus.actionLoading, clearMessages: true),
     );
-    final result = await action();
-    result.when(
-      success: (_) {
-        emit(state.copyWith(successMessage: successMessage));
-        _refreshNotificationsInbox();
-        load();
-      },
-      failure: (error) => emit(
+
+    if (selectedId != null && (blockCard || unblockCard)) {
+      final updatedCards = state.cards
+          .map(
+            (card) => card.id == selectedId
+                ? WalletCard(
+                    id: card.id,
+                    name: card.name,
+                    balance: card.balance,
+                    heldBalance: card.heldBalance,
+                    availableBalance: card.availableBalance,
+                    currency: card.currency,
+                    status: blockCard
+                        ? 'blocked'
+                        : unblockCard
+                            ? 'active'
+                            : card.status,
+                    isPrimary: card.isPrimary,
+                    mask: card.mask,
+                    isBlocked: blockCard
+                        ? true
+                        : unblockCard
+                            ? false
+                            : card.isBlocked,
+                  )
+                : card,
+          )
+          .toList();
+      final updatedSelected = updatedCards
+          .where((card) => card.id == selectedId)
+          .firstOrNull;
+      emit(
         state.copyWith(
           status: WalletStatus.loaded,
-          errorMessage: UserErrorMessage.from(error),
+          cards: updatedCards,
+          selectedCard: updatedSelected,
         ),
+      );
+    }
+
+    final result = await action();
+    await result.when(
+      success: (_) async {
+        final cardsResult = await _repository.cards();
+        cardsResult.when(
+          success: (cards) {
+            WalletCard? selected;
+            if (selectedId != null) {
+              selected = cards.where((c) => c.id == selectedId).firstOrNull;
+            }
+            selected ??=
+                cards.where((c) => c.isPrimary).firstOrNull ?? cards.firstOrNull;
+            emit(
+              state.copyWith(
+                status: cards.isEmpty ? WalletStatus.empty : WalletStatus.loaded,
+                cards: cards,
+                selectedCard: selected,
+                successMessage: successMessage,
+              ),
+            );
+          },
+          failure: (error) => emit(
+            state.copyWith(
+              status: WalletStatus.loaded,
+              errorMessage: UserErrorMessage.from(error),
+            ),
+          ),
+        );
+        _refreshNotificationsInbox();
+        final selected = state.selectedCard;
+        if (selected != null) {
+          await _refreshTransactions(selected);
+        }
+      },
+      failure: (error) async {
+        if (selectedId != null && (blockCard || unblockCard)) {
+          await load();
+        }
+        emit(
+          state.copyWith(
+            status: WalletStatus.loaded,
+            errorMessage: UserErrorMessage.from(error),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _refreshTransactions(WalletCard card) async {
+    final result = await _repository.transactions(card.id);
+    result.when(
+      success: (transactions) => emit(
+        state.copyWith(transactions: transactions),
       ),
+      failure: (_) {},
     );
   }
 

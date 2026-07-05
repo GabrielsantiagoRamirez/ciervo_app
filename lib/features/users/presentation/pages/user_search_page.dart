@@ -4,6 +4,9 @@ import '../../../../core/contacts/contacts_matcher.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/location/location_service.dart';
+import '../../../../core/permissions/permission_kind.dart';
+import '../../../../core/permissions/permission_manager.dart';
+import '../../../../core/permissions/widgets/permission_denied_state.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
@@ -42,6 +45,8 @@ class _UserSearchPageState extends State<UserSearchPage> {
   bool _includeOtherCountries = false;
   bool _loading = false;
   String? _error;
+  bool _isValidationHint = false;
+  bool _contactsPermissionDenied = false;
   List<UserSearchResult> _results = const [];
   String? _openingUserId;
 
@@ -61,7 +66,24 @@ class _UserSearchPageState extends State<UserSearchPage> {
     setState(() {
       _loading = true;
       _error = null;
+      _isValidationHint = false;
+      _contactsPermissionDenied = false;
     });
+
+    final granted = await PermissionManager.instance.ensure(
+      context,
+      AppPermissionKind.contacts,
+    );
+    if (!mounted) return;
+    if (!granted) {
+      setState(() {
+        _loading = false;
+        _contactsPermissionDenied = true;
+        _results = const [];
+      });
+      return;
+    }
+
     final result = await getIt<ContactsMatcher>().matchDeviceContacts();
     if (!mounted) return;
     result.when(
@@ -71,30 +93,45 @@ class _UserSearchPageState extends State<UserSearchPage> {
             .where((user) => !cache.isUserBlocked(user.userId))
             .toList();
         _loading = false;
-        if (_results.isEmpty) {
-          _error = 'No encontramos contactos registrados en Ciervo.';
-        }
+        _error = _results.isEmpty
+            ? 'No encontramos contactos registrados en Ciervo.'
+            : null;
+        _isValidationHint = _results.isEmpty;
       }),
       failure: (error) => setState(() {
         _error = UserErrorMessage.from(error);
         _loading = false;
         _results = const [];
+        _isValidationHint = false;
       }),
     );
   }
 
   Future<void> _search() async {
     final query = _controller.text.trim();
+    if (query.isEmpty) {
+      setState(() {
+        _error = null;
+        _isValidationHint = true;
+        _results = const [];
+        _contactsPermissionDenied = false;
+      });
+      return;
+    }
     if (query.length < 2) {
       setState(() {
         _error = 'Escribe al menos 2 caracteres para buscar.';
+        _isValidationHint = true;
         _results = const [];
+        _contactsPermissionDenied = false;
       });
       return;
     }
     setState(() {
       _loading = true;
       _error = null;
+      _isValidationHint = false;
+      _contactsPermissionDenied = false;
     });
 
     double? latitude;
@@ -302,6 +339,7 @@ class _UserSearchPageState extends State<UserSearchPage> {
       ),
     ),
     body: ListView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         TextField(
@@ -332,12 +370,39 @@ class _UserSearchPageState extends State<UserSearchPage> {
         ),
         const SizedBox(height: AppSpacing.sm),
         if (_loading) const LinearProgressIndicator(),
-        if (_error != null) ...[
+        if (_contactsPermissionDenied) ...[
+          const SizedBox(height: AppSpacing.md),
+          PermissionDeniedState(
+            kind: AppPermissionKind.contacts,
+            onRetry: _matchContacts,
+          ),
+        ] else if (_error != null && !_isValidationHint) ...[
           const SizedBox(height: AppSpacing.md),
           CiervoErrorState(
-            title: 'Búsqueda no disponible',
+            title: 'No pudimos buscar ahora',
             description: _error!,
             onRetry: _search,
+          ),
+        ] else if (_isValidationHint && _error != null) ...[
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            _error!,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+          ),
+        ] else if (!_loading &&
+            _error == null &&
+            _results.isEmpty &&
+            _controller.text.trim().isEmpty) ...[
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'Busca por nombre, teléfono o usuario para invitar.',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
           ),
         ],
         if (!_loading && _error == null && _results.isEmpty && _controller.text.trim().length >= 2)
@@ -345,7 +410,7 @@ class _UserSearchPageState extends State<UserSearchPage> {
             padding: EdgeInsets.only(top: AppSpacing.xl),
             child: CiervoEmptyState(
               title: 'Sin resultados',
-              description: 'No encontramos personas con ese nombre.',
+              description: 'No encontramos contactos con esa búsqueda.',
               icon: Icons.person_search_outlined,
             ),
           ),

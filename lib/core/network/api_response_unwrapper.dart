@@ -6,6 +6,7 @@ Object? unwrapApiResponse(Object? response) {
       throw AppException(
         message:
             response['msg']?.toString() ?? 'No pudimos completar la solicitud.',
+        code: response['errorCode']?.toString() ?? response['code']?.toString(),
       );
     }
     if (response.containsKey('value')) {

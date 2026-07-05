@@ -108,6 +108,12 @@ class MercadoPagoTokenizationException implements Exception {
 
   static MercadoPagoTokenizationException fromObject(Object error) {
     if (error is MercadoPagoTokenizationException) return error;
+    final raw = error.toString();
+    if (raw.contains('Provider') && raw.contains('not found')) {
+      return MercadoPagoTokenizationException(
+        'No pudimos completar la operación. Cierra y vuelve a abrir la pantalla.',
+      );
+    }
     if (error is DioException) {
       final data = error.response?.data;
       if (data is Map) {

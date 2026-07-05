@@ -1,3 +1,4 @@
+import '../contacts/contacts_matcher.dart';
 import '../utils/display_labels.dart';
 import 'app_exception.dart';
 
@@ -10,7 +11,17 @@ abstract final class UserErrorMessage {
   }
 
   static String from(Object error) {
+    if (error is AppContactsPermissionException) {
+      return error.toString();
+    }
     if (error is! AppException) {
+      final raw = error.toString();
+      if (raw.contains('Provider') && raw.contains('not found')) {
+        return 'No pudimos completar la acción. Cierra y vuelve a abrir la pantalla.';
+      }
+      if (raw.contains('Null check operator')) {
+        return 'Ocurrió un error inesperado. Intenta nuevamente.';
+      }
       return 'Ocurrió un error inesperado.';
     }
 
@@ -29,9 +40,29 @@ abstract final class UserErrorMessage {
       'USER_NOT_PARTICIPANT' => 'No tienes acceso a esta conversación.',
       'INSUFFICIENT_BALANCE' =>
         'Saldo insuficiente. Recarga tu wallet con Mercado Pago o transferencia.',
+      'TERMS_NOT_ACCEPTED' =>
+        'Debes aceptar los términos de la promoción para continuar.',
+      'ALREADY_PREMIUM' => 'Ya tienes un plan premium activo.',
+      'PROMOTION_SLOTS_EXHAUSTED' =>
+        'La promoción ya no tiene cupos disponibles.',
+      'IDEMPOTENCY_CONFLICT' =>
+        'No pudimos activar la promoción. Intenta nuevamente.',
+      'FRONT_DOCUMENT_MEDIA_REQUIRED' =>
+        'La foto del frente del documento es obligatoria.',
       _ => null,
     };
     if (codeMessage != null) return codeMessage;
+
+    final upperMsg = error.message.toUpperCase();
+    if (upperMsg.contains('FRONT_DOCUMENT_MEDIA_REQUIRED')) {
+      return 'La foto del frente del documento es obligatoria.';
+    }
+    if (upperMsg.contains('FILE_TOO_LARGE')) {
+      return 'La imagen supera el tamaño permitido.';
+    }
+    if (upperMsg.contains('INVALID_FILE_TYPE')) {
+      return 'Formato de imagen no permitido.';
+    }
 
     if (statusCode == 401) {
       return 'Credenciales inválidas o sesión expirada.';

@@ -37,11 +37,20 @@ class WalletCardDto {
       status: _statusLabel(json),
       isPrimary: _bool(json, const ['isPrimary', 'primary']),
       mask: _optionalString(json, const ['mask', 'cardMask', 'lastFour']),
-      isBlocked: blockedAt != null ||
-          statusId == 2 ||
-          statusId == '2' ||
-          _statusLabel(json).toLowerCase().contains('block'),
+      isBlocked: _isBlocked(json, blockedAt, statusId),
     );
+  }
+
+  static bool _isBlocked(
+    Map<String, dynamic> json,
+    String? blockedAt,
+    dynamic statusId,
+  ) {
+    if (json['isBlocked'] == true || json['isBlocked'] == 'true') return true;
+    if (blockedAt != null) return true;
+    // Backend prod: statusId 0 = bloqueada, 1 = activa (2 = Created, no aplica).
+    if (statusId == 0 || statusId == '0') return true;
+    return _statusLabel(json).toLowerCase().contains('block');
   }
 
   final String id;
@@ -102,9 +111,14 @@ class WalletCardDto {
   }
 
   static String _statusLabel(Map<String, dynamic> json) {
+    final blockedAt = _optionalString(json, const ['blockedAt']);
+    final statusId = json['statusId'];
+    if (blockedAt != null || statusId == 0 || statusId == '0') {
+      return 'Bloqueada';
+    }
     final name = _optionalString(json, const ['statusName']);
     if (name != null) return name;
-    final statusId = json['statusId'];
+    if (statusId == 1 || statusId == '1') return 'Activa';
     return statusId?.toString() ?? 'active';
   }
 

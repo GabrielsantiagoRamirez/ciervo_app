@@ -96,20 +96,28 @@ class AddFamilyCardResponseDto {
 
   factory AddFamilyCardResponseDto.fromJson(Map<String, dynamic> json) {
     final cardJson = json['card'] ?? json;
+    final map = Map<String, dynamic>.from(cardJson is Map ? cardJson : json);
+    final verificationUrl = _nullableString(
+      json['verificationUrl'] ??
+          json['threeDsRedirectUrl'] ??
+          json['threeDsUrl'] ??
+          map['threeDsRedirectUrl'] ??
+          map['authenticationUrl'],
+    );
+    final status = _string(map['status']).toLowerCase();
     final requires3ds = json['requires3ds'] == true ||
         json['requires3DS'] == true ||
         json['requiresVerification'] == true ||
-        json['status']?.toString().toLowerCase() == 'pending_verification';
+        status == 'pending_verification' ||
+        (verificationUrl != null && verificationUrl.isNotEmpty);
+    final cardId = _string(map['cardId'] ?? map['id']);
     return AddFamilyCardResponseDto(
-      card: FamilyPaymentCardDto.fromJson(
-        Map<String, dynamic>.from(cardJson is Map ? cardJson : json),
-      ),
+      card: FamilyPaymentCardDto.fromJson({
+        ...map,
+        if (cardId.isNotEmpty) 'id': cardId,
+      }),
       requires3ds: requires3ds,
-      verificationUrl: _nullableString(
-        json['verificationUrl'] ??
-            json['threeDsUrl'] ??
-            json['authenticationUrl'],
-      ),
+      verificationUrl: verificationUrl,
     );
   }
 

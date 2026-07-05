@@ -7,6 +7,8 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
+import '../../../../core/permissions/permission_kind.dart';
+import '../../../../core/permissions/permission_manager.dart';
 import '../../../../core/firebase/firebase_auth_service.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/display_labels.dart';
@@ -359,6 +361,7 @@ class _KycSubmitFormState extends State<_KycSubmitForm> {
   final _picker = ImagePicker();
   String _documentType = 'CC';
   bool _saving = false;
+  String? _progressLabel;
   String? _frontPath;
   String? _backPath;
   String? _selfiePath;
@@ -371,6 +374,12 @@ class _KycSubmitFormState extends State<_KycSubmitForm> {
   }
 
   Future<void> _pickPhoto(String slot) async {
+    final granted = await PermissionManager.instance.ensure(
+      context,
+      AppPermissionKind.camera,
+    );
+    if (!granted || !mounted) return;
+
     final file = await _picker.pickImage(
       source: ImageSource.camera,
       imageQuality: 85,
@@ -411,10 +420,17 @@ class _KycSubmitFormState extends State<_KycSubmitForm> {
 
   Future<int?> _upload(String path, String label) async {
     final file = File(path);
-    final result = await getIt<MediaRepository>().upload(
-      path: path,
-      fileName: file.uri.pathSegments.last,
-    );
+    final result = await getIt<MediaRepository>()
+        .upload(
+          path: path,
+          fileName: file.uri.pathSegments.last,
+        )
+        .timeout(
+          const Duration(seconds: 90),
+          onTimeout: () => throw Exception(
+            'La subida de $label tardó demasiado. Revisa tu conexión.',
+          ),
+        );
     return result.when(
       success: (asset) => int.tryParse(asset.id),
       failure: (error) {
@@ -481,13 +497,14 @@ class _KycSubmitFormState extends State<_KycSubmitForm> {
             FilledButton.icon(
               onPressed: _saving ? null : _submit,
               icon: const Icon(Icons.verified_user_outlined),
-              label: Text(_saving ? 'Enviando…' : 'Enviar documento'),
+              label: Text(_saving ? (_progressLabel ?? 'Enviando…') : 'Enviar documento'),
             ),
           ],
         ),
       );
 
   Future<void> _submit() async {
+    if (_saving) return;
     if (_documentController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Ingresa el número de documento.')),
@@ -500,30 +517,49 @@ class _KycSubmitFormState extends State<_KycSubmitForm> {
       );
       return;
     }
-    setState(() => _saving = true);
+    setState(() {
+      _saving = true;
+      _progressLabel = 'Preparando imágenes…';
+    });
     try {
-      final frontId = await _upload(_frontPath!, 'front');
-      if (frontId == null) throw Exception('No pudimos subir el frente del documento.');
+      setState(() => _progressLabel = 'Subiendo frente…');
+      final frontId = await _upload(_frontPath!, 'frente');
+      if (frontId == null) {
+        throw Exception('No pudimos subir el frente del documento.');
+      }
       int? backId;
       int? selfieId;
-      if (_backPath != null) backId = await _upload(_backPath!, 'back');
-      if (_selfiePath != null) selfieId = await _upload(_selfiePath!, 'selfie');
+      if (_backPath != null) {
+        setState(() => _progressLabel = 'Subiendo reverso…');
+        backId = await _upload(_backPath!, 'reverso');
+      }
+      if (_selfiePath != null) {
+        setState(() => _progressLabel = 'Subiendo selfie…');
+        selfieId = await _upload(_selfiePath!, 'selfie');
+      }
 
-      final result = await getIt<KycRepository>().submit(
-        documentType: _documentType,
-        documentNumber: _documentController.text.trim(),
-        country: widget.countryCode,
-        frontDocumentMediaId: frontId,
-        backDocumentMediaId: backId,
-        selfieMediaId: selfieId,
-        notes: _notesController.text.trim(),
-      );
+      setState(() => _progressLabel = 'Registrando verificación…');
+      final result = await getIt<KycRepository>()
+          .submit(
+            documentType: _documentType,
+            documentNumber: _documentController.text.trim(),
+            country: widget.countryCode,
+            frontDocumentMediaId: frontId,
+            backDocumentMediaId: backId,
+            selfieMediaId: selfieId,
+            notes: _notesController.text.trim(),
+          )
+          .timeout(
+            const Duration(seconds: 60),
+            onTimeout: () => throw Exception(
+              'El registro tardó demasiado. Intenta nuevamente.',
+            ),
+          );
       if (!mounted) return;
-      setState(() => _saving = false);
       result.when(
         success: (_) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Documento enviado para revisión.')),
+            const SnackBar(content: Text('Documento enviado para verificación.')),
           );
           widget.onSubmitted();
         },
@@ -533,10 +569,16 @@ class _KycSubmitFormState extends State<_KycSubmitForm> {
       );
     } catch (error) {
       if (!mounted) return;
-      setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(UserErrorMessage.from(error))),
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _saving = false;
+          _progressLabel = null;
+        });
+      }
     }
   }
 }

@@ -7,6 +7,11 @@ abstract interface class FamilyPaymentsRemoteDataSource {
 
   Future<AddFamilyCardResponseDto> addCard({
     required String cardToken,
+    required String brand,
+    required String last4,
+    required int expiryMonth,
+    required int expiryYear,
+    required String holderName,
     String? alias,
     required String idempotencyKey,
   });
@@ -118,6 +123,11 @@ class DioFamilyPaymentsRemoteDataSource
   @override
   Future<AddFamilyCardResponseDto> addCard({
     required String cardToken,
+    required String brand,
+    required String last4,
+    required int expiryMonth,
+    required int expiryYear,
+    required String holderName,
     String? alias,
     required String idempotencyKey,
   }) async {
@@ -125,6 +135,11 @@ class DioFamilyPaymentsRemoteDataSource
       '/api/family/payment-methods/cards',
       data: {
         'cardToken': cardToken,
+        'brand': brand,
+        'last4': last4,
+        'expiryMonth': expiryMonth,
+        'expiryYear': expiryYear,
+        'holderName': holderName,
         if (alias != null && alias.trim().isNotEmpty) 'alias': alias.trim(),
         'idempotencyKey': idempotencyKey,
       },

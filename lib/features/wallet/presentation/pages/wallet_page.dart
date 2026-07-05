@@ -88,7 +88,8 @@ class _WalletView extends StatelessWidget {
                 ),
           body: RefreshIndicator(
             onRefresh: cubit.load,
-            child: state.status == WalletStatus.loaded
+            child: state.status == WalletStatus.loaded ||
+                    state.status == WalletStatus.actionLoading
                 ? PremiumWalletDashboard(state: state)
                 : CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),

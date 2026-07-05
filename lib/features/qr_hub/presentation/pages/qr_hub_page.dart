@@ -4,7 +4,10 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/layout/ciervo_page_layout.dart';
-import '../../../../core/permissions/app_permission_service.dart';
+import '../../../../core/permissions/permission_kind.dart';
+import '../../../../core/permissions/permission_manager.dart';
+import '../../../../core/permissions/widgets/open_settings_button.dart';
+import '../../../../core/permissions/widgets/permission_denied_state.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_brand_loader.dart';
@@ -170,20 +173,24 @@ class _ScanQrPageState extends State<ScanQrPage> {
     super.dispose();
   }
 
+  bool _photosDenied = false;
+
   Future<void> _startCamera() async {
     setState(() {
       _source = _ScanSource.camera;
       _error = null;
-      _cameraReady = false;
+      _photosDenied = false;
     });
-    final granted =
-        await getIt<AppPermissionService>().requestCameraIfNeeded();
+    final granted = await PermissionManager.instance.ensure(
+      context,
+      AppPermissionKind.camera,
+    );
     if (!mounted) return;
     setState(() {
       _cameraReady = granted;
       _error = granted
           ? null
-          : 'Necesitamos acceso a la camara para escanear el QR.';
+          : 'Necesitamos acceso a la cámara para escanear el QR.';
     });
   }
 
@@ -191,14 +198,18 @@ class _ScanQrPageState extends State<ScanQrPage> {
     setState(() {
       _busy = true;
       _error = null;
+      _photosDenied = false;
     });
-    final granted =
-        await getIt<AppPermissionService>().requestPhotosIfNeeded();
+    final granted = await PermissionManager.instance.ensure(
+      context,
+      AppPermissionKind.photos,
+    );
     if (!granted) {
       if (!mounted) return;
       setState(() {
         _busy = false;
-        _error = 'Necesitamos acceso a tu galeria para leer el QR.';
+        _photosDenied = true;
+        _error = 'Necesitamos acceso a tu galería para leer el QR.';
       });
       return;
     }
@@ -225,7 +236,7 @@ class _ScanQrPageState extends State<ScanQrPage> {
       if (raw == null) {
         setState(() {
           _busy = false;
-          _error = 'No encontramos un QR valido en esa imagen.';
+          _error = 'No encontramos un código QR válido en esta imagen.';
         });
         return;
       }
@@ -305,7 +316,13 @@ class _ScanQrPageState extends State<ScanQrPage> {
                 color: Theme.of(context).colorScheme.secondaryContainer,
                 onTap: _busy ? null : _pickFromGallery,
               ),
-              if (_error != null) ...[
+              if (_photosDenied) ...[
+                const SizedBox(height: AppSpacing.md),
+                PermissionDeniedState(
+                  kind: AppPermissionKind.photos,
+                  onRetry: _pickFromGallery,
+                ),
+              ] else if (_error != null) ...[
                 const SizedBox(height: AppSpacing.md),
                 Text(
                   _error!,
@@ -314,6 +331,8 @@ class _ScanQrPageState extends State<ScanQrPage> {
                     color: Theme.of(context).colorScheme.error,
                   ),
                 ),
+                const SizedBox(height: AppSpacing.sm),
+                const OpenSettingsButton(),
               ],
               if (_busy)
                 const Padding(

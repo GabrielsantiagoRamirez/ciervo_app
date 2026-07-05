@@ -146,10 +146,20 @@ class FamilyPaymentMethodsCubit extends Cubit<FamilyPaymentMethodsState> {
 
   Future<AddCardFlowResult> addCard({
     required String cardToken,
+    required String brand,
+    required String last4,
+    required int expiryMonth,
+    required int expiryYear,
+    required String holderName,
     String? alias,
   }) async {
     final result = await _repository.addCard(
       cardToken: cardToken,
+      brand: brand,
+      last4: last4,
+      expiryMonth: expiryMonth,
+      expiryYear: expiryYear,
+      holderName: holderName,
       alias: alias,
       idempotencyKey: IdempotencyKey.generate('family-card'),
     );

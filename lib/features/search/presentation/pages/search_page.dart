@@ -69,6 +69,7 @@ class _SearchViewState extends State<_SearchView> {
     return Scaffold(
       appBar: AppBar(title: const Text('Buscar')),
       body: CustomScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           SliverPadding(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../core/theme/app_spacing.dart';
+import '../../core/utils/keyboard_utils.dart';
 import '../../features/chat/presentation/pages/chat_inbox_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/notifications/domain/entities/notification_badges.dart';
@@ -61,6 +62,7 @@ class _CiervoBottomNavScaffoldState extends State<CiervoBottomNavScaffold> {
                   height: 68,
                   selectedIndex: _selectedIndex,
                   onDestinationSelected: (index) {
+                    dismissKeyboard();
                     setState(() => _selectedIndex = index);
                     context.read<NotificationBadgesCubit>().refresh();
                   },

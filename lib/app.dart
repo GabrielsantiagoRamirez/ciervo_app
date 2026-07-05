@@ -16,6 +16,7 @@ import 'features/onboarding/entry_permissions_prompt.dart';
 import 'core/session/session_manager.dart';
 import 'core/session/session_state.dart';
 import 'core/theme/app_theme.dart';
+import 'core/utils/keyboard_utils.dart';
 import 'features/auth/presentation/pages/splash_page.dart';
 import 'features/memberships/presentation/cubit/membership_cubit.dart';
 import 'features/notifications/presentation/cubit/notification_badges_cubit.dart';
@@ -140,8 +141,10 @@ class _CiervoAppState extends State<CiervoApp> with WidgetsBindingObserver {
                 : ThemeMode.dark,
             routerConfig: _router,
             builder: (context, child) {
-              return CiervoUserIdOverlay(
-                child: child ?? const SplashPage(),
+              return DismissKeyboardScope(
+                child: CiervoUserIdOverlay(
+                  child: child ?? const SplashPage(),
+                ),
               );
             },
           );

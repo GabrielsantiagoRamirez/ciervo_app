@@ -164,7 +164,7 @@ class _NfcPaySetupPageState extends State<NfcPaySetupPage> {
                           ),
                           const SizedBox(height: AppSpacing.sm),
                           const Text(
-                            'El monto y comercio los define el backend al crear la sesion NFC.',
+                            'Confirma los datos del pago antes de acercar tu celular.',
                           ),
                         ],
                       ),
