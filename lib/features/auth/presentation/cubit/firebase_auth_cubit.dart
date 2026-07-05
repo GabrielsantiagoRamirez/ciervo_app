@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/country/country_registration.dart';
@@ -14,6 +15,7 @@ import '../../../../core/location/location_service.dart';
 import '../../data/dtos/account_lookup_dto.dart';
 import '../../domain/entities/auth_flow.dart';
 import '../../domain/repositories/auth_repository.dart';
+import 'firebase_login_attempts.dart';
 import 'firebase_auth_state.dart';
 
 class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
@@ -89,6 +91,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
         phoneNational: national,
         clearError: true,
         clearAuthMeta: true,
+        clearCheckUser: true,
         lookupExists: lookup?.exists ?? false,
         lookupRequiresLink: lookup?.requiresFirebaseLink ?? false,
       ),
@@ -178,19 +181,32 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
     final countryCode = state.countryCode.trim().isNotEmpty
         ? state.countryCode.trim().toUpperCase()
         : 'CO';
+    final phoneForBackend = _preferredPhoneForBackend();
     final check = await _authRepository.firebaseCheckUser(
       firebaseIdToken: token,
-      phone: state.phoneNational,
-      countryCode: countryCode,
+      phone: phoneForBackend.isNotEmpty
+          ? phoneForBackend
+          : state.phoneNational,
+      countryCode: phoneForBackend.startsWith('+') ? null : countryCode,
     );
     check.when(
       success: (result) {
+        if (kDebugMode) {
+          debugPrint(
+            '[AUTH] check-user exists=${result.exists} '
+            'uid=${result.firebaseUid?.substring(0, 8)}… '
+            'flow=${result.suggestedFlow}',
+          );
+        }
         emit(
           state.copyWith(
             status: FirebaseAuthStatus.phoneVerified,
             userExists: result.exists,
             requiresFirebaseLink:
                 result.requiresFirebaseLink || state.lookupRequiresLink,
+            checkUserFirebaseUid: result.firebaseUid,
+            checkUserPhone: result.phone ?? state.phoneE164,
+            checkUserEmail: result.email,
           ),
         );
       },
@@ -205,58 +221,108 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
     );
   }
 
+  /// Teléfono en E.164 para endpoints Firebase del backend.
+  String _preferredPhoneForBackend() {
+    final e164 = state.phoneE164?.trim();
+    if (e164 != null && e164.isNotEmpty) return e164;
+    final national = state.phoneNational?.trim();
+    if (national == null || national.isEmpty) return '';
+    return PhoneCountry.toE164(
+      countryCode: state.countryCode,
+      nationalNumber: national,
+    );
+  }
+
   Future<bool> firebaseLoginExisting({String? email}) async {
     emit(state.copyWith(status: FirebaseAuthStatus.loading, clearError: true));
     try {
       final token = await _firebaseAuth.freshIdToken();
-      final countryCode = state.countryCode.trim().isNotEmpty
-          ? state.countryCode.trim().toUpperCase()
-          : 'CO';
-      final result = await _authRepository.firebaseLogin(
-        firebaseIdToken: token,
-        phone: state.phoneNational,
-        email: email,
-        countryCode: countryCode,
+      final currentUid = _firebaseAuth.currentUser?.uid;
+      final uidAlreadyLinked = state.checkUserFirebaseUid != null &&
+          currentUid != null &&
+          state.checkUserFirebaseUid == currentUid;
+
+      final attempts = _firebaseLoginAttempts(
+        userKnownToExist: state.userExists || state.requiresFirebaseLink,
+        explicitEmail: email,
       );
-      return result.when(
-        success: (session) {
-          emit(
-            state.copyWith(
-              status: FirebaseAuthStatus.success,
-              authAction: session.authAction,
-              linkedLegacy: session.isLegacyLink,
-            ),
-          );
-          return true;
-        },
-        failure: (error) {
-          final message = _mapError(error).toLowerCase();
-          if (message.contains('registr') ||
-              message.contains('firebase/register') ||
-              message.contains('completa tu perfil')) {
+      Object? lastError;
+
+      for (final attempt in attempts) {
+        if (kDebugMode) {
+          final hint = attempt.email != null
+              ? 'email=${attempt.email!.contains('@') ? attempt.email!.split('@').first.substring(0, attempt.email!.split('@').first.length.clamp(0, 6)) : attempt.email}…'
+              : attempt.phone == null
+                  ? 'sin contacto'
+                  : 'phone=${attempt.phone!.length > 6 ? '${attempt.phone!.substring(0, 6)}…' : attempt.phone}';
+          debugPrint('[AUTH] firebase/login intento ($hint)');
+        }
+
+        final result = await _authRepository.firebaseLogin(
+          firebaseIdToken: token,
+          phone: attempt.phone,
+          email: attempt.email,
+          countryCode: attempt.countryCode,
+        );
+
+        final ok = result.when(
+          success: (session) {
             emit(
               state.copyWith(
-                status: FirebaseAuthStatus.phoneVerified,
-                userExists: false,
-                clearError: true,
+                status: FirebaseAuthStatus.success,
+                authAction: session.authAction,
+                linkedLegacy: session.isLegacyLink,
               ),
             );
+            return true;
+          },
+          failure: (error) {
+            lastError = error;
             return false;
-          }
-          final friendly = _mapBackendAuthError(error);
-          if (friendly.contains('no está activa')) {
-            unawaited(_firebaseAuth.signOut());
-            unawaited(_authRepository.clearLocalSession());
-          }
-          emit(
-            state.copyWith(
-              status: FirebaseAuthStatus.failure,
-              errorMessage: friendly,
-            ),
-          );
-          return false;
-        },
+          },
+        );
+        if (ok) return true;
+      }
+
+      if (lastError == null) {
+        emit(
+          state.copyWith(
+            status: FirebaseAuthStatus.failure,
+            errorMessage: 'No pudimos verificar tu sesión. Intenta nuevamente.',
+          ),
+        );
+        return false;
+      }
+
+      final message = _mapError(lastError!).toLowerCase();
+      if (message.contains('registr') ||
+          message.contains('firebase/register') ||
+          message.contains('completa tu perfil')) {
+        emit(
+          state.copyWith(
+            status: FirebaseAuthStatus.phoneVerified,
+            userExists: false,
+            clearError: true,
+          ),
+        );
+        return false;
+      }
+
+      final friendly = _mapBackendAuthError(
+        lastError!,
+        uidAlreadyLinked: uidAlreadyLinked,
       );
+      if (friendly.contains('no está activa')) {
+        unawaited(_firebaseAuth.signOut());
+        unawaited(_authRepository.clearLocalSession());
+      }
+      emit(
+        state.copyWith(
+          status: FirebaseAuthStatus.failure,
+          errorMessage: friendly,
+        ),
+      );
+      return false;
     } catch (error) {
       emit(
         state.copyWith(
@@ -266,6 +332,21 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
       );
       return false;
     }
+  }
+
+  List<({String? phone, String? email, String? countryCode})> _firebaseLoginAttempts({
+    required bool userKnownToExist,
+    String? explicitEmail,
+  }) {
+    return FirebaseLoginAttempts.build(
+      userKnownToExist: userKnownToExist,
+      phoneE164: _preferredPhoneForBackend(),
+      phoneNational: state.phoneNational,
+      countryCode: state.countryCode,
+      checkUserPhone: state.checkUserPhone,
+      checkUserEmail: state.checkUserEmail,
+      explicitEmail: explicitEmail,
+    );
   }
 
   Future<bool> firebaseRegisterProfile({
@@ -740,14 +821,22 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
     return UserErrorMessage.from(ErrorMapper.fromObject(error));
   }
 
-  String _mapBackendAuthError(Object error) {
+  String _mapBackendAuthError(
+    Object error, {
+    bool uidAlreadyLinked = false,
+  }) {
     final message = UserErrorMessage.from(ErrorMapper.fromObject(error));
     final lower = message.toLowerCase();
     if (lower.contains('inactiv') || lower.contains('bloquead')) {
       return 'Tu cuenta no está activa. Contacta soporte.';
     }
     if (lower.contains('vinculad')) {
-      return 'Este número ya está registrado. Iniciaremos sesión con tu código de verificación.';
+      if (uidAlreadyLinked) {
+        return 'No pudimos completar tu inicio de sesión. '
+            'Tu número ya está verificado; contacta soporte si persiste.';
+      }
+      return 'Este número ya está asociado a otra cuenta. '
+          'Contacta soporte si crees que es un error.';
     }
     return message;
   }

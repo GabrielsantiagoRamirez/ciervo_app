@@ -117,6 +117,7 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
   String _documentType = 'CC';
   bool _lookupLoading = false;
   bool _emailVerificationModalShown = false;
+  bool _phoneSmsVerified = false;
   Timer? _migrationTimeoutTimer;
 
   void _startMigrationTimeoutTimer() {
@@ -231,6 +232,7 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
     BuildContext context,
     FirebaseAuthState state,
   ) async {
+    _phoneSmsVerified = true;
     if (state.shouldFirebaseLogin) {
       final email = _emailController.text.trim();
       final ok = await context.read<FirebaseAuthCubit>().firebaseLoginExisting(
@@ -562,10 +564,11 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
                 !onEmailVerificationStep) {
               _showPhoneAuthFailure(context, state.errorMessage!);
               if (_phoneStep == _PhoneStep.migrationSplash ||
-                  _phoneStep == _PhoneStep.otp) {
+                  (_phoneStep == _PhoneStep.otp && !_phoneSmsVerified)) {
                 setState(() {
                   _phoneStep = _PhoneStep.entry;
                   _migrationTimedOut = false;
+                  _phoneSmsVerified = false;
                 });
                 _cancelMigrationTimeoutTimer();
               }
@@ -574,6 +577,7 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView>
               setState(() {
                 _phoneStep = _PhoneStep.otp;
                 _migrationTimedOut = false;
+                _phoneSmsVerified = false;
               });
               _cancelMigrationTimeoutTimer();
             }

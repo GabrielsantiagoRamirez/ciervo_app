@@ -2,6 +2,7 @@ class FirebaseCheckUserResult {
   const FirebaseCheckUserResult({
     required this.exists,
     this.userId,
+    this.firebaseUid,
     this.emailVerified = false,
     this.phoneVerified = false,
     this.countryCode,
@@ -19,6 +20,7 @@ class FirebaseCheckUserResult {
       userId: json['userId'] is int
           ? json['userId'] as int
           : int.tryParse('${json['userId'] ?? ''}'),
+      firebaseUid: json['firebaseUid']?.toString(),
       emailVerified: json['emailVerified'] == true,
       phoneVerified: json['phoneVerified'] == true,
       countryCode: json['countryCode']?.toString(),
@@ -33,6 +35,7 @@ class FirebaseCheckUserResult {
 
   final bool exists;
   final int? userId;
+  final String? firebaseUid;
   final bool emailVerified;
   final bool phoneVerified;
   final String? countryCode;

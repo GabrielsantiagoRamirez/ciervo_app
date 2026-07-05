@@ -27,6 +27,9 @@ class FirebaseAuthState {
     this.linkedLegacy = false,
     this.lookupExists = false,
     this.lookupRequiresLink = false,
+    this.checkUserFirebaseUid,
+    this.checkUserPhone,
+    this.checkUserEmail,
   });
 
   final FirebaseAuthStatus status;
@@ -45,6 +48,9 @@ class FirebaseAuthState {
   final bool linkedLegacy;
   final bool lookupExists;
   final bool lookupRequiresLink;
+  final String? checkUserFirebaseUid;
+  final String? checkUserPhone;
+  final String? checkUserEmail;
 
   bool get isLoading =>
       status == FirebaseAuthStatus.loading ||
@@ -75,6 +81,10 @@ class FirebaseAuthState {
     bool? lookupExists,
     bool? lookupRequiresLink,
     bool clearLookup = false,
+    String? checkUserFirebaseUid,
+    String? checkUserPhone,
+    String? checkUserEmail,
+    bool clearCheckUser = false,
   }) {
     return FirebaseAuthState(
       status: status ?? this.status,
@@ -94,6 +104,13 @@ class FirebaseAuthState {
       lookupExists: clearLookup ? false : (lookupExists ?? this.lookupExists),
       lookupRequiresLink:
           clearLookup ? false : (lookupRequiresLink ?? this.lookupRequiresLink),
+      checkUserFirebaseUid: clearCheckUser
+          ? null
+          : (checkUserFirebaseUid ?? this.checkUserFirebaseUid),
+      checkUserPhone:
+          clearCheckUser ? null : (checkUserPhone ?? this.checkUserPhone),
+      checkUserEmail:
+          clearCheckUser ? null : (checkUserEmail ?? this.checkUserEmail),
     );
   }
 }
