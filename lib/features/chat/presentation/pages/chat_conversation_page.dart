@@ -18,6 +18,8 @@ import '../../domain/entities/chat_message.dart';
 import '../../domain/repositories/chat_repository.dart';
 import '../cubit/chat_cubit.dart';
 import '../cubit/chat_state.dart';
+import '../../../safety/data/models/safety_models.dart';
+import '../../../safety/presentation/widgets/safety_sheets.dart';
 
 class ChatConversationPage extends StatelessWidget {
   const ChatConversationPage({
@@ -83,6 +85,23 @@ class _ConversationViewState extends State<_ConversationView> {
       appBar: AppBar(
         title: Text(state.conversation?.title ?? widget.title ?? 'Chat'),
         actions: [
+          if (state.conversation?.isDirect == true ||
+              state.conversation?.businessId != null)
+            IconButton(
+              tooltip: 'Seguridad',
+              icon: const Icon(Icons.more_vert),
+              onPressed: () => showSafetyOptionsSheet(
+                context,
+                title: 'Opciones de seguridad',
+                contentType: state.conversation?.businessId != null
+                    ? ReportTargetType.business
+                    : null,
+                contentId: state.conversation?.businessId?.toString(),
+                userId: state.conversation?.peerUserId,
+                userDisplayName: state.conversation?.title,
+                onActionCompleted: () => Navigator.of(context).maybePop(),
+              ),
+            ),
           IconButton(
             tooltip: 'Acciones del chat',
             icon: const Icon(Icons.apps_outlined),
@@ -120,11 +139,22 @@ class _ConversationViewState extends State<_ConversationView> {
                       }
                       final message = state.messages[index];
                       return GestureDetector(
-                        onLongPress: () => showChatForwardSheet(
-                          context,
-                          message: message,
-                          sourceConversationId: widget.conversationId,
-                        ),
+                        onLongPress: () {
+                          if (!message.isMine) {
+                            showReportSheet(
+                              context,
+                              targetType: ReportTargetType.chatMessage,
+                              targetId: message.id,
+                              subjectLabel: 'mensaje',
+                            );
+                            return;
+                          }
+                          showChatForwardSheet(
+                            context,
+                            message: message,
+                            sourceConversationId: widget.conversationId,
+                          );
+                        },
                         child: Align(
                         alignment: message.isMine
                             ? Alignment.centerRight

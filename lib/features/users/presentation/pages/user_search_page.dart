@@ -13,6 +13,10 @@ import '../../../chat_payments/presentation/pages/chat_gift_page.dart';
 import '../../../chat_payments/presentation/pages/chat_pay_page.dart';
 import '../../../wallet/presentation/pages/recharge_by_ciervo_id_page.dart';
 import '../../../wallet/presentation/pages/request_money_page.dart';
+import '../../../safety/data/models/safety_models.dart';
+import '../../../safety/data/services/safety_filter_cache.dart';
+import '../../../safety/domain/repositories/safety_repository.dart';
+import '../../../safety/presentation/widgets/safety_sheets.dart';
 import '../../data/user_search_repository.dart';
 import '../../domain/entities/user_search_result.dart';
 
@@ -42,6 +46,12 @@ class _UserSearchPageState extends State<UserSearchPage> {
   String? _openingUserId;
 
   @override
+  void initState() {
+    super.initState();
+    getIt<SafetyRepository>().refreshLocalFilters();
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
@@ -56,9 +66,12 @@ class _UserSearchPageState extends State<UserSearchPage> {
     if (!mounted) return;
     result.when(
       success: (items) => setState(() {
-        _results = items;
+        final cache = getIt<SafetyFilterCache>();
+        _results = items
+            .where((user) => !cache.isUserBlocked(user.userId))
+            .toList();
         _loading = false;
-        if (items.isEmpty) {
+        if (_results.isEmpty) {
           _error = 'No encontramos contactos registrados en Ciervo.';
         }
       }),
@@ -102,7 +115,10 @@ class _UserSearchPageState extends State<UserSearchPage> {
     if (!mounted) return;
     result.when(
       success: (items) => setState(() {
-        _results = items;
+        final cache = getIt<SafetyFilterCache>();
+        _results = items
+            .where((user) => !cache.isUserBlocked(user.userId))
+            .toList();
         _loading = false;
       }),
       failure: (error) => setState(() {
@@ -227,6 +243,42 @@ class _UserSearchPageState extends State<UserSearchPage> {
                     builder: (_) => RechargeByCiervoIdPage(
                       initialCiervoCode: user.ciervoUserCode,
                     ),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.flag_outlined),
+              title: const Text('Reportar usuario'),
+              onTap: () {
+                Navigator.pop(context);
+                showReportSheet(
+                  this.context,
+                  targetType: ReportTargetType.user,
+                  reportedUserId: int.tryParse(user.userId),
+                  subjectLabel: user.fullName,
+                  allowBlockUser: true,
+                  onCompleted: () => setState(
+                    () => _results = _results
+                        .where((item) => item.userId != user.userId)
+                        .toList(),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.block),
+              title: const Text('Bloquear usuario'),
+              onTap: () {
+                Navigator.pop(context);
+                showBlockUserFlow(
+                  this.context,
+                  userId: int.tryParse(user.userId) ?? 0,
+                  displayName: user.fullName,
+                  onBlocked: () => setState(
+                    () => _results = _results
+                        .where((item) => item.userId != user.userId)
+                        .toList(),
                   ),
                 );
               },

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
+import '../../../../core/layout/ciervo_page_layout.dart';
 import '../../../../core/layout/responsive_layout.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/display_labels.dart';
@@ -89,9 +90,11 @@ class _ParentPaymentHistoryPageState extends State<ParentPaymentHistoryPage> {
       body: Column(
         children: [
           Padding(
-            padding: pagePaddingOf(context).copyWith(bottom: 0),
+            padding: pagePaddingOf(context).copyWith(bottom: AppSpacing.sm),
             child: CiervoCard(
+              padding: CiervoPageLayout.compactCardPadding,
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   TextField(
                     controller: _merchantController,
@@ -104,6 +107,7 @@ class _ParentPaymentHistoryPageState extends State<ParentPaymentHistoryPage> {
                     ),
                     onSubmitted: (_) => _load(),
                   ),
+                  const SizedBox(height: AppSpacing.sm),
                   Wrap(
                     spacing: 8,
                     children: [
@@ -182,6 +186,7 @@ class _ParentPaymentHistoryPageState extends State<ParentPaymentHistoryPage> {
                       : _payments.isEmpty
                           ? ListView(
                               physics: const AlwaysScrollableScrollPhysics(),
+                              padding: pagePaddingOf(context),
                               children: const [
                                 CiervoEmptyState(
                                   title: 'Sin pagos registrados',
@@ -195,11 +200,13 @@ class _ParentPaymentHistoryPageState extends State<ParentPaymentHistoryPage> {
                               padding: pagePaddingOf(context),
                               itemCount: _payments.length,
                               separatorBuilder: (_, __) =>
-                                  const SizedBox(height: AppSpacing.sm),
+                                  const SizedBox(height: CiervoPageLayout.cardGap),
                               itemBuilder: (context, index) {
                                 final payment = _payments[index];
                                 return CiervoCard(
+                                  padding: CiervoPageLayout.compactCardPadding,
                                   child: ListTile(
+                                    contentPadding: EdgeInsets.zero,
                                     title: Text(payment.merchantName),
                                     subtitle: Text(
                                       '${payment.kidName ?? 'Menor'} · ${DisplayLabels.familyFundingSource(payment.fundingSource)}',

@@ -106,6 +106,7 @@ class _PremiumWalletDashboardState extends State<PremiumWalletDashboard> {
                   ),
                 ),
               const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.sm),
               _BalanceBar(
                 balance: balance,
                 currency: currency,
@@ -306,7 +307,7 @@ class _BalanceBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: palette.surfaceHigh,
         borderRadius: BorderRadius.circular(16),

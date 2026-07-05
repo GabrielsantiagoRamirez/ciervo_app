@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/config/ciervo_legal_urls.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../notifications/presentation/pages/notifications_page.dart';
+import '../../../safety/presentation/pages/safety_privacy_page.dart';
 import '../../domain/entities/user_profile.dart';
 import 'edit_profile_page.dart';
 
@@ -43,28 +45,37 @@ class SettingsPage extends StatelessWidget {
                   ),
                   _tile(
                     context,
+                    icon: Icons.shield_outlined,
+                    title: 'Seguridad y privacidad',
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const SafetyPrivacyPage(),
+                      ),
+                    ),
+                  ),
+                  _tile(
+                    context,
                     icon: Icons.description_outlined,
                     title: 'Terminos',
-                    onTap: () => _open(context, 'https://ciervoclub.com/terms'),
+                    onTap: () => _open(context, CiervoLegalUrls.terms),
                   ),
                   _tile(
                     context,
                     icon: Icons.privacy_tip_outlined,
                     title: 'Politica de privacidad',
-                    onTap: () =>
-                        _open(context, 'https://ciervoclub.com/privacy'),
+                    onTap: () => _open(context, CiervoLegalUrls.privacy),
                   ),
                   _tile(
                     context,
-                    icon: Icons.help_outline,
+                    icon: Icons.support_agent_outlined,
                     title: 'Centro de ayuda',
-                    onTap: () => _open(context, 'https://ciervoclub.com/help'),
+                    onTap: () => _open(context, CiervoLegalUrls.support),
                   ),
                   _tile(
                     context,
-                    icon: Icons.language_outlined,
-                    title: 'Landing web',
-                    onTap: () => _open(context, 'https://ciervoclub.com'),
+                    icon: Icons.manage_accounts_outlined,
+                    title: 'Solicitud de datos',
+                    onTap: () => _open(context, CiervoLegalUrls.dataRequest),
                   ),
                 ],
               ),
@@ -88,21 +99,21 @@ class HelpPage extends StatelessWidget {
                 children: [
                   _tile(
                     context,
-                    icon: Icons.language_outlined,
-                    title: 'Abrir landing',
-                    onTap: () => _open(context, 'https://ciervoclub.com'),
-                  ),
-                  _tile(
-                    context,
-                    icon: Icons.quiz_outlined,
-                    title: 'Abrir FAQ',
-                    onTap: () => _open(context, 'https://ciervoclub.com/faq'),
-                  ),
-                  _tile(
-                    context,
                     icon: Icons.support_agent_outlined,
                     title: 'Abrir soporte',
-                    onTap: () => _open(context, 'https://ciervoclub.com/support'),
+                    onTap: () => _open(context, CiervoLegalUrls.support),
+                  ),
+                  _tile(
+                    context,
+                    icon: Icons.privacy_tip_outlined,
+                    title: 'Politica de privacidad',
+                    onTap: () => _open(context, CiervoLegalUrls.privacy),
+                  ),
+                  _tile(
+                    context,
+                    icon: Icons.description_outlined,
+                    title: 'Terminos de uso',
+                    onTap: () => _open(context, CiervoLegalUrls.terms),
                   ),
                 ],
               ),

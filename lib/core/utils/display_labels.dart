@@ -337,7 +337,8 @@ abstract final class DisplayLabels {
     if (status == null || status.isEmpty) return 'Completado';
     final key = status.toLowerCase().replaceAll('_', '');
     return switch (key) {
-      'completed' || 'complete' || 'approved' => 'Completado',
+      'completed' || 'complete' || 'approved' || 'paid' || 'succeeded' =>
+        'Completado',
       'pending' => 'Pendiente',
       'failed' || 'rejected' => 'Rechazado',
       'cancelled' || 'canceled' => 'Cancelado',

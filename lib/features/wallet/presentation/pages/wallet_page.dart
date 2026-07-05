@@ -15,7 +15,6 @@ import '../../../financial_history/presentation/pages/financial_history_page.dar
 import '../../../notifications/presentation/pages/notifications_page.dart';
 import '../../../payments/presentation/pages/payments_history_page.dart';
 import '../../../pins/presentation/pages/pins_page.dart';
-import '../../../receipts/presentation/pages/receipts_page.dart';
 import '../../domain/entities/payment_request.dart';
 import '../../domain/entities/wallet_card.dart';
 import '../../domain/entities/wallet_transaction.dart';
@@ -78,10 +77,10 @@ class _WalletView extends StatelessWidget {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.receipt_long_outlined),
+                      icon: const Icon(Icons.timeline_outlined),
                       onPressed: () => Navigator.of(context).push(
                         MaterialPageRoute<void>(
-                          builder: (_) => const ReceiptsPage(),
+                          builder: (_) => const FinancialHistoryPage(),
                         ),
                       ),
                     ),
@@ -323,13 +322,6 @@ class _QuickActions extends StatelessWidget {
                     builder: (_) => PinsPage(card: card),
                   ),
                 ),
-        ),
-        _ActionChipButton(
-          label: 'Recibos',
-          icon: Icons.receipt_long_outlined,
-          onTap: () => Navigator.of(
-            context,
-          ).push(MaterialPageRoute<void>(builder: (_) => const ReceiptsPage())),
         ),
         _ActionChipButton(
           label: 'Pagos MP',

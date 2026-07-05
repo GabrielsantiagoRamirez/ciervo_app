@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/layout/ciervo_page_layout.dart';
 import '../../../../core/permissions/app_permission_service.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -155,17 +157,25 @@ class ScanQrPage extends StatefulWidget {
 
 class _ScanQrPageState extends State<ScanQrPage> {
   final _controller = MobileScannerController();
+  final _picker = ImagePicker();
+  _ScanSource _source = _ScanSource.choosing;
   bool _cameraReady = false;
   bool _handled = false;
+  bool _busy = false;
   String? _error;
 
   @override
-  void initState() {
-    super.initState();
-    _ensureCamera();
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
-  Future<void> _ensureCamera() async {
+  Future<void> _startCamera() async {
+    setState(() {
+      _source = _ScanSource.camera;
+      _error = null;
+      _cameraReady = false;
+    });
     final granted =
         await getIt<AppPermissionService>().requestCameraIfNeeded();
     if (!mounted) return;
@@ -177,10 +187,61 @@ class _ScanQrPageState extends State<ScanQrPage> {
     });
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  Future<void> _pickFromGallery() async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    final granted =
+        await getIt<AppPermissionService>().requestPhotosIfNeeded();
+    if (!granted) {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _error = 'Necesitamos acceso a tu galeria para leer el QR.';
+      });
+      return;
+    }
+
+    final image = await _picker.pickImage(source: ImageSource.gallery);
+    if (!mounted) return;
+    if (image == null) {
+      setState(() => _busy = false);
+      return;
+    }
+
+    try {
+      final capture = await _controller.analyzeImage(image.path);
+      String? raw;
+      if (capture != null) {
+        for (final barcode in capture.barcodes) {
+          final value = barcode.rawValue?.trim();
+          if (value != null && value.isNotEmpty) {
+            raw = value;
+            break;
+          }
+        }
+      }
+      if (raw == null) {
+        setState(() {
+          _busy = false;
+          _error = 'No encontramos un QR valido en esa imagen.';
+        });
+        return;
+      }
+      setState(() => _busy = false);
+      await QrScanRouter.handle(
+        context,
+        raw,
+        chatConversationId: widget.chatConversationId,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _error = 'No pudimos leer el QR de la imagen seleccionada.';
+      });
+    }
   }
 
   Future<void> _onDetect(BarcodeCapture capture) async {
@@ -206,32 +267,142 @@ class _ScanQrPageState extends State<ScanQrPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Escanear QR')),
-      body: Column(
-        children: [
-          Expanded(
-            child: _cameraReady
-                ? MobileScanner(
-                    controller: _controller,
-                    onDetect: _onDetect,
-                  )
-                : Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      child: Text(_error ?? 'Preparando camara…'),
-                    ),
-                  ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Text(
-              'Apunta al QR del comercio, cupon o persona. '
-              'No uses esta opcion si te van a escanear a ti: usa Mi QR.',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall,
+      appBar: AppBar(
+        title: const Text('Escanear QR'),
+        actions: [
+          if (_source == _ScanSource.camera)
+            IconButton(
+              tooltip: 'Cambiar metodo',
+              onPressed: () => setState(() {
+                _source = _ScanSource.choosing;
+                _error = null;
+              }),
+              icon: const Icon(Icons.swap_horiz),
             ),
-          ),
         ],
+      ),
+      body: switch (_source) {
+        _ScanSource.choosing => ListView(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            children: [
+              Text(
+                'Elige como quieres leer el codigo',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              _ScanOptionCard(
+                title: 'Usar camara',
+                subtitle: 'Apunta al QR en tiempo real',
+                icon: Icons.photo_camera_outlined,
+                color: Theme.of(context).colorScheme.primaryContainer,
+                onTap: _startCamera,
+              ),
+              const SizedBox(height: CiervoPageLayout.cardGap),
+              _ScanOptionCard(
+                title: 'Elegir de galeria',
+                subtitle: 'Selecciona una foto que ya tengas',
+                icon: Icons.photo_library_outlined,
+                color: Theme.of(context).colorScheme.secondaryContainer,
+                onTap: _busy ? null : _pickFromGallery,
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  _error!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ),
+              ],
+              if (_busy)
+                const Padding(
+                  padding: EdgeInsets.only(top: AppSpacing.lg),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              const SizedBox(height: AppSpacing.lg),
+              Text(
+                'No uses esta opcion si te van a escanear a ti: usa Mi QR.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+        _ScanSource.camera => Column(
+            children: [
+              Expanded(
+                child: _cameraReady
+                    ? MobileScanner(
+                        controller: _controller,
+                        onDetect: _onDetect,
+                      )
+                    : Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          child: Text(_error ?? 'Preparando camara…'),
+                        ),
+                      ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Text(
+                  'Apunta al QR del comercio, cupon o persona.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+            ],
+          ),
+        _ScanSource.gallery => const SizedBox.shrink(),
+      },
+    );
+  }
+}
+
+enum _ScanSource { choosing, camera, gallery }
+
+class _ScanOptionCard extends StatelessWidget {
+  const _ScanOptionCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: color,
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: CiervoPageLayout.compactCardPadding,
+          child: Row(
+            children: [
+              Icon(icon, size: 36),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: Theme.of(context).textTheme.titleMedium),
+                    Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right),
+            ],
+          ),
+        ),
       ),
     );
   }

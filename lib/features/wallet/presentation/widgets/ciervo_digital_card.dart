@@ -93,169 +93,232 @@ class CiervoDigitalCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = CiervoWalletPalette.of(context);
-    return Container(
-      height: 210,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: palette.cardGradient,
-        ),
-        border: Border.all(
-          color: CiervoBrandColors.gold.withValues(alpha: palette.cardBorderAlpha),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: CiervoBrandColors.gold.withValues(alpha: 0.12),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: CustomPaint(painter: _WavePatternPainter()),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 5,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Image.asset(
-                        'assets/notifications/ciervo_logo_gold.png',
-                        height: 72,
-                        fit: BoxFit.contain,
-                      ),
-                      const Spacer(),
-                      Text(
-                        'CIERVO',
-                        style: TextStyle(
-                          color: CiervoBrandColors.gold,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 4,
-                          fontSize: 16,
-                        ),
-                      ),
-                      Text(
-                        'ENTRETENIMIENTO SIN LÍMITES',
-                        style: TextStyle(
-                          color: CiervoBrandColors.goldSoft.withValues(alpha: 0.8),
-                          fontSize: 8,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                    ],
-                  ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 340;
+        final padding = isCompact ? AppSpacing.md : AppSpacing.lg;
+        final logoHeight = isCompact ? 56.0 : 64.0;
+        final aliasFontSize = isCompact ? 15.0 : 17.0;
+        final showCustomizeButton = onCustomizeAlias != null;
+
+        return AspectRatio(
+          aspectRatio: showCustomizeButton ? 1.62 : 1.75,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: palette.cardGradient,
+              ),
+              border: Border.all(
+                color: CiervoBrandColors.gold
+                    .withValues(alpha: palette.cardBorderAlpha),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: CiervoBrandColors.gold.withValues(alpha: 0.12),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
                 ),
-                Expanded(
-                  flex: 6,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+              ],
+            ),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: CustomPaint(painter: _WavePatternPainter()),
+                ),
+                Padding(
+                  padding: EdgeInsets.all(padding),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text(
-                            'TARJETA DIGITAL',
-                            style: TextStyle(
-                              color: CiervoBrandColors.goldSoft,
-                              fontSize: 10,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          GestureDetector(
-                            onTap: onNfcTap,
-                            child: Icon(
-                              Icons.nfc,
-                              color: CiervoBrandColors.gold,
-                              size: 22,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Align(
-                        alignment: Alignment.centerRight,
+                      Expanded(
+                        flex: 5,
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'NOMBRE / APODO',
-                              style: TextStyle(
-                                color: CiervoBrandColors.goldSoft,
-                                fontSize: 10,
-                                letterSpacing: 0.8,
+                            SizedBox(
+                              height: logoHeight,
+                              child: Image.asset(
+                                'assets/notifications/ciervo_logo_gold.png',
+                                fit: BoxFit.contain,
+                                alignment: Alignment.centerLeft,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              alias.isNotEmpty ? alias.toUpperCase() : holderName.toUpperCase(),
-                              textAlign: TextAlign.right,
-                              style: TextStyle(
-                                color: palette.textPrimary,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 18,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                            if (mask != null && mask!.isNotEmpty) ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                mask!,
+                            const Spacer(),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                'CIERVO',
                                 style: TextStyle(
-                                  color: palette.textMuted,
-                                  fontSize: 12,
+                                  color: CiervoBrandColors.gold,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: isCompact ? 2.5 : 4,
+                                  fontSize: isCompact ? 14 : 16,
                                 ),
                               ),
-                            ],
-                            const SizedBox(height: 4),
-                            Text(
-                              _statusLabel(status, isBlocked),
-                              style: TextStyle(
-                                color: isBlocked
-                                    ? CiervoBrandColors.expense
-                                    : CiervoBrandColors.income,
-                                fontSize: 11,
+                            ),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                'ENTRETENIMIENTO SIN LÍMITES',
+                                maxLines: 1,
+                                style: TextStyle(
+                                  color: CiervoBrandColors.goldSoft
+                                      .withValues(alpha: 0.8),
+                                  fontSize: isCompact ? 7 : 8,
+                                  letterSpacing: 1.2,
+                                ),
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const Spacer(),
-                      if (onCustomizeAlias != null)
-                        OutlinedButton.icon(
-                          onPressed: onCustomizeAlias,
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: CiervoBrandColors.gold,
-                            side: BorderSide(
-                              color: CiervoBrandColors.gold.withValues(alpha: 0.6),
+                      SizedBox(width: isCompact ? AppSpacing.sm : AppSpacing.md),
+                      Expanded(
+                        flex: 6,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Flexible(
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                      'TARJETA DIGITAL',
+                                      style: TextStyle(
+                                        color: CiervoBrandColors.goldSoft,
+                                        fontSize: isCompact ? 9 : 10,
+                                        letterSpacing: 1,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                GestureDetector(
+                                  onTap: onNfcTap,
+                                  child: Icon(
+                                    Icons.nfc,
+                                    color: CiervoBrandColors.gold,
+                                    size: isCompact ? 18 : 20,
+                                  ),
+                                ),
+                              ],
                             ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
+                            SizedBox(height: isCompact ? AppSpacing.sm : AppSpacing.md),
+                            Expanded(
+                              child: Align(
+                                alignment: Alignment.centerRight,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      'NOMBRE / APODO',
+                                      style: TextStyle(
+                                        color: CiervoBrandColors.goldSoft,
+                                        fontSize: isCompact ? 9 : 10,
+                                        letterSpacing: 0.8,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      alignment: Alignment.centerRight,
+                                      child: Text(
+                                        alias.isNotEmpty
+                                            ? alias.toUpperCase()
+                                            : holderName.toUpperCase(),
+                                        textAlign: TextAlign.right,
+                                        maxLines: 2,
+                                        style: TextStyle(
+                                          color: palette.textPrimary,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: aliasFontSize,
+                                          letterSpacing: 0.5,
+                                          height: 1.1,
+                                        ),
+                                      ),
+                                    ),
+                                    if (mask != null && mask!.isNotEmpty) ...[
+                                      const SizedBox(height: 2),
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        alignment: Alignment.centerRight,
+                                        child: Text(
+                                          mask!,
+                                          maxLines: 1,
+                                          style: TextStyle(
+                                            color: palette.textMuted,
+                                            fontSize: isCompact ? 10 : 11,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      _statusLabel(status, isBlocked),
+                                      style: TextStyle(
+                                        color: isBlocked
+                                            ? CiervoBrandColors.expense
+                                            : CiervoBrandColors.income,
+                                        fontSize: isCompact ? 10 : 11,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
-                          icon: const Icon(Icons.edit_outlined, size: 16),
-                          label: const Text(
-                            'PERSONALIZAR APODO',
-                            style: TextStyle(fontSize: 10),
-                          ),
+                            if (showCustomizeButton)
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerRight,
+                                child: OutlinedButton.icon(
+                                  onPressed: onCustomizeAlias,
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: CiervoBrandColors.gold,
+                                    side: BorderSide(
+                                      color: CiervoBrandColors.gold
+                                          .withValues(alpha: 0.6),
+                                    ),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: isCompact ? 8 : 10,
+                                      vertical: isCompact ? 4 : 5,
+                                    ),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                  icon: Icon(
+                                    Icons.edit_outlined,
+                                    size: isCompact ? 14 : 15,
+                                  ),
+                                  label: Text(
+                                    'PERSONALIZAR APODO',
+                                    style: TextStyle(
+                                      fontSize: isCompact ? 9 : 10,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
+                      ),
                     ],
                   ),
                 ),
               ],
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 

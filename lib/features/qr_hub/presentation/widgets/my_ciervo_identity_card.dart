@@ -5,7 +5,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/ciervo_id_qr.dart';
-import '../../../../core/utils/ciervo_share.dart';
+import '../../../../core/utils/ciervo_qr_share.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../wallet/domain/entities/ciervo_wallet_identity.dart';
 
@@ -80,9 +80,9 @@ class MyCiervoIdentityCard extends StatelessWidget {
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () => CiervoShare.shareText(
-                    'Mi CIERVO ID: ${identity.ciervoUserCode}\n$payload',
-                    subject: 'CIERVO CLUB',
+                  onPressed: () => CiervoQrShare.shareIdentity(
+                    ciervoUserCode: identity.ciervoUserCode,
+                    qrPayload: payload,
                   ),
                   icon: const Icon(Icons.share_outlined),
                   label: const Text('Compartir'),

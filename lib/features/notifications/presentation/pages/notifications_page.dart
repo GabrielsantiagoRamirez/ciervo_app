@@ -9,6 +9,7 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/notifications/notifications_sync.dart';
 import '../../../../core/notifications/notification_deep_link.dart';
+import '../../../../core/layout/ciervo_page_layout.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../wallet/presentation/widgets/ciervo_digital_card.dart';
 import '../../../../core/utils/display_labels.dart';
@@ -90,7 +91,13 @@ class _NotificationsViewState extends State<_NotificationsView> {
         ),
         IconButton(
           tooltip: 'Marcar todas como leidas',
-          onPressed: context.read<NotificationsCubit>().markAllAsRead,
+          onPressed: () async {
+            await context.read<NotificationsCubit>().markAllAsRead();
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Notificaciones marcadas como leidas.')),
+            );
+          },
           icon: const Icon(Icons.done_all),
         ),
         IconButton(
@@ -488,32 +495,40 @@ class _NotificationPreferencesPageState
             ),
           );
         }
-        return ListView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          children: [
-            ..._channels.map(
-              (channel) => CiervoCard(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                child: SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(channel.name),
-                  subtitle: channel.description == null
-                      ? null
-                      : Text(channel.description!),
-                  value: channel.enabled,
-                  onChanged: channel.configurable
-                      ? (value) => setState(() => channel.enabled = value)
-                      : null,
-                ),
+        return ListView.separated(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.lg,
+            AppSpacing.lg,
+            AppSpacing.xxl,
+          ),
+          itemCount: _channels.length + 1,
+          separatorBuilder: (_, _) =>
+              const SizedBox(height: CiervoPageLayout.cardGap),
+          itemBuilder: (context, index) {
+            if (index == _channels.length) {
+              return FilledButton.icon(
+                onPressed: _saving ? null : _save,
+                icon: const Icon(Icons.save_outlined),
+                label: Text(_saving ? 'Guardando…' : 'Guardar preferencias'),
+              );
+            }
+            final channel = _channels[index];
+            return CiervoCard(
+              padding: CiervoPageLayout.compactCardPadding,
+              child: SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(channel.name),
+                subtitle: channel.description == null
+                    ? null
+                    : Text(channel.description!),
+                value: channel.enabled,
+                onChanged: channel.configurable
+                    ? (value) => setState(() => channel.enabled = value)
+                    : null,
               ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            FilledButton.icon(
-              onPressed: _saving ? null : _save,
-              icon: const Icon(Icons.save_outlined),
-              label: Text(_saving ? 'Guardando…' : 'Guardar preferencias'),
-            ),
-          ],
+            );
+          },
         );
       },
     ),

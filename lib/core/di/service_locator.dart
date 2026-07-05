@@ -101,6 +101,10 @@ import '../../features/family_payments/domain/repositories/family_payments_repos
 import '../../features/wallet/data/datasources/wallet_remote_datasource.dart';
 import '../../features/wallet/data/repositories/wallet_repository_impl.dart';
 import '../../features/wallet/domain/repositories/wallet_repository.dart';
+import '../../features/safety/data/datasources/safety_remote_datasource.dart';
+import '../../features/safety/data/repositories/safety_repository_impl.dart';
+import '../../features/safety/data/services/safety_filter_cache.dart';
+import '../../features/safety/domain/repositories/safety_repository.dart';
 
 final getIt = GetIt.instance;
 
@@ -402,5 +406,15 @@ Future<void> configureDependencies() async {
     )
     ..registerLazySingleton<ReviewRepository>(
       () => ReviewRepository(getIt<NetworkClient>()),
+    )
+    ..registerLazySingleton<SafetyFilterCache>(SafetyFilterCache.new)
+    ..registerLazySingleton<SafetyRemoteDataSource>(
+      () => DioSafetyRemoteDataSource(getIt<NetworkClient>()),
+    )
+    ..registerLazySingleton<SafetyRepository>(
+      () => SafetyRepositoryImpl(
+        getIt<SafetyRemoteDataSource>(),
+        getIt<SafetyFilterCache>(),
+      ),
     );
 }

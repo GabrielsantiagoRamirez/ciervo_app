@@ -22,6 +22,7 @@ import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
 import '../../../discovery/presentation/widgets/activity_feed_section.dart';
+import '../../../safety/domain/repositories/safety_repository.dart';
 import '../../../bonuses/presentation/pages/bonuses_pages.dart';
 import '../../../campaigns/presentation/widgets/paid_campaign_banner_section.dart';
 import '../../../favorites/presentation/widgets/home_favorites_section.dart';
@@ -71,6 +72,7 @@ class _HomeViewState extends State<_HomeView> {
   @override
   void initState() {
     super.initState();
+    getIt<SafetyRepository>().refreshLocalFilters();
     _kidContext = getIt<SelectedKidContext>();
     _kidContext.addListener(_onKidModeChanged);
     _autoRefreshTimer = Timer.periodic(

@@ -6,6 +6,7 @@ class ChatConversation {
     required this.unreadCount,
     required this.status,
     this.businessId,
+    this.peerUserId,
     this.lastMessage,
     this.updatedAt,
   });
@@ -16,8 +17,10 @@ class ChatConversation {
   final int unreadCount;
   final String status;
   final int? businessId;
+  final int? peerUserId;
   final String? lastMessage;
   final DateTime? updatedAt;
 
   bool get canSend => status == 'Open';
+  bool get isDirect => type.toLowerCase().contains('direct');
 }

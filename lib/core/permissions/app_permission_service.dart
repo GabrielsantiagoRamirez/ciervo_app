@@ -14,6 +14,9 @@ abstract interface class AppPermissionService {
   /// Solicita cámara solo cuando el usuario va a escanear QR o tomar foto.
   Future<bool> requestCameraIfNeeded();
 
+  /// Solicita acceso a fotos/galería para escanear QR desde imagen.
+  Future<bool> requestPhotosIfNeeded();
+
   /// Solicita acceso a contactos para encontrar usuarios CIERVO.
   Future<bool> requestContactsIfNeeded();
 }
@@ -104,5 +107,25 @@ class DeviceAppPermissionService implements AppPermissionService {
     }
     final result = await Permission.contacts.request();
     return result.isGranted || result.isLimited;
+  }
+
+  @override
+  Future<bool> requestPhotosIfNeeded() async {
+    final photos = await Permission.photos.status;
+    if (photos.isGranted || photos.isLimited) return true;
+
+    final storage = await Permission.storage.status;
+    if (storage.isGranted || storage.isLimited) return true;
+
+    if (photos.isPermanentlyDenied || storage.isPermanentlyDenied) {
+      await openAppSettings();
+      return false;
+    }
+
+    final photosResult = await Permission.photos.request();
+    if (photosResult.isGranted || photosResult.isLimited) return true;
+
+    final storageResult = await Permission.storage.request();
+    return storageResult.isGranted || storageResult.isLimited;
   }
 }

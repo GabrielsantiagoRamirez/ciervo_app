@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/utils/ciervo_share.dart';
 import '../../../../core/utils/display_labels.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
@@ -12,6 +13,7 @@ import '../../../../shared/widgets/ciervo_payment_receipt.dart';
 import '../../../receipts/domain/entities/action_confirmation.dart';
 import '../../domain/entities/receipt.dart';
 import '../../domain/repositories/receipts_repository.dart';
+import '../../../financial_history/presentation/utils/receipt_share_text.dart';
 import '../cubit/receipts_cubit.dart';
 import '../cubit/receipts_state.dart';
 
@@ -87,13 +89,22 @@ class _ReceiptTile extends StatelessWidget {
             Expanded(
               child: Text(
                 receipt.title,
-                style: Theme.of(context).textTheme.titleLarge,
+                style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
-            Text('${receipt.currency} ${receipt.amount.toStringAsFixed(0)}'),
-            Text(
-              DisplayLabels.receiptStatus(receipt.status),
-              style: Theme.of(context).textTheme.bodySmall,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '${receipt.currency} ${receipt.amount.toStringAsFixed(0)}',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  DisplayLabels.receiptStatus(receipt.status),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
             ),
           ],
         ),
@@ -110,44 +121,68 @@ class ReceiptDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => ReceiptsCubit(getIt<ReceiptsRepository>())..loadDetail(id),
-      child: Scaffold(
-        appBar: AppBar(title: const Text('Detalle de recibo')),
-        body: BlocBuilder<ReceiptsCubit, ReceiptsState>(
-          builder: (context, state) {
-            final receipt = state.selected;
-            return Padding(
+      child: BlocBuilder<ReceiptsCubit, ReceiptsState>(
+        builder: (context, state) {
+          final receipt = state.selected;
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Detalle de recibo'),
+              actions: [
+                if (receipt != null)
+                  IconButton(
+                    tooltip: 'Compartir comprobante',
+                    icon: const Icon(Icons.ios_share_rounded),
+                    onPressed: () => CiervoShare.shareText(
+                      ReceiptShareText.fromReceipt(receipt),
+                      subject: 'Comprobante CIERVO',
+                    ),
+                  ),
+              ],
+            ),
+            body: Padding(
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: state.status == ReceiptsStatus.loading
                   ? const CiervoLoadingState(itemCount: 2)
                   : receipt == null
-                  ? const CiervoEmptyState(
-                      title: 'Recibo no disponible',
-                      description: 'No encontramos el detalle solicitado.',
-                    )
-                  : ListView(
-                      children: [
-                        CiervoPaymentReceipt(
-                          confirmation: ActionConfirmation(
-                            title: receipt.title,
-                            confirmationCode: receipt.id,
-                            userCiervoCode: receipt.userCiervoCode,
-                            amount: receipt.amount,
-                            currency: receipt.currency,
-                            status: DisplayLabels.receiptStatus(receipt.status),
-                            date: receipt.date?.toIso8601String(),
-                            publicReceiptUrl: receipt.publicReceiptUrl,
-                            shareDescription: receipt.shareDescription ??
-                                receipt.description ??
-                                '¡Gracias por confiar en CIERVO!',
-                          ),
-                          referenceLabel: 'Concepto',
-                          referenceValue: receipt.description ?? receipt.title,
+                      ? const CiervoEmptyState(
+                          title: 'Recibo no disponible',
+                          description: 'No encontramos el detalle solicitado.',
+                        )
+                      : ListView(
+                          children: [
+                            CiervoPaymentReceipt(
+                              confirmation: ActionConfirmation(
+                                title: receipt.title,
+                                confirmationCode: receipt.id,
+                                userCiervoCode: receipt.userCiervoCode,
+                                amount: receipt.amount,
+                                currency: receipt.currency,
+                                status:
+                                    DisplayLabels.receiptStatus(receipt.status),
+                                date: receipt.date?.toIso8601String(),
+                                publicReceiptUrl: receipt.publicReceiptUrl,
+                                shareDescription: receipt.shareDescription ??
+                                    receipt.description ??
+                                    '¡Gracias por confiar en CIERVO!',
+                              ),
+                              referenceLabel: 'Concepto',
+                              referenceValue:
+                                  receipt.description ?? receipt.title,
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            FilledButton.icon(
+                              onPressed: () => CiervoShare.shareText(
+                                ReceiptShareText.fromReceipt(receipt),
+                                subject: 'Comprobante CIERVO',
+                              ),
+                              icon: const Icon(Icons.share_outlined),
+                              label: const Text('Compartir comprobante'),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }

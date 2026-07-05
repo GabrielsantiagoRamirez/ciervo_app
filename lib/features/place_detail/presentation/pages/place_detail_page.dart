@@ -46,6 +46,7 @@ import '../../../../core/kids/selected_kid_context.dart';
 import '../../../delivery/presentation/pages/customer_order_detail_page.dart';
 import '../../../receipts/domain/entities/action_confirmation.dart';
 import '../../../receipts/presentation/pages/action_confirmation_page.dart';
+import '../../../../shared/widgets/ciervo_image_viewer_page.dart';
 
 class PlaceDetailPage extends StatefulWidget {
   const PlaceDetailPage({required this.place, super.key});
@@ -77,6 +78,7 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
   }
 
   bool _loadFailed = false;
+  String? _loadErrorMessage;
 
   Future<void> _loadCapabilities() async {
     final locationResult = await getIt<ClientLocationRepository>()
@@ -113,7 +115,10 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
           _hasReviewed = detail.hasReviewed;
           _userReviewId = detail.userReviewId;
         },
-        failure: (_) => _loadFailed = true,
+        failure: (error) {
+          _loadFailed = true;
+          _loadErrorMessage = UserErrorMessage.from(error);
+        },
       );
       availabilityResult.when(
         success: (availability) => _deliveryAvailability = availability,
@@ -132,15 +137,62 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
       );
     }
     if (_loadFailed || _publicDetail == null) {
+      final previewImage = place.imageUrl.trim();
       return Scaffold(
         appBar: AppBar(title: Text(place.name)),
-        body: CiervoErrorState(
-          title: 'No pudimos cargar el comercio',
-          description: 'Verifica tu conexion e intenta nuevamente.',
-          onRetry: () {
-            setState(() => _loadingCapabilities = true);
-            _loadCapabilities();
-          },
+        body: ListView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          children: [
+            if (previewImage.isNotEmpty) ...[
+              GestureDetector(
+                onTap: () => openCiervoImageViewer(
+                  context,
+                  images: [previewImage],
+                ),
+                child: ClipRRect(
+                  borderRadius: AppRadii.card,
+                  child: AspectRatio(
+                    aspectRatio: 16 / 10,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        AuthenticatedMediaImage(
+                          mediaId: previewImage,
+                          fit: BoxFit.cover,
+                          errorWidget: const ColoredBox(
+                            color: AppColors.surfaceTop,
+                          ),
+                        ),
+                        const Align(
+                          alignment: Alignment.bottomRight,
+                          child: Padding(
+                            padding: EdgeInsets.all(AppSpacing.sm),
+                            child: Icon(
+                              Icons.zoom_out_map_rounded,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+            ],
+            CiervoErrorState(
+              title: 'No pudimos cargar el comercio',
+              description: _loadErrorMessage ??
+                  'Verifica tu conexion e intenta nuevamente.',
+              onRetry: () {
+                setState(() {
+                  _loadingCapabilities = true;
+                  _loadErrorMessage = null;
+                });
+                _loadCapabilities();
+              },
+            ),
+          ],
         ),
       );
     }
@@ -1206,77 +1258,108 @@ class _HeroSection extends StatelessWidget {
     final images = detail.gallery.isEmpty
         ? [if (detail.imageUrl.isNotEmpty) detail.imageUrl]
         : detail.gallery;
-    return Stack(
-      children: [
-        Hero(
-          tag: 'place-${detail.id}',
-          child: AspectRatio(
-            aspectRatio: 16 / 10,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                if (images.length > 1)
-                  PageView.builder(
-                    itemCount: images.length,
-                    itemBuilder: (context, index) => AuthenticatedMediaImage(
-                      mediaId: images[index],
+    return GestureDetector(
+      onTap: images.isEmpty
+          ? null
+          : () => openCiervoImageViewer(context, images: images),
+      child: Stack(
+        children: [
+          Hero(
+            tag: 'place-${detail.id}',
+            child: AspectRatio(
+              aspectRatio: 16 / 10,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  if (images.length > 1)
+                    PageView.builder(
+                      itemCount: images.length,
+                      itemBuilder: (context, index) => AuthenticatedMediaImage(
+                        mediaId: images[index],
+                        fit: BoxFit.cover,
+                        errorWidget:
+                            const ColoredBox(color: AppColors.surfaceTop),
+                      ),
+                    )
+                  else if (images.isNotEmpty)
+                    AuthenticatedMediaImage(
+                      mediaId: images.first,
                       fit: BoxFit.cover,
-                      errorWidget: const ColoredBox(color: AppColors.surfaceTop),
+                      errorWidget:
+                          const ColoredBox(color: AppColors.surfaceTop),
+                    )
+                  else
+                    const ColoredBox(color: AppColors.surfaceTop),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: AppComponentStyles.cardOverlayGradient,
                     ),
-                  )
-                else if (images.isNotEmpty)
-                  AuthenticatedMediaImage(
-                    mediaId: images.first,
-                    fit: BoxFit.cover,
-                    errorWidget: const ColoredBox(color: AppColors.surfaceTop),
-                  )
-                else
-                  const ColoredBox(color: AppColors.surfaceTop),
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: AppComponentStyles.cardOverlayGradient,
                   ),
-                ),
-                if (images.length > 1)
-                  Positioned(
-                    right: AppSpacing.md,
-                    bottom: AppSpacing.md,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: Colors.black54,
-                        borderRadius: AppRadii.chip,
-                      ),
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: AppSpacing.sm,
-                          vertical: AppSpacing.xxs,
+                  if (images.isNotEmpty)
+                    const Align(
+                      alignment: Alignment.bottomRight,
+                      child: Padding(
+                        padding: EdgeInsets.all(AppSpacing.md),
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Colors.black54,
+                            borderRadius: AppRadii.chip,
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: AppSpacing.sm,
+                              vertical: AppSpacing.xxs,
+                            ),
+                            child: Icon(
+                              Icons.zoom_out_map_rounded,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                          ),
                         ),
-                        child: Icon(Icons.swipe, color: Colors.white, size: 18),
                       ),
                     ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-        Positioned(
-          top: MediaQuery.paddingOf(context).top + AppSpacing.sm,
-          left: AppSpacing.sm,
-          child: Container(
-            decoration: BoxDecoration(
-              color: AppColors.glass,
-              borderRadius: AppRadii.chip,
-            ),
-            child: IconButton(
-              icon: Icon(
-                Icons.arrow_back,
-                color: Theme.of(context).colorScheme.onSurface,
+                  if (images.length > 1)
+                    Positioned(
+                      right: AppSpacing.md,
+                      bottom: AppSpacing.xl + AppSpacing.sm,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: AppRadii.chip,
+                        ),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: AppSpacing.sm,
+                            vertical: AppSpacing.xxs,
+                          ),
+                          child: Icon(Icons.swipe, color: Colors.white, size: 18),
+                        ),
+                      ),
+                    ),
+                ],
               ),
-              onPressed: () => Navigator.of(context).pop(),
             ),
           ),
-        ),
-      ],
+          Positioned(
+            top: MediaQuery.paddingOf(context).top + AppSpacing.sm,
+            left: AppSpacing.sm,
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.glass,
+                borderRadius: AppRadii.chip,
+              ),
+              child: IconButton(
+                icon: Icon(
+                  Icons.arrow_back,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

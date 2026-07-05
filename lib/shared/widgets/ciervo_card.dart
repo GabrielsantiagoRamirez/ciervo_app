@@ -8,7 +8,7 @@ class CiervoCard extends StatelessWidget {
   const CiervoCard({
     required this.child,
     super.key,
-    this.padding = const EdgeInsets.all(AppSpacing.xl),
+    this.padding = const EdgeInsets.all(AppSpacing.md),
     this.height,
     this.width,
     this.showGradientOverlay = false,

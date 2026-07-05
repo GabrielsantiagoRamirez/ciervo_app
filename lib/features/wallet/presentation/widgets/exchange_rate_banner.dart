@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/layout/ciervo_page_layout.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../exchange/data/exchange_rate_repository.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
@@ -57,8 +58,9 @@ class _ExchangeRateBannerState extends State<ExchangeRateBanner> {
     }
     if (_summary == null) return const SizedBox.shrink();
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.only(top: AppSpacing.sm),
       child: CiervoCard(
+        padding: CiervoPageLayout.compactCardPadding,
         child: Row(
           children: [
             Icon(

@@ -16,6 +16,7 @@ ChatConversation conversationFromJson(Map<String, dynamic> json) =>
       unreadCount: _int(json['unreadCount']),
       status: '${json['status'] ?? 'Open'}',
       businessId: _nullableInt(json['businessId']),
+      peerUserId: _nullableInt(json['peerUserId']),
       lastMessage: (json['lastMessageBody'] ?? json['lastMessage']?['body'])
           ?.toString(),
       updatedAt: DateTime.tryParse(

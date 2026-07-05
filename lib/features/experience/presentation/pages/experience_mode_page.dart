@@ -35,15 +35,21 @@ class _ExperienceModePageState extends State<ExperienceModePage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDay = _selectedMode == ExperienceMode.day;
+    final background = isDay ? AppColors.dayBackground : AppColors.background;
+    final gradientColors = isDay
+        ? const [Color(0xFFFFF8E8), AppColors.dayBackground]
+        : const [Color(0xFF1B1810), AppColors.background];
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: background,
       body: DecoratedBox(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: RadialGradient(
-            center: Alignment(0, -0.35),
+            center: const Alignment(0, -0.35),
             radius: 1.15,
-            colors: [Color(0xFF1B1810), AppColors.background],
-            stops: [0, 0.72],
+            colors: gradientColors,
+            stops: const [0, 0.72],
           ),
         ),
         child: SafeArea(
@@ -89,6 +95,15 @@ class _ExperiencePanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDay = selectedMode == ExperienceMode.day;
+    final panelColor =
+        isDay ? AppColors.daySurface.withValues(alpha: 0.96) : const Color(0xF20D0D0E);
+    final titleColor = isDay ? AppColors.dayText : AppColors.textPrimary;
+    final subtitleColor = isDay ? AppColors.dayTextMuted : AppColors.textMuted;
+    final brandColor = isDay ? AppColors.goldDark : AppColors.primaryHigh;
+    final shadowColor =
+        isDay ? AppColors.shadowWarmSoft : Colors.black87;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.lg,
@@ -97,11 +112,17 @@ class _ExperiencePanel extends StatelessWidget {
         AppSpacing.lg,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xF20D0D0E),
+        color: panelColor,
         borderRadius: AppRadii.card,
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.38)),
-        boxShadow: const [
-          BoxShadow(color: Colors.black87, blurRadius: 32, offset: Offset(0, 18)),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: isDay ? 0.45 : 0.38),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: shadowColor,
+            blurRadius: 32,
+            offset: const Offset(0, 18),
+          ),
         ],
       ),
       child: Column(
@@ -113,7 +134,7 @@ class _ExperiencePanel extends StatelessWidget {
             padding: const EdgeInsets.all(AppSpacing.sm),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.primary.withValues(alpha: 0.08),
+              color: AppColors.primary.withValues(alpha: isDay ? 0.12 : 0.08),
               boxShadow: [
                 BoxShadow(
                   color: AppColors.primary.withValues(alpha: 0.2),
@@ -124,21 +145,21 @@ class _ExperiencePanel extends StatelessWidget {
             child: Image.asset('assets/icon/icon.png', fit: BoxFit.contain),
           ),
           const SizedBox(height: AppSpacing.md),
-          const Text(
+          Text(
             'CIERVO',
             style: TextStyle(
-              color: AppColors.primaryHigh,
+              color: brandColor,
               fontSize: 28,
               fontWeight: FontWeight.w600,
               letterSpacing: 9,
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
-          const Text(
+          Text(
             'Elige cuándo inicia\ntu momento',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: AppColors.textPrimary,
+              color: titleColor,
               fontSize: 34,
               height: 1.08,
               fontWeight: FontWeight.w500,
@@ -146,17 +167,21 @@ class _ExperiencePanel extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          const Text(
+          Text(
             'Selecciona el modo en el que quieres disfrutar la app.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: AppColors.textMuted,
+              color: subtitleColor,
               fontSize: 15,
               height: 1.45,
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
-          _ModeSelector(selectedMode: selectedMode, onChanged: onChanged),
+          _ModeSelector(
+            selectedMode: selectedMode,
+            isDayPreview: isDay,
+            onChanged: onChanged,
+          ),
           const SizedBox(height: AppSpacing.xl),
           _ContinueButton(saving: saving, onPressed: onContinue),
         ],
@@ -166,9 +191,14 @@ class _ExperiencePanel extends StatelessWidget {
 }
 
 class _ModeSelector extends StatelessWidget {
-  const _ModeSelector({required this.selectedMode, required this.onChanged});
+  const _ModeSelector({
+    required this.selectedMode,
+    required this.isDayPreview,
+    required this.onChanged,
+  });
 
   final ExperienceMode selectedMode;
+  final bool isDayPreview;
   final ValueChanged<ExperienceMode> onChanged;
 
   @override
@@ -177,7 +207,7 @@ class _ModeSelector extends StatelessWidget {
       height: 64,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFF151516),
+        color: isDayPreview ? const Color(0xFFF0E8D4) : const Color(0xFF151516),
         borderRadius: AppRadii.chip,
         border: Border.all(color: AppColors.goldDark.withValues(alpha: 0.55)),
       ),
@@ -257,7 +287,11 @@ class _ModeSegment extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  color: selected ? AppColors.dayText : AppColors.textPrimary,
+                  color: selected
+                      ? AppColors.dayText
+                      : (Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.textPrimary
+                          : AppColors.dayText),
                   fontWeight: FontWeight.w700,
                   fontSize: 16,
                 ),

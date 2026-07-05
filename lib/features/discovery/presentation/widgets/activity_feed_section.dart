@@ -14,6 +14,9 @@ import '../../../media/presentation/authenticated_media_image.dart';
 import '../../../place_detail/presentation/pages/place_detail_page.dart';
 import '../../data/repositories/activity_feed_repository.dart';
 import '../../domain/entities/activity_feed_item.dart';
+import '../../../safety/data/models/safety_models.dart';
+import '../../../safety/data/services/safety_filter_cache.dart';
+import '../../../safety/presentation/widgets/safety_sheets.dart';
 
 class ActivityFeedSection extends StatefulWidget {
   const ActivityFeedSection({super.key});
@@ -43,9 +46,35 @@ class _ActivityFeedSectionState extends State<ActivityFeedSection> {
   Future<List<ActivityFeedItem>> _load() async {
     final result = await getIt<ActivityFeedRepository>().feed();
     return result.when(
-      success: (value) => value,
+      success: (value) {
+        final cache = getIt<SafetyFilterCache>();
+        return value.where((item) => !_isBlocked(cache, item)).toList();
+      },
       failure: (error) => throw error,
     );
+  }
+
+  bool _isBlocked(SafetyFilterCache cache, ActivityFeedItem item) {
+    if (item.businessId != null &&
+        cache.isContentBlocked(ReportTargetType.business, '${item.businessId}')) {
+      return true;
+    }
+    if (item.eventId != null &&
+        cache.isContentBlocked(ReportTargetType.event, '${item.eventId}')) {
+      return true;
+    }
+    if (item.productId != null &&
+        cache.isContentBlocked(ReportTargetType.post, '${item.productId}')) {
+      return true;
+    }
+    if (item.promotionId != null &&
+        cache.isContentBlocked(
+          ReportTargetType.promotion,
+          '${item.promotionId}',
+        )) {
+      return true;
+    }
+    return false;
   }
 
   @override
@@ -102,12 +131,42 @@ class _ActivityCard extends StatelessWidget {
 
   final ActivityFeedItem item;
 
+  ReportTargetType? _targetType(ActivityFeedItem item) {
+    if (item.promotionId != null) return ReportTargetType.promotion;
+    if (item.eventId != null) return ReportTargetType.event;
+    if (item.productId != null) return ReportTargetType.post;
+    if (item.businessId != null) return ReportTargetType.business;
+    return null;
+  }
+
+  String? _targetId(ActivityFeedItem item) {
+    if (item.promotionId != null) return '${item.promotionId}';
+    if (item.eventId != null) return '${item.eventId}';
+    if (item.productId != null) return '${item.productId}';
+    if (item.businessId != null) return '${item.businessId}';
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) => SizedBox(
     width: 260,
     child: InkWell(
       borderRadius: BorderRadius.circular(18),
       onTap: () => _openActivity(context, item),
+      onLongPress: () {
+        final type = _targetType(item);
+        final id = _targetId(item);
+        if (type == null || id == null) return;
+        showSafetyOptionsSheet(
+          context,
+          title: item.title,
+          contentType: type,
+          contentId: id,
+          onActionCompleted: () {
+            HomeFeedRefresh.instance.refreshAll();
+          },
+        );
+      },
       child: CiervoCard(
         padding: EdgeInsets.zero,
         child: ClipRRect(

@@ -216,7 +216,7 @@ class _MembershipPageState extends State<MembershipPage>
           title: const Text('Membresia'),
           bottom: TabBar(
             controller: _tabController,
-            isScrollable: true,
+            isScrollable: false,
             tabs: const [
               Tab(text: 'Mi plan'),
               Tab(text: 'Planes'),
@@ -503,6 +503,7 @@ class _PlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => CiervoCard(
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

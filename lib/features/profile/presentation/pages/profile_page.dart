@@ -29,7 +29,6 @@ import '../../../wallet/presentation/pages/payment_requests_page.dart';
 import '../../../family_payments/presentation/pages/family_payment_methods_page.dart';
 import '../../../family_payments/presentation/pages/parent_payment_history_page.dart';
 import '../../../financial_history/presentation/pages/financial_history_page.dart';
-import '../../../receipts/presentation/pages/receipts_page.dart';
 import '../../../cashback/presentation/pages/cashback_page.dart';
 import '../../../qr_hub/presentation/pages/qr_hub_page.dart';
 import '../../../qr_wallet/presentation/pages/qr_wallet_page.dart';
@@ -603,13 +602,6 @@ class _AccountActions extends StatelessWidget {
               MaterialPageRoute<void>(
                 builder: (_) => const FinancialHistoryPage(),
               ),
-            ),
-          ),
-          _ActionTile(
-            icon: Icons.receipt_long_outlined,
-            title: 'Recibos',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const ReceiptsPage()),
             ),
           ),
           _ActionTile(
