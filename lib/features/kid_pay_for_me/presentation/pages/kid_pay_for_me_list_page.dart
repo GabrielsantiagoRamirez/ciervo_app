@@ -8,6 +8,7 @@ import '../../../../core/utils/pay_for_me_labels.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
+import '../../../kid_pay_for_me/presentation/pages/kid_pay_for_me_request_page.dart';
 import '../../../kid_me/data/kid_me_repository.dart';
 
 class KidPayForMeListPage extends StatefulWidget {
@@ -55,6 +56,18 @@ class _KidPayForMeListPageState extends State<KidPayForMeListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Mis solicitudes')),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          await Navigator.of(context).push<bool>(
+            MaterialPageRoute(
+              builder: (_) => const KidPayForMeRequestPage(),
+            ),
+          );
+          await _load();
+        },
+        icon: const Icon(Icons.add),
+        label: const Text('Nueva solicitud'),
+      ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: _loading
@@ -125,7 +138,7 @@ class _KidPayForMeListPageState extends State<KidPayForMeListPage> {
                         ),
                         const SizedBox(height: AppSpacing.xs),
                         Text(
-                          'COP ${_num(item['amount']).toStringAsFixed(0)}',
+                          '${item['currency'] ?? 'COP'} ${_num(item['amount']).toStringAsFixed(0)}',
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                         if (item['createdAt'] != null)

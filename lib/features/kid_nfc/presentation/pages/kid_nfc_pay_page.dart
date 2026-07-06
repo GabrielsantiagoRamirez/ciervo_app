@@ -54,10 +54,14 @@ class _KidNfcPayPageState extends State<KidNfcPayPage> {
   String get _qrToken {
     final payload = _session?['nfcPayload'];
     if (payload is Map) {
-      final token = payload['token'];
+      final token = payload['t'] ?? payload['token'];
       if (token != null && '$token'.isNotEmpty) return '$token';
     }
-    return '${_session?['token'] ?? _session?['qrPayload'] ?? ''}';
+    final sessionToken = _session?['token'] ?? _session?['qrPayload'];
+    if (sessionToken != null && '$sessionToken'.isNotEmpty) {
+      return '$sessionToken';
+    }
+    return '';
   }
 
   String get _sessionStatus =>

@@ -8,6 +8,7 @@ import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../domain/entities/delivery_models.dart';
 import '../../domain/repositories/delivery_repository.dart';
+import '../widgets/available_delivery_orders_map.dart';
 import '../widgets/delivery_pricing_card.dart';
 import 'delivery_order_detail_page.dart';
 
@@ -59,9 +60,33 @@ class _AvailableDeliveryOrdersPageState
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Domicilios disponibles')),
-    body: _loading
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Domicilios disponibles'),
+          bottom: const TabBar(
+            tabs: [
+              Tab(icon: Icon(Icons.list), text: 'Lista'),
+              Tab(icon: Icon(Icons.map_outlined), text: 'Mapa'),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            _buildList(context),
+            AvailableDeliveryOrdersMap(
+              orders: _orders,
+              onSelect: _claim,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildList(BuildContext context) => _loading
         ? const Center(child: CircularProgressIndicator())
         : RefreshIndicator(
             onRefresh: _load,
@@ -127,8 +152,7 @@ class _AvailableDeliveryOrdersPageState
                       );
                     },
                   ),
-          ),
-  );
+          );
 
   Future<void> _claim(AvailableDeliveryOrder order) async {
     if (_profile?.isSettlementAccountVerified != true) {

@@ -55,6 +55,31 @@ class AuthTokenClaims {
   final String? role;
   final String? businessRoleId;
 
+  int? get childProfileId {
+    for (final key in const [
+      'childProfileId',
+      'child_profile_id',
+      'kidId',
+      'kid_id',
+    ]) {
+      final value = claims[key];
+      if (value is int) return value;
+      final parsed = int.tryParse('$value');
+      if (parsed != null) return parsed;
+    }
+    return null;
+  }
+
+  int? get familyId {
+    for (final key in const ['familyId', 'family_id']) {
+      final value = claims[key];
+      if (value is int) return value;
+      final parsed = int.tryParse('$value');
+      if (parsed != null) return parsed;
+    }
+    return null;
+  }
+
   String get routeKind {
     final values = [
       accountKind,

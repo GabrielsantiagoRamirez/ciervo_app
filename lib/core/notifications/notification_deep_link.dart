@@ -1,5 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import '../../core/di/service_locator.dart';
+import '../../core/session/auth_token_claims.dart';
+import '../../core/session/session_manager.dart';
+import '../../features/kid_wallet/presentation/pages/kid_wallet_page.dart';
 import '../../features/bonuses/presentation/pages/bonus_detail_page.dart';
 import '../../features/bonuses/presentation/pages/bonuses_pages.dart';
 import '../../features/chat/presentation/pages/chat_conversation_page.dart';
@@ -16,6 +22,8 @@ import '../../features/secure_shipment/presentation/pages/secure_shipment_list_p
 import '../../features/wallet/presentation/pages/payment_requests_page.dart';
 import '../../features/wallet/presentation/pages/wallet_page.dart';
 import '../../features/family_payments/presentation/pages/family_payment_navigation.dart';
+import '../../features/universal_nfc/presentation/pages/kids_nfc_parent_approvals_page.dart';
+import '../../features/universal_nfc/presentation/pages/universal_nfc_pay_page.dart';
 
 /// Navega desde una notificacion (in-app o push) a la pantalla correspondiente.
 class NotificationDeepLink {
@@ -178,6 +186,23 @@ class NotificationDeepLink {
       }
       return true;
     }
+    if (text.contains('nfc.kids.pending_parent') ||
+        text.contains('nfc.kids.pending') ||
+        text.contains('nfc kids')) {
+      _push(context, const KidsNfcParentApprovalsPage());
+      return true;
+    }
+    if (text.contains('nfc.kids.approved') ||
+        text.contains('nfc.kids.rejected') ||
+        text.contains('nfc.payment.succeeded')) {
+      unawaited(_openNfcKidsResult(context));
+      return true;
+    }
+    if (text.contains('commerce.auth.pending') ||
+        text.contains('commerce.auth')) {
+      _push(context, const KidsNfcParentApprovalsPage());
+      return true;
+    }
     if (text.contains('payment.pending_parent') ||
         text.contains('payment.requested') ||
         text.contains('payment_request') ||
@@ -280,5 +305,16 @@ class NotificationDeepLink {
 
   static void _push(BuildContext context, Widget page) {
     Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
+  }
+
+  static Future<void> _openNfcKidsResult(BuildContext context) async {
+    final token = await getIt<SessionManager>().accessToken();
+    final isKid =
+        token != null && AuthTokenClaims.fromJwt(token).routeKind == 'Kid';
+    if (!context.mounted) return;
+    _push(
+      context,
+      isKid ? const KidWalletPage() : const UniversalNfcPayPage(),
+    );
   }
 }

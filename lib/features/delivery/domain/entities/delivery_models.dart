@@ -84,6 +84,12 @@ class DeliveryOrder {
     this.paymentMethod,
     this.childProfileId,
     this.businessId,
+    this.deliveryLatitude,
+    this.deliveryLongitude,
+    this.pickupLatitude,
+    this.pickupLongitude,
+    this.courierLatitude,
+    this.courierLongitude,
   });
   final String id;
   final String status;
@@ -116,6 +122,27 @@ class DeliveryOrder {
   final String? paymentMethod;
   final String? childProfileId;
   final String? businessId;
+  final double? deliveryLatitude;
+  final double? deliveryLongitude;
+  final double? pickupLatitude;
+  final double? pickupLongitude;
+  final double? courierLatitude;
+  final double? courierLongitude;
+
+  bool get isTrackableOnMap {
+    final s = status.toLowerCase();
+    return !s.contains('delivered') &&
+        !s.contains('cancel') &&
+        !s.contains('reject') &&
+        (s.contains('courier') ||
+            s.contains('accepted') ||
+            s.contains('picked') ||
+            s.contains('way') ||
+            s.contains('arrived') ||
+            s.contains('assigned') ||
+            s.contains('preparing') ||
+            s.contains('ready'));
+  }
 
   bool get needsPayment {
     final normalized = (paymentStatus ?? '').toLowerCase();
@@ -234,6 +261,10 @@ class AvailableDeliveryOrder {
     this.courierEarning,
     this.currency,
     this.pricing,
+    this.pickupLatitude,
+    this.pickupLongitude,
+    this.deliveryLatitude,
+    this.deliveryLongitude,
   });
 
   final String id;
@@ -244,6 +275,10 @@ class AvailableDeliveryOrder {
   final num? courierEarning;
   final String? currency;
   final DeliveryPricing? pricing;
+  final double? pickupLatitude;
+  final double? pickupLongitude;
+  final double? deliveryLatitude;
+  final double? deliveryLongitude;
 
   DeliveryPricing get effectivePricing => pricing ??
       DeliveryPricing(
@@ -251,6 +286,31 @@ class AvailableDeliveryOrder {
         courierEarning: courierEarning,
       );
 }
+
+class DeliveryTrackingPoint {
+  const DeliveryTrackingPoint({
+    required this.latitude,
+    required this.longitude,
+    this.status,
+    this.createdAt,
+  });
+
+  factory DeliveryTrackingPoint.fromJson(Map<String, dynamic> json) =>
+      DeliveryTrackingPoint(
+        latitude: _trackingDouble(json['latitude']) ?? 0,
+        longitude: _trackingDouble(json['longitude']) ?? 0,
+        status: json['status']?.toString(),
+        createdAt: DateTime.tryParse('${json['createdAt'] ?? ''}'),
+      );
+
+  final double latitude;
+  final double longitude;
+  final String? status;
+  final DateTime? createdAt;
+}
+
+double? _trackingDouble(dynamic value) =>
+    value is num ? value.toDouble() : double.tryParse('$value');
 
 class DeliverySettlementAccount {
   const DeliverySettlementAccount({

@@ -227,7 +227,7 @@ class KidsRepositoryImpl implements KidsRepository {
   Future<Result<Map<String, dynamic>>> createChildWalletCard({
     required String childId,
     required String displayName,
-    required String currency,
+    String? currency,
   }) async {
     try {
       return Success(
@@ -235,6 +235,34 @@ class KidsRepositoryImpl implements KidsRepository {
           childId: childId,
           displayName: displayName,
           currency: currency,
+        ),
+      );
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
+  Future<Result<Map<String, dynamic>>> childPaymentMethods(String childId) async {
+    try {
+      return Success(await _remoteDataSource.childPaymentMethods(childId));
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
+  Future<Result<Map<String, dynamic>>> saveChildPaymentSource({
+    required String childId,
+    String? cardId,
+    bool usePrimaryCard = true,
+  }) async {
+    try {
+      return Success(
+        await _remoteDataSource.saveChildPaymentSource(
+          childId: childId,
+          cardId: cardId,
+          usePrimaryCard: usePrimaryCard,
         ),
       );
     } catch (error) {

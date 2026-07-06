@@ -9,6 +9,7 @@ import '../../../../core/theme/app_component_styles.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/ciervo_date_picker.dart';
 import '../../../../core/utils/ciervo_share.dart';
 import '../../../../shared/widgets/insufficient_balance_dialog.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
@@ -18,7 +19,6 @@ import '../../../../shared/widgets/ciervo_brand_loader.dart';
 import '../../../home/domain/entities/home_place.dart';
 import '../../../chat/domain/repositories/chat_repository.dart';
 import '../../../chat/presentation/pages/chat_conversation_page.dart';
-import '../../../delivery/domain/repositories/delivery_repository.dart';
 import '../../../bonuses/presentation/pages/bonus_detail_page.dart';
 import '../../../campaigns/presentation/widgets/paid_campaign_banner_section.dart';
 import '../../../favorites/domain/entities/favorite_filters.dart';
@@ -42,8 +42,7 @@ import '../widgets/place_detail_review_tile.dart';
 import '../../../media/presentation/authenticated_media_image.dart';
 import '../../../product_categories/presentation/widgets/product_subcategory_filters.dart';
 import '../../../reservations/data/booking_repository.dart';
-import '../../../../core/kids/selected_kid_context.dart';
-import '../../../delivery/presentation/pages/customer_order_detail_page.dart';
+import '../../../delivery/presentation/pages/delivery_checkout_page.dart';
 import '../../../receipts/domain/entities/action_confirmation.dart';
 import '../../../receipts/presentation/pages/action_confirmation_page.dart';
 import '../../../../shared/widgets/ciervo_image_viewer_page.dart';
@@ -483,15 +482,13 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
       );
       return;
     }
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (context) => SafeArea(
-        child: _DeliveryOrderSheet(
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => DeliveryCheckoutPage(
           businessId: widget.place.id,
+          businessName: widget.place.name,
           products: deliveryProducts,
-          location: _location!,
+          initialLocation: _location!,
           availability: _deliveryAvailability,
         ),
       ),
@@ -717,11 +714,12 @@ class _ReservationSheetState extends State<_ReservationSheet> {
       );
 
   Future<void> _pickDate() async {
-    final value = await showDatePicker(
-      context: context,
+    final value = await showCiervoDatePicker(
+      context,
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 90)),
-      initialDate: _date,
+      initialDate: _date ?? DateTime.now(),
+      helpText: 'Selecciona la fecha',
     );
     if (value != null) setState(() => _date = value);
   }
@@ -914,220 +912,6 @@ class _ReviewSheetState extends State<_ReviewSheet> {
     );
   }
 }
-class _DeliveryOrderSheet extends StatefulWidget {
-  const _DeliveryOrderSheet({
-    required this.businessId,
-    required this.products,
-    required this.location,
-    required this.availability,
-  });
-
-  final String businessId;
-  final List<BusinessProduct> products;
-  final AppLocation location;
-  final DeliveryAvailability? availability;
-
-  @override
-  State<_DeliveryOrderSheet> createState() => _DeliveryOrderSheetState();
-}
-
-class _DeliveryOrderSheetState extends State<_DeliveryOrderSheet> {
-  final _addressController = TextEditingController();
-  final _notesController = TextEditingController();
-  final _quantities = <String, int>{};
-  bool _submitting = false;
-
-  @override
-  void dispose() {
-    _addressController.dispose();
-    _notesController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: EdgeInsets.only(
-          left: AppSpacing.lg,
-          right: AppSpacing.lg,
-          bottom: MediaQuery.viewInsetsOf(context).bottom + AppSpacing.lg,
-          top: AppSpacing.sm,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text('Pedir domicilio', style: AppTextStyles.title),
-              const SizedBox(height: AppSpacing.md),
-              ...widget.products.map(_quantityTile),
-              const SizedBox(height: AppSpacing.sm),
-              _DeliverySummary(
-                productsSubtotal: _productsSubtotal,
-                deliveryFee: widget.availability?.estimatedDeliveryFee ?? 0,
-                currency: widget.availability?.currency ?? 'COP',
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              TextField(
-                controller: _addressController,
-                decoration: const InputDecoration(labelText: 'Direccion de entrega'),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              TextField(
-                controller: _notesController,
-                minLines: 1,
-                maxLines: 3,
-                decoration: const InputDecoration(labelText: 'Notas opcionales'),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              CiervoButton(
-                label: _submitting ? 'Creando pedido' : 'Confirmar pedido',
-                icon: Icons.shopping_bag_outlined,
-                state: _submitting ? CiervoButtonState.loading : CiervoButtonState.normal,
-                onPressed: _submitting ? null : _submit,
-              ),
-            ],
-          ),
-        ),
-      );
-
-  Widget _quantityTile(BusinessProduct product) {
-    final quantity = _quantities[product.id] ?? 0;
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(product.name),
-      subtitle: Text('\$${product.price}'),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.remove_circle_outline),
-            onPressed: quantity == 0
-                ? null
-                : () => setState(() => _quantities[product.id] = quantity - 1),
-          ),
-          SizedBox(width: 24, child: Center(child: Text('$quantity'))),
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline),
-            onPressed: () => setState(() => _quantities[product.id] = quantity + 1),
-          ),
-        ],
-      ),
-    );
-  }
-
-  num get _productsSubtotal {
-    num total = 0;
-    for (final product in widget.products) {
-      total += product.price * (_quantities[product.id] ?? 0);
-    }
-    return total;
-  }
-
-  Future<void> _submit() async {
-    final items = _quantities.entries
-        .where((entry) => entry.value > 0)
-        .map((entry) => DeliveryOrderItemRequest(
-              productId: entry.key,
-              quantity: entry.value,
-            ))
-        .toList();
-    if (items.isEmpty || _addressController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecciona productos y direccion.')),
-      );
-      return;
-    }
-    setState(() => _submitting = true);
-    final childProfileId = getIt<SelectedKidContext>().kidId;
-    final result = await getIt<DeliveryRepository>().createCustomerOrder(
-      businessId: widget.businessId,
-      deliveryAddress: _addressController.text.trim(),
-      latitude: widget.location.latitude,
-      longitude: widget.location.longitude,
-      items: items,
-      notes: _notesController.text,
-      childProfileId: childProfileId,
-    );
-    if (!mounted) return;
-    setState(() => _submitting = false);
-    result.when(
-      success: (order) {
-        Navigator.of(context).pop();
-        Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => CustomerOrderDetailPage(orderId: order.id),
-          ),
-        );
-      },
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
-    );
-  }
-}
-
-class _DeliverySummary extends StatelessWidget {
-  const _DeliverySummary({
-    required this.productsSubtotal,
-    required this.deliveryFee,
-    required this.currency,
-  });
-
-  final num productsSubtotal;
-  final num deliveryFee;
-  final String currency;
-
-  @override
-  Widget build(BuildContext context) {
-    final total = productsSubtotal + deliveryFee;
-    return CiervoCard(
-      child: Column(
-        children: [
-          _AmountRow(
-            label: 'Subtotal productos',
-            value: _money(productsSubtotal, currency),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          _AmountRow(label: 'Domicilio', value: _money(deliveryFee, currency)),
-          const Divider(),
-          _AmountRow(
-            label: 'Total a pagar',
-            value: _money(total, currency),
-            prominent: true,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AmountRow extends StatelessWidget {
-  const _AmountRow({
-    required this.label,
-    required this.value,
-    this.prominent = false,
-  });
-
-  final String label;
-  final String value;
-  final bool prominent;
-
-  @override
-  Widget build(BuildContext context) {
-    final style = prominent
-        ? Theme.of(context).textTheme.titleMedium
-        : Theme.of(context).textTheme.bodyMedium;
-    return Row(
-      children: [
-        Expanded(child: Text(label, style: style)),
-        Text(value, style: style?.copyWith(fontWeight: FontWeight.w700)),
-      ],
-    );
-  }
-}
-
-String _money(num value, String currency) =>
-    '$currency ${value.toStringAsFixed(0)}';
 
 class _FavoriteButton extends StatefulWidget {
   const _FavoriteButton({

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../core/country/country_registration.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -35,6 +36,9 @@ class _SecureShipmentCreatePageState extends State<SecureShipmentCreatePage> {
   String? _receiverName;
   bool _submitting = false;
   String? _error;
+  String _currency = CountryRegistration.currencyForCountry(
+    CountryRegistration.defaultCountryCode(),
+  );
 
   @override
   void dispose() {
@@ -138,9 +142,15 @@ class _SecureShipmentCreatePageState extends State<SecureShipmentCreatePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Nuevo envío seguro')),
-      body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        children: [
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.lg,
+            AppSpacing.lg,
+            AppSpacing.xxl,
+          ),
+          children: [
           CiervoCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -189,8 +199,8 @@ class _SecureShipmentCreatePageState extends State<SecureShipmentCreatePage> {
             controller: _total,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: const InputDecoration(
-              labelText: 'Total (COP)',
+            decoration: InputDecoration(
+              labelText: 'Total ($_currency)',
               prefixText: '\$ ',
             ),
           ),
@@ -224,6 +234,7 @@ class _SecureShipmentCreatePageState extends State<SecureShipmentCreatePage> {
             onPressed: _submitting ? null : _submit,
           ),
         ],
+        ),
       ),
     );
   }

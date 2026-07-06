@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/country/country_registration.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
+import '../../../../core/utils/ciervo_date_picker.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/membership_upgrade_dialog.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
@@ -288,13 +289,14 @@ class _ChildFormViewState extends State<_ChildFormView> {
         },
         builder: (field) => InkWell(
           onTap: () async {
-            final selected = await showDatePicker(
-              context: context,
+            final selected = await showCiervoDatePicker(
+              context,
               initialDate:
                   _birthDate ??
                   DateTime.now().subtract(const Duration(days: 365 * 12)),
               firstDate: DateTime.now().subtract(const Duration(days: 365 * 26)),
               lastDate: DateTime.now().subtract(const Duration(days: 365 * 10)),
+              helpText: 'Fecha de nacimiento',
             );
             if (selected != null) {
               setState(() => _birthDate = selected);

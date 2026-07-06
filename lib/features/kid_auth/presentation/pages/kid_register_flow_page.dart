@@ -6,6 +6,7 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/session/session_manager.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/utils/ciervo_date_picker.dart';
 import '../../../../core/utils/app_routes.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
@@ -258,12 +259,15 @@ class _KidRegisterFlowPageState extends State<KidRegisterFlowPage> {
               const SizedBox(height: AppSpacing.md),
               InkWell(
                 onTap: () async {
-                  final selected = await showDatePicker(
-                    context: context,
+                  final selected = await showCiervoDatePicker(
+                    context,
                     initialDate: _birthDate ??
                         DateTime.now().subtract(const Duration(days: 365 * 12)),
-                    firstDate: DateTime.now().subtract(const Duration(days: 365 * 26)),
-                    lastDate: DateTime.now().subtract(const Duration(days: 365 * 10)),
+                    firstDate:
+                        DateTime.now().subtract(const Duration(days: 365 * 26)),
+                    lastDate:
+                        DateTime.now().subtract(const Duration(days: 365 * 10)),
+                    helpText: 'Fecha de nacimiento',
                   );
                   if (selected != null) {
                     setState(() {

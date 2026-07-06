@@ -27,7 +27,12 @@ class ChatButtonsBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final visible = buttons.visibleOnMobile();
-    final effective = visible.isNotEmpty ? visible : _fallbackButtons();
+    var effective = visible.isNotEmpty ? visible : _fallbackButtons();
+    if (familyKidMode) {
+      effective = effective
+          .where((b) => isKidAllowedFamilyChatAction(b.code))
+          .toList();
+    }
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,

@@ -48,6 +48,9 @@ import '../../features/family_chat/data/family_chat_repository.dart';
 import '../../features/kids/data/datasources/kids_remote_datasource.dart';
 import '../../features/kids/data/repositories/kids_repository_impl.dart';
 import '../../features/kids/domain/repositories/kids_repository.dart';
+import '../../features/universal_nfc/data/datasources/universal_nfc_remote_datasource.dart';
+import '../../features/universal_nfc/data/repositories/universal_nfc_repository_impl.dart';
+import '../../features/universal_nfc/domain/repositories/universal_nfc_repository.dart';
 import '../../features/kid_auth/data/datasources/kid_auth_remote_datasource.dart';
 import '../../features/kid_auth/data/repositories/kid_auth_repository_impl.dart';
 import '../../features/kid_me/data/kid_me_repository.dart';
@@ -300,6 +303,12 @@ Future<void> configureDependencies() async {
     )
     ..registerLazySingleton<FamilyPaymentsRepository>(
       () => FamilyPaymentsRepositoryImpl(getIt<FamilyPaymentsRemoteDataSource>()),
+    )
+    ..registerLazySingleton<UniversalNfcRemoteDataSource>(
+      () => DioUniversalNfcRemoteDataSource(getIt<NetworkClient>()),
+    )
+    ..registerLazySingleton<UniversalNfcRepository>(
+      () => UniversalNfcRepositoryImpl(getIt<UniversalNfcRemoteDataSource>()),
     )
     ..registerLazySingleton<MercadoPagoCardTokenizer>(
       MercadoPagoCardTokenizer.new,

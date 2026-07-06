@@ -228,13 +228,40 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
   });
 
   @override
-  Future<Result<Map<String, dynamic>>> tracking(String orderId) => _guard(
-    () async => unwrapApiMap(
-      (await _client.dio.get<dynamic>(
-        '/api/delivery/orders/$orderId/tracking',
-      )).data,
-    ),
-  );
+  Future<Result<List<DeliveryTrackingPoint>>> tracking(String orderId) =>
+      _guard(() async {
+        final response = await _client.dio.get<dynamic>(
+          '/api/delivery/orders/$orderId/tracking',
+        );
+        final value = unwrapApiResponse(response.data);
+        if (value is List) {
+          return value
+              .whereType<Map>()
+              .map((e) => DeliveryTrackingPoint.fromJson(
+                    Map<String, dynamic>.from(e),
+                  ))
+              .toList();
+        }
+        return const <DeliveryTrackingPoint>[];
+      });
+
+  @override
+  Future<Result<void>> postTracking({
+    required String orderId,
+    required double latitude,
+    required double longitude,
+    String? status,
+  }) =>
+      _guard(() async {
+        await _client.dio.post<void>(
+          '/api/delivery/orders/$orderId/tracking',
+          data: {
+            'latitude': latitude,
+            'longitude': longitude,
+            if (status != null && status.isNotEmpty) 'status': status,
+          },
+        );
+      });
   @override
   Future<Result<DeliveryOrder>> action(
     String id,
@@ -471,6 +498,12 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
       paymentMethod: _stringOrNull(json['paymentMethod']),
       childProfileId: _stringOrNull(json['childProfileId']),
       businessId: _stringOrNull(json['businessId'] ?? json['business']?['id']),
+      deliveryLatitude: _double(json['latitude'] ?? json['deliveryLatitude']),
+      deliveryLongitude: _double(json['longitude'] ?? json['deliveryLongitude']),
+      pickupLatitude: _double(json['pickupLatitude']),
+      pickupLongitude: _double(json['pickupLongitude']),
+      courierLatitude: _double(json['courierLatitude']),
+      courierLongitude: _double(json['courierLongitude']),
       confirmation: ActionConfirmation.fromJson(
         json,
         fallbackTitle: 'Pedido creado',
@@ -511,6 +544,10 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
           _num(json['courierEarning'] ?? json['estimatedCourierEarning']),
       currency: (json['currency'] ?? json['currencyCode'])?.toString(),
       pricing: pricing,
+      pickupLatitude: _double(json['pickupLatitude']),
+      pickupLongitude: _double(json['pickupLongitude']),
+      deliveryLatitude: _double(json['deliveryLatitude']),
+      deliveryLongitude: _double(json['deliveryLongitude']),
     );
   }
 

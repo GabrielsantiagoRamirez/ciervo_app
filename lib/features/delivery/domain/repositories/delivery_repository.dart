@@ -48,7 +48,13 @@ abstract interface class DeliveryRepository {
     required int rating,
     String? comment,
   });
-  Future<Result<Map<String, dynamic>>> tracking(String orderId);
+  Future<Result<List<DeliveryTrackingPoint>>> tracking(String orderId);
+  Future<Result<void>> postTracking({
+    required String orderId,
+    required double latitude,
+    required double longitude,
+    String? status,
+  });
   Future<Result<DeliveryOrder>> action(String id, String action, {String? pin});
   Future<Result<List<dynamic>>> conversations();
   Future<Result<List<dynamic>>> messages(String id, {required int page});

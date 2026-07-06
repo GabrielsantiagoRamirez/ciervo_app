@@ -1,12 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
+import '../../../../core/location/location_service.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../domain/entities/delivery_models.dart';
 import '../../domain/repositories/delivery_repository.dart';
 import '../widgets/delivery_pricing_card.dart';
+import '../widgets/delivery_route_map.dart';
 import 'delivery_chat_page.dart';
 
 class DeliveryOrderDetailPage extends StatefulWidget {
@@ -22,27 +28,76 @@ class _DeliveryOrderDetailPageState extends State<DeliveryOrderDetailPage> {
   bool _loading = true;
   bool _acting = false;
   String? _error;
+  Timer? _locationTimer;
+
   @override
   void initState() {
     super.initState();
     _load();
   }
 
+  @override
+  void dispose() {
+    _locationTimer?.cancel();
+    super.dispose();
+  }
+
   Future<void> _load() async {
     final result = await getIt<DeliveryRepository>().order(widget.orderId);
     if (!mounted) return;
     result.when(
-      success: (o) => setState(() {
-        _order = o;
-        _loading = false;
-        _error = null;
-      }),
+      success: (o) {
+        setState(() {
+          _order = o;
+          _loading = false;
+          _error = null;
+        });
+        _configureLocationBroadcast();
+      },
       failure: (e) => setState(() {
         _error = UserErrorMessage.from(e);
         _loading = false;
       }),
     );
   }
+
+  void _configureLocationBroadcast() {
+    _locationTimer?.cancel();
+    final order = _order;
+    if (order == null) return;
+    final status = order.status.toLowerCase();
+    final active = status.contains('accepted') ||
+        status.contains('picked') ||
+        status.contains('way') ||
+        status.contains('arrived');
+    if (!active) return;
+    _broadcastLocation();
+    _locationTimer = Timer.periodic(const Duration(seconds: 20), (_) {
+      _broadcastLocation();
+    });
+  }
+
+  Future<void> _broadcastLocation() async {
+    final order = _order;
+    if (order == null) return;
+    try {
+      final location = await getIt<LocationService>().currentLocation();
+      await getIt<DeliveryRepository>().updateLocation(
+        location.latitude,
+        location.longitude,
+        location.accuracy,
+      );
+      await getIt<DeliveryRepository>().postTracking(
+        orderId: order.id,
+        latitude: location.latitude,
+        longitude: location.longitude,
+        status: order.status,
+      );
+    } catch (_) {}
+  }
+
+  LatLng? _latLng(double? lat, double? lng) =>
+      lat != null && lng != null ? LatLng(lat, lng) : null;
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -54,6 +109,35 @@ class _DeliveryOrderDetailPageState extends State<DeliveryOrderDetailPage> {
         : ListView(
             padding: const EdgeInsets.all(AppSpacing.lg),
             children: [
+              if (_order!.pickupLatitude != null ||
+                  _order!.deliveryLatitude != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                  child: CiervoCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Ruta del pedido',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        DeliveryRouteMap(
+                          height: 240,
+                          showNavigateButtons: true,
+                          pickup: _latLng(
+                            _order!.pickupLatitude,
+                            _order!.pickupLongitude,
+                          ),
+                          delivery: _latLng(
+                            _order!.deliveryLatitude,
+                            _order!.deliveryLongitude,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               CiervoCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,10 +249,13 @@ class _DeliveryOrderDetailPageState extends State<DeliveryOrderDetailPage> {
     );
     if (!mounted) return;
     result.when(
-      success: (o) => setState(() {
-        _order = o;
-        _acting = false;
-      }),
+      success: (o) {
+        setState(() {
+          _order = o;
+          _acting = false;
+        });
+        _configureLocationBroadcast();
+      },
       failure: (e) {
         setState(() => _acting = false);
         ScaffoldMessenger.of(

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../../../core/network/api_response_unwrapper.dart';
 import '../../../../core/network/network_client.dart';
+import '../../../../core/utils/idempotency_key.dart';
 import '../dtos/child_profile_dto.dart';
 import '../dtos/kids_requests.dart';
 
@@ -29,7 +30,14 @@ abstract interface class KidsRemoteDataSource {
   Future<Map<String, dynamic>> createChildWalletCard({
     required String childId,
     required String displayName,
-    required String currency,
+    String? currency,
+    String? idempotencyKey,
+  });
+  Future<Map<String, dynamic>> childPaymentMethods(String childId);
+  Future<Map<String, dynamic>> saveChildPaymentSource({
+    required String childId,
+    String? cardId,
+    bool usePrimaryCard = true,
   });
   Future<void> saveAllowedCategories(String childId, List<int> categoryIds);
   Future<Map<String, dynamic>> spendingLimits(String childId);
@@ -166,11 +174,48 @@ class DioKidsRemoteDataSource implements KidsRemoteDataSource {
   Future<Map<String, dynamic>> createChildWalletCard({
     required String childId,
     required String displayName,
-    required String currency,
+    String? currency,
+    String? idempotencyKey,
   }) async {
     final response = await _client.dio.post<Map<String, dynamic>>(
       '/api/guardians/children/$childId/wallet/cards',
-      data: {'displayName': displayName, 'currency': currency},
+      data: {
+        'displayName': displayName,
+        'name': displayName,
+        if (currency != null && currency.trim().isNotEmpty)
+          'currency': currency.trim(),
+        'idempotencyKey':
+            idempotencyKey ?? IdempotencyKey.generate('kid-wallet-card'),
+      },
+    );
+    final map = unwrapApiMap(response.data);
+    final card = map['card'] ?? map['Card'];
+    if (card is Map) {
+      return Map<String, dynamic>.from(card);
+    }
+    return map;
+  }
+
+  @override
+  Future<Map<String, dynamic>> childPaymentMethods(String childId) async {
+    final response = await _client.dio.get<Map<String, dynamic>>(
+      '/api/guardians/children/$childId/payment-methods',
+    );
+    return unwrapApiMap(response.data);
+  }
+
+  @override
+  Future<Map<String, dynamic>> saveChildPaymentSource({
+    required String childId,
+    String? cardId,
+    bool usePrimaryCard = true,
+  }) async {
+    final response = await _client.dio.post<Map<String, dynamic>>(
+      '/api/guardians/children/$childId/payment-sources',
+      data: {
+        'usePrimaryCard': usePrimaryCard,
+        if (cardId != null && cardId.isNotEmpty) 'cardId': cardId,
+      },
     );
     return unwrapApiMap(response.data);
   }

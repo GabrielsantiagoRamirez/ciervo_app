@@ -8,7 +8,8 @@ import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
 import '../../../kid_pay_for_me/presentation/pages/kid_pay_for_me_request_page.dart';
-import '../../../kid_nfc/presentation/pages/kid_nfc_pay_page.dart';
+import '../../../universal_nfc/presentation/pages/kid_universal_nfc_pay_page.dart';
+import '../../../../core/country/country_registration.dart';
 import '../../../kid_me/data/kid_me_repository.dart';
 
 class KidBusinessesPage extends StatefulWidget {
@@ -102,9 +103,16 @@ class _KidBusinessesPageState extends State<KidBusinessesPage> {
                       title: Text('${item['name'] ?? 'Comercio'}'),
                       subtitle: Text(
                         [
+                          if (item['ciervoUserCode'] != null)
+                            '@${item['ciervoUserCode']}',
                           item['categoryName'] ?? item['category'],
                           item['city'],
-                          item['zone'],
+                          item['country'] != null
+                              ? CountryRegistration.countryLabel(
+                                  '${item['country']}',
+                                )
+                              : item['zone'],
+                          if (item['status'] != null) '${item['status']}',
                         ].where((v) => v != null && '$v'.isNotEmpty).join(' · '),
                       ),
                       trailing: item['isOpen'] == false
@@ -162,15 +170,16 @@ class _KidBusinessesPageState extends State<KidBusinessesPage> {
               ),
               ListTile(
                 leading: const Icon(Icons.nfc),
-                title: const Text('Pagar con NFC / QR'),
-                subtitle: const Text('Usa tu saldo en el comercio'),
+                title: const Text('Pagar con NFC Universal'),
+                subtitle: const Text('Acerca tu dispositivo al datáfono'),
                 onTap: () {
                   Navigator.pop(sheetContext);
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => KidNfcPayPage(
+                      builder: (_) => KidUniversalNfcPayPage(
                         businessId: businessId,
                         businessName: businessName,
+                        merchantId: int.tryParse(businessId),
                       ),
                     ),
                   );

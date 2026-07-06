@@ -43,6 +43,21 @@ void main() {
       expect(domain.verificationUrl, 'https://mp.test/3ds');
       expect(domain.card.id, '9');
     });
+
+    test('parsea respuesta plana del backend prod', () {
+      final dto = AddFamilyCardResponseDto.fromJson({
+        'cardId': '15',
+        'brand': 'visa',
+        'last4': '4242',
+        'status': 'pending_verification',
+        'threeDsRedirectUrl': 'https://mp.test/3ds-flat',
+      });
+
+      final domain = dto.toDomain();
+      expect(domain.card.id, '15');
+      expect(domain.requires3ds, isTrue);
+      expect(domain.verificationUrl, 'https://mp.test/3ds-flat');
+    });
   });
 
   group('FamilyPaymentRecordDto', () {

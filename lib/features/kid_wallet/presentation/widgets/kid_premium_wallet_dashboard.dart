@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../kid_businesses/presentation/pages/kid_businesses_page.dart';
 import '../../../kid_pay_for_me/presentation/pages/kid_pay_for_me_list_page.dart';
+import '../../../kid_pay_for_me/presentation/pages/kid_pay_for_me_request_page.dart';
 import '../../../wallet/presentation/widgets/ciervo_digital_card.dart';
 
-class KidPremiumWalletDashboard extends StatelessWidget {
+class KidPremiumWalletDashboard extends StatefulWidget {
   const KidPremiumWalletDashboard({
     required this.userName,
     required this.balance,
@@ -24,16 +25,43 @@ class KidPremiumWalletDashboard extends StatelessWidget {
   final Future<void> Function() onRefresh;
 
   @override
+  State<KidPremiumWalletDashboard> createState() =>
+      _KidPremiumWalletDashboardState();
+}
+
+class _KidPremiumWalletDashboardState extends State<KidPremiumWalletDashboard> {
+  final _scrollController = ScrollController();
+  final _movementsKey = GlobalKey();
+
+  void _scrollToMovements() {
+    final context = _movementsKey.currentContext;
+    if (context != null) {
+      Scrollable.ensureVisible(
+        context,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final palette = CiervoWalletPalette.of(context);
-    final recent = movements.take(5).toList();
+    final recent = widget.movements.take(5).toList();
 
     return ColoredBox(
       color: palette.background,
       child: RefreshIndicator(
         color: CiervoBrandColors.gold,
-        onRefresh: onRefresh,
+        onRefresh: widget.onRefresh,
         child: ListView(
+          controller: _scrollController,
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.lg,
             AppSpacing.md,
@@ -41,12 +69,12 @@ class KidPremiumWalletDashboard extends StatelessWidget {
             AppSpacing.xxl,
           ),
           children: [
-            _KidHeader(userName: userName, palette: palette),
+            _KidHeader(userName: widget.userName, palette: palette),
             const SizedBox(height: AppSpacing.md),
             _ParentAuthBanner(palette: palette),
             const SizedBox(height: AppSpacing.lg),
             CiervoDigitalCard(
-              holderName: userName,
+              holderName: widget.userName,
               alias: 'Wallet Kids',
               status: 'Activa',
               mask: 'Tarjeta digital CIERVO Kids',
@@ -59,20 +87,26 @@ class KidPremiumWalletDashboard extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             _KidBalanceBar(
-              balance: balance,
-              heldBalance: heldBalance,
-              currency: currency,
+              balance: widget.balance,
+              heldBalance: widget.heldBalance,
+              currency: widget.currency,
               palette: palette,
               onRequestFunds: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (_) => const KidBusinessesPage(),
+                  builder: (_) => const KidPayForMeRequestPage(),
                 ),
               ),
             ),
             const SizedBox(height: AppSpacing.xl),
-            _KidQuickActionsRow(palette: palette),
+            _KidQuickActionsRow(
+              palette: palette,
+              onMovementsTap: _scrollToMovements,
+            ),
             const SizedBox(height: AppSpacing.xl),
-            _RecentMovementsHeader(palette: palette),
+            KeyedSubtree(
+              key: _movementsKey,
+              child: _RecentMovementsHeader(palette: palette),
+            ),
             const SizedBox(height: AppSpacing.sm),
             if (recent.isEmpty)
               Padding(
@@ -86,14 +120,14 @@ class KidPremiumWalletDashboard extends StatelessWidget {
               ...recent.map(
                 (item) => _KidMovementTile(item: item, palette: palette),
               ),
-            if (movements.length > recent.length) ...[
+            if (widget.movements.length > recent.length) ...[
               const SizedBox(height: AppSpacing.sm),
               Text(
-                '${movements.length - recent.length} movimientos más abajo',
+                '${widget.movements.length - recent.length} movimientos más abajo',
                 style: TextStyle(color: palette.textMuted, fontSize: 12),
               ),
               const SizedBox(height: AppSpacing.sm),
-              ...movements.skip(5).map(
+              ...widget.movements.skip(5).map(
                     (item) => _KidMovementTile(item: item, palette: palette),
                   ),
             ],
@@ -268,9 +302,13 @@ class _KidBalanceBar extends StatelessWidget {
 }
 
 class _KidQuickActionsRow extends StatelessWidget {
-  const _KidQuickActionsRow({required this.palette});
+  const _KidQuickActionsRow({
+    required this.palette,
+    this.onMovementsTap,
+  });
 
   final CiervoWalletPalette palette;
+  final VoidCallback? onMovementsTap;
 
   @override
   Widget build(BuildContext context) {
@@ -307,7 +345,7 @@ class _KidQuickActionsRow extends StatelessWidget {
           label: 'Movimientos',
           icon: Icons.receipt_long_outlined,
           palette: palette,
-          onTap: () {},
+          onTap: onMovementsTap,
         ),
       ],
     );
@@ -444,7 +482,7 @@ class _KidMovementTile extends StatelessWidget {
             ),
           ),
           Text(
-            '$prefix${_formatMoney(amount.abs(), 'COP')}',
+            '$prefix${_formatMoney(amount.abs(), '${item['currency'] ?? 'COP'}')}',
             style: TextStyle(color: color, fontWeight: FontWeight.w700),
           ),
         ],

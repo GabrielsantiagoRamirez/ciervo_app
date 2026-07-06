@@ -1,9 +1,11 @@
 import 'package:dio/dio.dart';
 
+import '../../../core/country/country_registration.dart';
 import '../../../core/errors/error_mapper.dart';
 import '../../../core/network/api_response_unwrapper.dart';
 import '../../../core/network/network_client.dart';
 import '../../../core/result/result.dart';
+import '../../../core/utils/idempotency_key.dart';
 import '../../chat/data/dtos/chat_dtos.dart';
 import '../../chat/domain/entities/chat_conversation.dart';
 import '../../chat/domain/entities/chat_message.dart';
@@ -91,23 +93,85 @@ class KidMeRepository {
         );
       });
 
-  Future<Result<Map<String, dynamic>>> requestPayForMe({
-    required String businessId,
-    required double amount,
-    String? description,
-    double? latitude,
-    double? longitude,
-    String? address,
+  Future<Result<List<Map<String, dynamic>>>> tutors() async {
+    final result = await profile();
+    return result.when(
+      success: (data) => Success(_parseTutors(data)),
+      failure: Failure.new,
+    );
+  }
+
+  List<Map<String, dynamic>> _parseTutors(Map<String, dynamic> profile) {
+    for (final key in const ['guardians', 'tutors', 'familyTutors']) {
+      final raw = profile[key];
+      if (raw is List) {
+        return raw
+            .whereType<Map>()
+            .map((item) => Map<String, dynamic>.from(item))
+            .toList();
+      }
+    }
+    return const [];
+  }
+
+  Future<Result<Map<String, dynamic>>> updateDisplayName(String displayName) =>
+      _guard(() async {
+        final response = await _client.dio.patch<dynamic>(
+          '/api/kids/me/profile',
+          data: {'displayName': displayName.trim()},
+        );
+        return unwrapApiMap(response.data);
+      });
+
+  Future<Result<Map<String, dynamic>>> uploadPhoto({
+    required String path,
+    required String fileName,
   }) =>
       _guard(() async {
         final response = await _client.dio.post<dynamic>(
+          '/api/kids/me/photo',
+          data: FormData.fromMap({
+            'file': await MultipartFile.fromFile(path, filename: fileName),
+          }),
+        );
+        return unwrapApiMap(response.data);
+      });
+
+  Future<Result<Map<String, dynamic>>> requestPayForMe({
+    required double amount,
+    String? businessId,
+    String? description,
+    String? currency,
+    String? country,
+    String? requestedToTutorId,
+    String? commerceCiervoId,
+    String? method,
+    double? latitude,
+    double? longitude,
+    String? address,
+    bool shareInFamilyChat = false,
+  }) =>
+      _guard(() async {
+        final resolvedCurrency =
+            currency ?? CountryRegistration.currencyForCountry(country ?? 'CO');
+        final response = await _client.dio.post<dynamic>(
           '/api/kids/me/pay-for-me/request',
           data: {
-            'businessId': int.tryParse(businessId) ?? businessId,
+            if (businessId != null && businessId.isNotEmpty)
+              'businessId': int.tryParse(businessId) ?? businessId,
             'amount': amount,
-            'currency': 'COP',
+            'currency': resolvedCurrency,
+            if (country != null && country.isNotEmpty) 'country': country,
             if (description != null && description.trim().isNotEmpty)
               'description': description.trim(),
+            if (requestedToTutorId != null && requestedToTutorId.isNotEmpty)
+              'requestedToTutorId':
+                  int.tryParse(requestedToTutorId) ?? requestedToTutorId,
+            if (commerceCiervoId != null && commerceCiervoId.isNotEmpty)
+              'commerceCiervoId': commerceCiervoId,
+            if (method != null && method.isNotEmpty) 'method': method,
+            if (shareInFamilyChat) 'shareInFamilyChat': true,
+            'idempotencyKey': IdempotencyKey.generate('kid-pay-for-me'),
             if (latitude != null && longitude != null)
               'location': {
                 'latitude': latitude,
@@ -139,30 +203,6 @@ class KidMeRepository {
               .toList();
         }
         return const [];
-      });
-
-  Future<Result<Map<String, dynamic>>> createNfcSession({
-    required String businessId,
-    required double amount,
-  }) =>
-      _guard(() async {
-        final response = await _client.dio.post<dynamic>(
-          '/api/kids/me/nfc/sessions',
-          data: {
-            'businessId': int.tryParse(businessId) ?? businessId,
-            'amount': amount,
-            'currency': 'COP',
-          },
-        );
-        return unwrapApiMap(response.data);
-      });
-
-  Future<Result<Map<String, dynamic>>> nfcSession(int sessionId) =>
-      _guard(() async {
-        final response = await _client.dio.get<dynamic>(
-          '/api/kids/me/nfc/sessions/$sessionId',
-        );
-        return unwrapApiMap(response.data);
       });
 
   Future<Result<T>> _guard<T>(Future<T> Function() run) async {

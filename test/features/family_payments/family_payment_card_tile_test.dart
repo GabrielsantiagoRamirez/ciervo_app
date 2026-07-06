@@ -30,7 +30,7 @@ void main() {
     );
 
     expect(find.text('Tarjeta escolar'), findsOneWidget);
-    expect(find.textContaining('VISA'), findsOneWidget);
+    expect(find.text('VISA · **** 4242'), findsOneWidget);
     expect(find.text('Principal'), findsOneWidget);
   });
 }

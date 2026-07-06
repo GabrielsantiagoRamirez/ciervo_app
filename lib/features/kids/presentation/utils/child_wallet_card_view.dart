@@ -11,19 +11,23 @@ class ChildWalletCardView {
   });
 
   factory ChildWalletCardView.fromMap(Map<String, dynamic> json) {
-    final blockedAt = _optional(json, const ['blockedAt', 'BlockedAt']);
-    final statusId = json['statusId'] ?? json['StatusId'];
+    final source = _unwrapCardJson(json);
     return ChildWalletCardView(
-      id: _id(json),
-      displayName: _optional(json, const ['displayName', 'DisplayName']) ??
+      id: _id(source),
+      displayName: _optional(source, const [
+            'displayName',
+            'DisplayName',
+            'name',
+            'Name',
+            'cardName',
+            'templateName',
+          ]) ??
           'Tarjeta Kids',
-      balance: _amount(json),
-      currency: _optional(json, const ['currency', 'Currency']) ?? 'COP',
-      isPrimary: _bool(json, const ['isPrimary', 'IsPrimary']),
-      isBlocked: blockedAt != null ||
-          statusId == 2 ||
-          statusId == '2',
-      createdAt: _optional(json, const ['createdAt', 'CreatedAt']),
+      balance: _amount(source),
+      currency: _optional(source, const ['currency', 'Currency']) ?? 'COP',
+      isPrimary: _bool(source, const ['isPrimary', 'IsPrimary']),
+      isBlocked: _isBlocked(source),
+      createdAt: _optional(source, const ['createdAt', 'CreatedAt']),
     );
   }
 
@@ -45,22 +49,47 @@ class ChildWalletCardView {
   }
 
   static List<ChildWalletCardView> listFrom(dynamic value) {
-    if (value is List) {
-      return value
-          .whereType<Map>()
-          .map((e) => ChildWalletCardView.fromMap(Map<String, dynamic>.from(e)))
-          .where((c) => c.id.isNotEmpty)
-          .toList();
+    final items = _items(value);
+    return items
+        .whereType<Map>()
+        .map((e) => ChildWalletCardView.fromMap(Map<String, dynamic>.from(e)))
+        .where((c) => c.id.isNotEmpty)
+        .toList();
+  }
+
+  static Map<String, dynamic> _unwrapCardJson(Map<String, dynamic> json) {
+    for (final key in const ['card', 'Card', 'value', 'Value']) {
+      final nested = json[key];
+      if (nested is Map) {
+        return Map<String, dynamic>.from(nested);
+      }
     }
+    return json;
+  }
+
+  static List<dynamic> _items(dynamic value) {
+    if (value is List) return value;
     if (value is Map<String, dynamic>) {
-      final cards = value['cards'] ?? value['Cards'];
-      if (cards is List) return listFrom(cards);
+      for (final key in const ['cards', 'Cards', 'items', 'Items']) {
+        final nested = value[key];
+        if (nested is List) return nested;
+      }
+      if (_id(_unwrapCardJson(value)).isNotEmpty) {
+        return [value];
+      }
     }
     return const [];
   }
 
   static String _id(Map<String, dynamic> json) {
-    final raw = json['id'] ?? json['Id'] ?? json['cardId'] ?? json['CardId'];
+    final raw = json['id'] ??
+        json['Id'] ??
+        json['cardId'] ??
+        json['CardId'] ??
+        json['walletCardId'] ??
+        json['WalletCardId'] ??
+        json['childWalletCardId'] ??
+        json['ChildWalletCardId'];
     return raw?.toString() ?? '';
   }
 
@@ -96,5 +125,20 @@ class ChildWalletCardView {
       if (value != null) return value.toString().toLowerCase() == 'true';
     }
     return false;
+  }
+
+  /// Alineado con [WalletCardDto]: statusId 0 = bloqueada; 2 = creada (activa).
+  static bool _isBlocked(Map<String, dynamic> json) {
+    if (json['isBlocked'] == true || json['isBlocked'] == 'true') {
+      return true;
+    }
+    final blockedAt = _optional(json, const ['blockedAt', 'BlockedAt']);
+    if (blockedAt != null) return true;
+    final statusId = json['statusId'] ?? json['StatusId'];
+    if (statusId == 0 || statusId == '0') return true;
+    final status =
+        _optional(json, const ['status', 'Status', 'statusName'])?.toLowerCase() ??
+            '';
+    return status.contains('block');
   }
 }

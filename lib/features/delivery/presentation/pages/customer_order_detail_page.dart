@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/di/service_locator.dart';
@@ -18,6 +21,7 @@ import '../../../wallet/domain/repositories/wallet_repository.dart';
 import '../../../receipts/domain/entities/action_confirmation.dart';
 import '../../../receipts/presentation/pages/action_confirmation_page.dart';
 import 'delivery_chat_page.dart';
+import '../widgets/delivery_route_map.dart';
 
 class CustomerOrderDetailPage extends StatefulWidget {
   const CustomerOrderDetailPage({required this.orderId, super.key});
@@ -32,6 +36,9 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
   DeliveryOrder? _order;
   String? _error;
   bool _busy = false;
+  Timer? _trackTimer;
+  double? _trackedCourierLat;
+  double? _trackedCourierLng;
 
   @override
   void initState() {
@@ -39,18 +46,67 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
     _load();
   }
 
+  @override
+  void dispose() {
+    _trackTimer?.cancel();
+    super.dispose();
+  }
+
   Future<void> _load() async {
     final result =
         await getIt<DeliveryRepository>().customerOrder(widget.orderId);
     if (!mounted) return;
     result.when(
-      success: (order) => setState(() {
-        _order = order;
-        _error = null;
-      }),
+      success: (order) {
+        setState(() {
+          _order = order;
+          _error = null;
+        });
+        _configureTrackingPoll();
+      },
       failure: (error) => setState(() => _error = UserErrorMessage.from(error)),
     );
   }
+
+  void _configureTrackingPoll() {
+    _trackTimer?.cancel();
+    final order = _order;
+    if (order == null || !order.isTrackableOnMap) return;
+    _pollTracking();
+    _trackTimer = Timer.periodic(const Duration(seconds: 10), (_) async {
+      await _pollTracking();
+      await _refreshOrderQuiet();
+    });
+  }
+
+  Future<void> _refreshOrderQuiet() async {
+    final result =
+        await getIt<DeliveryRepository>().customerOrder(widget.orderId);
+    if (!mounted) return;
+    result.when(
+      success: (order) => setState(() => _order = order),
+      failure: (_) {},
+    );
+  }
+
+  Future<void> _pollTracking() async {
+    final result = await getIt<DeliveryRepository>().tracking(widget.orderId);
+    if (!mounted) return;
+    result.when(
+      success: (points) {
+        if (points.isEmpty) return;
+        final latest = points.first;
+        setState(() {
+          _trackedCourierLat = latest.latitude;
+          _trackedCourierLng = latest.longitude;
+        });
+      },
+      failure: (_) {},
+    );
+  }
+
+  LatLng? _latLng(double? lat, double? lng) =>
+      lat != null && lng != null ? LatLng(lat, lng) : null;
 
   Future<void> _pay(String method) async {
     setState(() => _busy = true);
@@ -448,6 +504,40 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
                 child: ListView(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   children: [
+                    if (_order!.isTrackableOnMap &&
+                        (_order!.deliveryLatitude != null ||
+                            _order!.pickupLatitude != null ||
+                            _trackedCourierLat != null))
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                        child: CiervoCard(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Seguimiento en vivo',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              DeliveryRouteMap(
+                                height: 240,
+                                pickup: _latLng(
+                                  _order!.pickupLatitude,
+                                  _order!.pickupLongitude,
+                                ),
+                                delivery: _latLng(
+                                  _order!.deliveryLatitude,
+                                  _order!.deliveryLongitude,
+                                ),
+                                courier: _latLng(
+                                  _trackedCourierLat ?? _order!.courierLatitude,
+                                  _trackedCourierLng ?? _order!.courierLongitude,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     CiervoCard(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,

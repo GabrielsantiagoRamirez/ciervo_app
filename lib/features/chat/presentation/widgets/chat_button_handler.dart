@@ -40,6 +40,11 @@ IconData iconForChatButton(String code) {
   };
 }
 
+bool isKidAllowedFamilyChatAction(String code) {
+  final normalized = code.replaceAll(RegExp(r'[\s_-]'), '').toLowerCase();
+  return normalized == 'payforme' || normalized == 'pagapormi';
+}
+
 Future<void> handleChatButtonTap(
   BuildContext context, {
   required ChatButton button,
@@ -61,6 +66,16 @@ Future<void> handleChatButtonTap(
   }
 
   final code = button.code.replaceAll(RegExp(r'[\s_-]'), '').toLowerCase();
+  if (familyKidMode && !isKidAllowedFamilyChatAction(code)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Esta acción no está disponible en tu cuenta Kids.',
+        ),
+      ),
+    );
+    return;
+  }
   switch (code) {
     case 'pay':
     case 'pagar':

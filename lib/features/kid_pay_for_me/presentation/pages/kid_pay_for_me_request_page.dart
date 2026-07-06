@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../core/country/country_registration.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/layout/responsive_layout.dart';
@@ -12,13 +13,15 @@ import '../../../kid_me/data/kid_me_repository.dart';
 
 class KidPayForMeRequestPage extends StatefulWidget {
   const KidPayForMeRequestPage({
-    required this.businessId,
-    required this.businessName,
+    this.businessId,
+    this.businessName,
+    this.commerceCiervoId,
     super.key,
   });
 
-  final String businessId;
-  final String businessName;
+  final String? businessId;
+  final String? businessName;
+  final String? commerceCiervoId;
 
   @override
   State<KidPayForMeRequestPage> createState() => _KidPayForMeRequestPageState();
@@ -28,9 +31,25 @@ class _KidPayForMeRequestPageState extends State<KidPayForMeRequestPage> {
   final _repository = getIt<KidMeRepository>();
   final _amount = TextEditingController();
   final _description = TextEditingController();
+  List<Map<String, dynamic>> _tutors = const [];
+  String? _selectedTutorId;
+  String _currency = 'COP';
+  String _country = 'CO';
   bool _attachLocation = true;
+  bool _shareInChat = true;
+  bool _loadingMeta = true;
   bool _submitting = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _amount.addListener(_onFieldsChanged);
+    _description.addListener(_onFieldsChanged);
+    _loadMeta();
+  }
+
+  void _onFieldsChanged() => setState(() {});
 
   @override
   void dispose() {
@@ -39,12 +58,43 @@ class _KidPayForMeRequestPageState extends State<KidPayForMeRequestPage> {
     super.dispose();
   }
 
-  Future<void> _submit() async {
+  bool get _canSubmit {
     final amount = double.tryParse(_amount.text.replaceAll(',', '').trim());
-    if (amount == null || amount <= 0) {
-      setState(() => _error = 'Ingresa un monto válido.');
-      return;
-    }
+    final description = _description.text.trim();
+    return !_submitting &&
+        amount != null &&
+        amount > 0 &&
+        description.length >= 3;
+  }
+
+  Future<void> _loadMeta() async {
+    final profileResult = await _repository.profile();
+    final tutorsResult = await _repository.tutors();
+    if (!mounted) return;
+    profileResult.when(
+      success: (profile) {
+        final country =
+            '${profile['country'] ?? profile['countryCode'] ?? 'CO'}';
+        _country = country.toUpperCase();
+        _currency = CountryRegistration.currencyForCountry(_country);
+      },
+      failure: (_) {},
+    );
+    tutorsResult.when(
+      success: (items) => setState(() {
+        _tutors = items;
+        if (items.length == 1) {
+          _selectedTutorId = '${items.first['userId'] ?? items.first['id']}';
+        }
+        _loadingMeta = false;
+      }),
+      failure: (_) => setState(() => _loadingMeta = false),
+    );
+  }
+
+  Future<void> _submit() async {
+    if (!_canSubmit) return;
+    final amount = double.parse(_amount.text.replaceAll(',', '').trim());
 
     setState(() {
       _submitting = true;
@@ -58,17 +108,21 @@ class _KidPayForMeRequestPageState extends State<KidPayForMeRequestPage> {
         final location = await getIt<LocationService>().currentLocation();
         latitude = location.latitude;
         longitude = location.longitude;
-      } catch (_) {
-        // Ubicación opcional; continuar sin ella.
-      }
+      } catch (_) {}
     }
 
     final result = await _repository.requestPayForMe(
       businessId: widget.businessId,
       amount: amount,
       description: _description.text.trim(),
+      currency: _currency,
+      country: _country,
+      requestedToTutorId: _selectedTutorId,
+      commerceCiervoId: widget.commerceCiervoId,
+      method: widget.businessId != null ? 'favorite' : 'manual',
       latitude: latitude,
       longitude: longitude,
+      shareInFamilyChat: _shareInChat,
     );
 
     if (!mounted) return;
@@ -76,7 +130,9 @@ class _KidPayForMeRequestPageState extends State<KidPayForMeRequestPage> {
       success: (_) {
         Navigator.of(context).pop(true);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Solicitud enviada a tu familia.')),
+          const SnackBar(
+            content: Text('Solicitud enviada. Tu tutor la verá en el chat familiar.'),
+          ),
         );
       },
       failure: (error) => setState(() {
@@ -89,69 +145,112 @@ class _KidPayForMeRequestPageState extends State<KidPayForMeRequestPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Pedir a mi familia')),
-      body: ListView(
-        padding: pagePaddingOf(context),
-        children: [
-          CiervoCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.businessName,
-                  style: Theme.of(context).textTheme.titleLarge,
+      appBar: AppBar(title: const Text('Paga por mí')),
+      body: SafeArea(
+        child: ListView(
+          padding: pagePaddingOf(context),
+          children: [
+            CiervoCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (widget.businessName != null) ...[
+                    Text(
+                      widget.businessName!,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                  ],
+                  Text(
+                    'Tu tutor recibirá la solicitud en el chat familiar.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            if (_loadingMeta)
+              const LinearProgressIndicator()
+            else if (_tutors.isNotEmpty) ...[
+              DropdownButtonFormField<String?>(
+                initialValue: _selectedTutorId,
+                decoration: const InputDecoration(
+                  labelText: 'Tutor',
+                  prefixIcon: Icon(Icons.family_restroom_outlined),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  'Tu tutor recibirá la solicitud y podrá aprobar o rechazar el pago.',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ],
+                items: [
+                  const DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text('Cualquier tutor de mi familia'),
+                  ),
+                  ..._tutors.map(
+                    (tutor) => DropdownMenuItem<String?>(
+                      value: '${tutor['userId'] ?? tutor['id']}',
+                      child: Text(
+                        '${tutor['displayName'] ?? tutor['name'] ?? 'Tutor'}',
+                      ),
+                    ),
+                  ),
+                ],
+                onChanged: _submitting
+                    ? null
+                    : (value) => setState(() => _selectedTutorId = value),
+              ),
+              const SizedBox(height: AppSpacing.md),
+            ],
+            TextField(
+              controller: _amount,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: InputDecoration(
+                labelText: 'Monto',
+                prefixText: '\$ ',
+                suffixText: _currency,
+              ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          TextField(
-            controller: _amount,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: const InputDecoration(
-              labelText: 'Monto (COP)',
-              prefixText: '\$ ',
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: _description,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                labelText: 'Descripción',
+                hintText: 'Ej: Quiero comprar una hamburguesa',
+              ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          TextField(
-            controller: _description,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              labelText: '¿Para qué lo necesitas?',
-              hintText: 'Ej: Quiero comprar una hamburguesa',
+            const SizedBox(height: AppSpacing.md),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Incluir mi ubicación'),
+              subtitle: const Text('Ayuda a tu familia a saber dónde estás.'),
+              value: _attachLocation,
+              onChanged: _submitting
+                  ? null
+                  : (value) => setState(() => _attachLocation = value),
             ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Incluir mi ubicación'),
-            subtitle: const Text('Ayuda a tu familia a saber dónde estás.'),
-            value: _attachLocation,
-            onChanged: _submitting
-                ? null
-                : (value) => setState(() => _attachLocation = value),
-          ),
-          if (_error != null) ...[
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              _error!,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Compartir en chat familiar'),
+              subtitle: const Text('Publica un mensaje con el detalle.'),
+              value: _shareInChat,
+              onChanged: _submitting
+                  ? null
+                  : (value) => setState(() => _shareInChat = value),
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                _error!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.xl),
+            CiervoButton(
+              label: _submitting ? 'Enviando...' : 'Enviar solicitud',
+              icon: Icons.send_outlined,
+              onPressed: _canSubmit ? _submit : null,
             ),
           ],
-          const SizedBox(height: AppSpacing.xl),
-          CiervoButton(
-            label: _submitting ? 'Enviando...' : 'Enviar solicitud',
-            icon: Icons.family_restroom,
-            onPressed: _submitting ? null : _submit,
-          ),
-        ],
+        ),
       ),
     );
   }

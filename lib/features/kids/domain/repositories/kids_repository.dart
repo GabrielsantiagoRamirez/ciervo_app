@@ -45,7 +45,13 @@ abstract interface class KidsRepository {
   Future<Result<Map<String, dynamic>>> createChildWalletCard({
     required String childId,
     required String displayName,
-    required String currency,
+    String? currency,
+  });
+  Future<Result<Map<String, dynamic>>> childPaymentMethods(String childId);
+  Future<Result<Map<String, dynamic>>> saveChildPaymentSource({
+    required String childId,
+    String? cardId,
+    bool usePrimaryCard = true,
   });
   Future<Result<Map<String, dynamic>>> payKidsBusiness({
     required String childProfileId,

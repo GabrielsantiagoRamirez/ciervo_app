@@ -3,6 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
+import '../../../../core/session/auth_token_claims.dart';
+import '../../../../core/session/session_manager.dart';
+import '../../../../core/country/country_registration.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
@@ -40,13 +43,15 @@ class _ChatGiftPageState extends State<ChatGiftPage> {
   final _descriptionController = TextEditingController();
   String _giftType = 'Money';
   bool _sending = false;
+  bool _blockedKid = false;
+  String _currency = 'COP';
   String? _targetUserId;
   UserSearchResult? _pickedRecipient;
 
   static const _giftTypes = <String, String>{
     'Money': 'Dinero',
     'GiftCard': 'Tarjeta regalo',
-    'Coupon': 'Cupon',
+    'Coupon': 'Cupón',
     'Benefit': 'Beneficio',
     'Event': 'Evento',
   };
@@ -58,6 +63,39 @@ class _ChatGiftPageState extends State<ChatGiftPage> {
     if (widget.initialTargetCiervoCode != null) {
       _codeController.text = widget.initialTargetCiervoCode!;
     }
+    _amountController.addListener(() => setState(() {}));
+    _codeController.addListener(() => setState(() {}));
+    _currency = CountryRegistration.currencyForCountry(
+      CountryRegistration.defaultCountryCode(),
+    );
+    _guardKidSession();
+  }
+
+  Future<void> _guardKidSession() async {
+    final token = await getIt<SessionManager>().accessToken();
+    if (token == null || !mounted) return;
+    if (AuthTokenClaims.fromJwt(token).routeKind == 'Kid') {
+      setState(() => _blockedKid = true);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Las cuentas Kids no pueden enviar regalos.'),
+          ),
+        );
+        Navigator.of(context).pop();
+      });
+    }
+  }
+
+  bool get _canSubmit {
+    if (_sending || _blockedKid) return false;
+    final amount =
+        double.tryParse(_amountController.text.replaceAll(',', '.')) ?? 0;
+    final hasRecipient = _targetUserId != null ||
+        _pickedRecipient != null ||
+        _codeController.text.trim().isNotEmpty;
+    return amount > 0 && hasRecipient;
   }
 
   @override
@@ -256,9 +294,9 @@ class _ChatGiftPageState extends State<ChatGiftPage> {
                       TextField(
                         controller: _amountController,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Monto (COP)',
-                          prefixIcon: Icon(Icons.attach_money),
+                        decoration: InputDecoration(
+                          labelText: 'Monto ($_currency)',
+                          prefixIcon: const Icon(Icons.attach_money),
                         ),
                       ),
                       const SizedBox(height: AppSpacing.md),
@@ -276,7 +314,7 @@ class _ChatGiftPageState extends State<ChatGiftPage> {
                         state: _sending
                             ? CiervoButtonState.loading
                             : CiervoButtonState.normal,
-                        onPressed: _sending ? null : () => _submit(resolved),
+                        onPressed: _canSubmit ? () => _submit(resolved) : null,
                       ),
                     ],
                   ),

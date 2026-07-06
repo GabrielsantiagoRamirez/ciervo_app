@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/utils/ciervo_date_picker.dart';
 import '../../../../core/utils/display_labels.dart';
 import '../../../../core/utils/input_validators.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
@@ -161,11 +162,13 @@ class _DeliveryApplyPageState extends State<DeliveryApplyPage> {
   );
 
   Future<void> _pickDate() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now().subtract(const Duration(days: 365 * 20)),
+    final now = DateTime.now();
+    final date = await showCiervoDatePicker(
+      context,
+      initialDate: _birthDate ?? DateTime(now.year - 25, now.month, now.day),
       firstDate: DateTime(1940),
-      lastDate: DateTime.now(),
+      lastDate: now,
+      helpText: 'Fecha de nacimiento',
     );
     if (date != null) setState(() => _birthDate = date);
   }

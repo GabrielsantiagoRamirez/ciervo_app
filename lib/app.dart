@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -134,6 +135,16 @@ class _CiervoAppState extends State<CiervoApp> with WidgetsBindingObserver {
           return MaterialApp.router(
             title: 'CIERVO CLUB',
             debugShowCheckedModeBanner: false,
+            locale: const Locale('es', 'CO'),
+            supportedLocales: const [
+              Locale('es', 'CO'),
+              Locale('es'),
+            ],
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
             theme: AppTheme.day(),
             darkTheme: AppTheme.dark(),
             themeMode: state.mode == ExperienceMode.day
