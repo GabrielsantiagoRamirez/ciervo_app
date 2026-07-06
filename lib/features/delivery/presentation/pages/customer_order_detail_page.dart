@@ -549,6 +549,12 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
                           const SizedBox(height: AppSpacing.sm),
                           if ((_order!.reference ?? '').isNotEmpty)
                             Text('Referencia: ${_order!.reference}'),
+                          if (_order!.fulfillmentType != null)
+                            Text(
+                              _order!.isPickup
+                                  ? 'Retiro en local'
+                                  : 'Domicilio',
+                            ),
                           Text('Estado: ${deliveryStatusLabel(_order!.status)}'),
                           Text(
                             'Pago: ${deliveryPaymentStatusLabel(_order!.paymentStatus)}',
@@ -664,14 +670,37 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
                         ),
                       ),
                     ],
-                    if (_order!.deliveryPin case final pin?) ...[
+                    if (_order!.isPickup &&
+                        _order!.isReadyForPickup &&
+                        _order!.effectivePickupCode != null) ...[
+                      const SizedBox(height: AppSpacing.lg),
+                      CiervoCard(
+                        child: Column(
+                          children: [
+                            const Text('Código para retirar en mostrador'),
+                            Text(
+                              _order!.effectivePickupCode!,
+                              style: Theme.of(context).textTheme.headlineMedium,
+                            ),
+                            if (_order!.userCiervoCode != null)
+                              Text(
+                                'También puedes mostrar tu CIERVO ID: ${_order!.userCiervoCode}',
+                              ),
+                            const Text(
+                              'Presenta este código cuando el comercio indique que tu pedido está listo.',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    if (!_order!.isPickup && _order!.deliveryPin != null) ...[
                       const SizedBox(height: AppSpacing.lg),
                       CiervoCard(
                         child: Column(
                           children: [
                             const Text('PIN de entrega'),
                             Text(
-                              pin,
+                              _order!.deliveryPin!,
                               style: Theme.of(context).textTheme.headlineMedium,
                             ),
                             const Text(

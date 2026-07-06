@@ -49,7 +49,11 @@ abstract interface class WalletRepository {
   });
   Future<Result<List<PaymentRequest>>> paymentRequestsInbox();
   Future<Result<List<PaymentRequest>>> paymentRequestsSent();
-  Future<Result<PaymentRequest>> approvePaymentRequest(String id);
+  Future<Result<PaymentRequest>> approvePaymentRequest(
+    String id, {
+    bool useBackupCard = false,
+    String? familyPaymentCardId,
+  });
   Future<Result<PaymentRequest>> rejectPaymentRequest(String id, String reason);
   Future<Result<PaymentRequest>> cancelPaymentRequest(String id);
   Future<Result<NfcSession>> createNfcSession({
@@ -67,6 +71,7 @@ abstract interface class WalletRepository {
     required String cardId,
     required String cardUid,
     required String label,
+    String? countryCode,
   });
   Future<Result<void>> blockPhysicalNfcCard(int id);
 }

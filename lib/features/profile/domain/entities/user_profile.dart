@@ -6,6 +6,8 @@ class UserProfile {
     required this.email,
     required this.phone,
     this.ciervoUserCode,
+    this.username,
+    this.nightOperationalId,
     this.identityDocument,
     this.documentType,
     this.photoUrl,
@@ -29,6 +31,8 @@ class UserProfile {
   final String email;
   final String phone;
   final String? ciervoUserCode;
+  final String? username;
+  final String? nightOperationalId;
   final String? identityDocument;
   final String? documentType;
   final String? photoUrl;
@@ -55,6 +59,8 @@ class UserProfile {
     bool? phoneVerified,
     String? countryCode,
     String? ciervoUserCode,
+    String? username,
+    String? nightOperationalId,
   }) =>
       UserProfile(
         id: id,
@@ -63,6 +69,8 @@ class UserProfile {
         email: email,
         phone: phone,
         ciervoUserCode: ciervoUserCode ?? this.ciervoUserCode,
+        username: username ?? this.username,
+        nightOperationalId: nightOperationalId ?? this.nightOperationalId,
         identityDocument: identityDocument,
         documentType: documentType,
         photoUrl: photoUrl ?? this.photoUrl,

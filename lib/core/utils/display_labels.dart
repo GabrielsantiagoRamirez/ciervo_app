@@ -73,6 +73,50 @@ abstract final class DisplayLabels {
     return description;
   }
 
+  static String paymentRequestStatus(String? status) {
+    if (status == null || status.trim().isEmpty) return 'Pendiente';
+    final key = status.toLowerCase().replaceAll('_', '').replaceAll(' ', '');
+    return switch (key) {
+      '1' ||
+      'pending' ||
+      'pendiente' ||
+      'open' ||
+      'requested' ||
+      'awaitingapproval' =>
+        'Pendiente',
+      '2' ||
+      'approved' ||
+      'aprobada' ||
+      'aprobado' ||
+      'accepted' =>
+        'Aprobada',
+      '3' ||
+      'rejected' ||
+      'rechazada' ||
+      'rechazado' ||
+      'declined' =>
+        'Rechazada',
+      '4' ||
+      'expired' ||
+      'expirada' ||
+      'vencida' =>
+        'Expirada',
+      '5' ||
+      'cancelled' ||
+      'canceled' ||
+      'cancelada' =>
+        'Cancelada',
+      '6' ||
+      'paid' ||
+      'pagada' ||
+      'pagado' ||
+      'completed' ||
+      'completada' =>
+        'Pagada',
+      _ => _looksTechnical(status) ? 'Pendiente' : _humanize(status),
+    };
+  }
+
   static String deliveryStatus(String status) {
     final key = status.toLowerCase().replaceAll('_', '');
     return switch (key) {
@@ -393,6 +437,15 @@ abstract final class DisplayLabels {
     if (trimmed.toLowerCase().contains('value cannot be null') ||
         trimmed.toLowerCase().contains('propertyname')) {
       return 'No pudimos completar la activación. Intenta de nuevo en unos segundos.';
+    }
+
+    if (trimmed.contains('could not be translated') ||
+        trimmed.contains('string.Format') ||
+        trimmed.contains('OrderByDescending') ||
+        trimmed.contains('ThenBy') ||
+        trimmed.contains('Entity Framework') ||
+        trimmed.contains('fwlink/?linkid=')) {
+      return 'No pudimos cargar esta información. Intenta de nuevo en unos segundos.';
     }
 
     if (trimmed.toLowerCase().contains('no se pudo completar la solicitud')) {

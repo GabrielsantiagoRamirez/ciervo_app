@@ -111,8 +111,9 @@ class _KidHomePageState extends State<KidHomePage> {
     final name = (_home?['name'] ?? 'amigo').toString();
     final wallet = _home?['wallet'];
     final balance = wallet is Map
-        ? _num(wallet['balance'] ?? wallet['availableBalance'])
+        ? _num(wallet['availableBalance'] ?? wallet['balance'])
         : 0.0;
+    final held = wallet is Map ? _num(wallet['heldBalance']) : 0.0;
     final businesses = _home?['allowedBusinessesCount'] ?? 0;
     final unread = _home?['unreadFamilyMessages'] ?? 0;
 
@@ -153,6 +154,13 @@ class _KidHomePageState extends State<KidHomePage> {
                           'COP ${balance.toStringAsFixed(0)}',
                           style: Theme.of(context).textTheme.displaySmall,
                         ),
+                        if (held > 0) ...[
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            'COP ${held.toStringAsFixed(0)} retenidos en pagos pendientes.',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
                       ],
                     ),
                   ),

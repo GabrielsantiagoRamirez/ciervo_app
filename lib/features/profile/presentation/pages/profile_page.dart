@@ -11,6 +11,7 @@ import '../../../../core/kids/selected_kid_context.dart';
 import '../../../../shared/widgets/kids_mode_banner.dart';
 import '../../../../core/experience/experience_mode_cubit.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/utils/display_formatters.dart';
 import '../../../../core/utils/input_validators.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
@@ -95,11 +96,11 @@ class _ProfileView extends StatelessWidget {
                     physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
                       SliverPadding(
-                        padding: const EdgeInsets.fromLTRB(
+                        padding: EdgeInsets.fromLTRB(
                           AppSpacing.lg,
                           AppSpacing.md,
                           AppSpacing.lg,
-                          AppSpacing.xxl,
+                          AppSpacing.xxl + MediaQuery.paddingOf(context).bottom,
                         ),
                         sliver: SliverToBoxAdapter(
                           child: switch (state.status) {
@@ -391,6 +392,16 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
                 _InfoChip(
                   icon: Icons.public_outlined,
                   label: profile.countryCode!,
+                ),
+              if ((profile.username ?? '').isNotEmpty)
+                _InfoChip(
+                  icon: Icons.alternate_email,
+                  label: DisplayFormatters.formatUsername(profile.username),
+                ),
+              if ((profile.nightOperationalId ?? '').isNotEmpty)
+                _InfoChip(
+                  icon: Icons.nightlight_round,
+                  label: profile.nightOperationalId!,
                 ),
               _ProfileCiervoIdChip(
                 code: widget.ciervoUserCode,

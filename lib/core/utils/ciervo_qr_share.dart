@@ -4,6 +4,8 @@ import 'dart:ui' as ui;
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../shared/widgets/ciervo_qr_view.dart';
+
 abstract final class CiervoQrShare {
   static Future<void> shareIdentity({
     required String ciervoUserCode,
@@ -38,11 +40,7 @@ abstract final class CiervoQrShare {
       );
       if (validation.status != QrValidationStatus.valid) return null;
 
-      final painter = QrPainter(
-        data: payload,
-        version: QrVersions.auto,
-        errorCorrectionLevel: QrErrorCorrectLevel.M,
-      );
+      final painter = CiervoQrView.sharePainter(payload);
       final data = await painter.toImageData(512, format: ui.ImageByteFormat.png);
       if (data == null) return null;
 

@@ -50,6 +50,7 @@ class _EditProfileViewState extends State<_EditProfileView> {
   late final TextEditingController _lastName;
   late final TextEditingController _email;
   late final TextEditingController _phone;
+  late final TextEditingController _username;
 
   @override
   void initState() {
@@ -58,6 +59,7 @@ class _EditProfileViewState extends State<_EditProfileView> {
     _lastName = TextEditingController(text: widget.profile.lastName);
     _email = TextEditingController(text: widget.profile.email);
     _phone = TextEditingController(text: widget.profile.phone);
+    _username = TextEditingController(text: widget.profile.username ?? '');
   }
 
   @override
@@ -66,6 +68,7 @@ class _EditProfileViewState extends State<_EditProfileView> {
     _lastName.dispose();
     _email.dispose();
     _phone.dispose();
+    _username.dispose();
     super.dispose();
   }
 
@@ -209,6 +212,20 @@ class _EditProfileViewState extends State<_EditProfileView> {
                         validator: (value) =>
                             InputValidators.phone(value ?? ''),
                       ),
+                      _field(
+                        controller: _username,
+                        label: 'Usuario (@username)',
+                        icon: Icons.alternate_email,
+                        helperText: 'Mínimo 3 caracteres. Sin @ al guardar.',
+                        validator: (value) {
+                          final text = (value ?? '').trim().replaceAll('@', '');
+                          if (text.isEmpty) return null;
+                          if (text.length < 3) {
+                            return 'El username debe tener al menos 3 caracteres.';
+                          }
+                          return null;
+                        },
+                      ),
                       const SizedBox(height: AppSpacing.md),
                       CiervoButton(
                         label: saving ? 'Guardando' : 'Guardar cambios',
@@ -324,6 +341,7 @@ class _EditProfileViewState extends State<_EditProfileView> {
       lastName: _lastName.text.trim(),
       email: _email.text.trim(),
       phone: _phone.text.trim(),
+      username: _username.text.trim(),
     );
   }
 }

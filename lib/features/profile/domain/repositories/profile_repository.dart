@@ -10,6 +10,7 @@ abstract interface class ProfileRepository {
     required String lastName,
     required String email,
     required String phone,
+    String? username,
   });
 
   Future<Result<ProfilePhotoUploadResult>> uploadPhoto({

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:qr_flutter/qr_flutter.dart';
-
+import '../../../../shared/widgets/ciervo_qr_view.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/ciervo_id_qr.dart';
@@ -36,21 +35,7 @@ class MyCiervoIdentityCard extends StatelessWidget {
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: AppSpacing.lg),
-          Center(
-            child: Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: QrImageView(
-                data: payload,
-                version: QrVersions.auto,
-                size: 220,
-                backgroundColor: Colors.white,
-              ),
-            ),
-          ),
+          Center(child: CiervoQrView(data: payload)),
           const SizedBox(height: AppSpacing.md),
           SelectableText(
             identity.ciervoUserCode,

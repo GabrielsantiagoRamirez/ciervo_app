@@ -7,6 +7,9 @@ class ChatConversation {
     required this.status,
     this.businessId,
     this.peerUserId,
+    this.peerUsername,
+    this.peerDisplayName,
+    this.participantCount,
     this.lastMessage,
     this.updatedAt,
   });
@@ -18,6 +21,9 @@ class ChatConversation {
   final String status;
   final int? businessId;
   final int? peerUserId;
+  final String? peerUsername;
+  final String? peerDisplayName;
+  final int? participantCount;
   final String? lastMessage;
   final DateTime? updatedAt;
 

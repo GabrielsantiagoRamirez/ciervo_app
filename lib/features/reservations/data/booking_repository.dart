@@ -107,6 +107,7 @@ Booking _bookingFromJson(Map<String, dynamic> json) => Booking(
     fallbackCode:
         '${json['publicCode'] ?? json['confirmationCode'] ?? json['reference'] ?? ''}',
   ),
+  conversationId: _name(json['conversationId'] ?? json['chatConversationId']),
 );
 
 EventBookingOption _optionFromJson(Map<String, dynamic> json) =>

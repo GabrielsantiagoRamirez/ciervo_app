@@ -30,6 +30,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
     required String lastName,
     required String email,
     required String phone,
+    String? username,
   }) async {
     try {
       final profile = await _remoteDataSource.updateMe(
@@ -38,6 +39,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
           lastName: lastName,
           email: email,
           phone: phone,
+          username: username,
         ),
       );
       return Success(profile.toDomain());

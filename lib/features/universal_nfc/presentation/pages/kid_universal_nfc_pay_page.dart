@@ -89,13 +89,9 @@ class _KidUniversalNfcPayPageState extends State<KidUniversalNfcPayPage> {
     if (!mounted) return;
     profileResult.when(
       success: (profile) {
-        final country =
-            '${profile['country'] ?? profile['countryCode'] ?? 'CO'}';
-        _country = country.toUpperCase();
+        _country = profile.countryCode.toUpperCase();
         _currency = CountryRegistration.currencyForCountry(_country);
-        _childProfileId ??= _intOrNull(
-          profile['kidId'] ?? profile['childProfileId'] ?? profile['id'],
-        );
+        _childProfileId ??= int.tryParse(profile.childProfileId);
       },
       failure: (_) {},
     );

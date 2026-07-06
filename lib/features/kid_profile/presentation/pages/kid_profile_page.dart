@@ -5,11 +5,15 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/layout/responsive_layout.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/utils/display_formatters.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
+import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../../kid_me/data/kid_me_repository.dart';
+import '../../../kid_me/domain/entities/kid_me_profile.dart';
+import '../../../kid_nfc/presentation/pages/kid_nfc_device_registration_page.dart';
 import '../../../kid_wallet/presentation/pages/kid_wallet_page.dart';
 
 class KidProfilePage extends StatefulWidget {
@@ -21,7 +25,7 @@ class KidProfilePage extends StatefulWidget {
 
 class _KidProfilePageState extends State<KidProfilePage> {
   final _repository = getIt<KidMeRepository>();
-  Map<String, dynamic>? _profile;
+  KidMeProfile? _profile;
   bool _loading = true;
   bool _uploadingPhoto = false;
   bool _savingNickname = false;
@@ -52,19 +56,16 @@ class _KidProfilePageState extends State<KidProfilePage> {
     );
   }
 
-  String get _legalName => '${_profile?['name'] ?? 'Menor'}'.trim();
-
   String? get _nickname {
-    final value = _profile?['displayName'] ?? _profile?['nickname'];
-    final text = '$value'.trim();
-    if (text.isEmpty || text.toLowerCase() == 'apodo') return null;
-    return text;
-  }
-
-  String? get _photoUrl {
-    final url = _profile?['photoUrl'] ?? _profile?['avatarUrl'];
-    final text = '$url'.trim();
-    return text.isEmpty ? null : text;
+    final nick = DisplayFormatters.safeText(_profile?.nickname);
+    final display = DisplayFormatters.safeText(_profile?.displayName);
+    if (nick.isNotEmpty && nick != display) return nick;
+    if (display.isNotEmpty &&
+        display != _profile?.firstName &&
+        display != '${_profile?.firstName} ${_profile?.lastName}'.trim()) {
+      return display;
+    }
+    return null;
   }
 
   Future<void> _pickPhoto() async {
@@ -82,12 +83,27 @@ class _KidProfilePageState extends State<KidProfilePage> {
     if (!mounted) return;
     result.when(
       success: (data) {
-        final url = data['photoUrl'] ?? data['imageUrl'];
+        final url = DisplayFormatters.safeText(
+          data['photoUrl'] ?? data['imageUrl'],
+        );
         setState(() {
-          _profile = {
-            ...?_profile,
-            if (url != null) 'photoUrl': url,
-          };
+          if (_profile != null && url.isNotEmpty) {
+            _profile = KidMeProfile(
+              firstName: _profile!.firstName,
+              lastName: _profile!.lastName,
+              displayName: _profile!.displayName,
+              nickname: _profile!.nickname,
+              username: _profile!.username,
+              ciervoUserCode: _profile!.ciervoUserCode,
+              role: _profile!.role,
+              roleLabel: _profile!.roleLabel,
+              photoUrl: url,
+              familyName: _profile!.familyName,
+              countryCode: _profile!.countryCode,
+              childProfileId: _profile!.childProfileId,
+              guardians: _profile!.guardians,
+            );
+          }
           _uploadingPhoto = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
@@ -135,11 +151,9 @@ class _KidProfilePageState extends State<KidProfilePage> {
     final result = await _repository.updateDisplayName(controller.text);
     if (!mounted) return;
     result.when(
-      success: (data) {
-        setState(() {
-          _profile = {...?_profile, ...data};
-          _savingNickname = false;
-        });
+      success: (_) {
+        setState(() => _savingNickname = false);
+        _load();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Apodo guardado.')),
         );
@@ -155,6 +169,7 @@ class _KidProfilePageState extends State<KidProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final profile = _profile;
     return Scaffold(
       appBar: AppBar(title: const Text('Mi perfil')),
       body: RefreshIndicator(
@@ -167,92 +182,148 @@ class _KidProfilePageState extends State<KidProfilePage> {
             : ListView(
                 padding: pagePaddingOf(context),
                 children: [
-                  if (_error != null) Text(_error!, textAlign: TextAlign.center),
-                  CiervoCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Stack(
-                              children: [
-                                CircleAvatar(
-                                  radius: 36,
-                                  backgroundImage: _photoUrl != null
-                                      ? NetworkImage(_photoUrl!)
-                                      : null,
-                                  child: _photoUrl == null
-                                      ? Text(
-                                          (_legalName.isNotEmpty
-                                                  ? _legalName[0]
-                                                  : 'K')
-                                              .toUpperCase(),
-                                        )
-                                      : null,
-                                ),
-                                Positioned(
-                                  right: 0,
-                                  bottom: 0,
-                                  child: IconButton.filledTonal(
-                                    icon: _uploadingPhoto
-                                        ? const SizedBox(
-                                            width: 18,
-                                            height: 18,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                            ),
-                                          )
-                                        : const Icon(Icons.camera_alt, size: 18),
-                                    onPressed:
-                                        _uploadingPhoto ? null : _pickPhoto,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                  if (_error != null)
+                    CiervoErrorState(
+                      title: 'No pudimos cargar tu perfil',
+                      description: _error!,
+                      onRetry: _load,
+                    ),
+                  if (profile != null) ...[
+                    CiervoCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Stack(
                                 children: [
-                                  if (_nickname != null) ...[
+                                  CircleAvatar(
+                                    radius: 36,
+                                    backgroundImage: profile.photoUrl.isNotEmpty
+                                        ? NetworkImage(profile.photoUrl)
+                                        : null,
+                                    child: profile.photoUrl.isEmpty
+                                        ? Text(
+                                            profile.firstName.isNotEmpty
+                                                ? profile.firstName[0]
+                                                    .toUpperCase()
+                                                : 'K',
+                                          )
+                                        : null,
+                                  ),
+                                  Positioned(
+                                    right: 0,
+                                    bottom: 0,
+                                    child: IconButton.filledTonal(
+                                      icon: _uploadingPhoto
+                                          ? const SizedBox(
+                                              width: 18,
+                                              height: 18,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                          : const Icon(
+                                              Icons.camera_alt,
+                                              size: 18,
+                                            ),
+                                      onPressed: _uploadingPhoto
+                                          ? null
+                                          : _pickPhoto,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
                                     Text(
-                                      _nickname!,
+                                      DisplayFormatters.safeDisplayName(
+                                        nickname: profile.nickname,
+                                        displayName: profile.displayName,
+                                        firstName: profile.firstName,
+                                        lastName: profile.lastName,
+                                        username: profile.username,
+                                        ciervoId: profile.ciervoUserCode,
+                                        fallback: 'Menor',
+                                      ),
                                       style: Theme.of(context)
                                           .textTheme
                                           .titleLarge
-                                          ?.copyWith(fontWeight: FontWeight.w700),
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                          ),
                                     ),
                                     const SizedBox(height: 4),
-                                  ],
-                                  Text(
-                                    _legalName,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyLarge
-                                        ?.copyWith(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onSurfaceVariant,
+                                    Text(profile.roleLabel),
+                                    if (profile.username.isNotEmpty) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        DisplayFormatters.formatUsername(
+                                          profile.username,
                                         ),
+                                      ),
+                                    ],
+                                    if (profile.ciervoUserCode.isNotEmpty) ...[
+                                      const SizedBox(height: 4),
+                                      Text(profile.ciervoUserCode),
+                                    ],
+                                    if (profile.familyName.isNotEmpty) ...[
+                                      const SizedBox(height: 4),
+                                      Text(profile.familyName),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          OutlinedButton.icon(
+                            onPressed: _savingNickname ? null : _editNickname,
+                            icon: const Icon(Icons.edit_outlined),
+                            label: Text(
+                              _nickname == null
+                                  ? 'Agregar apodo'
+                                  : 'Cambiar apodo',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (profile.guardians.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      CiervoCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Mis tutores',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            ...profile.guardians.map(
+                              (guardian) => ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: const Icon(Icons.family_restroom),
+                                title: Text(
+                                  DisplayFormatters.identityLine(
+                                    username: guardian.username,
+                                    displayName: guardian.displayName,
+                                    ciervoId: guardian.ciervoUserCode,
                                   ),
-                                  if (_profile?['familyName'] != null)
-                                    Text('${_profile?['familyName']}'),
-                                ],
+                                ),
+                                subtitle: guardian.isPrimary
+                                    ? const Text('Tutor principal')
+                                    : null,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: AppSpacing.md),
-                        OutlinedButton.icon(
-                          onPressed: _savingNickname ? null : _editNickname,
-                          icon: const Icon(Icons.edit_outlined),
-                          label: Text(
-                            _nickname == null ? 'Agregar apodo' : 'Cambiar apodo',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                      ),
+                    ],
+                  ],
                   const SizedBox(height: AppSpacing.md),
                   CiervoButton(
                     label: 'Ver mi wallet',
@@ -260,6 +331,17 @@ class _KidProfilePageState extends State<KidProfilePage> {
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(
                         builder: (_) => const KidWalletPage(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  CiervoButton(
+                    label: 'Registrar dispositivo NFC',
+                    variant: CiervoButtonVariant.secondary,
+                    icon: Icons.nfc,
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const KidNfcDeviceRegistrationPage(),
                       ),
                     ),
                   ),

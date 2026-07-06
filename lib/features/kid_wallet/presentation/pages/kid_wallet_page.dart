@@ -5,6 +5,7 @@ import '../../../../core/errors/user_error_message.dart';
 import '../../../../shared/widgets/ciervo_brand_loader.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../kid_me/data/kid_me_repository.dart';
+import '../../../kid_me/domain/entities/kid_me_profile.dart';
 import '../widgets/kid_premium_wallet_dashboard.dart';
 
 class KidWalletPage extends StatefulWidget {
@@ -17,7 +18,7 @@ class KidWalletPage extends StatefulWidget {
 class _KidWalletPageState extends State<KidWalletPage> {
   final _repository = getIt<KidMeRepository>();
   Map<String, dynamic>? _wallet;
-  Map<String, dynamic>? _profile;
+  KidMeProfile? _profile;
   bool _loading = true;
   String? _error;
 
@@ -73,10 +74,14 @@ class _KidWalletPageState extends State<KidWalletPage> {
         .toList();
   }
 
-  String get _userName {
-    final name = _profile?['name'] ?? _profile?['firstName'] ?? _wallet?['name'];
-    final text = '$name'.trim();
-    return text.isEmpty ? 'amigo' : text.split(' ').first;
+  String get _userName => _profile?.greetingName ?? 'amigo';
+
+  double get _availableBalance {
+    final available = _num(_wallet?['availableBalance']);
+    if (available > 0) return available;
+    final balance = _num(_wallet?['balance']);
+    final held = _num(_wallet?['heldBalance']);
+    return balance - held;
   }
 
   @override
@@ -93,7 +98,7 @@ class _KidWalletPageState extends State<KidWalletPage> {
                 )
               : KidPremiumWalletDashboard(
                   userName: _userName,
-                  balance: _num(_wallet?['balance'] ?? _wallet?['availableBalance']),
+                  balance: _availableBalance,
                   heldBalance: _num(_wallet?['heldBalance']),
                   currency: '${_wallet?['currency'] ?? 'COP'}',
                   movements: _movements(),

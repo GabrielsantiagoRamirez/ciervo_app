@@ -299,10 +299,19 @@ class WalletCubit extends Cubit<WalletState> {
     );
   }
 
-  Future<void> approvePaymentRequest(String id) => _paymentRequestAction(
-    () => _repository.approvePaymentRequest(id),
-    'Solicitud aprobada.',
-  );
+  Future<void> approvePaymentRequest(
+    String id, {
+    bool useBackupCard = false,
+    String? familyPaymentCardId,
+  }) =>
+      _paymentRequestAction(
+        () => _repository.approvePaymentRequest(
+          id,
+          useBackupCard: useBackupCard,
+          familyPaymentCardId: familyPaymentCardId,
+        ),
+        'Solicitud aprobada.',
+      );
 
   Future<void> rejectPaymentRequest(String id, String reason) =>
       _paymentRequestAction(

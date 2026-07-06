@@ -403,6 +403,14 @@ class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
   Future<void> _inviteFriend() async {
     final planId = widget.plan.id;
     if (planId == null) return;
+    if (widget.plan.participantCount >= widget.plan.maxParticipants) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('El grupo ya alcanzó el máximo de 5 participantes.'),
+        ),
+      );
+      return;
+    }
     final userId = await Navigator.of(context).push<String>(
       MaterialPageRoute(builder: (_) => const UserSearchPage(selectMode: true)),
     );
@@ -422,8 +430,15 @@ class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
         );
       },
       failure: (error) {
+        final message = UserErrorMessage.from(error);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
+          SnackBar(
+            content: Text(
+              message.toLowerCase().contains('maximo de 5')
+                  ? 'El grupo ya alcanzó el máximo de 5 participantes.'
+                  : message,
+            ),
+          ),
         );
       },
     );
@@ -462,6 +477,11 @@ class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
               padding: const EdgeInsets.all(AppSpacing.lg),
               children: [
                 VakupliPlanCard(plan: widget.plan),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  'Participantes: ${widget.plan.participantsLabel}',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
                 const SizedBox(height: AppSpacing.md),
                 VakupliFriendsGroup(friends: _friends),
                 const SizedBox(height: AppSpacing.md),

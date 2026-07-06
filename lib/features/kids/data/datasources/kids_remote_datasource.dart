@@ -83,6 +83,18 @@ abstract interface class KidsRemoteDataSource {
     required String childId,
     required String pin,
   });
+
+  Future<void> associateChildNfc({
+    required String childId,
+    required String childWalletCardId,
+    required String cardUid,
+    required String label,
+  });
+
+  Future<String> generateChildNfcPublicId({
+    required String childId,
+    required String cardId,
+  });
 }
 
 class DioKidsRemoteDataSource implements KidsRemoteDataSource {
@@ -432,5 +444,35 @@ class DioKidsRemoteDataSource implements KidsRemoteDataSource {
       '/api/guardians/children/$childId/account/pin',
       data: {'pin': pin},
     );
+  }
+
+  @override
+  Future<void> associateChildNfc({
+    required String childId,
+    required String childWalletCardId,
+    required String cardUid,
+    required String label,
+  }) async {
+    await _client.dio.post<void>(
+      '/api/guardians/children/$childId/nfc/associate',
+      data: {
+        'childWalletCardId':
+            int.tryParse(childWalletCardId) ?? childWalletCardId,
+        'cardUid': cardUid.trim().toUpperCase(),
+        'label': label.trim(),
+      },
+    );
+  }
+
+  @override
+  Future<String> generateChildNfcPublicId({
+    required String childId,
+    required String cardId,
+  }) async {
+    final response = await _client.dio.post<dynamic>(
+      '/api/guardians/children/$childId/nfc/cards/$cardId/public-id',
+    );
+    final value = unwrapApiResponse(response.data);
+    return value?.toString() ?? '';
   }
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../core/di/service_locator.dart';
 import '../../core/theme/app_colors.dart';
@@ -7,6 +6,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/utils/ciervo_id_qr.dart';
 import '../../core/utils/ciervo_share.dart';
 import '../../features/wallet/domain/repositories/wallet_repository.dart';
+import 'ciervo_qr_view.dart';
 import 'ciervo_user_id_badge.dart';
 
 Future<void> showCiervoIdQrDialog(
@@ -26,26 +26,7 @@ Future<void> showCiervoIdQrDialog(
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: QrImageView(
-              data: payload,
-              version: QrVersions.auto,
-              size: 200,
-              eyeStyle: const QrEyeStyle(
-                eyeShape: QrEyeShape.square,
-                color: Colors.black,
-              ),
-              dataModuleStyle: const QrDataModuleStyle(
-                dataModuleShape: QrDataModuleShape.square,
-                color: Colors.black,
-              ),
-            ),
-          ),
+          CiervoQrView(data: payload, size: 200),
           const SizedBox(height: AppSpacing.md),
           SelectableText(
             code,

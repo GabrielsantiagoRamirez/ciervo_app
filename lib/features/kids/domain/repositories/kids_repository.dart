@@ -85,4 +85,16 @@ abstract interface class KidsRepository {
     required String childId,
     required String pin,
   });
+
+  Future<Result<void>> associateChildNfc({
+    required String childId,
+    required String childWalletCardId,
+    required String cardUid,
+    required String label,
+  });
+
+  Future<Result<String>> generateChildNfcPublicId({
+    required String childId,
+    required String cardId,
+  });
 }

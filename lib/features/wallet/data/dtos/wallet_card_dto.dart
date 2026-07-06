@@ -15,9 +15,23 @@ class WalletCardDto {
   });
 
   factory WalletCardDto.fromJson(Map<String, dynamic> json) {
-    final balance = _double(json, const ['balance']);
-    final heldBalance = _double(json, const ['heldBalance']);
-    final available = _optionalDouble(json, const ['availableBalance']);
+    final balance = _double(json, const [
+      'balance',
+      'currentBalance',
+      'saldo',
+      'amount',
+    ]);
+    final heldBalance = _double(json, const [
+      'heldBalance',
+      'heldAmount',
+      'retainedBalance',
+      'blockedBalance',
+    ]);
+    final available = _optionalDouble(json, const [
+      'availableBalance',
+      'spendableBalance',
+      'available',
+    ]);
     final blockedAt = _optionalString(json, const ['blockedAt', 'BlockedAt']);
     final statusId = json['statusId'] ?? json['StatusId'];
     return WalletCardDto(

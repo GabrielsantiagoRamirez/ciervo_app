@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../features/family_payments/presentation/pages/family_payment_methods_page.dart';
 import '../../features/chat/presentation/pages/chat_inbox_page.dart';
 import '../../features/kids/presentation/pages/guardian_pay_for_me_page.dart';
 import '../../features/wallet/presentation/pages/request_money_page.dart';
@@ -43,6 +44,10 @@ Future<void> showInsufficientBalanceDialog(
           onPressed: () => Navigator.pop(ctx, 'tutor'),
           child: const Text('Pedir a tutor'),
         ),
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, 'backup'),
+          child: const Text('Tarjeta de respaldo'),
+        ),
         FilledButton(
           onPressed: () => Navigator.pop(ctx, 'recharge'),
           child: const Text('Recargar'),
@@ -81,6 +86,12 @@ Future<void> showInsufficientBalanceDialog(
     case 'tutor':
       await Navigator.of(context).push(
         MaterialPageRoute<void>(builder: (_) => const GuardianPayForMePage()),
+      );
+    case 'backup':
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => const FamilyPaymentMethodsPage(),
+        ),
       );
     case 'recharge':
     case 'wallet':

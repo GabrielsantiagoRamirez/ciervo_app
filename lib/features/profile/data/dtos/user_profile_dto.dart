@@ -8,6 +8,8 @@ class UserProfileDto {
     required this.email,
     required this.phone,
     this.ciervoUserCode,
+    this.username,
+    this.nightOperationalId,
     this.identityDocument,
     this.documentType,
     this.photoUrl,
@@ -48,6 +50,11 @@ class UserProfileDto {
         'userCode',
         'userPublicCode',
         'userCiervoCode',
+      ]),
+      username: _optionalString(source, const ['username', 'userName']),
+      nightOperationalId: _optionalString(source, const [
+        'nightOperationalId',
+        'NightOperationalId',
       ]),
       identityDocument: _optionalString(source, const [
         'identityDocument',
@@ -101,6 +108,8 @@ class UserProfileDto {
   final String email;
   final String phone;
   final String? ciervoUserCode;
+  final String? username;
+  final String? nightOperationalId;
   final String? identityDocument;
   final String? documentType;
   final String? photoUrl;
@@ -125,6 +134,8 @@ class UserProfileDto {
       email: email,
       phone: phone,
       ciervoUserCode: ciervoUserCode,
+      username: username,
+      nightOperationalId: nightOperationalId,
       identityDocument: identityDocument,
       documentType: documentType,
       photoUrl: photoUrl,

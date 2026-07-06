@@ -44,7 +44,9 @@ Future<String?> resolveCiervoUserCodeForSession() async {
   if (claims.routeKind == 'Kid') {
     final result = await getIt<KidMeRepository>().profile();
     return result.when(
-      success: (profile) => _pickIdFromMap(profile),
+      success: (profile) => profile.ciervoUserCode.isNotEmpty
+          ? profile.ciervoUserCode
+          : null,
       failure: (_) => null,
     );
   }
@@ -59,20 +61,6 @@ Future<String?> resolveCiervoUserCodeForSession() async {
     success: (user) => user.ciervoUserCode,
     failure: (_) => null,
   );
-}
-
-String? _pickIdFromMap(Map<String, dynamic> profile) {
-  for (final key in const [
-    'ciervoUserCode',
-    'publicCode',
-    'userPublicCode',
-    'childPublicCode',
-    'id',
-  ]) {
-    final value = profile[key]?.toString().trim();
-    if (value != null && value.isNotEmpty) return value;
-  }
-  return null;
 }
 
 class CiervoUserIdBadge extends StatefulWidget {

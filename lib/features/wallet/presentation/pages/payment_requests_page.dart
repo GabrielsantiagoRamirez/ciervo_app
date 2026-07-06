@@ -3,10 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/utils/display_formatters.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
+import '../widgets/payment_request_approve_sheet.dart';
 import '../../domain/entities/payment_request.dart';
 import '../../domain/repositories/wallet_repository.dart';
 import '../cubit/wallet_cubit.dart';
@@ -18,8 +20,9 @@ class PaymentRequestsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          WalletCubit(getIt<WalletRepository>())..loadPaymentRequests(),
+      create: (_) => WalletCubit(getIt<WalletRepository>())
+        ..load()
+        ..loadPaymentRequests(),
       child: DefaultTabController(
         length: 2,
         child: BlocConsumer<WalletCubit, WalletState>(
@@ -112,7 +115,7 @@ class _RequestList extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: CiervoEmptyState(
           title: emptyTitle,
-          description: 'Cuando haya movimientos pendientes apareceran aqui.',
+          description: 'Cuando haya movimientos pendientes aparecerán aquí.',
           icon: Icons.mark_email_unread_outlined,
         ),
       );
@@ -123,50 +126,118 @@ class _RequestList extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.lg),
         itemCount: requests.length,
         separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
-        itemBuilder: (context, index) =>
-            _RequestTile(request: requests[index], actions: actions),
+        itemBuilder: (context, index) => _RequestTile(
+          request: requests[index],
+          actions: actions,
+        ),
       ),
     );
   }
 }
 
 class _RequestTile extends StatelessWidget {
-  const _RequestTile({required this.request, required this.actions});
+  const _RequestTile({
+    required this.request,
+    required this.actions,
+  });
 
   final PaymentRequest request;
   final _RequestActions actions;
 
+  String get _counterpartyLine {
+    if (actions == _RequestActions.inbox) {
+      return DisplayFormatters.identityLine(
+        username: request.requesterUsername,
+        displayName: request.requesterName,
+        ciervoId: request.requesterCiervoId,
+      );
+    }
+    return DisplayFormatters.identityLine(
+      username: request.payerUsername,
+      displayName: request.payerName ?? request.targetName,
+      ciervoId: request.payerCiervoId,
+    );
+  }
+
+  String get _concept => DisplayFormatters.safeText(
+        request.description,
+        fallback: 'Solicitud de pago',
+      );
+
+  Future<void> _approve(BuildContext context) async {
+    final cubit = context.read<WalletCubit>();
+    final options = await showPaymentRequestApproveSheet(
+      context,
+      request: request,
+      walletCards: cubit.state.cards,
+    );
+    if (options == null || !context.mounted) return;
+    await cubit.approvePaymentRequest(
+      request.id,
+      useBackupCard: options.useBackupCard,
+      familyPaymentCardId: options.familyPaymentCardId,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final person = actions == _RequestActions.inbox
-        ? request.targetName ?? request.payerName
-        : request.payerName ?? request.targetName;
+    final counterparty = _counterpartyLine;
+    final statusLabel = DisplayFormatters.safeText(
+      request.status,
+      fallback: DisplayFormatters.formatStatus(request.rawStatus),
+    );
+
     return CiervoCard(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Icon(Icons.request_page_outlined),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: Text(
-                  person?.isNotEmpty == true ? person! : 'Solicitud de pago',
-                  style: Theme.of(context).textTheme.titleLarge,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _concept,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    if (counterparty.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.xxs),
+                      Text(
+                        counterparty,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
+                  ],
                 ),
               ),
-              Text('${request.currency} ${request.amount.toStringAsFixed(0)}'),
+              Text(
+                DisplayFormatters.formatMoney(
+                  request.amount,
+                  currency: request.currency,
+                ),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
             ],
           ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            request.description.isEmpty ? request.status : request.description,
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            'Estado: ${request.status}',
-            style: Theme.of(context).textTheme.bodySmall,
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              _StatusChip(label: statusLabel),
+              if (request.expiresAt != null) ...[
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  'Vence ${DisplayFormatters.formatDate(request.expiresAt)}',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ],
           ),
           const SizedBox(height: AppSpacing.sm),
           if (actions == _RequestActions.inbox && request.isPending)
@@ -174,9 +245,7 @@ class _RequestTile extends StatelessWidget {
               spacing: AppSpacing.sm,
               children: [
                 FilledButton(
-                  onPressed: () => context
-                      .read<WalletCubit>()
-                      .approvePaymentRequest(request.id),
+                  onPressed: () => _approve(context),
                   child: const Text('Aprobar'),
                 ),
                 OutlinedButton(
@@ -223,5 +292,32 @@ class _RequestTile extends StatelessWidget {
     );
     if (reason == null || reason.isEmpty || !context.mounted) return;
     context.read<WalletCubit>().rejectPaymentRequest(request.id, reason);
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: colors.primaryContainer.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+      ),
+    );
   }
 }

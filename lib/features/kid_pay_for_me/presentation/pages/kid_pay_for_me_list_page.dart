@@ -4,6 +4,7 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/layout/responsive_layout.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/utils/display_formatters.dart';
 import '../../../../core/utils/pay_for_me_labels.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
@@ -138,11 +139,21 @@ class _KidPayForMeListPageState extends State<KidPayForMeListPage> {
                         ),
                         const SizedBox(height: AppSpacing.xs),
                         Text(
-                          '${item['currency'] ?? 'COP'} ${_num(item['amount']).toStringAsFixed(0)}',
+                          DisplayFormatters.formatMoney(
+                            _num(item['amount']),
+                            currency: '${item['currency'] ?? 'COP'}',
+                          ),
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
-                        if (item['createdAt'] != null)
-                          Text('${item['createdAt']}'),
+                        if (DisplayFormatters.formatBackendDate(
+                              item['createdAt'] ?? item['requestedAt'],
+                            ).isNotEmpty)
+                          Text(
+                            DisplayFormatters.formatBackendDate(
+                              item['createdAt'] ?? item['requestedAt'],
+                            ),
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
                       ],
                     ),
                   );

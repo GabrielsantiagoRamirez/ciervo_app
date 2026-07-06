@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/utils/display_formatters.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/membership_upgrade_dialog.dart';
@@ -149,17 +150,37 @@ class _ChatInboxPageState extends State<ChatInboxPage> {
     return RefreshIndicator(
       onRefresh: _load,
       child: ListView.separated(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          AppSpacing.sm,
+          AppSpacing.md,
+          AppSpacing.xxl,
+        ),
         itemCount: _items.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
+        separatorBuilder: (_, __) => Divider(
+          height: 1,
+          indent: 72,
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
+        ),
         itemBuilder: (context, index) {
           final item = _items[index];
           final conversation = item.conversation;
           final subtitle = conversation.lastMessage?.trim();
           final updated = conversation.updatedAt;
           final timeLabel = updated == null ? null : _formatTime(updated);
+          final title = DisplayFormatters.chatTitle(
+            rawTitle: conversation.title,
+            username: conversation.peerUsername,
+            displayName: conversation.peerDisplayName,
+            conversationType: conversation.type,
+            participantCount: conversation.participantCount,
+          );
 
           return ListTile(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.xs,
+            ),
             leading: CircleAvatar(
               child: Icon(
                 item.source == ChatInboxSource.vakupli
@@ -167,7 +188,7 @@ class _ChatInboxPageState extends State<ChatInboxPage> {
                     : _iconForKind(conversation.type),
               ),
             ),
-            title: Text(conversation.title),
+            title: Text(title),
             subtitle: subtitle != null && subtitle.isNotEmpty
                 ? Text(
                     subtitle,

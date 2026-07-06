@@ -9,6 +9,7 @@ import '../../../../shared/widgets/ciervo_brand_loader.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../core/utils/display_labels.dart';
 import '../../data/booking_repository.dart';
+import '../../../search/presentation/pages/search_page.dart';
 import '../../../wallet/presentation/pages/request_money_page.dart';
 import '../../domain/entities/booking.dart';
 import '../../../qr_wallet/domain/entities/ciervo_qr_item.dart';
@@ -49,6 +50,13 @@ class _ReservationsPageState extends State<ReservationsPage> {
           icon: const Icon(Icons.manage_search),
         ),
       ],
+    ),
+    floatingActionButton: FloatingActionButton.extended(
+      onPressed: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => const SearchPage()),
+      ),
+      icon: const Icon(Icons.add),
+      label: const Text('Nueva reserva'),
     ),
     body: FutureBuilder<List<Booking>>(
       future: _bookings,

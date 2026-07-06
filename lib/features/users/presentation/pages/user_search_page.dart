@@ -8,6 +8,7 @@ import '../../../../core/permissions/permission_kind.dart';
 import '../../../../core/permissions/permission_manager.dart';
 import '../../../../core/permissions/widgets/permission_denied_state.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/utils/display_formatters.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../chat/domain/repositories/chat_repository.dart';
@@ -209,12 +210,21 @@ class _UserSearchPageState extends State<UserSearchPage> {
               ),
               title: Text(user.fullName),
               subtitle: Text(
-                [
-                  if (user.ciervoUserCode != null) user.ciervoUserCode,
-                  if (user.distanceLabel != null) user.distanceLabel,
-                  if (user.city != null) user.city,
-                  if (user.country != null) user.country,
-                ].whereType<String>().join(' · '),
+                DisplayFormatters.identityLine(
+                  username: user.username,
+                  displayName: user.fullName,
+                  ciervoId: user.ciervoUserCode,
+                ).isEmpty
+                    ? [
+                        if (user.distanceLabel != null) user.distanceLabel,
+                        if (user.city != null) user.city,
+                        if (user.country != null) user.country,
+                      ].whereType<String>().join(' · ')
+                    : DisplayFormatters.identityLine(
+                        username: user.username,
+                        displayName: user.fullName,
+                        ciervoId: user.ciervoUserCode,
+                      ),
               ),
             ),
             const Divider(height: 1),
@@ -347,7 +357,7 @@ class _UserSearchPageState extends State<UserSearchPage> {
           textInputAction: TextInputAction.search,
           onSubmitted: (_) => _search(),
           decoration: InputDecoration(
-            hintText: 'Nombre, teléfono o usuario',
+            hintText: 'Nombre, @usuario o CIERVO ID',
             prefixIcon: const Icon(Icons.search),
             suffixIcon: IconButton(
               icon: const Icon(Icons.arrow_forward),
@@ -416,8 +426,13 @@ class _UserSearchPageState extends State<UserSearchPage> {
           ),
         ..._results.map((user) {
           final opening = _openingUserId == user.userId;
+          final identity = DisplayFormatters.identityLine(
+            username: user.username,
+            displayName: user.fullName,
+            ciervoId: user.ciervoUserCode,
+          );
           final subtitle = [
-            if (user.ciervoUserCode != null) user.ciervoUserCode,
+            if (identity.isNotEmpty) identity,
             if (user.phoneMasked != null) user.phoneMasked,
             if (user.matchedByPhone) 'Contacto del teléfono',
             if (user.distanceLabel != null) user.distanceLabel,

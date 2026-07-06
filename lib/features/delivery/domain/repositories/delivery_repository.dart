@@ -17,14 +17,23 @@ abstract interface class DeliveryRepository {
   Future<Result<DeliveryOrder>> order(String id);
   Future<Result<List<DeliveryOrder>>> customerOrders();
   Future<Result<DeliveryOrder>> customerOrder(String id);
-  Future<Result<DeliveryOrder>> createCustomerOrder({
+  Future<Result<OrderQuote>> orderQuote({
     required String businessId,
-    required String deliveryAddress,
+    required List<DeliveryOrderItemRequest> items,
     required double latitude,
     required double longitude,
+    OrderFulfillmentType? fulfillmentType,
+  });
+  Future<Result<DeliveryOrder>> createCustomerOrder({
+    required String businessId,
+    required OrderFulfillmentType fulfillmentType,
     required List<DeliveryOrderItemRequest> items,
+    String? deliveryAddress,
+    double? latitude,
+    double? longitude,
     String? notes,
     String? childProfileId,
+    bool legacyDeliveryContract = false,
   });
   Future<Result<DeliveryPaymentResult>> payOrder({
     required String orderId,

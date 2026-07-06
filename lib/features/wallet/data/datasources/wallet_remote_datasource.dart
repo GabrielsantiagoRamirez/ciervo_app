@@ -46,7 +46,11 @@ abstract interface class WalletRemoteDataSource {
   });
   Future<List<PaymentRequestDto>> paymentRequestsInbox();
   Future<List<PaymentRequestDto>> paymentRequestsSent();
-  Future<PaymentRequestDto> approvePaymentRequest(String id);
+  Future<PaymentRequestDto> approvePaymentRequest(
+    String id, {
+    bool useBackupCard = false,
+    String? familyPaymentCardId,
+  });
   Future<PaymentRequestDto> rejectPaymentRequest(String id, String reason);
   Future<PaymentRequestDto> cancelPaymentRequest(String id);
   Future<NfcSessionDto> createNfcSession({
@@ -65,6 +69,7 @@ abstract interface class WalletRemoteDataSource {
     required String cardId,
     required String cardUid,
     required String label,
+    String? countryCode,
   });
   Future<void> blockPhysicalNfcCard(int id);
 }
@@ -270,9 +275,18 @@ class DioWalletRemoteDataSource implements WalletRemoteDataSource {
   }
 
   @override
-  Future<PaymentRequestDto> approvePaymentRequest(String id) async {
+  Future<PaymentRequestDto> approvePaymentRequest(
+    String id, {
+    bool useBackupCard = false,
+    String? familyPaymentCardId,
+  }) async {
     final response = await _client.dio.post<Map<String, dynamic>>(
       '/api/payment-requests/$id/approve',
+      data: {
+        if (useBackupCard) 'useBackupCard': true,
+        if (familyPaymentCardId != null && familyPaymentCardId.isNotEmpty)
+          'familyPaymentCardId': familyPaymentCardId,
+      },
     );
     return PaymentRequestDto.fromJson(unwrapApiMap(response.data));
   }
@@ -350,12 +364,15 @@ class DioWalletRemoteDataSource implements WalletRemoteDataSource {
     required String cardId,
     required String cardUid,
     required String label,
+    String? countryCode,
   }) async {
     final response = await _client.dio.post<Map<String, dynamic>>(
       '/api/wallet/cards/$cardId/physical-nfc',
       data: {
         'cardUid': cardUid,
         'label': label,
+        if (countryCode != null && countryCode.isNotEmpty)
+          'countryCode': countryCode.toUpperCase(),
       },
     );
     return PhysicalNfcCardDto.fromJson(unwrapApiMap(response.data));

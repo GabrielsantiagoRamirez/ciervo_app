@@ -403,4 +403,40 @@ class KidsRepositoryImpl implements KidsRepository {
       return Failure(ErrorMapper.fromObject(error));
     }
   }
+
+  @override
+  Future<Result<void>> associateChildNfc({
+    required String childId,
+    required String childWalletCardId,
+    required String cardUid,
+    required String label,
+  }) async {
+    try {
+      await _remoteDataSource.associateChildNfc(
+        childId: childId,
+        childWalletCardId: childWalletCardId,
+        cardUid: cardUid,
+        label: label,
+      );
+      return const Success<void>(null);
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
+  Future<Result<String>> generateChildNfcPublicId({
+    required String childId,
+    required String cardId,
+  }) async {
+    try {
+      final value = await _remoteDataSource.generateChildNfcPublicId(
+        childId: childId,
+        cardId: cardId,
+      );
+      return Success(value);
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
 }

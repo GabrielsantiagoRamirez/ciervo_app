@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/kids/selected_kid_context.dart';
@@ -32,7 +33,8 @@ import 'child_wallet_page.dart';
 import 'child_business_payment_page.dart';
 import 'child_form_page.dart';
 import 'link_child_page.dart';
-import 'package:image_picker/image_picker.dart';
+import 'guardian_kid_nfc_associate_page.dart';
+import 'tutor_kid_preview_shell_page.dart';
 import '../widgets/child_profile_avatar.dart';
 import '../widgets/kid_login_access_card.dart';
 
@@ -475,21 +477,34 @@ class KidsDetailPage extends StatelessWidget {
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       OutlinedButton.icon(
+                        icon: const Icon(Icons.nfc),
+                        label: const Text('Registrar tarjeta NFC'),
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => GuardianKidNfcAssociatePage(
+                              childId: childId,
+                              childName: child.fullName,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      OutlinedButton.icon(
                         icon: const Icon(Icons.visibility_outlined),
-                        label: const Text('Navegar como este menor'),
+                        label: const Text('Ver como ve su hijo'),
                         onPressed: () {
                           getIt<SelectedKidContext>().select(
                             childId,
                             name: child.fullName,
                           );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Modo menor activado para ${child.fullName}.',
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => TutorKidPreviewShellPage(
+                                childId: childId,
+                                childName: child.fullName,
                               ),
                             ),
                           );
-                          Navigator.of(context).popUntil((route) => route.isFirst);
                         },
                       ),
                       const SizedBox(height: AppSpacing.sm),

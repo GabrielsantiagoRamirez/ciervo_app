@@ -118,22 +118,66 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
     ),
   );
   @override
-  Future<Result<DeliveryOrder>> createCustomerOrder({
+  Future<Result<OrderQuote>> orderQuote({
     required String businessId,
-    required String deliveryAddress,
+    required List<DeliveryOrderItemRequest> items,
     required double latitude,
     required double longitude,
+    OrderFulfillmentType? fulfillmentType,
+  }) async {
+    try {
+      final response = await _client.dio.post<dynamic>(
+        '/api/businesses/$businessId/order-quote',
+        data: {
+          'items': items.map((item) => item.toJson()).toList(),
+          'latitude': latitude,
+          'longitude': longitude,
+          if (fulfillmentType != null)
+            'fulfillmentType': fulfillmentType.apiValue,
+        },
+      );
+      return Success(_orderQuote(unwrapApiMap(response.data)));
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 404) {
+        return const Failure(
+          AppException(
+            message: 'Cotización no disponible en este entorno.',
+            code: 'order_quote_unavailable',
+            statusCode: 404,
+          ),
+        );
+      }
+      return Failure(ErrorMapper.fromObject(error));
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
+  Future<Result<DeliveryOrder>> createCustomerOrder({
+    required String businessId,
+    required OrderFulfillmentType fulfillmentType,
     required List<DeliveryOrderItemRequest> items,
+    String? deliveryAddress,
+    double? latitude,
+    double? longitude,
     String? notes,
     String? childProfileId,
+    bool legacyDeliveryContract = false,
   }) => _guard(() async {
+    final isDelivery =
+        legacyDeliveryContract || fulfillmentType == OrderFulfillmentType.delivery;
     final response = await _client.dio.post<dynamic>(
       '/api/businesses/$businessId/delivery-orders',
       data: {
-        'deliveryAddress': deliveryAddress,
-        'latitude': latitude,
-        'longitude': longitude,
+        if (!legacyDeliveryContract)
+          'fulfillmentType': fulfillmentType.apiValue,
         'items': items.map((item) => item.toJson()).toList(),
+        if (isDelivery) ...{
+          'deliveryAddress': deliveryAddress,
+          'latitude': latitude,
+          'longitude': longitude,
+        },
         if (notes != null && notes.trim().isNotEmpty) 'notes': notes.trim(),
         if (childProfileId != null && childProfileId.trim().isNotEmpty)
           'childProfileId': int.tryParse(childProfileId) ?? childProfileId,
@@ -464,6 +508,10 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
           (delivery['conversationId'] ?? json['conversationId'])?.toString(),
       deliveryPin: (delivery['deliveryPin'] ?? json['deliveryPin'])?.toString(),
       pickupPin: (delivery['pickupPin'] ?? json['pickupPin'])?.toString(),
+      pickupCode: json['pickupCode']?.toString(),
+      fulfillmentType: OrderFulfillmentType.tryParse(
+        json['fulfillmentType']?.toString(),
+      ),
       pricing: pricing,
       unreadCount:
           int.tryParse(
@@ -609,6 +657,57 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
       paymentMethod: _stringOrNull(json['paymentMethod']),
       message: _stringOrNull(json['message'] ?? json['msg']),
     );
+  }
+
+  static OrderQuote _orderQuote(Map<String, dynamic> json) {
+    return OrderQuote(
+      businessId: '${json['businessId'] ?? ''}',
+      businessName: '${json['businessName'] ?? 'Comercio'}',
+      pickup: _quoteOption(json['pickup']),
+      delivery: _quoteOption(json['delivery']),
+    );
+  }
+
+  static OrderQuoteOption? _quoteOption(dynamic raw) {
+    if (raw is! Map) return null;
+    final json = Map<String, dynamic>.from(raw);
+    final type = OrderFulfillmentType.tryParse(json['fulfillmentType']?.toString());
+    if (type == null) return null;
+    final pricingJson = json['pricing'];
+    final pricing = pricingJson is Map
+        ? DeliveryPricing.fromJson(
+            Map<String, dynamic>.from(pricingJson),
+            fallback: json,
+          )
+        : null;
+    return OrderQuoteOption(
+      fulfillmentType: type,
+      available: json['available'] == true,
+      reason: _stringOrNull(json['reason'] ?? json['message'] ?? json['msg']),
+      productSubtotal:
+          _num(json['productSubtotal'] ?? json['productsSubtotal']) ?? 0,
+      deliveryFee: _num(json['deliveryFee']) ?? 0,
+      total: _num(json['total']) ?? 0,
+      currency: (json['currency'] ?? 'COP').toString(),
+      countryCode: _stringOrNull(json['countryCode']),
+      estimatedMinutes: int.tryParse('${json['estimatedMinutes'] ?? ''}'),
+      pricing: pricing,
+      items: _quoteItems(json['items']),
+    );
+  }
+
+  static List<OrderQuoteItem> _quoteItems(dynamic value) {
+    if (value is! List) return const [];
+    return value.whereType<Map>().map((raw) {
+      final json = Map<String, dynamic>.from(raw);
+      return OrderQuoteItem(
+        productId: '${json['productId'] ?? json['id'] ?? ''}',
+        productName: '${json['productName'] ?? json['name'] ?? 'Producto'}',
+        quantity: int.tryParse('${json['quantity'] ?? 0}') ?? 0,
+        unitPrice: _num(json['unitPrice'] ?? json['price']) ?? 0,
+        totalPrice: _num(json['totalPrice'] ?? json['total']) ?? 0,
+      );
+    }).toList();
   }
 
   static String _idempotencyKey(String prefix, String seed) {

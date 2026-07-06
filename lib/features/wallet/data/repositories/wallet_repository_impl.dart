@@ -276,8 +276,18 @@ class WalletRepositoryImpl implements WalletRepository {
   }
 
   @override
-  Future<Result<PaymentRequest>> approvePaymentRequest(String id) =>
-      _paymentRequest(() => _remoteDataSource.approvePaymentRequest(id));
+  Future<Result<PaymentRequest>> approvePaymentRequest(
+    String id, {
+    bool useBackupCard = false,
+    String? familyPaymentCardId,
+  }) =>
+      _paymentRequest(
+        () => _remoteDataSource.approvePaymentRequest(
+          id,
+          useBackupCard: useBackupCard,
+          familyPaymentCardId: familyPaymentCardId,
+        ),
+      );
 
   @override
   Future<Result<PaymentRequest>> rejectPaymentRequest(
@@ -345,12 +355,14 @@ class WalletRepositoryImpl implements WalletRepository {
     required String cardId,
     required String cardUid,
     required String label,
+    String? countryCode,
   }) async {
     try {
       final dto = await _remoteDataSource.registerPhysicalNfcCard(
         cardId: cardId,
         cardUid: cardUid,
         label: label,
+        countryCode: countryCode,
       );
       return Success(dto.toDomain());
     } catch (error) {

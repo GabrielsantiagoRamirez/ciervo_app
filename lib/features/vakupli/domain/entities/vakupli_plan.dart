@@ -15,6 +15,8 @@ class VakupliPlan {
     this.createdAt,
     this.paidContributions = 0,
     this.totalContributions = 0,
+    this.participantCount = 0,
+    this.maxParticipants = 5,
   });
 
   final int? id;
@@ -32,11 +34,15 @@ class VakupliPlan {
   final DateTime? createdAt;
   final int paidContributions;
   final int totalContributions;
+  final int participantCount;
+  final int maxParticipants;
 
   String get paymentProgressLabel =>
       totalContributions > 0
           ? '$paidContributions/$totalContributions pagados'
           : statusLabel;
+
+  String get participantsLabel => '$participantCount / $maxParticipants';
 }
 
 class VakupliFriend {

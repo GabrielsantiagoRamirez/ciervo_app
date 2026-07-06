@@ -98,6 +98,7 @@ class ProfileCubit extends Cubit<ProfileState> {
     required String lastName,
     required String email,
     required String phone,
+    String? username,
   }) async {
     emit(state.copyWith(status: ProfileStatus.saving, clearError: true));
     final result = await _profileRepository.updateMe(
@@ -105,6 +106,7 @@ class ProfileCubit extends Cubit<ProfileState> {
       lastName: lastName,
       email: email,
       phone: phone,
+      username: username,
     );
 
     result.when(

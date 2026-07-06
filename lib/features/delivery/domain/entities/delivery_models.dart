@@ -1,7 +1,9 @@
 import '../../../receipts/domain/entities/action_confirmation.dart';
 import 'delivery_pricing.dart';
+import 'order_fulfillment_models.dart';
 
 export 'delivery_pricing.dart';
+export 'order_fulfillment_models.dart';
 
 class DeliveryProfile {
   const DeliveryProfile({
@@ -90,6 +92,8 @@ class DeliveryOrder {
     this.pickupLongitude,
     this.courierLatitude,
     this.courierLongitude,
+    this.fulfillmentType,
+    this.pickupCode,
   });
   final String id;
   final String status;
@@ -102,6 +106,8 @@ class DeliveryOrder {
   final String? conversationId;
   final String? deliveryPin;
   final String? pickupPin;
+  final String? pickupCode;
+  final OrderFulfillmentType? fulfillmentType;
   final DeliveryPricing? pricing;
   final int unreadCount;
   final ActionConfirmation? confirmation;
@@ -167,6 +173,21 @@ class DeliveryOrder {
   bool get isDelivered {
     final normalized = status.toLowerCase().replaceAll('_', '');
     return normalized == 'delivered' || normalized.contains('delivered');
+  }
+
+  bool get isPickup =>
+      fulfillmentType == OrderFulfillmentType.pickup ||
+      (fulfillmentType == null &&
+          deliveryAddress.toLowerCase().contains('recoger'));
+
+  bool get isReadyForPickup {
+    final normalized = status.toLowerCase().replaceAll('_', '');
+    return normalized.contains('readyforpickup');
+  }
+
+  String? get effectivePickupCode {
+    if (!isPickup) return null;
+    return (pickupCode != null && pickupCode!.isNotEmpty) ? pickupCode : null;
   }
 
   DeliveryPricing get effectivePricing => pricing ??

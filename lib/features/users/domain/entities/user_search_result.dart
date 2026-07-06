@@ -2,6 +2,7 @@ class UserSearchResult {
   const UserSearchResult({
     required this.userId,
     required this.fullName,
+    this.username,
     this.ciervoUserCode,
     this.country,
     this.city,
@@ -14,6 +15,7 @@ class UserSearchResult {
 
   final String userId;
   final String fullName;
+  final String? username;
   final String? ciervoUserCode;
   final String? country;
   final String? city;
@@ -23,8 +25,8 @@ class UserSearchResult {
   final String? phoneMasked;
   final bool matchedByPhone;
 
-  String? get distanceLabel {
-    if (distanceKm == null) return null;
+  String get distanceLabel {
+    if (distanceKm == null) return '';
     if (distanceKm! < 1) {
       return '${(distanceKm! * 1000).round()} m';
     }
@@ -35,6 +37,7 @@ class UserSearchResult {
       UserSearchResult(
         userId: '${json['userId'] ?? json['id'] ?? ''}',
         fullName: _name(json),
+        username: _optional(json['username'] ?? json['userName']),
         ciervoUserCode: _optional(
           json['ciervoUserCode'] ?? json['ciervoId'] ?? json['userCode'],
         ),
@@ -67,6 +70,9 @@ class UserSearchResult {
 
   static String? _optional(dynamic value) {
     final text = value?.toString().trim();
-    return text == null || text.isEmpty ? null : text;
+    if (text == null || text.isEmpty || text.toLowerCase() == 'null') {
+      return null;
+    }
+    return text;
   }
 }

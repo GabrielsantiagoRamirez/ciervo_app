@@ -204,6 +204,11 @@ class VakupliRepository {
       createdAt: createdAt,
       paidContributions: paid,
       totalContributions: total,
+      participantCount: _intOr(
+        json['participantCount'] ?? paymentMap['participantCount'],
+        0,
+      ),
+      maxParticipants: _intOr(json['maxParticipants'], 5),
     );
   }
 

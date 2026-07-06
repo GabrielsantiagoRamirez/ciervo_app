@@ -42,7 +42,8 @@ import '../widgets/place_detail_review_tile.dart';
 import '../../../media/presentation/authenticated_media_image.dart';
 import '../../../product_categories/presentation/widgets/product_subcategory_filters.dart';
 import '../../../reservations/data/booking_repository.dart';
-import '../../../delivery/presentation/pages/delivery_checkout_page.dart';
+import '../../../delivery/presentation/pages/order_checkout_page.dart';
+import '../../../delivery/domain/entities/delivery_models.dart';
 import '../../../receipts/domain/entities/action_confirmation.dart';
 import '../../../receipts/presentation/pages/action_confirmation_page.dart';
 import '../../../../shared/widgets/ciervo_image_viewer_page.dart';
@@ -270,6 +271,14 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
                       child: _ProductTile(product: product),
                     ),
                   ),
+                if (_products.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  CiervoButton(
+                    label: 'Comprar',
+                    icon: Icons.shopping_bag_outlined,
+                    onPressed: () => _openOrderCheckout(context),
+                  ),
+                ],
                 if (_products.any((item) => item.allowsPickup)) ...[
                   const SizedBox(height: AppSpacing.xs),
                   const _CapabilityLine(
@@ -474,22 +483,43 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
   }
 
   void _showDeliverySheet(BuildContext context) {
-    final deliveryProducts =
-        _products.where((item) => item.allowsDelivery).toList();
+    _openOrderCheckout(
+      context,
+      initialFulfillment: OrderFulfillmentType.delivery,
+      products: _products.where((item) => item.allowsDelivery).toList(),
+    );
+  }
+
+  void _openOrderCheckout(
+    BuildContext context, {
+    OrderFulfillmentType? initialFulfillment,
+    List<BusinessProduct>? products,
+  }) {
+    final checkoutProducts = products ??
+        _products
+            .where((item) => item.allowsDelivery || item.allowsPickup)
+            .toList();
+    if (checkoutProducts.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No hay productos disponibles para compra.')),
+      );
+      return;
+    }
     if (_location == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Activa tu ubicacion para pedir domicilio.')),
+        const SnackBar(content: Text('Activa tu ubicación para continuar.')),
       );
       return;
     }
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => DeliveryCheckoutPage(
+        builder: (_) => OrderCheckoutPage(
           businessId: widget.place.id,
           businessName: widget.place.name,
-          products: deliveryProducts,
+          products: checkoutProducts,
           initialLocation: _location!,
-          availability: _deliveryAvailability,
+          initialFulfillment: initialFulfillment,
+          deliveryAvailability: _deliveryAvailability,
         ),
       ),
     );
@@ -773,6 +803,17 @@ class _ReservationSheetState extends State<_ReservationSheet> {
               ? booking.publicCode
               : base.confirmationCode,
         );
+        final chatId = booking.conversationId?.trim();
+        if (chatId != null && chatId.isNotEmpty && mounted) {
+          await Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => ChatConversationPage(
+                conversationId: chatId,
+                title: booking.businessName ?? 'Chat comercial',
+              ),
+            ),
+          );
+        }
       },
       failure: (error) async {
         final message = UserErrorMessage.from(error);

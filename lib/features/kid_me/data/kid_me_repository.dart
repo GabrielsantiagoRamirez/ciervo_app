@@ -9,6 +9,8 @@ import '../../../core/utils/idempotency_key.dart';
 import '../../chat/data/dtos/chat_dtos.dart';
 import '../../chat/domain/entities/chat_conversation.dart';
 import '../../chat/domain/entities/chat_message.dart';
+import '../domain/entities/kid_me_profile.dart';
+import 'dtos/kid_me_profile_dto.dart';
 
 class KidMeRepository {
   const KidMeRepository(this._client);
@@ -59,11 +61,28 @@ class KidMeRepository {
         return const [];
       });
 
-  Future<Result<Map<String, dynamic>>> profile() => _guard(() async {
-        final response =
-            await _client.dio.get<dynamic>('/api/kids/me/profile');
-        return unwrapApiMap(response.data);
-      });
+  Future<Result<KidMeProfile>> profile() async {
+    final direct = await _guard(() async {
+      final response =
+          await _client.dio.get<dynamic>('/api/kids/me/profile');
+      return KidMeProfileDto.fromJson(unwrapApiMap(response.data)).toDomain();
+    });
+    if (direct case Success(:final value) when _hasProfileContent(value)) {
+      return direct;
+    }
+    final homeResult = await home();
+    return homeResult.when(
+      success: (data) => Success(
+        KidMeProfileDto.fromHomeMap(data).toDomain(),
+      ),
+      failure: (_) => direct,
+    );
+  }
+
+  bool _hasProfileContent(KidMeProfile profile) =>
+      profile.firstName.isNotEmpty ||
+      profile.displayName.isNotEmpty ||
+      profile.ciervoUserCode.isNotEmpty;
 
   Future<Result<ChatConversation>> familyChat() => _guard(() async {
         final response =
@@ -96,23 +115,24 @@ class KidMeRepository {
   Future<Result<List<Map<String, dynamic>>>> tutors() async {
     final result = await profile();
     return result.when(
-      success: (data) => Success(_parseTutors(data)),
+      success: (profile) => Success(_guardiansAsMaps(profile.guardians)),
       failure: Failure.new,
     );
   }
 
-  List<Map<String, dynamic>> _parseTutors(Map<String, dynamic> profile) {
-    for (final key in const ['guardians', 'tutors', 'familyTutors']) {
-      final raw = profile[key];
-      if (raw is List) {
-        return raw
-            .whereType<Map>()
-            .map((item) => Map<String, dynamic>.from(item))
-            .toList();
-      }
-    }
-    return const [];
-  }
+  List<Map<String, dynamic>> _guardiansAsMaps(
+    List<KidGuardianSummary> guardians,
+  ) =>
+      guardians
+          .map(
+            (guardian) => {
+              'displayName': guardian.displayName,
+              'username': guardian.username,
+              'ciervoUserCode': guardian.ciervoUserCode,
+              'isPrimaryGuardian': guardian.isPrimary,
+            },
+          )
+          .toList();
 
   Future<Result<Map<String, dynamic>>> updateDisplayName(String displayName) =>
       _guard(() async {
@@ -203,6 +223,35 @@ class KidMeRepository {
               .toList();
         }
         return const [];
+      });
+
+  Future<Result<Map<String, dynamic>>> createNfcSession({
+    required String businessId,
+    required double amount,
+    String? currency,
+    String? description,
+  }) =>
+      _guard(() async {
+        final response = await _client.dio.post<dynamic>(
+          '/api/kids/me/nfc/sessions',
+          data: {
+            'businessId': int.tryParse(businessId) ?? businessId,
+            'amount': amount,
+            if (currency != null) 'currency': currency,
+            if (description != null && description.trim().isNotEmpty)
+              'description': description.trim(),
+            'idempotencyKey': IdempotencyKey.generate('kid-nfc-session'),
+          },
+        );
+        return unwrapApiMap(response.data);
+      });
+
+  Future<Result<Map<String, dynamic>>> nfcSession(int sessionId) =>
+      _guard(() async {
+        final response = await _client.dio.get<dynamic>(
+          '/api/kids/me/nfc/sessions/$sessionId',
+        );
+        return unwrapApiMap(response.data);
       });
 
   Future<Result<T>> _guard<T>(Future<T> Function() run) async {

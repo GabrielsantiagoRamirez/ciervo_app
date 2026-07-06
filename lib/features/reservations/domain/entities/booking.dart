@@ -20,6 +20,7 @@ class Booking {
     this.qrPayload,
     this.qrExpiresAt,
     this.confirmation,
+    this.conversationId,
   });
 
   final int id;
@@ -40,6 +41,7 @@ class Booking {
   final String? qrPayload;
   final DateTime? qrExpiresAt;
   final ActionConfirmation? confirmation;
+  final String? conversationId;
 }
 
 class EventBookingOption {
