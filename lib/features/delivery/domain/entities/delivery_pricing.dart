@@ -49,7 +49,8 @@ class DeliveryPricing {
     }
 
     return DeliveryPricing(
-      distanceKm: pickDouble('distanceKm') ??
+      distanceKm:
+          pickDouble('distanceKm') ??
           _double(json?['distance'] ?? fallback?['distance']),
       deliveryFee: pick('deliveryFee') ?? _num(fallback?['deliveryAmount']),
       deliveryFeeBase: pick('deliveryFeeBase'),

@@ -17,10 +17,9 @@ class QrWalletRepository {
 
   Future<Result<List<CiervoQrItem>>> bookings() => _guard(() async {
     final response = await _client.dio.get<dynamic>('/api/bookings/me');
-    return unwrapApiList(response.data)
-        .whereType<Map<String, dynamic>>()
-        .map(_bookingQrFromJson)
-        .toList();
+    return unwrapApiList(
+      response.data,
+    ).whereType<Map<String, dynamic>>().map(_bookingQrFromJson).toList();
   });
 
   Future<Result<List<CiervoQrItem>>> tickets() => _guard(() async {
@@ -34,8 +33,9 @@ class QrWalletRepository {
   });
 
   Future<Result<List<CiervoQrItem>>> giftCards() => _guard(() async {
-    final response =
-        await _client.dio.get<dynamic>('/api/gift-cards/me/history');
+    final response = await _client.dio.get<dynamic>(
+      '/api/gift-cards/me/history',
+    );
     return _list(response.data).map(_giftCardFromJson).toList();
   });
 
@@ -52,11 +52,7 @@ class QrWalletRepository {
     final data = unwrapApiMap(response.data);
     final benefit = data['benefit'];
     if (benefit is Map<String, dynamic>) {
-      return _benefitFromJson({
-        ...benefit,
-        'token': token,
-        'qrPayload': token,
-      });
+      return _benefitFromJson({...benefit, 'token': token, 'qrPayload': token});
     }
     if (data.isNotEmpty) return _qrFromJson(data);
     return null;
@@ -88,8 +84,9 @@ class QrWalletRepository {
       });
 
   Future<Result<int?>> rewardPoints() => _guard(() async {
-    final response =
-        await _client.dio.get<dynamic>('/api/wallet/loyalty/summary');
+    final response = await _client.dio.get<dynamic>(
+      '/api/wallet/loyalty/summary',
+    );
     final data = unwrapApiMap(response.data);
     return _intOrNull(
       data['pointsAvailable'] ?? data['points'] ?? data['balance'],
@@ -98,16 +95,16 @@ class QrWalletRepository {
 
   Future<Result<List<CiervoQrItem>>> rewardsCatalog() => _guard(() async {
     final response = await _client.dio.get<dynamic>('/api/rewards/catalog');
-    return _list(response.data)
-        .map((item) => _catalogBenefitFromJson(item, 'rewards'))
-        .toList();
+    return _list(
+      response.data,
+    ).map((item) => _catalogBenefitFromJson(item, 'rewards')).toList();
   });
 
   Future<Result<List<CiervoQrItem>>> couponsCatalog() => _guard(() async {
     final response = await _client.dio.get<dynamic>('/api/coupons');
-    return _list(response.data)
-        .map((item) => _catalogBenefitFromJson(item, 'coupons'))
-        .toList();
+    return _list(
+      response.data,
+    ).map((item) => _catalogBenefitFromJson(item, 'coupons')).toList();
   });
 
   Future<Result<CiervoQrItem?>> redeem(CiervoQrItem item) => _guard(() async {
@@ -158,10 +155,13 @@ CiervoQrItem _bookingQrFromJson(Map<String, dynamic> json) => CiervoQrItem(
   title: _stringOrNull(json, const ['businessName']) ?? 'Reserva',
   subtitle: _stringOrNull(json, const ['bookingType', 'type']),
   qrId: _stringOrNull(json, const ['qrId', 'universalQrId']),
-  qrPayload: _stringOrNull(
-    json,
-    const ['signedToken', 'qrPayload', 'qrContent', 'token', 'publicCode'],
-  ),
+  qrPayload: _stringOrNull(json, const [
+    'signedToken',
+    'qrPayload',
+    'qrContent',
+    'token',
+    'publicCode',
+  ]),
   expiresAt: _date(json, const ['qrExpiresAt', 'expiresAt']),
   eventDate: _date(json, const ['bookingDate']),
   rawStatus: json['status']?.toString(),
@@ -198,14 +198,15 @@ CiervoQrItem _giftCardFromJson(Map<String, dynamic> json) => CiervoQrItem(
   type: CiervoQrType.giftCard,
   status: _status(json['status']),
   reference: _string(json, const ['code', 'publicCode', 'giftCardCode']),
-  title:
-      _stringOrNull(json, const ['title', 'name']) ?? 'Tarjeta regalo',
+  title: _stringOrNull(json, const ['title', 'name']) ?? 'Tarjeta regalo',
   subtitle: _stringOrNull(json, const ['businessName', 'description']),
   qrId: _stringOrNull(json, const ['qrId', 'universalQrId']),
-  qrPayload: _stringOrNull(
-    json,
-    const ['signedToken', 'qrPayload', 'qrContent', 'token'],
-  ),
+  qrPayload: _stringOrNull(json, const [
+    'signedToken',
+    'qrPayload',
+    'qrContent',
+    'token',
+  ]),
   expiresAt: _date(json, const ['expiresAt', 'expirationDate', 'validUntil']),
   pin: _stringOrNull(json, const ['pin', 'pinCode']),
   rawStatus: json['status']?.toString(),
@@ -217,27 +218,36 @@ CiervoQrItem _benefitFromJson(Map<String, dynamic> json) => CiervoQrItem(
   status: _status(json['status']),
   reference: _string(json, const ['code', 'publicCode', 'redemptionCode']),
   title:
-      _stringOrNull(json, const ['title', 'name', 'rewardName', 'couponName']) ??
-          'Beneficio',
+      _stringOrNull(json, const [
+        'title',
+        'name',
+        'rewardName',
+        'couponName',
+      ]) ??
+      'Beneficio',
   subtitle: _stringOrNull(json, const ['description', 'businessName']),
   qrId: _stringOrNull(json, const ['qrId', 'universalQrId']),
-  qrPayload: _stringOrNull(
-    json,
-    const ['signedToken', 'qrPayload', 'qrContent', 'token'],
-  ),
+  qrPayload: _stringOrNull(json, const [
+    'signedToken',
+    'qrPayload',
+    'qrContent',
+    'token',
+  ]),
   expiresAt: _date(json, const ['expiresAt', 'expirationDate', 'validUntil']),
   points: _intOrNull(json['points'] ?? json['pointsCost']),
   redeemPath: _stringOrNull(json, const ['redeemPath']),
   rawStatus: json['status']?.toString(),
 );
 
-CiervoQrItem _catalogBenefitFromJson(Map<String, dynamic> json, String source) =>
-    _benefitFromJson({
-      ...json,
-      'status': json['status'] ?? 'Activo',
-      'redemptionCode': json['code'] ?? json['publicCode'] ?? json['id'],
-      'redeemPath': '/api/$source/${json['id']}/redeem',
-    });
+CiervoQrItem _catalogBenefitFromJson(
+  Map<String, dynamic> json,
+  String source,
+) => _benefitFromJson({
+  ...json,
+  'status': json['status'] ?? 'Activo',
+  'redemptionCode': json['code'] ?? json['publicCode'] ?? json['id'],
+  'redeemPath': '/api/$source/${json['id']}/redeem',
+});
 
 List<Map<String, dynamic>> _list(dynamic response) {
   final source = unwrapApiResponse(response);

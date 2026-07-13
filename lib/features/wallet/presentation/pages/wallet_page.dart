@@ -59,7 +59,8 @@ class _WalletView extends StatelessWidget {
       builder: (context, state) {
         final cubit = context.read<WalletCubit>();
         return Scaffold(
-          backgroundColor: state.status == WalletStatus.loaded ||
+          backgroundColor:
+              state.status == WalletStatus.loaded ||
                   state.status == WalletStatus.empty
               ? CiervoWalletPalette.of(context).background
               : null,
@@ -88,18 +89,21 @@ class _WalletView extends StatelessWidget {
                 ),
           body: RefreshIndicator(
             onRefresh: cubit.load,
-            child: state.status == WalletStatus.loaded ||
+            child:
+                state.status == WalletStatus.loaded ||
                     state.status == WalletStatus.actionLoading
                 ? PremiumWalletDashboard(state: state)
                 : CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                SliverPadding(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  sliver: SliverToBoxAdapter(child: _body(context, state)),
-                ),
-              ],
-            ),
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      SliverPadding(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        sliver: SliverToBoxAdapter(
+                          child: _body(context, state),
+                        ),
+                      ),
+                    ],
+                  ),
           ),
         );
       },
@@ -319,9 +323,7 @@ class _QuickActions extends StatelessWidget {
           onTap: card == null
               ? null
               : () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => PinsPage(card: card),
-                  ),
+                  MaterialPageRoute<void>(builder: (_) => PinsPage(card: card)),
                 ),
         ),
         _ActionChipButton(

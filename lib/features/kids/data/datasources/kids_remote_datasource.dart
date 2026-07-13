@@ -79,10 +79,7 @@ abstract interface class KidsRemoteDataSource {
     required String pin,
   });
 
-  Future<void> updateKidPin({
-    required String childId,
-    required String pin,
-  });
+  Future<void> updateKidPin({required String childId, required String pin});
 
   Future<void> associateChildNfc({
     required String childId,
@@ -319,7 +316,8 @@ class DioKidsRemoteDataSource implements KidsRemoteDataSource {
       data: {
         'amount': amount,
         'currency': currency,
-        'idempotencyKey': 'kid-recharge-$childId-${DateTime.now().microsecondsSinceEpoch}',
+        'idempotencyKey':
+            'kid-recharge-$childId-${DateTime.now().microsecondsSinceEpoch}',
       },
     );
     return unwrapApiMap(response.data);
@@ -341,7 +339,8 @@ class DioKidsRemoteDataSource implements KidsRemoteDataSource {
         'businessId': int.tryParse(businessId) ?? businessId,
         'amount': amount,
         'currency': currency,
-        'idempotencyKey': idempotencyKey ??
+        'idempotencyKey':
+            idempotencyKey ??
             'kids-pay-$childProfileId-${DateTime.now().microsecondsSinceEpoch}',
         if (walletCardId != null)
           'childWalletCardId': int.tryParse(walletCardId) ?? walletCardId,
@@ -426,11 +425,7 @@ class DioKidsRemoteDataSource implements KidsRemoteDataSource {
   }) async {
     final response = await _client.dio.post<Map<String, dynamic>>(
       '/api/guardians/children/$childId/account',
-      data: {
-        'username': username.trim(),
-        'pin': pin,
-        'loginMethod': 'PIN',
-      },
+      data: {'username': username.trim(), 'pin': pin, 'loginMethod': 'PIN'},
     );
     return unwrapApiMap(response.data);
   }

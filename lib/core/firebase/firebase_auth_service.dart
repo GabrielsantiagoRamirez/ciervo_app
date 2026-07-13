@@ -52,8 +52,10 @@ class FirebaseAuthService {
 
     throw FirebaseAuthException(
       code: 'no-token',
-      message: 'No se pudo obtener el ID token de Firebase. '
-          '${lastError ?? ''}'.trim(),
+      message:
+          'No se pudo obtener el ID token de Firebase. '
+                  '${lastError ?? ''}'
+              .trim(),
     );
   }
 
@@ -102,7 +104,9 @@ class FirebaseAuthService {
     } on FirebaseAuthException catch (error) {
       if (_shouldRetryAfterSignOut(error.code)) {
         if (kDebugMode) {
-          debugPrint('[AUTH] Reintentando signIn tras signOut (${error.code}).');
+          debugPrint(
+            '[AUTH] Reintentando signIn tras signOut (${error.code}).',
+          );
         }
         await signOut();
         return _auth.signInWithCredential(credential);
@@ -121,19 +125,15 @@ class FirebaseAuthService {
     required String email,
     required String password,
   }) =>
-      _auth.signInWithEmailAndPassword(
-        email: email.trim(),
-        password: password,
-      );
+      _auth.signInWithEmailAndPassword(email: email.trim(), password: password);
 
   Future<UserCredential> createUserWithEmail({
     required String email,
     required String password,
-  }) =>
-      _auth.createUserWithEmailAndPassword(
-        email: email.trim(),
-        password: password,
-      );
+  }) => _auth.createUserWithEmailAndPassword(
+    email: email.trim(),
+    password: password,
+  );
 
   Future<void> linkEmailToCurrentUser(String email) async {
     final user = currentUser;
@@ -162,4 +162,15 @@ class FirebaseAuthService {
   }
 
   Future<void> signOut() => _auth.signOut();
+
+  /// Revierte registro Firebase si el backend falló tras crear la cuenta.
+  Future<void> rollbackRecentRegistration() async {
+    final user = currentUser;
+    if (user == null) return;
+    try {
+      await user.delete();
+    } catch (_) {
+      await signOut();
+    }
+  }
 }

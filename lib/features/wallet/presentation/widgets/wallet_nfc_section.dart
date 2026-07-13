@@ -60,7 +60,11 @@ class _WalletNfcSectionState extends State<WalletNfcSection> {
             runSpacing: AppSpacing.sm,
             children: [
               ActionChip(
-                avatar: Icon(Icons.contactless_outlined, size: 18, color: accent),
+                avatar: Icon(
+                  Icons.contactless_outlined,
+                  size: 18,
+                  color: accent,
+                ),
                 label: const Text('NFC Universal'),
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
@@ -69,7 +73,11 @@ class _WalletNfcSectionState extends State<WalletNfcSection> {
                 ),
               ),
               ActionChip(
-                avatar: Icon(Icons.family_restroom_outlined, size: 18, color: accent),
+                avatar: Icon(
+                  Icons.family_restroom_outlined,
+                  size: 18,
+                  color: accent,
+                ),
                 label: const Text('Aprobaciones Kids'),
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
@@ -91,9 +99,8 @@ class _WalletNfcSectionState extends State<WalletNfcSection> {
                   label: const Text('Tarjeta fisica'),
                   onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
-                      builder: (_) => NfcPhysicalCardsPage(
-                        walletCard: widget.selectedCard,
-                      ),
+                      builder: (_) =>
+                          NfcPhysicalCardsPage(walletCard: widget.selectedCard),
                     ),
                   ),
                 ),

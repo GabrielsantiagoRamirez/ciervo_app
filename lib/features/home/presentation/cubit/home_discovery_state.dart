@@ -1,3 +1,5 @@
+import '../../../../core/country/country_context.dart';
+import '../../../../core/country/country_registration.dart';
 import '../../../../core/location/location_permission_status.dart';
 import '../../../../core/location/app_location.dart';
 import '../../../../core/experience/experience_mode.dart';
@@ -6,19 +8,25 @@ import '../../../discovery/domain/entities/business_summary.dart';
 enum HomeDiscoveryStatus { initial, loading, loaded, empty, failure }
 
 class HomeDiscoveryState {
-  const HomeDiscoveryState({
+  HomeDiscoveryState({
     this.status = HomeDiscoveryStatus.initial,
     this.permissionStatus = AppLocationPermissionStatus.unknown,
     this.businesses = const [],
     this.selectedCategory = 'Top',
-    this.city = 'Bogota',
-    this.countryCode = 'CO',
+    String? city,
+    String? countryCode,
     this.experienceMode = ExperienceMode.night,
     this.errorMessage,
     this.usingLocation = false,
     this.location,
     this.categories = const [],
-  });
+  }) : countryCode =
+           countryCode ?? CountryRegistration.defaultCountryCode(),
+       city =
+           city ??
+           CountryRegistration.contextForCode(
+             countryCode ?? CountryRegistration.defaultCountryCode(),
+           ).city;
 
   final HomeDiscoveryStatus status;
   final AppLocationPermissionStatus permissionStatus;
@@ -31,6 +39,9 @@ class HomeDiscoveryState {
   final bool usingLocation;
   final AppLocation? location;
   final List<String> categories;
+
+  CountryContext get countryContext =>
+      CountryRegistration.contextForCode(countryCode);
 
   HomeDiscoveryState copyWith({
     HomeDiscoveryStatus? status,

@@ -10,9 +10,10 @@ import '../../../../app/app_router.dart';
 import '../../../../core/kids/selected_kid_context.dart';
 import '../../../../shared/widgets/kids_mode_banner.dart';
 import '../../../../core/di/service_locator.dart';
-import '../../../../core/country/country_context.dart';
+import '../../../../core/country/country_registration.dart';
 import '../../../../core/experience/experience_mode.dart';
 import '../../../../core/experience/experience_mode_cubit.dart';
+import '../../../../core/geo/geo_repository.dart';
 import '../../../../core/location/location_service.dart';
 import '../../../../core/sync/home_feed_refresh.dart';
 import '../../../../core/location/location_permission_status.dart';
@@ -52,6 +53,7 @@ class HomePage extends StatelessWidget {
         discoveryRepository: getIt<DiscoveryRepository>(),
         clientLocationRepository: getIt<ClientLocationRepository>(),
         businessCategoriesRepository: getIt<BusinessCategoriesRepository>(),
+        geoRepository: getIt<GeoRepository>(),
         initialExperienceMode: context.read<ExperienceModeCubit>().state.mode,
       )..initialize(),
       child: const _HomeView(),
@@ -105,7 +107,10 @@ class _HomeViewState extends State<_HomeView> {
     }
   }
 
-  Future<void> _onPullRefresh(HomeDiscoveryCubit cubit, bool usingLocation) async {
+  Future<void> _onPullRefresh(
+    HomeDiscoveryCubit cubit,
+    bool usingLocation,
+  ) async {
     HomeFeedRefresh.instance.refreshAll();
     if (usingLocation) {
       await cubit.loadNearby();
@@ -154,98 +159,101 @@ class _HomeViewState extends State<_HomeView> {
                     child: CustomScrollView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       slivers: [
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.lg,
-                        AppSpacing.md,
-                        AppSpacing.lg,
-                        AppSpacing.md,
-                      ),
-                      sliver: SliverToBoxAdapter(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            HomeTopBar(
-                              mode: modeState.mode,
-                              onChangeMode: () => context.push(
-                                AppRoutePaths.experienceMode,
-                              ),
+                        SliverPadding(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.lg,
+                            AppSpacing.md,
+                            AppSpacing.lg,
+                            AppSpacing.md,
+                          ),
+                          sliver: SliverToBoxAdapter(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                HomeTopBar(
+                                  mode: modeState.mode,
+                                  onChangeMode: () => context.push(
+                                    AppRoutePaths.experienceMode,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.xl),
+                                Text(
+                                  'Explora Ciervo',
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.headlineMedium,
+                                ),
+                                const SizedBox(height: AppSpacing.xs),
+                                Text(
+                                  '${modeState.mode.label} - ${state.usingLocation ? 'cerca de ti' : '${state.city}, ${state.countryCode}'}',
+                                  style: AppTextStyles.bodyMuted,
+                                ),
+                                const SizedBox(height: AppSpacing.lg),
+                                HomeSearchBar(onSubmitted: cubit.search),
+                                const SizedBox(height: AppSpacing.md),
+                                _CurrentCountry(countryCode: state.countryCode),
+                                if (shouldShowPermission) ...[
+                                  const SizedBox(height: AppSpacing.lg),
+                                  LocationPermissionCard(
+                                    status: state.permissionStatus,
+                                    onAllow: cubit.requestLocation,
+                                    onContinueWithoutLocation:
+                                        cubit.loadGeneral,
+                                    onOpenSettings: cubit.openAppSettings,
+                                    onOpenLocationSettings:
+                                        cubit.openLocationSettings,
+                                  ),
+                                ],
+                                const SizedBox(height: AppSpacing.lg),
+                                const ActivityFeedSection(),
+                                const SizedBox(height: AppSpacing.lg),
+                                PaidCampaignBannerSection(
+                                  country: state.countryCode,
+                                  city: state.city,
+                                ),
+                                const SizedBox(height: AppSpacing.lg),
+                                HomeFavoritesSection(
+                                  country: state.countryCode,
+                                  city: state.city,
+                                ),
+                                const SizedBox(height: AppSpacing.lg),
+                                HomeBonusesSection(
+                                  title: 'Bonos cerca de ti',
+                                  onlyFavorites: false,
+                                  country: state.countryCode,
+                                  city: state.city,
+                                ),
+                                const SizedBox(height: AppSpacing.lg),
+                                HomeBonusesSection(
+                                  title: 'Bonos de tus favoritos',
+                                  onlyFavorites: true,
+                                  country: state.countryCode,
+                                  city: state.city,
+                                ),
+                                const SizedBox(height: AppSpacing.lg),
+                                HomeCategoryList(
+                                  categories: cubit.categories,
+                                  selectedCategory: state.selectedCategory,
+                                  onCategorySelected: cubit.selectCategory,
+                                ),
+                                const SizedBox(height: AppSpacing.xl),
+                              ],
                             ),
-                            const SizedBox(height: AppSpacing.xl),
-                            Text(
-                              'Explora Ciervo',
-                              style: Theme.of(context).textTheme.headlineMedium,
-                            ),
-                            const SizedBox(height: AppSpacing.xs),
-                            Text(
-                              '${modeState.mode.label} - ${state.usingLocation ? 'cerca de ti' : '${state.city}, ${state.countryCode}'}',
-                              style: AppTextStyles.bodyMuted,
-                            ),
-                            const SizedBox(height: AppSpacing.lg),
-                            HomeSearchBar(onSubmitted: cubit.search),
-                            const SizedBox(height: AppSpacing.md),
-                            _CurrentCountry(countryCode: state.countryCode),
-                            if (shouldShowPermission) ...[
-                              const SizedBox(height: AppSpacing.lg),
-                              LocationPermissionCard(
-                                status: state.permissionStatus,
-                                onAllow: cubit.requestLocation,
-                                onContinueWithoutLocation: cubit.loadGeneral,
-                                onOpenSettings: cubit.openAppSettings,
-                                onOpenLocationSettings:
-                                    cubit.openLocationSettings,
-                              ),
-                            ],
-                            const SizedBox(height: AppSpacing.lg),
-                            const ActivityFeedSection(),
-                            const SizedBox(height: AppSpacing.lg),
-                            PaidCampaignBannerSection(
-                              country: state.countryCode,
-                              city: state.city,
-                            ),
-                            const SizedBox(height: AppSpacing.lg),
-                            HomeFavoritesSection(
-                              country: state.countryCode,
-                              city: state.city,
-                            ),
-                            const SizedBox(height: AppSpacing.lg),
-                            HomeBonusesSection(
-                              title: 'Bonos cerca de ti',
-                              onlyFavorites: false,
-                              country: state.countryCode,
-                              city: state.city,
-                            ),
-                            const SizedBox(height: AppSpacing.lg),
-                            HomeBonusesSection(
-                              title: 'Bonos de tus favoritos',
-                              onlyFavorites: true,
-                              country: state.countryCode,
-                              city: state.city,
-                            ),
-                            const SizedBox(height: AppSpacing.lg),
-                            HomeCategoryList(
-                              categories: cubit.categories,
-                              selectedCategory: state.selectedCategory,
-                              onCategorySelected: cubit.selectCategory,
-                            ),
-                            const SizedBox(height: AppSpacing.xl),
-                          ],
+                          ),
                         ),
-                      ),
-                    ),
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.lg,
-                        0,
-                        AppSpacing.lg,
-                        AppSpacing.xxl,
-                      ),
-                      sliver: _DiscoveryResults(
-                        state: state,
-                        mode: modeState.mode,
-                      ),
-                    ),
-                  ],
+                        SliverPadding(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.lg,
+                            0,
+                            AppSpacing.lg,
+                            AppSpacing.xxl,
+                          ),
+                          sliver: _DiscoveryResults(
+                            state: state,
+                            mode: modeState.mode,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -265,9 +273,7 @@ class _CurrentCountry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = countryCode == CountryContext.chile.countryCode
-        ? 'Chile'
-        : 'Colombia';
+    final label = CountryRegistration.countryLabel(countryCode);
     return Row(
       children: [
         Icon(

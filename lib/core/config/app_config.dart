@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import 'app_environment.dart';
 
 class AppConfig {
@@ -9,23 +11,32 @@ class AppConfig {
     required this.receiveTimeout,
   });
 
+  /// Configuración central por ambiente.
+  ///
+  /// - `APP_ENV`: `dev` | `staging` | `prod` (en release sin define → `prod`)
+  /// - `API_BASE_URL`: override opcional de la URL del API
+  /// - `AUTH_REFRESH_PATH`: path de refresh (default `/api/auth/refresh-token`)
   factory AppConfig.fromEnvironment() {
-    const environmentName = String.fromEnvironment(
-      'APP_ENV',
-      defaultValue: 'dev',
-    );
-    const apiBaseUrl = String.fromEnvironment(
+    const environmentName = String.fromEnvironment('APP_ENV', defaultValue: '');
+    const apiBaseUrlOverride = String.fromEnvironment(
       'API_BASE_URL',
-      defaultValue:
-          'https://ciervo-backend-613568140358.southamerica-east1.run.app',
+      defaultValue: '',
     );
     const refreshTokenPath = String.fromEnvironment(
       'AUTH_REFRESH_PATH',
       defaultValue: '/api/auth/refresh-token',
     );
 
+    final environment = environmentName.isNotEmpty
+        ? AppEnvironmentX.fromName(environmentName)
+        : (kReleaseMode ? AppEnvironment.prod : AppEnvironment.dev);
+
+    final apiBaseUrl = apiBaseUrlOverride.isNotEmpty
+        ? apiBaseUrlOverride
+        : environment.apiBaseUrl;
+
     return AppConfig(
-      environment: AppEnvironmentX.fromName(environmentName),
+      environment: environment,
       apiBaseUrl: apiBaseUrl,
       refreshTokenPath: refreshTokenPath,
       connectTimeout: const Duration(seconds: 20),

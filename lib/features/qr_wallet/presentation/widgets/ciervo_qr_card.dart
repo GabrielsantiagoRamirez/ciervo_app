@@ -142,10 +142,7 @@ class _InfoLine extends StatelessWidget {
       children: [
         SizedBox(
           width: 86,
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
+          child: Text(label, style: Theme.of(context).textTheme.bodySmall),
         ),
         Expanded(child: Text(value.isEmpty ? 'No disponible' : value)),
       ],
@@ -167,13 +164,14 @@ String _typeLabel(CiervoQrType type) => switch (type) {
   CiervoQrType.benefit => 'Beneficio',
 };
 
-String _statusLabel(CiervoQrStatus status, String? rawStatus) => switch (status) {
-  CiervoQrStatus.active => _translatedStatus(rawStatus) ?? 'Activo',
-  CiervoQrStatus.used => _translatedStatus(rawStatus) ?? 'Usado',
-  CiervoQrStatus.expired => _translatedStatus(rawStatus) ?? 'Vencido',
-  CiervoQrStatus.cancelled => _translatedStatus(rawStatus) ?? 'Cancelado',
-  CiervoQrStatus.unknown => _translatedStatus(rawStatus) ?? 'Sin estado',
-};
+String _statusLabel(CiervoQrStatus status, String? rawStatus) =>
+    switch (status) {
+      CiervoQrStatus.active => _translatedStatus(rawStatus) ?? 'Activo',
+      CiervoQrStatus.used => _translatedStatus(rawStatus) ?? 'Usado',
+      CiervoQrStatus.expired => _translatedStatus(rawStatus) ?? 'Vencido',
+      CiervoQrStatus.cancelled => _translatedStatus(rawStatus) ?? 'Cancelado',
+      CiervoQrStatus.unknown => _translatedStatus(rawStatus) ?? 'Sin estado',
+    };
 
 String? _translatedStatus(String? value) {
   final text = value?.toLowerCase();
@@ -191,13 +189,15 @@ String? _translatedStatus(String? value) {
   };
 }
 
-Color _statusColor(BuildContext context, CiervoQrStatus status) => switch (status) {
-  CiervoQrStatus.active => Colors.green,
-  CiervoQrStatus.used => Theme.of(context).colorScheme.primary,
-  CiervoQrStatus.expired => Colors.orange,
-  CiervoQrStatus.cancelled => Theme.of(context).colorScheme.error,
-  CiervoQrStatus.unknown => Theme.of(context).colorScheme.outline,
-};
+Color _statusColor(BuildContext context, CiervoQrStatus status) =>
+    switch (status) {
+      CiervoQrStatus.active => Colors.green,
+      CiervoQrStatus.used => Theme.of(context).colorScheme.primary,
+      CiervoQrStatus.expired => Colors.orange,
+      CiervoQrStatus.cancelled => Theme.of(context).colorScheme.error,
+      CiervoQrStatus.unknown => Theme.of(context).colorScheme.outline,
+    };
 
-String _date(DateTime? value) =>
-    value == null ? 'No disponible' : value.toLocal().toString().substring(0, 16);
+String _date(DateTime? value) => value == null
+    ? 'No disponible'
+    : value.toLocal().toString().substring(0, 16);

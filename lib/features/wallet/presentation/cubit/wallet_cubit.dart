@@ -80,29 +80,28 @@ class WalletCubit extends Cubit<WalletState> {
   );
 
   Future<void> block(String cardId) => _cardAction(
-        () => _repository.block(cardId),
-        'Tarjeta bloqueada.',
-        blockCard: true,
-      );
+    () => _repository.block(cardId),
+    'Tarjeta bloqueada.',
+    blockCard: true,
+  );
 
   Future<void> unblock(String cardId) => _cardAction(
-        () => _repository.unblock(cardId),
-        'Tarjeta desbloqueada.',
-        unblockCard: true,
-      );
+    () => _repository.unblock(cardId),
+    'Tarjeta desbloqueada.',
+    unblockCard: true,
+  );
 
   Future<void> delete(String cardId) =>
       _cardAction(() => _repository.delete(cardId), 'Tarjeta eliminada.');
 
   Future<void> pollRechargeIntent(String intentId) async {
-    emit(state.copyWith(status: WalletStatus.actionLoading, clearMessages: true));
+    emit(
+      state.copyWith(status: WalletStatus.actionLoading, clearMessages: true),
+    );
     RechargeIntent? last;
     for (var attempt = 0; attempt < 20; attempt++) {
       final result = await _repository.rechargeIntent(intentId);
-      result.when(
-        success: (intent) => last = intent,
-        failure: (_) {},
-      );
+      result.when(success: (intent) => last = intent, failure: (_) {});
       if (last?.isTerminal == true) break;
       if (attempt < 19) {
         await Future<void>.delayed(const Duration(seconds: 3));
@@ -135,7 +134,11 @@ class WalletCubit extends Cubit<WalletState> {
     }
   }
 
-  Future<void> createRechargeIntent(String cardId, double amount) async {
+  Future<void> createRechargeIntent(
+    String cardId,
+    double amount, {
+    String? currency,
+  }) async {
     emit(
       state.copyWith(
         status: WalletStatus.actionLoading,
@@ -160,6 +163,7 @@ class WalletCubit extends Cubit<WalletState> {
     final result = await _repository.createRechargeIntent(
       cardId: cardId,
       amount: amount,
+      currency: currency,
     );
     result.when(
       success: (intent) => emit(
@@ -303,15 +307,14 @@ class WalletCubit extends Cubit<WalletState> {
     String id, {
     bool useBackupCard = false,
     String? familyPaymentCardId,
-  }) =>
-      _paymentRequestAction(
-        () => _repository.approvePaymentRequest(
-          id,
-          useBackupCard: useBackupCard,
-          familyPaymentCardId: familyPaymentCardId,
-        ),
-        'Solicitud aprobada.',
-      );
+  }) => _paymentRequestAction(
+    () => _repository.approvePaymentRequest(
+      id,
+      useBackupCard: useBackupCard,
+      familyPaymentCardId: familyPaymentCardId,
+    ),
+    'Solicitud aprobada.',
+  );
 
   Future<void> rejectPaymentRequest(String id, String reason) =>
       _paymentRequestAction(
@@ -385,15 +388,15 @@ class WalletCubit extends Cubit<WalletState> {
                     status: blockCard
                         ? 'blocked'
                         : unblockCard
-                            ? 'active'
-                            : card.status,
+                        ? 'active'
+                        : card.status,
                     isPrimary: card.isPrimary,
                     mask: card.mask,
                     isBlocked: blockCard
                         ? true
                         : unblockCard
-                            ? false
-                            : card.isBlocked,
+                        ? false
+                        : card.isBlocked,
                   )
                 : card,
           )
@@ -421,10 +424,13 @@ class WalletCubit extends Cubit<WalletState> {
               selected = cards.where((c) => c.id == selectedId).firstOrNull;
             }
             selected ??=
-                cards.where((c) => c.isPrimary).firstOrNull ?? cards.firstOrNull;
+                cards.where((c) => c.isPrimary).firstOrNull ??
+                cards.firstOrNull;
             emit(
               state.copyWith(
-                status: cards.isEmpty ? WalletStatus.empty : WalletStatus.loaded,
+                status: cards.isEmpty
+                    ? WalletStatus.empty
+                    : WalletStatus.loaded,
                 cards: cards,
                 selectedCard: selected,
                 successMessage: successMessage,
@@ -461,9 +467,8 @@ class WalletCubit extends Cubit<WalletState> {
   Future<void> _refreshTransactions(WalletCard card) async {
     final result = await _repository.transactions(card.id);
     result.when(
-      success: (transactions) => emit(
-        state.copyWith(transactions: transactions),
-      ),
+      success: (transactions) =>
+          emit(state.copyWith(transactions: transactions)),
       failure: (_) {},
     );
   }

@@ -175,9 +175,7 @@ class DioFamilyPaymentsRemoteDataSource
 
   @override
   Future<void> deleteCard(String cardId) async {
-    await _client.dio.delete<void>(
-      '/api/family/payment-methods/cards/$cardId',
-    );
+    await _client.dio.delete<void>('/api/family/payment-methods/cards/$cardId');
   }
 
   @override
@@ -372,10 +370,7 @@ class DioFamilyPaymentsRemoteDataSource
   }) async {
     final response = await _client.dio.get<dynamic>(
       '/api/kids/$kidId/payments',
-      queryParameters: {
-        'page': page,
-        'pageSize': pageSize,
-      },
+      queryParameters: {'page': page, 'pageSize': pageSize},
     );
     return FamilyPaymentRecordDto.listFrom(unwrapApiResponse(response.data));
   }
@@ -398,9 +393,7 @@ class DioFamilyPaymentsRemoteDataSource
 
   @override
   Future<void> approvePayment(String paymentId) async {
-    await _client.dio.post<void>(
-      '/api/family/payments/$paymentId/approve',
-    );
+    await _client.dio.post<void>('/api/family/payments/$paymentId/approve');
   }
 
   @override

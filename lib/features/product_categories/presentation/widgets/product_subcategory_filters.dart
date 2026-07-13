@@ -41,9 +41,8 @@ class _ProductSubcategoryFiltersState extends State<ProductSubcategoryFilters> {
   }
 
   Future<List<ProductCategory>> _load() async {
-    final result = await getIt<ProductCategoriesRepository>().byBusinessCategory(
-      widget.businessCategoryId,
-    );
+    final result = await getIt<ProductCategoriesRepository>()
+        .byBusinessCategory(widget.businessCategoryId);
     return result.when(
       success: (categories) => categories,
       failure: (_) => const [],
@@ -82,8 +81,9 @@ class _ProductSubcategoryFiltersState extends State<ProductSubcategoryFilters> {
                   ),
                   ...categories.map(
                     (category) => CiervoChipTag(
-                      label:
-                          category.name.isEmpty ? category.code : category.name,
+                      label: category.name.isEmpty
+                          ? category.code
+                          : category.name,
                       selected: _selected?.id == category.id,
                       onSelected: (_) => _select(category),
                     ),

@@ -62,9 +62,9 @@ class _KidFamilyPageState extends State<KidFamilyPage> {
         success: (_) => ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Ubicación compartida con tu familia.')),
         ),
-        failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        ),
+        failure: (error) => ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
       );
     } catch (_) {
       if (!mounted) return;
@@ -88,10 +88,7 @@ class _KidFamilyPageState extends State<KidFamilyPage> {
                   if (_error != null) ...[
                     Text(_error!, textAlign: TextAlign.center),
                     const SizedBox(height: AppSpacing.md),
-                    CiervoButton(
-                      label: 'Reintentar',
-                      onPressed: _openChat,
-                    ),
+                    CiervoButton(label: 'Reintentar', onPressed: _openChat),
                   ] else ...[
                     CiervoCard(
                       child: Column(

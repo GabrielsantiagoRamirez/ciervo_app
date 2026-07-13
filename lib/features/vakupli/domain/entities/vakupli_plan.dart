@@ -37,19 +37,15 @@ class VakupliPlan {
   final int participantCount;
   final int maxParticipants;
 
-  String get paymentProgressLabel =>
-      totalContributions > 0
-          ? '$paidContributions/$totalContributions pagados'
-          : statusLabel;
+  String get paymentProgressLabel => totalContributions > 0
+      ? '$paidContributions/$totalContributions pagados'
+      : statusLabel;
 
   String get participantsLabel => '$participantCount / $maxParticipants';
 }
 
 class VakupliFriend {
-  const VakupliFriend({
-    required this.name,
-    required this.initials,
-  });
+  const VakupliFriend({required this.name, required this.initials});
 
   final String name;
   final String initials;

@@ -24,7 +24,9 @@ class NotificationBadges {
       chat: count(json['chat'] ?? json['messages']),
       delivery: count(json['delivery']),
       reservations: count(json['reservas'] ?? json['reservations']),
-      promos: count(json['promos'] ?? json['promociones'] ?? json['promotions']),
+      promos: count(
+        json['promos'] ?? json['promociones'] ?? json['promotions'],
+      ),
     );
   }
 }

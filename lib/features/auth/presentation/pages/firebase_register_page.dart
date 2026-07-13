@@ -68,16 +68,18 @@ class _FirebaseRegisterViewState extends State<_FirebaseRegisterView> {
     return BlocConsumer<FirebaseAuthCubit, FirebaseAuthState>(
       listener: (context, state) async {
         if (state.errorMessage != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.errorMessage!)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.errorMessage!)));
         }
         if (state.status == FirebaseAuthStatus.codeSent && _step < 1) {
           setState(() => _step = 1);
         }
         if (state.status == FirebaseAuthStatus.phoneVerified) {
           if (state.shouldFirebaseLogin) {
-            final ok = await context.read<FirebaseAuthCubit>().firebaseLoginExisting();
+            final ok = await context
+                .read<FirebaseAuthCubit>()
+                .firebaseLoginExisting();
             if (ok && context.mounted) context.go(AppRoutes.root);
           } else {
             setState(() => _step = 2);
@@ -99,7 +101,8 @@ class _FirebaseRegisterViewState extends State<_FirebaseRegisterView> {
                     leading: const Icon(Icons.location_on_outlined),
                     title: const Text('Ubicación detectada'),
                     subtitle: Text(
-                      'Usaremos tu GPS para asignar el país (${state.countryCode}).',
+                      'Usaremos tu GPS para recomendaciones cercanas. '
+                      'El país de tu cuenta es el que eliges abajo (${state.countryCode}).',
                     ),
                   ),
                 ),
@@ -119,9 +122,14 @@ class _FirebaseRegisterViewState extends State<_FirebaseRegisterView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Verifica tu teléfono', style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            'Verifica tu teléfono',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: AppSpacing.sm),
-          const Text('Enviaremos un código SMS con Firebase (no usamos SMS del backend).'),
+          const Text(
+            'Enviaremos un código SMS con Firebase (no usamos SMS del backend).',
+          ),
           const SizedBox(height: AppSpacing.lg),
           DropdownButtonFormField<String>(
             value: _countryCode,
@@ -133,7 +141,9 @@ class _FirebaseRegisterViewState extends State<_FirebaseRegisterView> {
                 .map(
                   (item) => DropdownMenuItem(
                     value: item.countryCode,
-                    child: Text('${item.flag} ${item.label} (${item.dialCode})'),
+                    child: Text(
+                      '${item.flag} ${item.label} (${item.dialCode})',
+                    ),
                   ),
                 )
                 .toList(),
@@ -143,7 +153,9 @@ class _FirebaseRegisterViewState extends State<_FirebaseRegisterView> {
                     if (value == null) return;
                     setState(() {
                       _countryCode = value;
-                      _documentType = CountryRegistration.adultDocumentOptions(value).first.code;
+                      _documentType = CountryRegistration.adultDocumentOptions(
+                        value,
+                      ).first.code;
                     });
                   },
           ),
@@ -153,20 +165,23 @@ class _FirebaseRegisterViewState extends State<_FirebaseRegisterView> {
             keyboardType: TextInputType.phone,
             decoration: InputDecoration(
               labelText: 'Teléfono',
-              prefixText: '${PhoneCountry.byCountryCode(_countryCode).dialCode} ',
+              prefixText:
+                  '${PhoneCountry.byCountryCode(_countryCode).dialCode} ',
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
           CiervoButton(
             label: state.isLoading ? 'Enviando SMS' : 'Enviar código',
             icon: Icons.sms_outlined,
-            state: state.isLoading ? CiervoButtonState.loading : CiervoButtonState.normal,
+            state: state.isLoading
+                ? CiervoButtonState.loading
+                : CiervoButtonState.normal,
             onPressed: state.isLoading
                 ? null
                 : () => context.read<FirebaseAuthCubit>().sendPhoneCode(
-                      countryCode: _countryCode,
-                      nationalNumber: _phoneController.text,
-                    ),
+                    countryCode: _countryCode,
+                    nationalNumber: _phoneController.text,
+                  ),
           ),
         ],
       ),
@@ -192,21 +207,23 @@ class _FirebaseRegisterViewState extends State<_FirebaseRegisterView> {
           CiervoButton(
             label: state.isLoading ? 'Verificando' : 'Confirmar código',
             icon: Icons.verified_outlined,
-            state: state.isLoading ? CiervoButtonState.loading : CiervoButtonState.normal,
+            state: state.isLoading
+                ? CiervoButtonState.loading
+                : CiervoButtonState.normal,
             onPressed: state.isLoading
                 ? null
                 : () => context.read<FirebaseAuthCubit>().confirmPhoneCode(
-                      _smsController.text,
-                    ),
+                    _smsController.text,
+                  ),
           ),
           TextButton(
             onPressed: state.isLoading
                 ? null
                 : () => context.read<FirebaseAuthCubit>().sendPhoneCode(
-                      countryCode: _countryCode,
-                      nationalNumber: _phoneController.text,
-                      resend: true,
-                    ),
+                    countryCode: _countryCode,
+                    nationalNumber: _phoneController.text,
+                    resend: true,
+                  ),
             child: const Text('Reenviar código'),
           ),
         ],
@@ -219,7 +236,10 @@ class _FirebaseRegisterViewState extends State<_FirebaseRegisterView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Completa tu perfil', style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            'Completa tu perfil',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: AppSpacing.lg),
           TextField(
             controller: _firstName,
@@ -244,9 +264,12 @@ class _FirebaseRegisterViewState extends State<_FirebaseRegisterView> {
             value: _documentType,
             decoration: const InputDecoration(labelText: 'Tipo de documento'),
             items: CountryRegistration.adultDocumentOptions(_countryCode)
-                .map((o) => DropdownMenuItem(value: o.code, child: Text(o.label)))
+                .map(
+                  (o) => DropdownMenuItem(value: o.code, child: Text(o.label)),
+                )
                 .toList(),
-            onChanged: (v) => setState(() => _documentType = v ?? _documentType),
+            onChanged: (v) =>
+                setState(() => _documentType = v ?? _documentType),
           ),
           const SizedBox(height: AppSpacing.md),
           TextField(
@@ -262,13 +285,18 @@ class _FirebaseRegisterViewState extends State<_FirebaseRegisterView> {
           CiervoButton(
             label: state.isLoading ? 'Creando cuenta' : 'Crear cuenta',
             icon: Icons.check,
-            state: state.isLoading ? CiervoButtonState.loading : CiervoButtonState.normal,
+            state: state.isLoading
+                ? CiervoButtonState.loading
+                : CiervoButtonState.normal,
             onPressed: state.isLoading
                 ? null
                 : () async {
-                    if (_firstName.text.trim().isEmpty || _lastName.text.trim().isEmpty) {
+                    if (_firstName.text.trim().isEmpty ||
+                        _lastName.text.trim().isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Nombre y apellido son requeridos.')),
+                        const SnackBar(
+                          content: Text('Nombre y apellido son requeridos.'),
+                        ),
                       );
                       return;
                     }
@@ -279,7 +307,9 @@ class _FirebaseRegisterViewState extends State<_FirebaseRegisterView> {
                       );
                       return;
                     }
-                    await context.read<FirebaseAuthCubit>().firebaseRegisterProfile(
+                    await context
+                        .read<FirebaseAuthCubit>()
+                        .firebaseRegisterProfile(
                           firstName: _firstName.text,
                           lastName: _lastName.text,
                           email: _email.text,

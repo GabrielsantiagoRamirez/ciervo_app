@@ -7,6 +7,7 @@ import '../core/experience/experience_mode_cubit.dart';
 import '../features/kid_auth/presentation/pages/kid_register_flow_page.dart';
 import '../features/kid_auth/presentation/pages/kid_login_page.dart';
 import '../features/auth/presentation/pages/login_page.dart';
+import '../features/auth/presentation/pages/password_recovery_page.dart';
 import '../features/auth/presentation/pages/register_page.dart';
 import '../features/auth/presentation/pages/splash_page.dart';
 import '../features/experience/presentation/pages/experience_mode_page.dart';
@@ -19,6 +20,7 @@ abstract final class AppRoutePaths {
   static const login = '/login';
   static const kidLogin = '/kid-login';
   static const kidRegister = '/kid-register';
+  static const passwordRecovery = '/password-recovery';
   static const firebaseLogin = '/firebase-login';
   static const firebaseRegister = '/firebase-register';
   static const register = '/register';
@@ -40,9 +42,11 @@ GoRouter createAppRouter(
     redirect: (context, state) {
       final status = sessionManager.state.status;
       final location = state.matchedLocation;
-      final isAuthRoute = location == AppRoutePaths.login ||
+      final isAuthRoute =
+          location == AppRoutePaths.login ||
           location == AppRoutePaths.kidLogin ||
           location == AppRoutePaths.kidRegister ||
+          location == AppRoutePaths.passwordRecovery ||
           location == AppRoutePaths.firebaseLogin ||
           location == AppRoutePaths.firebaseRegister ||
           location == AppRoutePaths.register;
@@ -70,6 +74,13 @@ GoRouter createAppRouter(
       GoRoute(
         path: AppRoutePaths.login,
         builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: AppRoutePaths.passwordRecovery,
+        builder: (context, state) {
+          final email = state.uri.queryParameters['email'];
+          return PasswordRecoveryPage(initialEmail: email);
+        },
       ),
       GoRoute(
         path: AppRoutePaths.kidLogin,

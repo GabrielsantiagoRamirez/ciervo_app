@@ -72,12 +72,14 @@ class _ChildPaymentMethodsPageState extends State<ChildPaymentMethodsPage> {
       failure: (e) => error ??= UserErrorMessage.from(e),
     );
 
-    final backupRaw = status?['parentBackupCards'] ??
+    final backupRaw =
+        status?['parentBackupCards'] ??
         status?['backupCards'] ??
         status?['familyCards'];
     final backup = _parseFamilyCards(backupRaw);
 
-    final linkedId = status?['linkedCardId'] ??
+    final linkedId =
+        status?['linkedCardId'] ??
         status?['paymentSourceCardId'] ??
         status?['cardId'];
     final usePrimary = status?['usePrimaryCard'] != false;
@@ -117,9 +119,8 @@ class _ChildPaymentMethodsPageState extends State<ChildPaymentMethodsPage> {
   }
 
   String? get _hint {
-    final hint = _status?['hint'] ??
-        _status?['setupHint'] ??
-        _status?['message'];
+    final hint =
+        _status?['hint'] ?? _status?['setupHint'] ?? _status?['message'];
     return hint?.toString();
   }
 
@@ -139,17 +140,25 @@ class _ChildPaymentMethodsPageState extends State<ChildPaymentMethodsPage> {
         );
         _load();
       },
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 
   Future<void> _openAddFamilyCard() async {
-    final added = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => const AddFamilyCardPage()),
-    );
-    if (added == true) await _load();
+    final added = await Navigator.of(
+      context,
+    ).push<bool>(MaterialPageRoute(builder: (_) => const AddFamilyCardPage()));
+    if (!mounted) return;
+    if (added == true) {
+      await _load();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tarjeta del tutor registrada correctamente.'),
+        ),
+      );
+    }
   }
 
   @override
@@ -166,196 +175,196 @@ class _ChildPaymentMethodsPageState extends State<ChildPaymentMethodsPage> {
               child: CiervoLoadingState(itemCount: 4),
             )
           : _error != null && _status == null
-              ? Padding(
-                  padding: pagePaddingOf(context),
-                  child: CiervoErrorState(
-                    title: 'No pudimos cargar la configuración',
-                    description: _error!,
-                    onRetry: _load,
-                  ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _load,
-                  child: ListView(
-                    padding: pagePaddingOf(context),
-                    children: [
-                      Center(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxWidth: maxContentWidthOf(context),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              CiervoCard(
-                                showGradientOverlay: isDark,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Pagos de ${widget.childName}',
-                                      style: theme.textTheme.titleLarge,
-                                    ),
-                                    const SizedBox(height: AppSpacing.sm),
-                                    Text(
-                                      'Las tarjetas Kids son virtuales (saldo prepago). '
-                                      'Visa/Mastercard del tutor se tokenizan por separado '
-                                      'y se usan como respaldo.',
-                                      style: theme.textTheme.bodyMedium,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (_hint != null && _hint!.isNotEmpty) ...[
-                                const SizedBox(height: AppSpacing.md),
-                                Container(
-                                  padding: const EdgeInsets.all(AppSpacing.md),
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.primaryContainer
-                                        .withValues(alpha: isDark ? 0.2 : 0.45),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: accent.withValues(alpha: 0.35),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Icon(Icons.info_outline, color: accent),
-                                      const SizedBox(width: AppSpacing.sm),
-                                      Expanded(
-                                        child: Text(
-                                          _hint!,
-                                          style: theme.textTheme.bodySmall,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                              const SizedBox(height: AppSpacing.lg),
-                              Text(
-                                'Tarjetas Kids (virtuales)',
-                                style: theme.textTheme.titleMedium,
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              if (_virtualCards.isEmpty)
-                                const CiervoCard(
-                                  child: Text(
-                                    'Aún no hay tarjetas virtuales. Créalas desde la wallet del menor.',
-                                  ),
-                                )
-                              else
-                                ..._virtualCards.map(
-                                  (card) => Padding(
-                                    padding: const EdgeInsets.only(
-                                      bottom: AppSpacing.sm,
-                                    ),
-                                    child: CiervoCard(
-                                      child: ListTile(
-                                        contentPadding: EdgeInsets.zero,
-                                        leading: CircleAvatar(
-                                          backgroundColor: accent.withValues(
-                                            alpha: isDark ? 0.2 : 0.12,
-                                          ),
-                                          child: Icon(
-                                            Icons.credit_card,
-                                            color: accent,
-                                          ),
-                                        ),
-                                        title: Text(card.displayName),
-                                        subtitle: Text(
-                                          'Saldo: ${card.currency} ${card.balance.toStringAsFixed(0)}',
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              const SizedBox(height: AppSpacing.lg),
-                              Text(
-                                'Respaldo del tutor (Visa/Mastercard)',
-                                style: theme.textTheme.titleMedium,
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              if (_backupCards.isEmpty) ...[
-                                CiervoCard(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                                    children: [
-                                      const Text(
-                                        'Agrega una tarjeta del tutor para pagos cuando no haya saldo Kids.',
-                                      ),
-                                      const SizedBox(height: AppSpacing.md),
-                                      CiervoButton(
-                                        label: 'Tokenizar tarjeta del tutor',
-                                        icon: Icons.add_card_outlined,
-                                        onPressed: _openAddFamilyCard,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ] else ...[
-                                SwitchListTile(
-                                  contentPadding: EdgeInsets.zero,
-                                  title: const Text('Usar tarjeta principal'),
-                                  value: _usePrimary,
-                                  onChanged: (value) =>
-                                      setState(() => _usePrimary = value),
-                                ),
-                                if (!_usePrimary)
-                                  CiervoCard(
-                                    child: Column(
-                                      children: _backupCards
-                                          .map(
-                                            (card) => RadioListTile<String>(
-                                              value: card.id,
-                                              groupValue: _selectedCardId,
-                                              onChanged: (value) => setState(
-                                                () => _selectedCardId = value,
-                                              ),
-                                              title: Text(
-                                                card.alias.isNotEmpty
-                                                    ? card.alias
-                                                    : card.maskedNumber,
-                                              ),
-                                              subtitle: Text(
-                                                '${card.brand} · ${card.maskedNumber}',
-                                              ),
-                                            ),
-                                          )
-                                          .toList(),
-                                    ),
-                                  ),
-                                const SizedBox(height: AppSpacing.sm),
-                                CiervoButton(
-                                  label: _saving
-                                      ? 'Guardando...'
-                                      : 'Vincular al menor',
-                                  icon: Icons.link,
-                                  state: _saving
-                                      ? CiervoButtonState.loading
-                                      : CiervoButtonState.normal,
-                                  onPressed: _saving ? null : _saveSource,
-                                ),
-                                const SizedBox(height: AppSpacing.sm),
-                                TextButton.icon(
-                                  onPressed: () => Navigator.of(context).push(
-                                    MaterialPageRoute<void>(
-                                      builder: (_) =>
-                                          const FamilyPaymentMethodsPage(),
-                                    ),
-                                  ),
-                                  icon: const Icon(Icons.settings_outlined),
-                                  label: const Text('Gestionar tarjetas del tutor'),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
+          ? Padding(
+              padding: pagePaddingOf(context),
+              child: CiervoErrorState(
+                title: 'No pudimos cargar la configuración',
+                description: _error!,
+                onRetry: _load,
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: _load,
+              child: ListView(
+                padding: pagePaddingOf(context),
+                children: [
+                  Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: maxContentWidthOf(context),
                       ),
-                    ],
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          CiervoCard(
+                            showGradientOverlay: isDark,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Pagos de ${widget.childName}',
+                                  style: theme.textTheme.titleLarge,
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                Text(
+                                  'Las tarjetas Kids son virtuales (saldo prepago). '
+                                  'Visa/Mastercard del tutor se tokenizan por separado '
+                                  'y se usan como respaldo.',
+                                  style: theme.textTheme.bodyMedium,
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (_hint != null && _hint!.isNotEmpty) ...[
+                            const SizedBox(height: AppSpacing.md),
+                            Container(
+                              padding: const EdgeInsets.all(AppSpacing.md),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.primaryContainer
+                                    .withValues(alpha: isDark ? 0.2 : 0.45),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: accent.withValues(alpha: 0.35),
+                                ),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Icon(Icons.info_outline, color: accent),
+                                  const SizedBox(width: AppSpacing.sm),
+                                  Expanded(
+                                    child: Text(
+                                      _hint!,
+                                      style: theme.textTheme.bodySmall,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: AppSpacing.lg),
+                          Text(
+                            'Tarjetas Kids (virtuales)',
+                            style: theme.textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          if (_virtualCards.isEmpty)
+                            const CiervoCard(
+                              child: Text(
+                                'Aún no hay tarjetas virtuales. Créalas desde la wallet del menor.',
+                              ),
+                            )
+                          else
+                            ..._virtualCards.map(
+                              (card) => Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: AppSpacing.sm,
+                                ),
+                                child: CiervoCard(
+                                  child: ListTile(
+                                    contentPadding: EdgeInsets.zero,
+                                    leading: CircleAvatar(
+                                      backgroundColor: accent.withValues(
+                                        alpha: isDark ? 0.2 : 0.12,
+                                      ),
+                                      child: Icon(
+                                        Icons.credit_card,
+                                        color: accent,
+                                      ),
+                                    ),
+                                    title: Text(card.displayName),
+                                    subtitle: Text(
+                                      'Saldo: ${card.currency} ${card.balance.toStringAsFixed(0)}',
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          const SizedBox(height: AppSpacing.lg),
+                          Text(
+                            'Respaldo del tutor (Visa/Mastercard)',
+                            style: theme.textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          if (_backupCards.isEmpty) ...[
+                            CiervoCard(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  const Text(
+                                    'Agrega una tarjeta del tutor para pagos cuando no haya saldo Kids.',
+                                  ),
+                                  const SizedBox(height: AppSpacing.md),
+                                  CiervoButton(
+                                    label: 'Tokenizar tarjeta del tutor',
+                                    icon: Icons.add_card_outlined,
+                                    onPressed: _openAddFamilyCard,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ] else ...[
+                            SwitchListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: const Text('Usar tarjeta principal'),
+                              value: _usePrimary,
+                              onChanged: (value) =>
+                                  setState(() => _usePrimary = value),
+                            ),
+                            if (!_usePrimary)
+                              CiervoCard(
+                                child: Column(
+                                  children: _backupCards
+                                      .map(
+                                        (card) => RadioListTile<String>(
+                                          value: card.id,
+                                          groupValue: _selectedCardId,
+                                          onChanged: (value) => setState(
+                                            () => _selectedCardId = value,
+                                          ),
+                                          title: Text(
+                                            card.alias.isNotEmpty
+                                                ? card.alias
+                                                : card.maskedNumber,
+                                          ),
+                                          subtitle: Text(
+                                            '${card.brand} · ${card.maskedNumber}',
+                                          ),
+                                        ),
+                                      )
+                                      .toList(),
+                                ),
+                              ),
+                            const SizedBox(height: AppSpacing.sm),
+                            CiervoButton(
+                              label: _saving
+                                  ? 'Guardando...'
+                                  : 'Vincular al menor',
+                              icon: Icons.link,
+                              state: _saving
+                                  ? CiervoButtonState.loading
+                                  : CiervoButtonState.normal,
+                              onPressed: _saving ? null : _saveSource,
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            TextButton.icon(
+                              onPressed: () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) =>
+                                      const FamilyPaymentMethodsPage(),
+                                ),
+                              ),
+                              icon: const Icon(Icons.settings_outlined),
+                              label: const Text('Gestionar tarjetas del tutor'),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                ],
+              ),
+            ),
     );
   }
 }

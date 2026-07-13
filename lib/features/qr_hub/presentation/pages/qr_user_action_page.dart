@@ -73,9 +73,8 @@ class QrUserActionPage extends StatelessWidget {
                 variant: CiervoButtonVariant.secondary,
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
-                    builder: (_) => TransferPage(
-                      initialCiervoCode: ciervoUserCode,
-                    ),
+                    builder: (_) =>
+                        TransferPage(initialCiervoCode: ciervoUserCode),
                   ),
                 ),
               ),

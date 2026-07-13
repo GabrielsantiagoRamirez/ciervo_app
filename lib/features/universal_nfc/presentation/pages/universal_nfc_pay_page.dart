@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../core/country/country_registration.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/layout/responsive_layout.dart';
@@ -10,6 +11,7 @@ import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
+import '../../../payments/domain/repositories/payments_repository.dart';
 import '../../domain/entities/payment_quote.dart';
 import '../../domain/entities/universal_nfc_payment.dart';
 import '../../domain/repositories/universal_nfc_repository.dart';
@@ -38,7 +40,31 @@ class _UniversalNfcPayPageState extends State<UniversalNfcPayPage> {
   PaymentQuote? _quote;
   bool _loading = false;
   String? _error;
-  String _currency = 'COP';
+  String _currency = CountryRegistration.currencyForCountry(
+    CountryRegistration.defaultCountryCode(),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _resolveCurrency();
+  }
+
+  Future<void> _resolveCurrency() async {
+    try {
+      final config = await getIt<PaymentsRepository>().config();
+      if (!mounted) return;
+      config.when(
+        success: (value) {
+          final currency = value.currency.trim().toUpperCase();
+          if (currency.isNotEmpty) {
+            setState(() => _currency = currency);
+          }
+        },
+        failure: (_) {},
+      );
+    } catch (_) {}
+  }
 
   @override
   void dispose() {
@@ -69,7 +95,9 @@ class _UniversalNfcPayPageState extends State<UniversalNfcPayPage> {
         child: _loading && _step != _UniversalNfcStep.summary
             ? const CiervoLoadingState()
             : RefreshIndicator(
-                onRefresh: _step == _UniversalNfcStep.methods ? _loadMethods : () async {},
+                onRefresh: _step == _UniversalNfcStep.methods
+                    ? _loadMethods
+                    : () async {},
                 child: ListView(
                   padding: pagePaddingOf(context),
                   children: [
@@ -119,7 +147,9 @@ class _UniversalNfcPayPageState extends State<UniversalNfcPayPage> {
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
-                      'Ingresa el monto del datáfono. La comisión solo aparece en el resumen.',
+                      'Ingresa el monto del datáfono y paga con tu medio Ciervo '
+                      '(wallet o tarjeta tokenizada, p. ej. Cuenta RUT Visa). '
+                      'Funciona aunque el comercio no esté en Ciervo.',
                       style: theme.textTheme.bodySmall,
                     ),
                   ],
@@ -268,7 +298,9 @@ class _UniversalNfcPayPageState extends State<UniversalNfcPayPage> {
               state: _loading
                   ? CiervoButtonState.loading
                   : CiervoButtonState.normal,
-              onPressed: !quote.sufficientFunds || _loading ? null : _createIntent,
+              onPressed: !quote.sufficientFunds || _loading
+                  ? null
+                  : _createIntent,
             ),
             if (!quote.sufficientFunds) ...[
               const SizedBox(height: AppSpacing.sm),
@@ -321,7 +353,8 @@ class _UniversalNfcPayPageState extends State<UniversalNfcPayPage> {
         final active = methods.where((m) => m.isActive).toList();
         setState(() {
           _methods = active;
-          _selectedMethod = active.where((m) => m.isDefault).firstOrNull ??
+          _selectedMethod =
+              active.where((m) => m.isDefault).firstOrNull ??
               active.firstOrNull;
           _loading = false;
         });
@@ -400,7 +433,9 @@ class _UniversalNfcPayPageState extends State<UniversalNfcPayPage> {
         final message = UserErrorMessage.from(error);
         if (message.toLowerCase().contains('nfc') ||
             message.toLowerCase().contains('plan')) {
-          setState(() => _error = NfcPaymentUi.rejectReasonMessage('NfcNotAvailable'));
+          setState(
+            () => _error = NfcPaymentUi.rejectReasonMessage('NfcNotAvailable'),
+          );
         } else {
           setState(() => _error = message);
         }

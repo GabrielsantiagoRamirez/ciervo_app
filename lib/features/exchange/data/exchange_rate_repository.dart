@@ -36,10 +36,12 @@ class ExchangeRateSnapshot {
     final ratesRaw = json['rates'];
     final rates = ratesRaw is List
         ? ratesRaw
-            .whereType<Map>()
-            .map((e) => ExchangeRateItem.fromJson(Map<String, dynamic>.from(e)))
-            .where((r) => r.targetCurrency.isNotEmpty)
-            .toList()
+              .whereType<Map>()
+              .map(
+                (e) => ExchangeRateItem.fromJson(Map<String, dynamic>.from(e)),
+              )
+              .where((r) => r.targetCurrency.isNotEmpty)
+              .toList()
         : <ExchangeRateItem>[];
     return ExchangeRateSnapshot(
       baseCurrency: '${json['baseCurrency'] ?? 'USD'}',
@@ -124,49 +126,42 @@ class ExchangeRateRepository {
   final NetworkClient _client;
 
   Future<Result<ExchangeRateSnapshot>> getRates() => _guard(() async {
-        final response = await _client.dio.get<dynamic>('/api/exchange-rates');
-        return ExchangeRateSnapshot.fromJson(unwrapApiMap(response.data));
-      });
+    final response = await _client.dio.get<dynamic>('/api/exchange-rates');
+    return ExchangeRateSnapshot.fromJson(unwrapApiMap(response.data));
+  });
 
   Future<Result<CurrencyConversion>> convert({
     required double amount,
     required String from,
     required String to,
-  }) =>
-      _guard(() async {
-        final response = await _client.dio.get<dynamic>(
-          '/api/exchange-rates/convert',
-          queryParameters: {
-            'amount': amount,
-            'from': from,
-            'to': to,
-          },
-        );
-        return CurrencyConversion.fromJson(unwrapApiMap(response.data));
-      });
+  }) => _guard(() async {
+    final response = await _client.dio.get<dynamic>(
+      '/api/exchange-rates/convert',
+      queryParameters: {'amount': amount, 'from': from, 'to': to},
+    );
+    return CurrencyConversion.fromJson(unwrapApiMap(response.data));
+  });
 
   Future<Result<CurrencyCatalog>> getCurrencies() => _guard(() async {
-        final response =
-            await _client.dio.get<dynamic>('/api/catalogs/currencies');
-        final map = unwrapApiMap(response.data);
-        final currenciesRaw = map['currencies'];
-        final items = currenciesRaw is List
-            ? currenciesRaw
-                .whereType<Map>()
-                .map(
-                  (e) => CurrencyCatalogItem.fromJson(
-                    Map<String, dynamic>.from(e),
-                  ),
-                )
-                .where((c) => c.currency.isNotEmpty)
-                .toList()
-            : <CurrencyCatalogItem>[];
-        return CurrencyCatalog(
-          baseCurrency: '${map['baseCurrency'] ?? 'USD'}',
-          cacheMinutes: _int(map['cacheMinutes']),
-          currencies: items,
-        );
-      });
+    final response = await _client.dio.get<dynamic>('/api/catalogs/currencies');
+    final map = unwrapApiMap(response.data);
+    final currenciesRaw = map['currencies'];
+    final items = currenciesRaw is List
+        ? currenciesRaw
+              .whereType<Map>()
+              .map(
+                (e) =>
+                    CurrencyCatalogItem.fromJson(Map<String, dynamic>.from(e)),
+              )
+              .where((c) => c.currency.isNotEmpty)
+              .toList()
+        : <CurrencyCatalogItem>[];
+    return CurrencyCatalog(
+      baseCurrency: '${map['baseCurrency'] ?? 'USD'}',
+      cacheMinutes: _int(map['cacheMinutes']),
+      currencies: items,
+    );
+  });
 
   Future<Result<T>> _guard<T>(Future<T> Function() action) async {
     try {

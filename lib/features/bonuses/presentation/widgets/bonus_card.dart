@@ -21,69 +21,71 @@ class BonusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => InkWell(
+    borderRadius: AppRadii.card,
+    onTap: onTap,
+    child: Container(
+      decoration: BoxDecoration(
         borderRadius: AppRadii.card,
-        onTap: onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: AppRadii.card,
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [AppColors.surfaceHigh, AppColors.surfaceLow],
-            ),
-            border: Border.all(color: AppColors.primary.withValues(alpha: 0.35)),
-          ),
-          padding: EdgeInsets.all(compact ? AppSpacing.sm : AppSpacing.md),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _BonusImage(bonus: bonus, compact: compact),
-              SizedBox(width: compact ? AppSpacing.sm : AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.surfaceHigh, AppColors.surfaceLow],
+        ),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.35)),
+      ),
+      padding: EdgeInsets.all(compact ? AppSpacing.sm : AppSpacing.md),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _BonusImage(bonus: bonus, compact: compact),
+          SizedBox(width: compact ? AppSpacing.sm : AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            bonus.title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.title.copyWith(fontSize: compact ? 14 : 16),
-                          ),
-                        ),
-                        _StatusChip(status: bonus.status),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.xxs),
-                    Text(
-                      bonus.businessName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.bodyMuted.copyWith(fontSize: 12),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      bonus.benefitLabel,
-                      style: AppTextStyles.label.copyWith(color: AppColors.primary),
-                    ),
-                    if (!compact && bonus.description.isNotEmpty) ...[
-                      const SizedBox(height: AppSpacing.xxs),
-                      Text(
-                        bonus.description,
+                    Expanded(
+                      child: Text(
+                        bonus.title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.bodyMuted.copyWith(fontSize: 12),
+                        style: AppTextStyles.title.copyWith(
+                          fontSize: compact ? 14 : 16,
+                        ),
                       ),
-                    ],
+                    ),
+                    _StatusChip(status: bonus.status),
                   ],
                 ),
-              ),
-            ],
+                const SizedBox(height: AppSpacing.xxs),
+                Text(
+                  bonus.businessName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.bodyMuted.copyWith(fontSize: 12),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  bonus.benefitLabel,
+                  style: AppTextStyles.label.copyWith(color: AppColors.primary),
+                ),
+                if (!compact && bonus.description.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.xxs),
+                  Text(
+                    bonus.description,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.bodyMuted.copyWith(fontSize: 12),
+                  ),
+                ],
+              ],
+            ),
           ),
-        ),
-      );
+        ],
+      ),
+    ),
+  );
 }
 
 class _BonusImage extends StatelessWidget {
@@ -109,9 +111,14 @@ class _BonusImage extends StatelessWidget {
             : DecoratedBox(
                 decoration: BoxDecoration(
                   color: AppColors.surfaceTop,
-                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.4)),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.4),
+                  ),
                 ),
-                child: const Icon(Icons.local_offer_outlined, color: AppColors.primary),
+                child: const Icon(
+                  Icons.local_offer_outlined,
+                  color: AppColors.primary,
+                ),
               ),
       ),
     );

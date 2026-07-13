@@ -24,12 +24,12 @@ class AuthBootstrapService {
     required AuthTokenRefresher tokenRefresher,
     required AuthPendingRegistrationStore pendingRegistration,
     required AuthStartupMessageStore startupMessage,
-  })  : _sessionManager = sessionManager,
-        _firebaseAuth = firebaseAuth,
-        _authRepository = authRepository,
-        _tokenRefresher = tokenRefresher,
-        _pendingRegistration = pendingRegistration,
-        _startupMessage = startupMessage;
+  }) : _sessionManager = sessionManager,
+       _firebaseAuth = firebaseAuth,
+       _authRepository = authRepository,
+       _tokenRefresher = tokenRefresher,
+       _pendingRegistration = pendingRegistration,
+       _startupMessage = startupMessage;
 
   final SessionManager _sessionManager;
   final FirebaseAuthService _firebaseAuth;
@@ -167,10 +167,7 @@ class AuthBootstrapService {
   _FirebaseContact _contactFromFirebaseUser(User user) {
     final rawPhone = user.phoneNumber?.trim();
     if (rawPhone == null || rawPhone.isEmpty) {
-      return _FirebaseContact(
-        email: user.email?.trim(),
-        countryCode: 'CO',
-      );
+      return _FirebaseContact(email: user.email?.trim(), countryCode: 'CO');
     }
 
     final e164 = rawPhone.startsWith('+') ? rawPhone : '+$rawPhone';

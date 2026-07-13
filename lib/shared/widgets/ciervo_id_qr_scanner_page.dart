@@ -27,8 +27,7 @@ class _CiervoIdQrScannerPageState extends State<CiervoIdQrScannerPage> {
   }
 
   Future<void> _ensureCamera() async {
-    final granted =
-        await getIt<AppPermissionService>().requestCameraIfNeeded();
+    final granted = await getIt<AppPermissionService>().requestCameraIfNeeded();
     if (!mounted) return;
     setState(() {
       _cameraReady = granted;
@@ -65,10 +64,7 @@ class _CiervoIdQrScannerPageState extends State<CiervoIdQrScannerPage> {
         children: [
           Expanded(
             child: _cameraReady
-                ? MobileScanner(
-                    controller: _controller,
-                    onDetect: _onDetect,
-                  )
+                ? MobileScanner(controller: _controller, onDetect: _onDetect)
                 : Center(
                     child: Padding(
                       padding: const EdgeInsets.all(AppSpacing.lg),

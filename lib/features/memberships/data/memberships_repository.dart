@@ -27,50 +27,46 @@ class MembershipsRepository {
       });
 
   Future<Result<Map<String, dynamic>>> myMembership() => _guard(
-        () async => unwrapApiMap(
-          (await _client.dio.get<dynamic>('/api/memberships/me')).data,
-        ),
-      );
+    () async => unwrapApiMap(
+      (await _client.dio.get<dynamic>('/api/memberships/me')).data,
+    ),
+  );
 
   Future<Result<Map<String, dynamic>>> benefits() => _guard(
-        () async => unwrapApiMap(
-          (await _client.dio.get<dynamic>('/api/memberships/benefits')).data,
-        ),
-      );
+    () async => unwrapApiMap(
+      (await _client.dio.get<dynamic>('/api/memberships/benefits')).data,
+    ),
+  );
 
   Future<Result<Map<String, PlanLimit>>> limits() => _guard(() async {
-        final response =
-            await _client.dio.get<dynamic>('/api/memberships/me/limits');
-        final raw = unwrapApiMap(response.data);
-        return raw.map(
-          (key, value) => MapEntry(
-            key,
-            PlanLimit.fromJson(value),
-          ),
-        );
-      });
+    final response = await _client.dio.get<dynamic>(
+      '/api/memberships/me/limits',
+    );
+    final raw = unwrapApiMap(response.data);
+    return raw.map((key, value) => MapEntry(key, PlanLimit.fromJson(value)));
+  });
 
   Future<Result<List<Map<String, dynamic>>>> invoices() => _guard(() async {
-        final response = await _client.dio.get<dynamic>(
-          '/api/memberships/invoices',
-        );
-        return _list(response.data);
-      });
+    final response = await _client.dio.get<dynamic>(
+      '/api/memberships/invoices',
+    );
+    return _list(response.data);
+  });
 
   Future<Result<Map<String, dynamic>>> subscribeFree({
     required String planId,
   }) => _guard(() async {
-        final parsed = int.tryParse(planId);
-        final response = await _client.dio.post<dynamic>(
-          '/api/memberships/subscribe',
-          data: {'planId': parsed ?? planId},
-        );
-        return unwrapApiMap(response.data);
-      });
+    final parsed = int.tryParse(planId);
+    final response = await _client.dio.post<dynamic>(
+      '/api/memberships/subscribe',
+      data: {'planId': parsed ?? planId},
+    );
+    return unwrapApiMap(response.data);
+  });
 
   Future<Result<void>> cancel() => _guard(() async {
-        await _client.dio.post<void>('/api/memberships/cancel');
-      });
+    await _client.dio.post<void>('/api/memberships/cancel');
+  });
 
   Future<Result<T>> _guard<T>(Future<T> Function() action) async {
     try {
@@ -86,12 +82,14 @@ MembershipPlan _planFromJson(Map<String, dynamic> json) {
   final benefitsRaw = json['benefits'];
   final benefits = benefitsRaw is List
       ? benefitsRaw
-          .map((item) => item is Map
-              ? '${item['name'] ?? item['description'] ?? item['code'] ?? ''}'
-              : '$item')
-          .where((item) => item.trim().isNotEmpty)
-          .map((item) => item.toString())
-          .toList()
+            .map(
+              (item) => item is Map
+                  ? '${item['name'] ?? item['description'] ?? item['code'] ?? ''}'
+                  : '$item',
+            )
+            .where((item) => item.trim().isNotEmpty)
+            .map((item) => item.toString())
+            .toList()
       : _features(json);
 
   return MembershipPlan(
@@ -110,9 +108,7 @@ MembershipPlan _planFromJson(Map<String, dynamic> json) {
     baseCurrency: _string(json, const ['baseCurrency']).isEmpty
         ? 'USD'
         : _string(json, const ['baseCurrency']),
-    estimatedLocalPrice: _optionalDouble(json, const [
-      'estimatedLocalPrice',
-    ]),
+    estimatedLocalPrice: _optionalDouble(json, const ['estimatedLocalPrice']),
     estimatedLocalCurrency: _stringOrNull(json, const [
       'estimatedLocalCurrency',
     ]),
@@ -121,7 +117,9 @@ MembershipPlan _planFromJson(Map<String, dynamic> json) {
     paymentProvider: _stringOrNull(json, const ['paymentProvider']),
     benefits: benefits,
     limits: _limits(json),
-    supportsCheckout: _bool(json, const ['supportsCheckout'], defaultValue: true),
+    supportsCheckout: _bool(json, const [
+      'supportsCheckout',
+    ], defaultValue: true),
     requiresCustomQuote: _bool(json, const [
       'requiresCustomQuote',
       'requiresQuote',
@@ -149,9 +147,11 @@ List<String> _features(Map<String, dynamic> json) {
   final value = json['features'];
   if (value is List) {
     return value
-        .map((item) => item is Map
-            ? '${item['name'] ?? item['description'] ?? item['code'] ?? ''}'
-            : '$item')
+        .map(
+          (item) => item is Map
+              ? '${item['name'] ?? item['description'] ?? item['code'] ?? ''}'
+              : '$item',
+        )
         .where((item) => item.trim().isNotEmpty)
         .toList();
   }
@@ -178,8 +178,8 @@ List<Map<String, dynamic>> _list(dynamic response) {
   final items = source is List
       ? source
       : source is Map<String, dynamic> && source['items'] is List
-          ? source['items'] as List
-          : const [];
+      ? source['items'] as List
+      : const [];
   return items
       .whereType<Map>()
       .map((item) => Map<String, dynamic>.from(item))
@@ -233,10 +233,10 @@ bool _bool(
 int _int(dynamic value) => value is int ? value : int.tryParse('$value') ?? 0;
 
 int _fallbackSort(String code) => switch (code.toLowerCase()) {
-      'free' => 0,
-      'plus' || 'silver' => 1,
-      'gold' => 2,
-      'platinum' || 'black' => 3,
-      'family' => 4,
-      _ => 99,
-    };
+  'free' => 0,
+  'plus' || 'silver' => 1,
+  'gold' => 2,
+  'platinum' || 'black' => 3,
+  'family' => 4,
+  _ => 99,
+};

@@ -53,48 +53,49 @@ class _KycPageState extends State<KycPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Verificación de identidad')),
-        body: FutureBuilder<_KycPageData>(
-          future: _data,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState != ConnectionState.done) {
-              return const CiervoLoadingState();
-            }
-            if (snapshot.hasError) {
-              return Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: CiervoErrorState(
-                  title: 'No pudimos cargar tu verificación',
-                  description: UserErrorMessage.from(snapshot.error!),
-                  onRetry: () => setState(_reload),
+    appBar: AppBar(title: const Text('Verificación de identidad')),
+    body: FutureBuilder<_KycPageData>(
+      future: _data,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const CiervoLoadingState();
+        }
+        if (snapshot.hasError) {
+          return Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: CiervoErrorState(
+              title: 'No pudimos cargar tu verificación',
+              description: UserErrorMessage.from(snapshot.error!),
+              onRetry: () => setState(_reload),
+            ),
+          );
+        }
+        final payload = snapshot.data!;
+        return RefreshIndicator(
+          onRefresh: () async => setState(_reload),
+          child: ListView(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            children: [
+              _KycStatusCard(kyc: payload.kyc),
+              const SizedBox(height: AppSpacing.lg),
+              if (payload.profile != null)
+                _ContactVerificationCard(
+                  profile: payload.profile!,
+                  onChanged: () => setState(_reload),
                 ),
-              );
-            }
-            final payload = snapshot.data!;
-            return RefreshIndicator(
-              onRefresh: () async => setState(_reload),
-              child: ListView(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                children: [
-                  _KycStatusCard(kyc: payload.kyc),
-                  const SizedBox(height: AppSpacing.lg),
-                  if (payload.profile != null)
-                    _ContactVerificationCard(
-                      profile: payload.profile!,
-                      onChanged: () => setState(_reload),
-                    ),
-                  if (payload.profile != null) const SizedBox(height: AppSpacing.lg),
-                  if (_canSubmitDocument(payload.kyc, payload.profile))
-                    _KycSubmitForm(
-                      countryCode: payload.profile?.countryCode ?? 'CO',
-                      onSubmitted: () => setState(_reload),
-                    ),
-                ],
-              ),
-            );
-          },
-        ),
-      );
+              if (payload.profile != null)
+                const SizedBox(height: AppSpacing.lg),
+              if (_canSubmitDocument(payload.kyc, payload.profile))
+                _KycSubmitForm(
+                  countryCode: payload.profile?.countryCode ?? 'CO',
+                  onSubmitted: () => setState(_reload),
+                ),
+            ],
+          ),
+        );
+      },
+    ),
+  );
 }
 
 class _KycPageData {
@@ -132,19 +133,21 @@ class _ContactVerificationCardState extends State<_ContactVerificationCard> {
       result.when(
         success: (_) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Teléfono sincronizado con tu cuenta.')),
+            const SnackBar(
+              content: Text('Teléfono sincronizado con tu cuenta.'),
+            ),
           );
           widget.onChanged();
         },
-        failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        ),
+        failure: (error) => ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
       );
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
     } finally {
       if (mounted) setState(() => _syncingPhone = false);
     }
@@ -174,9 +177,13 @@ class _ContactVerificationCardState extends State<_ContactVerificationCard> {
                   : Icons.phone_iphone_outlined,
               color: profile.phoneVerified ? Colors.green : null,
             ),
-            title: Text(profile.phone.isEmpty ? 'Teléfono sin registrar' : profile.phone),
+            title: Text(
+              profile.phone.isEmpty ? 'Teléfono sin registrar' : profile.phone,
+            ),
             subtitle: Text(
-              profile.phoneVerified ? 'Verificado' : 'Pendiente de verificación',
+              profile.phoneVerified
+                  ? 'Verificado'
+                  : 'Pendiente de verificación',
             ),
             trailing: profile.phoneVerified
                 ? null
@@ -198,7 +205,9 @@ class _ContactVerificationCardState extends State<_ContactVerificationCard> {
               profile.email.isEmpty ? 'Correo sin registrar' : profile.email,
             ),
             subtitle: Text(
-              profile.emailVerified ? 'Verificado' : 'Pendiente de verificación',
+              profile.emailVerified
+                  ? 'Verificado'
+                  : 'Pendiente de verificación',
             ),
             trailing: profile.emailVerified
                 ? null
@@ -206,9 +215,9 @@ class _ContactVerificationCardState extends State<_ContactVerificationCard> {
                     onPressed: profile.email.isEmpty
                         ? null
                         : () => showEmailVerificationSheet(
-                              context,
-                              email: profile.email,
-                            ).then((_) => widget.onChanged()),
+                            context,
+                            email: profile.email,
+                          ).then((_) => widget.onChanged()),
                     child: const Text('Confirmar'),
                   ),
           ),
@@ -247,24 +256,20 @@ class _KycStatusCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      status,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
+                    Text(status, style: Theme.of(context).textTheme.titleLarge),
                     const SizedBox(height: AppSpacing.xxs),
                     Text(
                       _statusDescription(rawStatus, kyc),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          if (kyc != null &&
-              (kyc!.documentNumber ?? '').isNotEmpty) ...[
+          if (kyc != null && (kyc!.documentNumber ?? '').isNotEmpty) ...[
             const SizedBox(height: AppSpacing.md),
             const Divider(height: 1),
             const SizedBox(height: AppSpacing.md),
@@ -303,23 +308,23 @@ class _KycStatusCard extends StatelessWidget {
   }
 
   Widget _infoRow(BuildContext context, String label, String value) => Padding(
-        padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 100,
-              child: Text(
-                label,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              ),
+    padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 100,
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
-            Expanded(child: Text(value)),
-          ],
+          ),
         ),
-      );
+        Expanded(child: Text(value)),
+      ],
+    ),
+  );
 
   String _statusDescription(String status, KycSubmission? kyc) {
     final key = status.toLowerCase().replaceAll('_', '').replaceAll(' ', '');
@@ -343,10 +348,7 @@ class _KycStatusCard extends StatelessWidget {
 }
 
 class _KycSubmitForm extends StatefulWidget {
-  const _KycSubmitForm({
-    required this.countryCode,
-    required this.onSubmitted,
-  });
+  const _KycSubmitForm({required this.countryCode, required this.onSubmitted});
 
   final String countryCode;
   final VoidCallback onSubmitted;
@@ -406,9 +408,7 @@ class _KycSubmitFormState extends State<_KycSubmitForm> {
       contentPadding: EdgeInsets.zero,
       leading: path == null
           ? const CircleAvatar(child: Icon(Icons.image_outlined))
-          : CircleAvatar(
-              backgroundImage: FileImage(File(path)),
-            ),
+          : CircleAvatar(backgroundImage: FileImage(File(path))),
       title: Text(label),
       subtitle: Text(path == null ? 'Sin foto' : 'Lista para enviar'),
       trailing: OutlinedButton(
@@ -421,10 +421,7 @@ class _KycSubmitFormState extends State<_KycSubmitForm> {
   Future<int?> _upload(String path, String label) async {
     final file = File(path);
     final result = await getIt<MediaRepository>()
-        .upload(
-          path: path,
-          fileName: file.uri.pathSegments.last,
-        )
+        .upload(path: path, fileName: file.uri.pathSegments.last)
         .timeout(
           const Duration(seconds: 90),
           onTimeout: () => throw Exception(
@@ -441,67 +438,69 @@ class _KycSubmitFormState extends State<_KycSubmitForm> {
 
   @override
   Widget build(BuildContext context) => CiervoCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Agregar documento',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            const Text(
-              'Sube fotos del documento (frente obligatorio) y opcionalmente reverso y selfie.',
-            ),
-            const SizedBox(height: AppSpacing.md),
-            DropdownButtonFormField<String>(
-              initialValue: _documentType,
-              items: const [
-                DropdownMenuItem(value: 'CC', child: Text('Cédula')),
-                DropdownMenuItem(value: 'CE', child: Text('Cédula de extranjería')),
-                DropdownMenuItem(value: 'PASSPORT', child: Text('Pasaporte')),
-              ],
-              onChanged: (value) {
-                if (value != null) setState(() => _documentType = value);
-              },
-              decoration: const InputDecoration(labelText: 'Tipo de documento'),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            TextField(
-              controller: _documentController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Número de documento'),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _photoTile(
-              label: 'Frente del documento *',
-              path: _frontPath,
-              onPick: () => _pickPhoto('front'),
-            ),
-            _photoTile(
-              label: 'Reverso (opcional)',
-              path: _backPath,
-              onPick: () => _pickPhoto('back'),
-            ),
-            _photoTile(
-              label: 'Selfie (opcional)',
-              path: _selfiePath,
-              onPick: () => _pickPhoto('selfie'),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            TextField(
-              controller: _notesController,
-              maxLines: 2,
-              decoration: const InputDecoration(labelText: 'Notas opcionales'),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            FilledButton.icon(
-              onPressed: _saving ? null : _submit,
-              icon: const Icon(Icons.verified_user_outlined),
-              label: Text(_saving ? (_progressLabel ?? 'Enviando…') : 'Enviar documento'),
-            ),
-          ],
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Agregar documento',
+          style: Theme.of(context).textTheme.titleLarge,
         ),
-      );
+        const SizedBox(height: AppSpacing.xs),
+        const Text(
+          'Sube fotos del documento (frente obligatorio) y opcionalmente reverso y selfie.',
+        ),
+        const SizedBox(height: AppSpacing.md),
+        DropdownButtonFormField<String>(
+          initialValue: _documentType,
+          items: const [
+            DropdownMenuItem(value: 'CC', child: Text('Cédula')),
+            DropdownMenuItem(value: 'CE', child: Text('Cédula de extranjería')),
+            DropdownMenuItem(value: 'PASSPORT', child: Text('Pasaporte')),
+          ],
+          onChanged: (value) {
+            if (value != null) setState(() => _documentType = value);
+          },
+          decoration: const InputDecoration(labelText: 'Tipo de documento'),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        TextField(
+          controller: _documentController,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(labelText: 'Número de documento'),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _photoTile(
+          label: 'Frente del documento *',
+          path: _frontPath,
+          onPick: () => _pickPhoto('front'),
+        ),
+        _photoTile(
+          label: 'Reverso (opcional)',
+          path: _backPath,
+          onPick: () => _pickPhoto('back'),
+        ),
+        _photoTile(
+          label: 'Selfie (opcional)',
+          path: _selfiePath,
+          onPick: () => _pickPhoto('selfie'),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        TextField(
+          controller: _notesController,
+          maxLines: 2,
+          decoration: const InputDecoration(labelText: 'Notas opcionales'),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        FilledButton.icon(
+          onPressed: _saving ? null : _submit,
+          icon: const Icon(Icons.verified_user_outlined),
+          label: Text(
+            _saving ? (_progressLabel ?? 'Enviando…') : 'Enviar documento',
+          ),
+        ),
+      ],
+    ),
+  );
 
   Future<void> _submit() async {
     if (_saving) return;
@@ -513,7 +512,9 @@ class _KycSubmitFormState extends State<_KycSubmitForm> {
     }
     if (_frontPath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('La foto del frente del documento es obligatoria.')),
+        const SnackBar(
+          content: Text('La foto del frente del documento es obligatoria.'),
+        ),
       );
       return;
     }
@@ -559,19 +560,21 @@ class _KycSubmitFormState extends State<_KycSubmitForm> {
       result.when(
         success: (_) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Documento enviado para verificación.')),
+            const SnackBar(
+              content: Text('Documento enviado para verificación.'),
+            ),
           );
           widget.onSubmitted();
         },
-        failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        ),
+        failure: (error) => ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
       );
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
     } finally {
       if (mounted) {
         setState(() {

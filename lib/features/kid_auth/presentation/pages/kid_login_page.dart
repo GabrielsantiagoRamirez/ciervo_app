@@ -34,9 +34,9 @@ class _KidLoginPageState extends State<KidLoginPage> {
     final username = _username.text.trim();
     final pin = _pin.text.trim();
     if (username.isEmpty || pin.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ingresa usuario y PIN.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Ingresa usuario y PIN.')));
       return;
     }
     setState(() => _loading = true);
@@ -53,9 +53,9 @@ class _KidLoginPageState extends State<KidLoginPage> {
       },
       failure: (error) {
         setState(() => _loading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       },
     );
   }

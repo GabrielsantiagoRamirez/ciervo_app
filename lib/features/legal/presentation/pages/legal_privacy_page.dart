@@ -24,9 +24,9 @@ class LegalPrivacyPage extends StatelessWidget {
               children: [
                 Text(
                   'Tu confianza es prioridad',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.primary,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(color: AppColors.primary),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 const Text(
@@ -131,21 +131,21 @@ class LegalPrivacyPage extends StatelessWidget {
   }
 
   static IconData _iconFor(AppPermissionKind kind) => switch (kind) {
-        AppPermissionKind.camera => Icons.photo_camera_outlined,
-        AppPermissionKind.photos => Icons.photo_library_outlined,
-        AppPermissionKind.contacts => Icons.contacts_outlined,
-        AppPermissionKind.location => Icons.location_on_outlined,
-        AppPermissionKind.notifications => Icons.notifications_active_outlined,
-        AppPermissionKind.nfc => Icons.nfc,
-      };
+    AppPermissionKind.camera => Icons.photo_camera_outlined,
+    AppPermissionKind.photos => Icons.photo_library_outlined,
+    AppPermissionKind.contacts => Icons.contacts_outlined,
+    AppPermissionKind.location => Icons.location_on_outlined,
+    AppPermissionKind.notifications => Icons.notifications_active_outlined,
+    AppPermissionKind.nfc => Icons.nfc,
+  };
 
   static Future<void> _open(BuildContext context, String url) async {
     final uri = Uri.parse(url);
     final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!opened && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No pudimos abrir $url')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('No pudimos abrir $url')));
     }
   }
 }

@@ -13,17 +13,17 @@ class GeocodeResult {
   });
 
   factory GeocodeResult.fromJson(Map<String, dynamic> json) => GeocodeResult(
-        latitude: _double(json['latitude']),
-        longitude: _double(json['longitude']),
-        formattedAddress: json['formattedAddress']?.toString(),
-        street: json['street']?.toString(),
-        city: json['city']?.toString(),
-        region: json['region']?.toString(),
-        country: json['country']?.toString(),
-        postalCode: json['postalCode']?.toString(),
-        mapsUrl: json['mapsUrl']?.toString(),
-        provider: json['provider']?.toString(),
-      );
+    latitude: _double(json['latitude']),
+    longitude: _double(json['longitude']),
+    formattedAddress: json['formattedAddress']?.toString(),
+    street: json['street']?.toString(),
+    city: json['city']?.toString(),
+    region: json['region']?.toString(),
+    country: json['country']?.toString(),
+    postalCode: json['postalCode']?.toString(),
+    mapsUrl: json['mapsUrl']?.toString(),
+    provider: json['provider']?.toString(),
+  );
 
   final double? latitude;
   final double? longitude;
@@ -38,7 +38,12 @@ class GeocodeResult {
 
   String get displayLine =>
       formattedAddress ??
-      [street, city, region, country].where((p) => (p ?? '').isNotEmpty).join(', ');
+      [
+        street,
+        city,
+        region,
+        country,
+      ].where((p) => (p ?? '').isNotEmpty).join(', ');
 }
 
 double? _double(dynamic value) {

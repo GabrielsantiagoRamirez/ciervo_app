@@ -12,17 +12,20 @@ class EventBookingOptions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => FutureBuilder<List<EventBookingOption>>(
-    future: getIt<BookingRepository>().getEventOptions(eventId).then(
-      (result) => result.when(
-        success: (value) => value,
-        failure: (error) => throw error,
-      ),
-    ),
+    future: getIt<BookingRepository>()
+        .getEventOptions(eventId)
+        .then(
+          (result) => result.when(
+            success: (value) => value,
+            failure: (error) => throw error,
+          ),
+        ),
     builder: (context, snapshot) {
       if (snapshot.connectionState != ConnectionState.done) {
         return const Center(child: CircularProgressIndicator());
       }
-      if (snapshot.hasError) return Text(UserErrorMessage.from(snapshot.error!));
+      if (snapshot.hasError)
+        return Text(UserErrorMessage.from(snapshot.error!));
       final options = snapshot.data ?? const [];
       if (options.isEmpty) {
         return const Text('No hay opciones disponibles para este evento.');
@@ -88,10 +91,8 @@ class _BookingOptionCard extends StatelessWidget {
     );
   }
 
-  Widget _pill(String text) => Chip(
-    label: Text(text),
-    visualDensity: VisualDensity.compact,
-  );
+  Widget _pill(String text) =>
+      Chip(label: Text(text), visualDensity: VisualDensity.compact);
 
   String _date(DateTime? value) =>
       value == null ? '' : value.toLocal().toString().substring(0, 16);

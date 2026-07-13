@@ -66,15 +66,15 @@ class CampaignFilters {
   final int pageSize;
 
   Map<String, dynamic> toQueryParameters() => {
-        if (country != null && country!.isNotEmpty) 'country': country,
-        if (city != null && city!.isNotEmpty) 'city': city,
-        if (zone != null && zone!.isNotEmpty) 'zone': zone,
-        if (businessId != null && businessId!.isNotEmpty) 'businessId': businessId,
-        if (nearLat != null) 'nearLat': nearLat,
-        if (nearLng != null) 'nearLng': nearLng,
-        if (radiusKm != null) 'radiusKm': radiusKm,
-        if (activeOnly) 'activeOnly': true,
-        'page': page,
-        'pageSize': pageSize,
-      };
+    if (country != null && country!.isNotEmpty) 'country': country,
+    if (city != null && city!.isNotEmpty) 'city': city,
+    if (zone != null && zone!.isNotEmpty) 'zone': zone,
+    if (businessId != null && businessId!.isNotEmpty) 'businessId': businessId,
+    if (nearLat != null) 'nearLat': nearLat,
+    if (nearLng != null) 'nearLng': nearLng,
+    if (radiusKm != null) 'radiusKm': radiusKm,
+    if (activeOnly) 'activeOnly': true,
+    'page': page,
+    'pageSize': pageSize,
+  };
 }

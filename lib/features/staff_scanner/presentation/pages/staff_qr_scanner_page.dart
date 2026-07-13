@@ -34,8 +34,7 @@ class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
   }
 
   Future<void> _ensureCamera() async {
-    final granted =
-        await getIt<AppPermissionService>().requestCameraIfNeeded();
+    final granted = await getIt<AppPermissionService>().requestCameraIfNeeded();
     if (!mounted) return;
     setState(() {
       _cameraReady = granted;
@@ -71,10 +70,7 @@ class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
             fit: StackFit.expand,
             children: [
               if (_cameraReady)
-                MobileScanner(
-                  controller: _controller,
-                  onDetect: _onDetect,
-                )
+                MobileScanner(controller: _controller, onDetect: _onDetect)
               else
                 Center(
                   child: Padding(
@@ -265,8 +261,9 @@ class _ResultPanel extends StatelessWidget {
           ? CiervoButton(
               label: isBusy ? 'Confirmando' : 'Confirmar uso',
               icon: Icons.verified,
-              state:
-                  isBusy ? CiervoButtonState.loading : CiervoButtonState.normal,
+              state: isBusy
+                  ? CiervoButtonState.loading
+                  : CiervoButtonState.normal,
               onPressed: onRedeem,
             )
           : OutlinedButton.icon(

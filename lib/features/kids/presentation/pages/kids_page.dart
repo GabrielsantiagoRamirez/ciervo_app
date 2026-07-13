@@ -67,8 +67,9 @@ class _KidsView extends StatelessWidget {
       builder: (context, state) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
         return Scaffold(
-          backgroundColor:
-              isDark ? AppColors.background : AppColors.dayBackground,
+          backgroundColor: isDark
+              ? AppColors.background
+              : AppColors.dayBackground,
           appBar: AppBar(title: const Text('Ciervo Kids')),
           body: RefreshIndicator(
             onRefresh: context.read<KidsCubit>().loadChildren,
@@ -120,9 +121,7 @@ class _KidsView extends StatelessWidget {
                     onRetry: context.read<KidsCubit>().loadChildren,
                   )
                 else if (state.children.isEmpty)
-                  _KidsEmptyPanel(
-                    onAdd: () => _openChildForm(context),
-                  )
+                  _KidsEmptyPanel(onAdd: () => _openChildForm(context))
                 else ...[
                   ...state.children.map(
                     (child) => Padding(
@@ -211,17 +210,17 @@ class _KidsEmptyPanel extends StatelessWidget {
             Text(
               'Aún no tienes niños agregados',
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
               'Crea un perfil para administrar permisos, comercios, categorías y experiencia familiar.',
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: colors.onSurfaceVariant,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
             ),
             const SizedBox(height: AppSpacing.xl),
             CiervoButton(
@@ -272,7 +271,8 @@ class _ChildCard extends StatelessWidget {
           Text(
             '${child.age == null ? 'Edad no registrada' : '${child.age} años'}${document.isEmpty ? '' : ' · $document'}',
           ),
-          if (child.kidUsername != null && child.kidUsername!.trim().isNotEmpty) ...[
+          if (child.kidUsername != null &&
+              child.kidUsername!.trim().isNotEmpty) ...[
             const SizedBox(height: AppSpacing.xs),
             Row(
               children: [
@@ -280,15 +280,17 @@ class _ChildCard extends StatelessWidget {
                   child: Text(
                     'Usuario acceso: ${child.kidUsername}',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 IconButton(
                   tooltip: 'Copiar usuario',
                   visualDensity: VisualDensity.compact,
                   onPressed: () {
-                    Clipboard.setData(ClipboardData(text: child.kidUsername!.trim()));
+                    Clipboard.setData(
+                      ClipboardData(text: child.kidUsername!.trim()),
+                    );
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Usuario copiado.')),
                     );
@@ -301,8 +303,8 @@ class _ChildCard extends StatelessWidget {
             Text(
               'Sin cuenta de acceso — créala en Gestionar.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.error,
-                  ),
+                color: Theme.of(context).colorScheme.error,
+              ),
             ),
           Text('Comercios permitidos: ${child.allowedBusinessesCount}'),
           Text('Categorías permitidas: ${child.allowedCategoriesCount}'),
@@ -403,9 +405,8 @@ class KidsDetailPage extends StatelessWidget {
                         label: const Text('Pagar en comercio'),
                         onPressed: () => Navigator.of(context).push(
                           MaterialPageRoute<void>(
-                            builder: (_) => ChildBusinessPaymentPage(
-                              childId: childId,
-                            ),
+                            builder: (_) =>
+                                ChildBusinessPaymentPage(childId: childId),
                           ),
                         ),
                       ),
@@ -448,12 +449,13 @@ class KidsDetailPage extends StatelessWidget {
                         icon: const Icon(Icons.storefront_outlined),
                         label: const Text('Gestionar comercios permitidos'),
                         onPressed: () async {
-                          final updated = await Navigator.of(context).push<bool>(
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  AllowedBusinessesPage(childId: childId),
-                            ),
-                          );
+                          final updated = await Navigator.of(context)
+                              .push<bool>(
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      AllowedBusinessesPage(childId: childId),
+                                ),
+                              );
                           if (updated == true && context.mounted) {
                             context.read<KidsCubit>().loadChild(childId);
                           }
@@ -464,12 +466,13 @@ class KidsDetailPage extends StatelessWidget {
                         icon: const Icon(Icons.category_outlined),
                         label: const Text('Gestionar categorías permitidas'),
                         onPressed: () async {
-                          final updated = await Navigator.of(context).push<bool>(
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  AllowedCategoriesPage(childId: childId),
-                            ),
-                          );
+                          final updated = await Navigator.of(context)
+                              .push<bool>(
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      AllowedCategoriesPage(childId: childId),
+                                ),
+                              );
                           if (updated == true && context.mounted) {
                             context.read<KidsCubit>().loadChild(childId);
                           }
@@ -570,10 +573,10 @@ class _DetailsCard extends StatelessWidget {
     );
     if (file == null || !context.mounted) return;
     await context.read<KidsCubit>().uploadChildPhoto(
-          childId: childId,
-          path: file.path,
-          fileName: file.name,
-        );
+      childId: childId,
+      path: file.path,
+      fileName: file.name,
+    );
   }
 
   @override
@@ -601,7 +604,9 @@ class _DetailsCard extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         Text('Nombre: ${child.fullName}'),
         Text('Edad: ${child.age ?? 'No registrada'}'),
-        Text('Relación: ${DisplayLabels.guardianRelationship(child.relationshipType)}'),
+        Text(
+          'Relación: ${DisplayLabels.guardianRelationship(child.relationshipType)}',
+        ),
         Text(
           'Documento: ${child.documentType ?? ''} ${child.documentNumber ?? 'No registrado'}',
         ),
@@ -615,8 +620,7 @@ class _DetailsCard extends StatelessWidget {
           ),
         ],
         Text('Estado del perfil: ${child.isActive ? 'Activo' : 'Inactivo'}'),
-        if (child.hasKidAccount)
-          const Text('Cuenta de acceso Kids: activa'),
+        if (child.hasKidAccount) const Text('Cuenta de acceso Kids: activa'),
         Text('Comercios permitidos: ${child.allowedBusinessesCount}'),
         Text('Categorías permitidas: ${child.allowedCategoriesCount}'),
       ],

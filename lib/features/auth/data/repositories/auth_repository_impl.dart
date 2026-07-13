@@ -227,9 +227,7 @@ class AuthRepositoryImpl implements AuthRepository {
         LoginRequestDto(email: email, password: password),
       );
       final phone = dto.phone?.replaceAll(RegExp(r'\D'), '');
-      return Success(
-        phone != null && phone.isNotEmpty ? phone : null,
-      );
+      return Success(phone != null && phone.isNotEmpty ? phone : null);
     } catch (error) {
       return Failure(ErrorMapper.fromObject(error));
     }
@@ -252,6 +250,34 @@ class AuthRepositoryImpl implements AuthRepository {
   }) async {
     try {
       await _remoteDataSource.verifyEmailCode(email: email, code: code);
+      return const Success(null);
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
+  Future<Result<void>> requestPasswordRecovery(String email) async {
+    try {
+      await _remoteDataSource.requestPasswordRecovery(email);
+      return const Success(null);
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
+  Future<Result<void>> recoverPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    try {
+      await _remoteDataSource.recoverPassword(
+        email: email,
+        code: code,
+        newPassword: newPassword,
+      );
       return const Success(null);
     } catch (error) {
       return Failure(ErrorMapper.fromObject(error));

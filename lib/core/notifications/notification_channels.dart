@@ -115,28 +115,28 @@ abstract final class CiervoNotificationChannels {
   ];
 
   static String labelForChannel(String channelId) => switch (channelId) {
-        messages => 'Mensajes',
-        wallet => 'Wallet',
-        pagos => 'Pagos',
-        reservas => 'Reservas',
-        delivery => 'Delivery',
-        eventos => 'Eventos',
-        promociones => 'Promociones',
-        recompensas => 'Recompensas',
-        seguridad => 'Seguridad',
-        _ => 'Sistema',
-      };
+    messages => 'Mensajes',
+    wallet => 'Wallet',
+    pagos => 'Pagos',
+    reservas => 'Reservas',
+    delivery => 'Delivery',
+    eventos => 'Eventos',
+    promociones => 'Promociones',
+    recompensas => 'Recompensas',
+    seguridad => 'Seguridad',
+    _ => 'Sistema',
+  };
 
   static String descriptionForChannel(String channelId) => switch (channelId) {
-        messages => 'Nuevos mensajes y chat',
-        wallet => 'Saldo, recargas y tarjeta',
-        pagos => 'Pagos, transferencias y cobros',
-        reservas => 'Reservas y recordatorios',
-        delivery => 'Pedidos y domiciliarios',
-        eventos => 'Entradas y eventos',
-        promociones => 'Cupones y ofertas',
-        recompensas => 'Puntos e insignias',
-        seguridad => 'Alertas de cuenta',
-        _ => 'Actualizaciones de CIERVO CLUB',
-      };
+    messages => 'Nuevos mensajes y chat',
+    wallet => 'Saldo, recargas y tarjeta',
+    pagos => 'Pagos, transferencias y cobros',
+    reservas => 'Reservas y recordatorios',
+    delivery => 'Pedidos y domiciliarios',
+    eventos => 'Entradas y eventos',
+    promociones => 'Cupones y ofertas',
+    recompensas => 'Puntos e insignias',
+    seguridad => 'Alertas de cuenta',
+    _ => 'Actualizaciones de CIERVO CLUB',
+  };
 }

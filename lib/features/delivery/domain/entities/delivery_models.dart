@@ -190,7 +190,8 @@ class DeliveryOrder {
     return (pickupCode != null && pickupCode!.isNotEmpty) ? pickupCode : null;
   }
 
-  DeliveryPricing get effectivePricing => pricing ??
+  DeliveryPricing get effectivePricing =>
+      pricing ??
       DeliveryPricing(
         distanceKm: distanceKm,
         deliveryFee: deliveryFee,
@@ -301,11 +302,9 @@ class AvailableDeliveryOrder {
   final double? deliveryLatitude;
   final double? deliveryLongitude;
 
-  DeliveryPricing get effectivePricing => pricing ??
-      DeliveryPricing(
-        distanceKm: distanceKm,
-        courierEarning: courierEarning,
-      );
+  DeliveryPricing get effectivePricing =>
+      pricing ??
+      DeliveryPricing(distanceKm: distanceKm, courierEarning: courierEarning);
 }
 
 class DeliveryTrackingPoint {
@@ -364,8 +363,7 @@ class DeliverySettlementAccount {
       'accountType': accountType,
     if (accountNumber != null && accountNumber!.isNotEmpty)
       'accountNumber': accountNumber,
-    if (holderName != null && holderName!.isNotEmpty)
-      'holderName': holderName,
+    if (holderName != null && holderName!.isNotEmpty) 'holderName': holderName,
     if (documentNumber != null && documentNumber!.isNotEmpty)
       'documentNumber': documentNumber,
     if (phoneNumber != null && phoneNumber!.isNotEmpty)

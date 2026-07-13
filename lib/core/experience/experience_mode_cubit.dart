@@ -4,14 +4,11 @@ import '../storage/secure_storage.dart';
 import 'experience_mode.dart';
 
 class ExperienceModeState {
-  const ExperienceModeState({
-    required this.mode,
-    required this.hasSelection,
-  });
+  const ExperienceModeState({required this.mode, required this.hasSelection});
 
   const ExperienceModeState.unselected()
-      : mode = ExperienceMode.night,
-        hasSelection = false;
+    : mode = ExperienceMode.night,
+      hasSelection = false;
 
   final ExperienceMode mode;
   final bool hasSelection;
@@ -19,7 +16,7 @@ class ExperienceModeState {
 
 class ExperienceModeCubit extends Cubit<ExperienceModeState> {
   ExperienceModeCubit(this._storage)
-      : super(const ExperienceModeState.unselected());
+    : super(const ExperienceModeState.unselected());
 
   static const _storageKey = 'ciervo.experienceMode';
 

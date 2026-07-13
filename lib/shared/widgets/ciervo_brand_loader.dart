@@ -36,9 +36,10 @@ class _CiervoBrandLoaderState extends State<CiervoBrandLoader>
     _pulse = Tween<double>(begin: 0.96, end: 1.04).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic),
     );
-    _glow = Tween<double>(begin: 0.22, end: 0.56).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _glow = Tween<double>(
+      begin: 0.22,
+      end: 0.56,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -51,7 +52,8 @@ class _CiervoBrandLoaderState extends State<CiervoBrandLoader>
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final tight = constraints.maxHeight.isFinite && constraints.maxHeight < 150;
+        final tight =
+            constraints.maxHeight.isFinite && constraints.maxHeight < 150;
         final effectiveCompact = widget.compact || tight;
         final size = tight ? 54.0 : (effectiveCompact ? 72.0 : 122.0);
         final showMessage = !tight || constraints.maxHeight > 96;
@@ -100,9 +102,9 @@ class _CiervoBrandLoaderState extends State<CiervoBrandLoader>
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: AppColors.primary,
-                            letterSpacing: 0.4,
-                          ),
+                        color: AppColors.primary,
+                        letterSpacing: 0.4,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                   ],
@@ -111,8 +113,9 @@ class _CiervoBrandLoaderState extends State<CiervoBrandLoader>
                     child: LinearProgressIndicator(
                       minHeight: 3,
                       backgroundColor: AppColors.primary.withOpacity(0.18),
-                      valueColor:
-                          const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        AppColors.primary,
+                      ),
                     ),
                   ),
                 ],

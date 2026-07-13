@@ -29,9 +29,9 @@ Future<bool> showPermissionExplanationModal(
           children: [
             Text(
               kind.title,
-              style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
-                    color: AppColors.primary,
-                  ),
+              style: Theme.of(
+                ctx,
+              ).textTheme.titleLarge?.copyWith(color: AppColors.primary),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.md),

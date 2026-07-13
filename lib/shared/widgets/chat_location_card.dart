@@ -37,8 +37,7 @@ class ChatLocationCard extends StatelessWidget {
             latitude: payload.latitude,
             longitude: payload.longitude,
             height: 100,
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(14)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
           ),
           Padding(
             padding: const EdgeInsets.all(AppSpacing.sm),

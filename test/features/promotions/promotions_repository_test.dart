@@ -11,7 +11,7 @@ void main() {
         'description': 'Las primeras 200 personas...',
         'eligible': true,
         'slotsRemaining': 187,
-        'termsUrl': 'https://ciervo.netlify.app/#/terms',
+        'termsUrl': 'https://ciervo.club/#/terms',
       });
 
       expect(promo.id, 'gold-trial-200');

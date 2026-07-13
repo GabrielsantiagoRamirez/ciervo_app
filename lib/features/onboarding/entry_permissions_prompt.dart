@@ -32,9 +32,9 @@ abstract final class EntryPermissionsPrompt {
             children: [
               Text(
                 'Permisos de Ciervo Club',
-                style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
-                      color: AppColors.primary,
-                    ),
+                style: Theme.of(
+                  ctx,
+                ).textTheme.titleLarge?.copyWith(color: AppColors.primary),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.md),
@@ -57,7 +57,8 @@ abstract final class EntryPermissionsPrompt {
                 icon: Icons.check_circle_outline,
                 onPressed: () async {
                   Navigator.pop(ctx);
-                  await getIt<AppPermissionService>().requestRequiredEntryPermissions();
+                  await getIt<AppPermissionService>()
+                      .requestRequiredEntryPermissions();
                 },
               ),
               TextButton(
@@ -94,16 +95,13 @@ class _PermissionRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+              Text(title, style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: AppSpacing.xxs),
               Text(
                 description,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textMuted,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
               ),
             ],
           ),

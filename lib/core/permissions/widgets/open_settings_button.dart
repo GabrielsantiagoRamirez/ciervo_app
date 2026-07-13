@@ -4,10 +4,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../../../shared/widgets/ciervo_button.dart';
 
 class OpenSettingsButton extends StatelessWidget {
-  const OpenSettingsButton({
-    this.label = 'Abrir configuración',
-    super.key,
-  });
+  const OpenSettingsButton({this.label = 'Abrir configuración', super.key});
 
   final String label;
 

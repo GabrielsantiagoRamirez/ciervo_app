@@ -73,16 +73,14 @@ class _GoldTrialPromotionSheetState extends State<_GoldTrialPromotionSheet> {
         final expiryLabel = expires == null
             ? ''
             : ' Válido hasta ${expires.toLocal().toString().substring(0, 10)}.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${claim.message}$expiryLabel'),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('${claim.message}$expiryLabel')));
       },
       failure: (error) async {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       },
     );
   }
@@ -110,9 +108,9 @@ class _GoldTrialPromotionSheetState extends State<_GoldTrialPromotionSheet> {
           children: [
             Text(
               promo.title,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: AppColors.primary,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(color: AppColors.primary),
               textAlign: TextAlign.center,
             ),
             if (promo.slotsRemaining != null) ...[
@@ -128,18 +126,16 @@ class _GoldTrialPromotionSheetState extends State<_GoldTrialPromotionSheet> {
               promo.description.isNotEmpty
                   ? promo.description
                   : 'Las primeras 200 personas reciben Plan Gold gratis por 60 días. '
-                      'Después de ese periodo podrán continuar con su plan pagando la suscripción correspondiente. '
-                      'Las transacciones realizadas dentro de la plataforma podrán tener una comisión del 1%.',
+                        'Después de ese periodo podrán continuar con su plan pagando la suscripción correspondiente.',
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Al continuar aceptas los términos. Las transacciones en la plataforma '
-              'podrán tener una comisión del 1%.',
+              'Al continuar aceptas los términos y condiciones de la promoción.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: AppSpacing.md),
             CheckboxListTile(
@@ -156,7 +152,9 @@ class _GoldTrialPromotionSheetState extends State<_GoldTrialPromotionSheet> {
                 ),
                 child: Text(
                   'Ver términos y condiciones',
-                  style: TextStyle(color: Theme.of(context).colorScheme.primary),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
               ),
             ),

@@ -10,27 +10,29 @@ class CashbackRepository {
   final NetworkClient _client;
 
   Future<Result<List<CashbackRule>>> rules() => _guard(() async {
-        final response = await _client.dio.get<dynamic>('/api/cashback/rules');
-        return _list(response.data).map(_ruleFromJson).toList();
-      });
+    final response = await _client.dio.get<dynamic>('/api/cashback/rules');
+    return _list(response.data).map(_ruleFromJson).toList();
+  });
 
   Future<Result<int?>> rewardBalance() => _guard(() async {
-        final response =
-            await _client.dio.get<dynamic>('/api/wallet/loyalty/summary');
-        final value = unwrapApiMap(response.data);
-        return _intOrNull(
-          value['cashbackAvailable'] ??
-              value['cashback'] ??
-              value['pointsAvailable'] ??
-              value['points'] ??
-              value['balance'],
-        );
-      });
+    final response = await _client.dio.get<dynamic>(
+      '/api/wallet/loyalty/summary',
+    );
+    final value = unwrapApiMap(response.data);
+    return _intOrNull(
+      value['cashbackAvailable'] ??
+          value['cashback'] ??
+          value['pointsAvailable'] ??
+          value['points'] ??
+          value['balance'],
+    );
+  });
 
   Future<Result<List<Map<String, dynamic>>>> rewardTransactions() =>
       _guard(() async {
-        final response =
-            await _client.dio.get<dynamic>('/api/rewards/me/transactions');
+        final response = await _client.dio.get<dynamic>(
+          '/api/rewards/me/transactions',
+        );
         return _list(response.data);
       });
 
@@ -44,22 +46,22 @@ class CashbackRepository {
 }
 
 CashbackRule _ruleFromJson(Map<String, dynamic> json) => CashbackRule(
-      id: _string(json, const ['id', 'ruleId']),
-      name: _string(json, const ['name', 'title']),
-      description: _string(json, const ['description', 'summary']),
-      percentage: _double(json, const ['percentage', 'cashbackPercent', 'rate']),
-      pointsMultiplier: _double(json, const ['pointsMultiplier', 'multiplier']),
-      membershipTier: _string(json, const ['membershipTier', 'planCode', 'tier']),
-      isActive: json['isActive'] != false && json['active'] != false,
-    );
+  id: _string(json, const ['id', 'ruleId']),
+  name: _string(json, const ['name', 'title']),
+  description: _string(json, const ['description', 'summary']),
+  percentage: _double(json, const ['percentage', 'cashbackPercent', 'rate']),
+  pointsMultiplier: _double(json, const ['pointsMultiplier', 'multiplier']),
+  membershipTier: _string(json, const ['membershipTier', 'planCode', 'tier']),
+  isActive: json['isActive'] != false && json['active'] != false,
+);
 
 List<Map<String, dynamic>> _list(dynamic response) {
   final source = unwrapApiResponse(response);
   final items = source is List
       ? source
       : source is Map<String, dynamic> && source['items'] is List
-          ? source['items'] as List
-          : const [];
+      ? source['items'] as List
+      : const [];
   return items
       .whereType<Map>()
       .map((item) => Map<String, dynamic>.from(item))

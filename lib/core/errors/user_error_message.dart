@@ -7,7 +7,8 @@ abstract final class UserErrorMessage {
     if (error is! AppException) return false;
     final code = error.code?.toUpperCase();
     final message = error.message.toUpperCase();
-    return code == 'PLAN_LIMIT_REACHED' || message.contains('PLAN_LIMIT_REACHED');
+    return code == 'PLAN_LIMIT_REACHED' ||
+        message.contains('PLAN_LIMIT_REACHED');
   }
 
   static String from(Object error) {
@@ -93,7 +94,8 @@ abstract final class UserErrorMessage {
       if (message.contains('cotizacion') || message.contains('cotización')) {
         return 'Este plan requiere cotizacion comercial.';
       }
-      if (message.contains('insufficient') || message.contains('saldo insuficiente')) {
+      if (message.contains('insufficient') ||
+          message.contains('saldo insuficiente')) {
         return 'Saldo insuficiente. Recarga tu wallet con Mercado Pago o transferencia.';
       }
       if (message.contains('amount') && message.contains('membership')) {

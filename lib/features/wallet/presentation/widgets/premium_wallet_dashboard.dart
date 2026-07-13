@@ -100,10 +100,8 @@ class _PremiumWalletDashboardState extends State<PremiumWalletDashboard> {
                   mask: card.mask ?? 'Tarjeta digital CIERVO',
                   isBlocked: card.isBlocked,
                   onCustomizeAlias: () => _editAlias(context, card),
-                  onNfcTap: () => openNfcPaySetup(
-                    context,
-                    walletCardId: card.id,
-                  ),
+                  onNfcTap: () =>
+                      openNfcPaySetup(context, walletCardId: card.id),
                 ),
               const SizedBox(height: AppSpacing.lg),
               const SizedBox(height: AppSpacing.sm),
@@ -341,7 +339,11 @@ class _BalanceBar extends StatelessWidget {
               ],
             ),
           ),
-          Container(width: 1, height: 48, color: CiervoBrandColors.gold.withValues(alpha: 0.25)),
+          Container(
+            width: 1,
+            height: 48,
+            color: CiervoBrandColors.gold.withValues(alpha: 0.25),
+          ),
           const SizedBox(width: AppSpacing.md),
           InkWell(
             onTap: onRecharge,
@@ -408,9 +410,9 @@ class _QuickActionsRow extends StatelessWidget {
           label: 'Escanear QR',
           icon: Icons.qr_code_scanner,
           palette: palette,
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(builder: (_) => const ScanQrPage()),
-          ),
+          onTap: () => Navigator.of(
+            context,
+          ).push(MaterialPageRoute<void>(builder: (_) => const ScanQrPage())),
         ),
         _CircleAction(
           label: 'Transferir',
@@ -471,10 +473,7 @@ class _CircleAction extends StatelessWidget {
             child: Text(
               label,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: palette.textMuted,
-                fontSize: 11,
-              ),
+              style: TextStyle(color: palette.textMuted, fontSize: 11),
             ),
           ),
         ],
@@ -484,10 +483,7 @@ class _CircleAction extends StatelessWidget {
 }
 
 class _RecentMovementsHeader extends StatelessWidget {
-  const _RecentMovementsHeader({
-    required this.palette,
-    required this.onSeeAll,
-  });
+  const _RecentMovementsHeader({required this.palette, required this.onSeeAll});
   final CiervoWalletPalette palette;
   final VoidCallback onSeeAll;
 
@@ -524,10 +520,14 @@ class _MovementTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isCredit = transaction.direction.toLowerCase().contains('in') ||
+    final isCredit =
+        transaction.direction.toLowerCase().contains('in') ||
         transaction.direction.toLowerCase().contains('credit') ||
-        transaction.amount > 0 && transaction.type.toLowerCase().contains('recharge');
-    final color = isCredit ? CiervoBrandColors.income : CiervoBrandColors.expense;
+        transaction.amount > 0 &&
+            transaction.type.toLowerCase().contains('recharge');
+    final color = isCredit
+        ? CiervoBrandColors.income
+        : CiervoBrandColors.expense;
     final prefix = isCredit ? '+' : '-';
     final date = transaction.createdAt?.toLocal();
     final dateLabel = date == null
@@ -552,7 +552,11 @@ class _MovementTile extends StatelessWidget {
           CircleAvatar(
             radius: 22,
             backgroundColor: palette.surfaceHigh,
-            child: Icon(_iconFor(transaction), color: CiervoBrandColors.gold, size: 20),
+            child: Icon(
+              _iconFor(transaction),
+              color: CiervoBrandColors.gold,
+              size: 20,
+            ),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
@@ -571,10 +575,7 @@ class _MovementTile extends StatelessWidget {
                 if (dateLabel.isNotEmpty)
                   Text(
                     dateLabel,
-                    style: TextStyle(
-                      color: palette.textMuted,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: palette.textMuted, fontSize: 12),
                   ),
               ],
             ),
@@ -593,15 +594,27 @@ class _MovementTile extends StatelessWidget {
   IconData _iconFor(WalletTransaction tx) {
     final text = '${tx.type} ${tx.description}'.toLowerCase();
     if (text.contains('recarga')) return Icons.add_circle_outline;
-    if (text.contains('cafe') || text.contains('restaur')) return Icons.local_cafe_outlined;
-    if (text.contains('compra') || text.contains('tienda')) return Icons.shopping_bag_outlined;
+    if (text.contains('cafe') || text.contains('restaur'))
+      return Icons.local_cafe_outlined;
+    if (text.contains('compra') || text.contains('tienda'))
+      return Icons.shopping_bag_outlined;
     return Icons.receipt_long_outlined;
   }
 
   String _month(int m) {
     const months = [
-      'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-      'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic',
+      'Ene',
+      'Feb',
+      'Mar',
+      'Abr',
+      'May',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dic',
     ];
     return months[m - 1];
   }
@@ -620,9 +633,7 @@ class _SecureShipmentEntry extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => const SecureShipmentListPage(),
-          ),
+          MaterialPageRoute(builder: (_) => const SecureShipmentListPage()),
         ),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
@@ -669,8 +680,5 @@ class _SecureShipmentEntry extends StatelessWidget {
 
 String _formatMoney(double amount, String currency) {
   final symbol = currency == 'COP' ? '\$' : '$currency ';
-  return '$symbol${amount.toStringAsFixed(0).replaceAllMapped(
-        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-        (m) => '${m[1]}.',
-      )}';
+  return '$symbol${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
 }

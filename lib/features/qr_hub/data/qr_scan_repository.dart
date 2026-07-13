@@ -30,55 +30,49 @@ class QrScanRepository {
     required String token,
     required String walletCardId,
     required String idempotencyKey,
-  }) =>
-      _guard(() async {
-        final normalized = token.trim();
-        final response = await _client.dio.post<dynamic>(
-          '/api/payments/qr/${Uri.encodeComponent(normalized)}/pay',
-          data: {
-            'paymentMethod': 'wallet',
-            'walletCardId': int.tryParse(walletCardId) ?? walletCardId,
-            'idempotencyKey': idempotencyKey,
-          },
-        );
-        return _paymentResultFromJson(unwrapApiMap(response.data));
-      });
+  }) => _guard(() async {
+    final normalized = token.trim();
+    final response = await _client.dio.post<dynamic>(
+      '/api/payments/qr/${Uri.encodeComponent(normalized)}/pay',
+      data: {
+        'paymentMethod': 'wallet',
+        'walletCardId': int.tryParse(walletCardId) ?? walletCardId,
+        'idempotencyKey': idempotencyKey,
+      },
+    );
+    return _paymentResultFromJson(unwrapApiMap(response.data));
+  });
 
   Future<Result<QrPaymentResult>> payWithMercadoPago({
     required String token,
     required String idempotencyKey,
-  }) =>
-      _guard(() async {
-        final normalized = token.trim();
-        final response = await _client.dio.post<dynamic>(
-          '/api/payments/qr/${Uri.encodeComponent(normalized)}/pay',
-          data: {
-            'paymentMethod': 'mercadopago',
-            'idempotencyKey': idempotencyKey,
-          },
-        );
-        return _paymentResultFromJson(unwrapApiMap(response.data));
-      });
+  }) => _guard(() async {
+    final normalized = token.trim();
+    final response = await _client.dio.post<dynamic>(
+      '/api/payments/qr/${Uri.encodeComponent(normalized)}/pay',
+      data: {'paymentMethod': 'mercadopago', 'idempotencyKey': idempotencyKey},
+    );
+    return _paymentResultFromJson(unwrapApiMap(response.data));
+  });
 
   Future<Result<QrValidatePreview>> validate({
     required String token,
     double? latitude,
     double? longitude,
     String? deviceInfo,
-  }) =>
-      _guard(() async {
-        final response = await _client.dio.post<dynamic>(
-          '/api/qr/validate',
-          data: {
-            'token': token,
-            if (latitude != null) 'latitude': latitude,
-            if (longitude != null) 'longitude': longitude,
-            if (deviceInfo != null && deviceInfo.isNotEmpty)
-              'deviceInfo': deviceInfo,
-          },
-        );
-        return _validateFromJson(unwrapApiMap(response.data));
-      });
+  }) => _guard(() async {
+    final response = await _client.dio.post<dynamic>(
+      '/api/qr/validate',
+      data: {
+        'token': token,
+        if (latitude != null) 'latitude': latitude,
+        if (longitude != null) 'longitude': longitude,
+        if (deviceInfo != null && deviceInfo.isNotEmpty)
+          'deviceInfo': deviceInfo,
+      },
+    );
+    return _validateFromJson(unwrapApiMap(response.data));
+  });
 
   Future<Result<Map<String, dynamic>>> redeemCoupon(int couponId) =>
       _guard(() async {
@@ -112,19 +106,18 @@ QrResolveResult _resolveFromJson(Map<String, dynamic> json) {
 QrPaymentDetails _paymentDetailsFromJson(
   String token,
   Map<String, dynamic> json,
-) =>
-    QrPaymentDetails(
-      token: token,
-      businessId: _int(json['businessId']),
-      businessName: _string(json['businessName']) ?? 'Comercio',
-      amount: _double(json['amount']),
-      currency: _string(json['currency']) ?? 'COP',
-      status: _string(json['status']) ?? 'pending',
-      isExpired: json['isExpired'] == true,
-      description: _string(json['description']),
-      paymentIntentId: _intOrNull(json['paymentIntentId']),
-      expiresAt: DateTime.tryParse('${json['expiresAt'] ?? ''}'),
-    );
+) => QrPaymentDetails(
+  token: token,
+  businessId: _int(json['businessId']),
+  businessName: _string(json['businessName']) ?? 'Comercio',
+  amount: _double(json['amount']),
+  currency: _string(json['currency']) ?? 'COP',
+  status: _string(json['status']) ?? 'pending',
+  isExpired: json['isExpired'] == true,
+  description: _string(json['description']),
+  paymentIntentId: _intOrNull(json['paymentIntentId']),
+  expiresAt: DateTime.tryParse('${json['expiresAt'] ?? ''}'),
+);
 
 QrPaymentResult _paymentResultFromJson(Map<String, dynamic> json) {
   final receipt = json['receipt'];
@@ -170,11 +163,13 @@ QrValidatePreview _validateFromJson(Map<String, dynamic> json) {
     token: _string(json['token'] ?? json['qrPayload']),
     recommendedRedeemEndpoint: _string(json['recommendedRedeemEndpoint']),
     benefitTitle: benefitMap == null ? null : _string(benefitMap['title']),
-    benefitDescription:
-        benefitMap == null ? null : _string(benefitMap['description']),
+    benefitDescription: benefitMap == null
+        ? null
+        : _string(benefitMap['description']),
     couponTitle: couponMap == null ? null : _string(couponMap['title']),
-    couponDescription:
-        couponMap == null ? null : _string(couponMap['description']),
+    couponDescription: couponMap == null
+        ? null
+        : _string(couponMap['description']),
   );
 }
 

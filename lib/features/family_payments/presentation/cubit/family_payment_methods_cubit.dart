@@ -7,25 +7,31 @@ import 'family_payment_methods_state.dart';
 
 class FamilyPaymentMethodsCubit extends Cubit<FamilyPaymentMethodsState> {
   FamilyPaymentMethodsCubit(this._repository)
-      : super(const FamilyPaymentMethodsState());
+    : super(const FamilyPaymentMethodsState());
 
   final FamilyPaymentsRepository _repository;
 
   Future<void> load() async {
-    emit(state.copyWith(
-      status: FamilyPaymentMethodsStatus.loading,
-      clearMessages: true,
-    ));
+    emit(
+      state.copyWith(
+        status: FamilyPaymentMethodsStatus.loading,
+        clearMessages: true,
+      ),
+    );
     final result = await _repository.listCards();
     result.when(
-      success: (cards) => emit(state.copyWith(
-        status: FamilyPaymentMethodsStatus.success,
-        cards: cards,
-      )),
-      failure: (error) => emit(state.copyWith(
-        status: FamilyPaymentMethodsStatus.failure,
-        errorMessage: UserErrorMessage.from(error),
-      )),
+      success: (cards) => emit(
+        state.copyWith(
+          status: FamilyPaymentMethodsStatus.success,
+          cards: cards,
+        ),
+      ),
+      failure: (error) => emit(
+        state.copyWith(
+          status: FamilyPaymentMethodsStatus.failure,
+          errorMessage: UserErrorMessage.from(error),
+        ),
+      ),
     );
   }
 
@@ -34,16 +40,20 @@ class FamilyPaymentMethodsCubit extends Cubit<FamilyPaymentMethodsState> {
     final result = await _repository.deleteCard(cardId);
     result.when(
       success: (_) async {
-        emit(state.copyWith(
-          successMessage: 'Tarjeta eliminada.',
-          actionCardId: null,
-        ));
+        emit(
+          state.copyWith(
+            successMessage: 'Tarjeta eliminada.',
+            actionCardId: null,
+          ),
+        );
         await load();
       },
-      failure: (error) => emit(state.copyWith(
-        errorMessage: UserErrorMessage.from(error),
-        actionCardId: null,
-      )),
+      failure: (error) => emit(
+        state.copyWith(
+          errorMessage: UserErrorMessage.from(error),
+          actionCardId: null,
+        ),
+      ),
     );
   }
 
@@ -52,16 +62,20 @@ class FamilyPaymentMethodsCubit extends Cubit<FamilyPaymentMethodsState> {
     final result = await _repository.setPrimaryCard(cardId);
     result.when(
       success: (_) async {
-        emit(state.copyWith(
-          successMessage: 'Tarjeta principal actualizada.',
-          actionCardId: null,
-        ));
+        emit(
+          state.copyWith(
+            successMessage: 'Tarjeta principal actualizada.',
+            actionCardId: null,
+          ),
+        );
         await load();
       },
-      failure: (error) => emit(state.copyWith(
-        errorMessage: UserErrorMessage.from(error),
-        actionCardId: null,
-      )),
+      failure: (error) => emit(
+        state.copyWith(
+          errorMessage: UserErrorMessage.from(error),
+          actionCardId: null,
+        ),
+      ),
     );
   }
 
@@ -70,16 +84,20 @@ class FamilyPaymentMethodsCubit extends Cubit<FamilyPaymentMethodsState> {
     final result = await _repository.setBackupCard(cardId);
     result.when(
       success: (_) async {
-        emit(state.copyWith(
-          successMessage: 'Tarjeta de respaldo actualizada.',
-          actionCardId: null,
-        ));
+        emit(
+          state.copyWith(
+            successMessage: 'Tarjeta de respaldo actualizada.',
+            actionCardId: null,
+          ),
+        );
         await load();
       },
-      failure: (error) => emit(state.copyWith(
-        errorMessage: UserErrorMessage.from(error),
-        actionCardId: null,
-      )),
+      failure: (error) => emit(
+        state.copyWith(
+          errorMessage: UserErrorMessage.from(error),
+          actionCardId: null,
+        ),
+      ),
     );
   }
 
@@ -88,16 +106,20 @@ class FamilyPaymentMethodsCubit extends Cubit<FamilyPaymentMethodsState> {
     final result = await _repository.freezeCard(cardId);
     result.when(
       success: (_) async {
-        emit(state.copyWith(
-          successMessage: 'Tarjeta congelada.',
-          actionCardId: null,
-        ));
+        emit(
+          state.copyWith(
+            successMessage: 'Tarjeta congelada.',
+            actionCardId: null,
+          ),
+        );
         await load();
       },
-      failure: (error) => emit(state.copyWith(
-        errorMessage: UserErrorMessage.from(error),
-        actionCardId: null,
-      )),
+      failure: (error) => emit(
+        state.copyWith(
+          errorMessage: UserErrorMessage.from(error),
+          actionCardId: null,
+        ),
+      ),
     );
   }
 
@@ -106,16 +128,20 @@ class FamilyPaymentMethodsCubit extends Cubit<FamilyPaymentMethodsState> {
     final result = await _repository.unfreezeCard(cardId);
     result.when(
       success: (_) async {
-        emit(state.copyWith(
-          successMessage: 'Tarjeta descongelada.',
-          actionCardId: null,
-        ));
+        emit(
+          state.copyWith(
+            successMessage: 'Tarjeta descongelada.',
+            actionCardId: null,
+          ),
+        );
         await load();
       },
-      failure: (error) => emit(state.copyWith(
-        errorMessage: UserErrorMessage.from(error),
-        actionCardId: null,
-      )),
+      failure: (error) => emit(
+        state.copyWith(
+          errorMessage: UserErrorMessage.from(error),
+          actionCardId: null,
+        ),
+      ),
     );
   }
 
@@ -124,21 +150,28 @@ class FamilyPaymentMethodsCubit extends Cubit<FamilyPaymentMethodsState> {
     required String alias,
   }) async {
     emit(state.copyWith(actionCardId: cardId, clearMessages: true));
-    final result = await _repository.updateCardAlias(cardId: cardId, alias: alias);
+    final result = await _repository.updateCardAlias(
+      cardId: cardId,
+      alias: alias,
+    );
     return result.when(
       success: (_) async {
-        emit(state.copyWith(
-          successMessage: 'Alias actualizado.',
-          actionCardId: null,
-        ));
+        emit(
+          state.copyWith(
+            successMessage: 'Alias actualizado.',
+            actionCardId: null,
+          ),
+        );
         await load();
         return true;
       },
       failure: (error) {
-        emit(state.copyWith(
-          errorMessage: UserErrorMessage.from(error),
-          actionCardId: null,
-        ));
+        emit(
+          state.copyWith(
+            errorMessage: UserErrorMessage.from(error),
+            actionCardId: null,
+          ),
+        );
         return false;
       },
     );

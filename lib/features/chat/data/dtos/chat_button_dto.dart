@@ -28,12 +28,7 @@ class ChatButtonDto {
       'state',
     ]);
     return ChatButtonDto(
-      code: _string(json, const [
-        'buttonKey',
-        'code',
-        'buttonCode',
-        'id',
-      ]),
+      code: _string(json, const ['buttonKey', 'code', 'buttonCode', 'id']),
       label: _string(json, const ['label', 'title', 'name']),
       visibility: ChatButtonVisibility.parse(status),
       message: _optional(json, const [
@@ -68,14 +63,13 @@ class ChatButtonDto {
     if (value is Map<String, dynamic>) {
       final items = value['items'] ?? value['buttons'] ?? value['value'];
       if (items is List) return listFrom(items);
-      return value.entries
-          .where((e) => e.value is Map<String, dynamic>)
-          .map((e) {
-            final map = Map<String, dynamic>.from(e.value as Map);
-            map.putIfAbsent('code', () => e.key);
-            return ChatButtonDto.fromJson(map);
-          })
-          .toList();
+      return value.entries.where((e) => e.value is Map<String, dynamic>).map((
+        e,
+      ) {
+        final map = Map<String, dynamic>.from(e.value as Map);
+        map.putIfAbsent('code', () => e.key);
+        return ChatButtonDto.fromJson(map);
+      }).toList();
     }
     return const [];
   }

@@ -12,16 +12,18 @@ void main() {
         'visibility': 'ProductionReady',
         'sortOrder': 1,
       },
-      {
-        'code': 'Trips',
-        'label': 'Viajes',
-        'visibility': 'RequiresProvider',
-      },
+      {'code': 'Trips', 'label': 'Viajes', 'visibility': 'RequiresProvider'},
     ]);
 
     expect(items, hasLength(2));
-    expect(items.first.toDomain().visibility, ChatButtonVisibility.productionReady);
-    expect(items.last.toDomain().visibility, ChatButtonVisibility.requiresProvider);
+    expect(
+      items.first.toDomain().visibility,
+      ChatButtonVisibility.productionReady,
+    );
+    expect(
+      items.last.toDomain().visibility,
+      ChatButtonVisibility.requiresProvider,
+    );
     expect(items.last.toDomain().visibility.isVisible, isFalse);
   });
 

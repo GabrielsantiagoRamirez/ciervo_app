@@ -24,7 +24,8 @@ class AuthenticatedMediaImage extends StatefulWidget {
   final Widget? errorWidget;
 
   @override
-  State<AuthenticatedMediaImage> createState() => _AuthenticatedMediaImageState();
+  State<AuthenticatedMediaImage> createState() =>
+      _AuthenticatedMediaImageState();
 }
 
 class _AuthenticatedMediaImageState extends State<AuthenticatedMediaImage> {
@@ -48,7 +49,10 @@ class _AuthenticatedMediaImageState extends State<AuthenticatedMediaImage> {
   void _load() {
     _bytes = getIt<MediaRepository>()
         .download(widget.mediaId, thumbnail: widget.thumbnail)
-        .then((result) => result.when(success: (value) => value, failure: (_) => null));
+        .then(
+          (result) =>
+              result.when(success: (value) => value, failure: (_) => null),
+        );
   }
 
   @override

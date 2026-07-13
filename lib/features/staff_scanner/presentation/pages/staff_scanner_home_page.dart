@@ -115,9 +115,7 @@ class _StaffScannerHomePageState extends State<StaffScannerHomePage> {
                     icon: Icons.history,
                   );
                 }
-                return Column(
-                  children: items.map(_AuditTile.new).toList(),
-                );
+                return Column(children: items.map(_AuditTile.new).toList());
               },
             ),
           ],
@@ -154,11 +152,13 @@ class _AuditTile extends StatelessWidget {
     child: ListTile(
       leading: Icon(_icon(audit.result)),
       title: Text(audit.resourceTitle ?? audit.qrType ?? 'QR escaneado'),
-      subtitle: Text([
-        audit.ownerName,
-        audit.failureReason,
-        _date(audit.scannedAt),
-      ].whereType<String>().where((item) => item.isNotEmpty).join(' - ')),
+      subtitle: Text(
+        [
+          audit.ownerName,
+          audit.failureReason,
+          _date(audit.scannedAt),
+        ].whereType<String>().where((item) => item.isNotEmpty).join(' - '),
+      ),
       trailing: Text(_resultLabel(audit.result)),
     ),
   );

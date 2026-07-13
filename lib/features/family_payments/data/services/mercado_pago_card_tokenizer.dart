@@ -5,10 +5,7 @@ import '../../../../core/errors/error_mapper.dart';
 
 /// Normaliza y valida la fecha de expiración antes de tokenizar con Mercado Pago.
 class MercadoPagoCardExpiration {
-  const MercadoPagoCardExpiration({
-    required this.month,
-    required this.year,
-  });
+  const MercadoPagoCardExpiration({required this.month, required this.year});
 
   final int month;
   final int year;
@@ -47,13 +44,14 @@ class MercadoPagoCardExpiration {
 /// Los datos sensibles se envían únicamente a Mercado Pago, nunca al backend CIERVO.
 class MercadoPagoCardTokenizer {
   MercadoPagoCardTokenizer({Dio? dio})
-      : _dio = dio ??
-            Dio(
-              BaseOptions(
-                connectTimeout: const Duration(seconds: 20),
-                receiveTimeout: const Duration(seconds: 20),
-              ),
-            );
+    : _dio =
+          dio ??
+          Dio(
+            BaseOptions(
+              connectTimeout: const Duration(seconds: 20),
+              receiveTimeout: const Duration(seconds: 20),
+            ),
+          );
 
   final Dio _dio;
 
@@ -68,7 +66,9 @@ class MercadoPagoCardTokenizer {
     String? identificationNumber,
   }) async {
     final sanitizedNumber = cardNumber.replaceAll(RegExp(r'\s+'), '');
-    final normalizedYear = MercadoPagoCardExpiration.normalizeYear(expirationYear);
+    final normalizedYear = MercadoPagoCardExpiration.normalizeYear(
+      expirationYear,
+    );
     final response = await _dio.post<Map<String, dynamic>>(
       'https://api.mercadopago.com/v1/card_tokens',
       queryParameters: {'public_key': publicKey},
@@ -122,9 +122,9 @@ class MercadoPagoTokenizationException implements Exception {
           return MercadoPagoTokenizationException('$message');
         }
       }
-      return MercadoPagoTokenizationException(UserErrorMessage.from(
-        ErrorMapper.fromObject(error),
-      ));
+      return MercadoPagoTokenizationException(
+        UserErrorMessage.from(ErrorMapper.fromObject(error)),
+      );
     }
     return MercadoPagoTokenizationException(error.toString());
   }

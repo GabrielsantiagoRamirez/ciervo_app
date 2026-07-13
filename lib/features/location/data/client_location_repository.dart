@@ -67,7 +67,9 @@ class ClientLocationRepository {
 
   Future<bool> _shouldSync(AppLocation current) async {
     final last = await _lastSyncedLocation();
-    final lastSyncAt = DateTime.tryParse(await _storage.read(_lastSyncAtKey) ?? '');
+    final lastSyncAt = DateTime.tryParse(
+      await _storage.read(_lastSyncAtKey) ?? '',
+    );
     if (last == null || lastSyncAt == null) {
       return true;
     }
@@ -87,8 +89,12 @@ class ClientLocationRepository {
   }
 
   Future<AppLocation?> _lastSyncedLocation() async {
-    final latitude = double.tryParse(await _storage.read(_lastLatitudeKey) ?? '');
-    final longitude = double.tryParse(await _storage.read(_lastLongitudeKey) ?? '');
+    final latitude = double.tryParse(
+      await _storage.read(_lastLatitudeKey) ?? '',
+    );
+    final longitude = double.tryParse(
+      await _storage.read(_lastLongitudeKey) ?? '',
+    );
     if (latitude == null || longitude == null) {
       return null;
     }
@@ -96,8 +102,17 @@ class ClientLocationRepository {
   }
 
   Future<void> _saveSyncedLocation(AppLocation location) async {
-    await _storage.write(_lastLatitudeKey, location.latitude.toStringAsFixed(6));
-    await _storage.write(_lastLongitudeKey, location.longitude.toStringAsFixed(6));
-    await _storage.write(_lastSyncAtKey, DateTime.now().toUtc().toIso8601String());
+    await _storage.write(
+      _lastLatitudeKey,
+      location.latitude.toStringAsFixed(6),
+    );
+    await _storage.write(
+      _lastLongitudeKey,
+      location.longitude.toStringAsFixed(6),
+    );
+    await _storage.write(
+      _lastSyncAtKey,
+      DateTime.now().toUtc().toIso8601String(),
+    );
   }
 }

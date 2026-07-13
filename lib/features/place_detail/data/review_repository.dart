@@ -12,13 +12,12 @@ class ReviewRepository {
   final NetworkClient _client;
 
   Future<Result<List<PlaceReview>>> byBusiness(int businessId) => _guard(
-        () async => unwrapApiList(
-          (await _client.dio.get<dynamic>(
-            '/api/reviews/by-business/$businessId',
-          ))
-              .data,
-        ).whereType<Map<String, dynamic>>().map(_review).toList(),
-      );
+    () async => unwrapApiList(
+      (await _client.dio.get<dynamic>(
+        '/api/reviews/by-business/$businessId',
+      )).data,
+    ).whereType<Map<String, dynamic>>().map(_review).toList(),
+  );
 
   Future<Result<void>> create({
     required int businessId,
@@ -27,20 +26,19 @@ class ReviewRepository {
     int? sourceId,
     String? comment,
     int? bookingId,
-  }) =>
-      _guard(() async {
-        await _client.dio.post<dynamic>(
-          '/api/reviews',
-          data: {
-            'businessId': businessId,
-            'bookingId': ?bookingId,
-            'sourceType': ?_nonEmpty(sourceType),
-            'sourceId': ?sourceId,
-            'rating': rating.clamp(1, 5),
-            'comment': ?_nonEmpty(comment),
-          },
-        );
-      });
+  }) => _guard(() async {
+    await _client.dio.post<dynamic>(
+      '/api/reviews',
+      data: {
+        'businessId': businessId,
+        'bookingId': ?bookingId,
+        'sourceType': ?_nonEmpty(sourceType),
+        'sourceId': ?sourceId,
+        'rating': rating.clamp(1, 5),
+        'comment': ?_nonEmpty(comment),
+      },
+    );
+  });
 
   Future<Result<void>> update({
     required int reviewId,
@@ -50,20 +48,19 @@ class ReviewRepository {
     int? sourceId,
     String? comment,
     int? bookingId,
-  }) =>
-      _guard(() async {
-        await _client.dio.put<dynamic>(
-          '/api/reviews/$reviewId',
-          data: {
-            'businessId': businessId,
-            'bookingId': ?bookingId,
-            'sourceType': ?_nonEmpty(sourceType),
-            'sourceId': ?sourceId,
-            'rating': rating.clamp(1, 5),
-            'comment': ?_nonEmpty(comment),
-          },
-        );
-      });
+  }) => _guard(() async {
+    await _client.dio.put<dynamic>(
+      '/api/reviews/$reviewId',
+      data: {
+        'businessId': businessId,
+        'bookingId': ?bookingId,
+        'sourceType': ?_nonEmpty(sourceType),
+        'sourceId': ?sourceId,
+        'rating': rating.clamp(1, 5),
+        'comment': ?_nonEmpty(comment),
+      },
+    );
+  });
 
   Future<Result<T>> _guard<T>(Future<T> Function() action) async {
     try {
@@ -77,17 +74,17 @@ class ReviewRepository {
 }
 
 PlaceReview _review(Map<String, dynamic> json) => PlaceReview(
-      id: int.tryParse('${json['id'] ?? json['reviewId'] ?? ''}'),
-      userName: _value(json, const [
-        'userDisplayName',
-        'userName',
-        'clientName',
-        'name',
-      ]),
-      comment: _value(json, const ['comment', 'description']),
-      rating: double.tryParse('${json['rating'] ?? 0}') ?? 0,
-      timeAgo: _value(json, const ['createdAt', 'updatedAt']),
-    );
+  id: int.tryParse('${json['id'] ?? json['reviewId'] ?? ''}'),
+  userName: _value(json, const [
+    'userDisplayName',
+    'userName',
+    'clientName',
+    'name',
+  ]),
+  comment: _value(json, const ['comment', 'description']),
+  rating: double.tryParse('${json['rating'] ?? 0}') ?? 0,
+  timeAgo: _value(json, const ['createdAt', 'updatedAt']),
+);
 
 String _value(Map<String, dynamic> json, List<String> keys) {
   for (final key in keys) {

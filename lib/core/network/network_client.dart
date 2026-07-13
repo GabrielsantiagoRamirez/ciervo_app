@@ -14,16 +14,16 @@ class NetworkClient {
     required AuthTokenRefresher tokenRefresher,
     required AppLogger logger,
   }) : dio = Dio(
-          BaseOptions(
-            baseUrl: config.apiBaseUrl,
-            connectTimeout: config.connectTimeout,
-            receiveTimeout: config.receiveTimeout,
-            headers: const {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json',
-            },
-          ),
-        ) {
+         BaseOptions(
+           baseUrl: config.apiBaseUrl,
+           connectTimeout: config.connectTimeout,
+           receiveTimeout: config.receiveTimeout,
+           headers: const {
+             'Accept': 'application/json',
+             'Content-Type': 'application/json',
+           },
+         ),
+       ) {
     dio.interceptors.add(
       AuthInterceptor(
         sessionManager: sessionManager,

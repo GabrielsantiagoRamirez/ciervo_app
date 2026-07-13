@@ -41,7 +41,10 @@ class ChildProfileDto {
         'PhotoUrl',
         'profilePhotoUrl',
       ]),
-      kidsPublicId: _optionalString(json, const ['kidsPublicId', 'KidsPublicId']),
+      kidsPublicId: _optionalString(json, const [
+        'kidsPublicId',
+        'KidsPublicId',
+      ]),
       hasKidAccount: _bool(json, const ['hasKidAccount', 'HasKidAccount']),
       kidUsername: _optionalString(json, const ['kidUsername', 'username']),
       countryCode: _optionalString(json, const ['countryCode', 'CountryCode']),
@@ -69,25 +72,25 @@ class ChildProfileDto {
   final bool isPrimaryGuardian;
 
   ChildProfile toDomain() => ChildProfile(
-        id: id,
-        firstName: firstName,
-        lastName: lastName,
-        relationshipType: relationshipType,
-        isActive: isActive,
-        birthDate: birthDate,
-        age: age,
-        documentType: documentType,
-        documentNumber: documentNumber,
-        medicalNotes: medicalNotes,
-        allowedBusinessesCount: allowedBusinessesCount,
-        allowedCategoriesCount: allowedCategoriesCount,
-        photoUrl: photoUrl,
-        kidsPublicId: kidsPublicId,
-        hasKidAccount: hasKidAccount,
-        kidUsername: kidUsername,
-        countryCode: countryCode,
-        isPrimaryGuardian: isPrimaryGuardian,
-      );
+    id: id,
+    firstName: firstName,
+    lastName: lastName,
+    relationshipType: relationshipType,
+    isActive: isActive,
+    birthDate: birthDate,
+    age: age,
+    documentType: documentType,
+    documentNumber: documentNumber,
+    medicalNotes: medicalNotes,
+    allowedBusinessesCount: allowedBusinessesCount,
+    allowedCategoriesCount: allowedCategoriesCount,
+    photoUrl: photoUrl,
+    kidsPublicId: kidsPublicId,
+    hasKidAccount: hasKidAccount,
+    kidUsername: kidUsername,
+    countryCode: countryCode,
+    isPrimaryGuardian: isPrimaryGuardian,
+  );
 
   static List<ChildProfileDto> listFrom(dynamic value) {
     final source = value is Map<String, dynamic>
@@ -96,8 +99,8 @@ class ChildProfileDto {
     final items = source is List
         ? source
         : source is Map<String, dynamic> && source['items'] is List
-            ? source['items'] as List
-            : const [];
+        ? source['items'] as List
+        : const [];
     return items
         .whereType<Map<String, dynamic>>()
         .map(ChildProfileDto.fromJson)

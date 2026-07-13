@@ -9,26 +9,21 @@ import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../wallet/domain/entities/ciervo_wallet_identity.dart';
 
 class MyCiervoIdentityCard extends StatelessWidget {
-  const MyCiervoIdentityCard({
-    required this.identity,
-    super.key,
-  });
+  const MyCiervoIdentityCard({required this.identity, super.key});
 
   final CiervoWalletIdentity identity;
 
   @override
   Widget build(BuildContext context) {
-    final payload = identity.qrPayload ??
+    final payload =
+        identity.qrPayload ??
         CiervoIdQr.payloadForCode(identity.ciervoUserCode);
 
     return CiervoCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Mi QR Ciervo',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text('Mi QR Ciervo', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: AppSpacing.xs),
           Text(
             'Presenta este codigo para identificarte o recibir pagos.',
@@ -41,9 +36,9 @@ class MyCiervoIdentityCard extends StatelessWidget {
             identity.ciervoUserCode,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primary,
-                ),
+              fontWeight: FontWeight.w700,
+              color: AppColors.primary,
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           Row(

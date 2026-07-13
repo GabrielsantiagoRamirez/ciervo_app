@@ -62,57 +62,59 @@ class _FamilyPaymentDetailPageState extends State<FamilyPaymentDetailPage> {
               child: CiervoLoadingState(itemCount: 4),
             )
           : _error != null
-              ? Padding(
-                  padding: pagePaddingOf(context),
-                  child: CiervoErrorState(
-                    title: 'No pudimos cargar el pago',
-                    description: _error!,
-                    onRetry: _load,
-                  ),
-                )
-              : payment == null
-                  ? const SizedBox.shrink()
-                  : RefreshIndicator(
-                      onRefresh: _load,
-                      child: ListView(
-                        padding: pagePaddingOf(context),
-                        children: [
-                          CiervoCard(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Text(
-                                  payment.merchantName,
-                                  style:
-                                      Theme.of(context).textTheme.headlineSmall,
-                                ),
-                                const SizedBox(height: AppSpacing.sm),
-                                Text(
-                                  '${payment.currency} ${payment.amount.toStringAsFixed(0)}',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headlineMedium
-                                      ?.copyWith(fontWeight: FontWeight.bold),
-                                ),
-                                const Divider(height: 24),
-                                _row('Estado',
-                                    DisplayLabels.familyPaymentStatus(payment.status)),
-                                _row('Fuente',
-                                    DisplayLabels.familyFundingSource(payment.fundingSource)),
-                                if (payment.kidName != null)
-                                  _row('Hijo', payment.kidName!),
-                                if (payment.city != null)
-                                  _row('Ciudad', payment.city!),
-                                if (payment.createdAt != null)
-                                  _row('Hora', payment.createdAt.toString()),
-                                if (payment.cardAlias != null)
-                                  _row('Tarjeta', payment.cardAlias!),
-                              ],
-                            ),
+          ? Padding(
+              padding: pagePaddingOf(context),
+              child: CiervoErrorState(
+                title: 'No pudimos cargar el pago',
+                description: _error!,
+                onRetry: _load,
+              ),
+            )
+          : payment == null
+          ? const SizedBox.shrink()
+          : RefreshIndicator(
+              onRefresh: _load,
+              child: ListView(
+                padding: pagePaddingOf(context),
+                children: [
+                  CiervoCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          payment.merchantName,
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          '${payment.currency} ${payment.amount.toStringAsFixed(0)}',
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        const Divider(height: 24),
+                        _row(
+                          'Estado',
+                          DisplayLabels.familyPaymentStatus(payment.status),
+                        ),
+                        _row(
+                          'Fuente',
+                          DisplayLabels.familyFundingSource(
+                            payment.fundingSource,
                           ),
-                        ],
-                      ),
+                        ),
+                        if (payment.kidName != null)
+                          _row('Hijo', payment.kidName!),
+                        if (payment.city != null) _row('Ciudad', payment.city!),
+                        if (payment.createdAt != null)
+                          _row('Hora', payment.createdAt.toString()),
+                        if (payment.cardAlias != null)
+                          _row('Tarjeta', payment.cardAlias!),
+                      ],
                     ),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 

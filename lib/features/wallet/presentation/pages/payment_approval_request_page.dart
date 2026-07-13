@@ -22,7 +22,8 @@ class PaymentApprovalRequestPage extends StatefulWidget {
       _PaymentApprovalRequestPageState();
 }
 
-class _PaymentApprovalRequestPageState extends State<PaymentApprovalRequestPage> {
+class _PaymentApprovalRequestPageState
+    extends State<PaymentApprovalRequestPage> {
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
   bool _sending = false;
@@ -88,9 +89,9 @@ class _PaymentApprovalRequestPageState extends State<PaymentApprovalRequestPage>
     final amount =
         double.tryParse(_amountController.text.replaceAll(',', '.')) ?? 0;
     if (amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ingresa un monto valido.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Ingresa un monto valido.')));
       return;
     }
 
@@ -111,9 +112,9 @@ class _PaymentApprovalRequestPageState extends State<PaymentApprovalRequestPage>
       Navigator.of(context).pop(true);
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
     } finally {
       if (mounted) setState(() => _sending = false);
     }

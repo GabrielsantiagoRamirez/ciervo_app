@@ -74,9 +74,7 @@ class QrPaymentResult {
   final String? currency;
 
   String? get receiptLookupId =>
-      (receiptId != null && receiptId!.isNotEmpty)
-          ? receiptId
-          : receiptNumber;
+      (receiptId != null && receiptId!.isNotEmpty) ? receiptId : receiptNumber;
 }
 
 class QrValidatePreview {

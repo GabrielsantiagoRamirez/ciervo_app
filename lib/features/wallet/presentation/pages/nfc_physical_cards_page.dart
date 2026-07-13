@@ -172,7 +172,9 @@ class _NfcPhysicalCardsPageState extends State<NfcPhysicalCardsPage> {
     setState(() => _scanning = false);
     if (uid == null || uid.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No pudimos leer el UID. Intenta de nuevo.')),
+        const SnackBar(
+          content: Text('No pudimos leer el UID. Intenta de nuevo.'),
+        ),
       );
       return;
     }
@@ -198,13 +200,15 @@ class _NfcPhysicalCardsPageState extends State<NfcPhysicalCardsPage> {
       ),
     );
     if (confirm != true || !mounted) return;
-    final result = await getIt<WalletRepository>().blockPhysicalNfcCard(card.id);
+    final result = await getIt<WalletRepository>().blockPhysicalNfcCard(
+      card.id,
+    );
     if (!mounted) return;
     result.when(
       success: (_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tarjeta bloqueada.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Tarjeta bloqueada.')));
         _load();
       },
       failure: (error) => handleNfcError(context, error),
@@ -302,7 +306,9 @@ class _NfcPhysicalCardsPageState extends State<NfcPhysicalCardsPage> {
                             contentPadding: EdgeInsets.zero,
                             leading: const Icon(Icons.nfc),
                             title: Text(card.label),
-                            subtitle: Text('UID: ${card.cardUid} · ${card.status}'),
+                            subtitle: Text(
+                              'UID: ${card.cardUid} · ${card.status}',
+                            ),
                             trailing: card.isBlocked
                                 ? null
                                 : IconButton(

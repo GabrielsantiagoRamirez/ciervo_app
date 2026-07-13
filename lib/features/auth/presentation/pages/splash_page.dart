@@ -37,30 +37,22 @@ class _SplashPageState extends State<SplashPage> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Colors.black,
-              Color(0xFF161311),
-              AppColors.background,
-            ],
+            colors: [Colors.black, Color(0xFF161311), AppColors.background],
           ),
         ),
         child: SafeArea(
           child: Column(
             children: [
-              const Expanded(
-                child: CiervoBrandLoader(
-                  message: 'Ciervo Club',
-                ),
-              ),
+              const Expanded(child: CiervoBrandLoader(message: 'Ciervo Club')),
               if (_versionLabel != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: AppSpacing.lg),
                   child: Text(
                     _versionLabel!,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.primary.withValues(alpha: 0.72),
-                          letterSpacing: 0.6,
-                        ),
+                      color: AppColors.primary.withValues(alpha: 0.72),
+                      letterSpacing: 0.6,
+                    ),
                   ),
                 ),
             ],

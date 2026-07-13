@@ -65,9 +65,7 @@ class DioCampaignsRemoteDataSource implements CampaignsRemoteDataSource {
   Future<void> _postFirstOk(List<String> templates, String campaignId) async {
     for (final template in templates) {
       try {
-        await _client.dio.post<void>(
-          template.replaceFirst('{id}', campaignId),
-        );
+        await _client.dio.post<void>(template.replaceFirst('{id}', campaignId));
         return;
       } on DioException catch (error) {
         if (error.response?.statusCode != 404) rethrow;

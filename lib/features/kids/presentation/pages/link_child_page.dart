@@ -51,9 +51,9 @@ class _LinkChildViewState extends State<_LinkChildView> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     final ok = await context.read<KidsCubit>().linkChild(
-          kidsPublicId: _codeController.text.trim(),
-          relationshipType: _relationshipType,
-        );
+      kidsPublicId: _codeController.text.trim(),
+      relationshipType: _relationshipType,
+    );
     if (ok && mounted) Navigator.of(context).pop(true);
   }
 
@@ -116,8 +116,9 @@ class _LinkChildViewState extends State<_LinkChildView> {
                             .toList(),
                         onChanged: loading
                             ? null
-                            : (value) =>
-                                setState(() => _relationshipType = value ?? 2),
+                            : (value) => setState(
+                                () => _relationshipType = value ?? 2,
+                              ),
                       ),
                       const SizedBox(height: AppSpacing.lg),
                       CiervoButton(

@@ -24,10 +24,7 @@ class DeliveryPricingCard extends StatelessWidget {
     final rows = <(String, String)>[];
     void add(String label, num? value, {int decimals = 0}) {
       if (value == null) return;
-      rows.add((
-        label,
-        '$moneyCurrency ${value.toStringAsFixed(decimals)}',
-      ));
+      rows.add((label, '$moneyCurrency ${value.toStringAsFixed(decimals)}'));
     }
 
     if (pricing.distanceKm != null) {
@@ -40,7 +37,10 @@ class DeliveryPricingCard extends StatelessWidget {
     add('Propina', pricing.tipAmount);
     add('Total domiciliario', pricing.courierTotal);
     if (pricing.includedKm != null) {
-      rows.add(('Km incluidos', '${pricing.includedKm!.toStringAsFixed(1)} km'));
+      rows.add((
+        'Km incluidos',
+        '${pricing.includedKm!.toStringAsFixed(1)} km',
+      ));
     }
     if (pricing.extraKm != null && pricing.extraKm! > 0) {
       rows.add(('Km adicionales', '${pricing.extraKm!.toStringAsFixed(1)} km'));
@@ -66,10 +66,7 @@ class DeliveryPricingCard extends StatelessWidget {
               child: Row(
                 children: [
                   Expanded(child: Text(row.$1)),
-                  Text(
-                    row.$2,
-                    style: Theme.of(context).textTheme.labelLarge,
-                  ),
+                  Text(row.$2, style: Theme.of(context).textTheme.labelLarge),
                 ],
               ),
             ),

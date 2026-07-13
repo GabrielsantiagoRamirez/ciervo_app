@@ -65,15 +65,14 @@ class MembershipState {
     bool? isLoaded,
     String? error,
     bool clearError = false,
-  }) =>
-      MembershipState(
-        me: me ?? this.me,
-        benefits: benefits ?? this.benefits,
-        limits: limits ?? this.limits,
-        isLoading: isLoading ?? this.isLoading,
-        isLoaded: isLoaded ?? this.isLoaded,
-        error: clearError ? null : error ?? this.error,
-      );
+  }) => MembershipState(
+    me: me ?? this.me,
+    benefits: benefits ?? this.benefits,
+    limits: limits ?? this.limits,
+    isLoading: isLoading ?? this.isLoading,
+    isLoaded: isLoaded ?? this.isLoaded,
+    error: clearError ? null : error ?? this.error,
+  );
 
   static String? _string(dynamic value) {
     final text = value?.toString().trim();

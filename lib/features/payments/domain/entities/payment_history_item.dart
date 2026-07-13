@@ -18,12 +18,12 @@ class PaymentHistoryItem {
   final String? receiptUrl;
 
   String get statusLabel => switch (status.toLowerCase()) {
-        'pending' => 'Pendiente',
-        'processing' => 'Procesando',
-        'approved' || 'succeeded' => 'Aprobado',
-        'rejected' || 'failed' => 'Rechazado',
-        'cancelled' => 'Cancelado',
-        'expired' => 'Expirado',
-        _ => status,
-      };
+    'pending' => 'Pendiente',
+    'processing' => 'Procesando',
+    'approved' || 'succeeded' => 'Aprobado',
+    'rejected' || 'failed' => 'Rechazado',
+    'cancelled' => 'Cancelado',
+    'expired' => 'Expirado',
+    _ => status,
+  };
 }

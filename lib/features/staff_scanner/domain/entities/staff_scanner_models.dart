@@ -26,10 +26,9 @@ class StaffPermissions {
       canUseMobileScanner &&
       permissions.any((item) => item == 'qr.scan' || item == 'qr.validate');
 
-  bool get canRedeem =>
-      permissions.any(
-        (item) => item == 'qr.redeem' || item.endsWith('.redeem'),
-      );
+  bool get canRedeem => permissions.any(
+    (item) => item == 'qr.redeem' || item.endsWith('.redeem'),
+  );
 
   bool get canViewOrders => permissions.any(
     (item) =>

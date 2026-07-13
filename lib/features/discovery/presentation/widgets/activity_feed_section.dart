@@ -56,7 +56,10 @@ class _ActivityFeedSectionState extends State<ActivityFeedSection> {
 
   bool _isBlocked(SafetyFilterCache cache, ActivityFeedItem item) {
     if (item.businessId != null &&
-        cache.isContentBlocked(ReportTargetType.business, '${item.businessId}')) {
+        cache.isContentBlocked(
+          ReportTargetType.business,
+          '${item.businessId}',
+        )) {
       return true;
     }
     if (item.eventId != null &&
@@ -117,7 +120,8 @@ class _ActivityFeedSectionState extends State<ActivityFeedSection> {
               scrollDirection: Axis.horizontal,
               itemCount: items.length,
               separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
-              itemBuilder: (context, index) => _ActivityCard(item: items[index]),
+              itemBuilder: (context, index) =>
+                  _ActivityCard(item: items[index]),
             ),
           ),
         ],
@@ -196,20 +200,18 @@ class _ActivityCard extends StatelessWidget {
                       item.title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(color: Colors.white),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleMedium?.copyWith(color: Colors.white),
                     ),
                     if (item.description.isNotEmpty)
                       Text(
                         item.description,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.copyWith(color: Colors.white70),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodySmall?.copyWith(color: Colors.white70),
                       ),
                   ],
                 ),
@@ -256,24 +258,22 @@ void _openActivity(BuildContext context, ActivityFeedItem item) {
   }
 
   Navigator.of(context).push(
-    MaterialPageRoute<void>(
-      builder: (_) => _ActivityDetailPage(item: item),
-    ),
+    MaterialPageRoute<void>(builder: (_) => _ActivityDetailPage(item: item)),
   );
 }
 
 HomePlace _placeFromActivity(ActivityFeedItem item) => HomePlace(
-      id: '${item.businessId}',
-      name: item.title,
-      category: item.category ?? 'Experiencia',
-      rating: 0,
-      priceLevel: '',
-      distanceKm: 0,
-      matchPercent: 0,
-      imageUrl: item.imageMediaId ?? '',
-      city: 'Bogota',
-      countryCode: 'CO',
-    );
+  id: '${item.businessId}',
+  name: item.title,
+  category: item.category ?? 'Experiencia',
+  rating: 0,
+  priceLevel: '',
+  distanceKm: 0,
+  matchPercent: 0,
+  imageUrl: item.imageMediaId ?? '',
+  city: 'Bogota',
+  countryCode: 'CO',
+);
 
 class _ActivityDetailPage extends StatelessWidget {
   const _ActivityDetailPage({required this.item});

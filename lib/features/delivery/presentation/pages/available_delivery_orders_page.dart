@@ -76,10 +76,7 @@ class _AvailableDeliveryOrdersPageState
         body: TabBarView(
           children: [
             _buildList(context),
-            AvailableDeliveryOrdersMap(
-              orders: _orders,
-              onSelect: _claim,
-            ),
+            AvailableDeliveryOrdersMap(orders: _orders, onSelect: _claim),
           ],
         ),
       ),
@@ -87,72 +84,70 @@ class _AvailableDeliveryOrdersPageState
   }
 
   Widget _buildList(BuildContext context) => _loading
-        ? const Center(child: CircularProgressIndicator())
-        : RefreshIndicator(
-            onRefresh: _load,
-            child: _orders.isEmpty
-                ? ListView(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    children: [
-                      CiervoEmptyState(
-                        title: 'Sin domicilios disponibles',
-                        description:
-                            _error ?? 'Los pedidos aprobados apareceran aqui.',
-                        icon: Icons.delivery_dining_outlined,
-                      ),
-                    ],
-                  )
-                : ListView.separated(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    itemCount: _orders.length,
-                    separatorBuilder: (_, _) =>
-                        const SizedBox(height: AppSpacing.md),
-                    itemBuilder: (context, index) {
-                      final order = _orders[index];
-                      final canClaim =
-                          _profile?.isSettlementAccountVerified == true;
-                      return CiervoCard(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              order.businessName,
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            Text('Recogida: ${order.businessAddress}'),
-                            Text('Entrega: ${order.deliveryAddress}'),
-                            const SizedBox(height: AppSpacing.sm),
-                            DeliveryPricingCard(
-                              pricing: order.effectivePricing,
-                              currency: order.currency ?? 'COP',
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            if (!canClaim)
-                              const Padding(
-                                padding: EdgeInsets.only(
-                                  bottom: AppSpacing.sm,
-                                ),
-                                child: Text(
-                                  'Necesitas una cuenta de liquidacion aprobada para aceptar domicilios.',
-                                ),
+      ? const Center(child: CircularProgressIndicator())
+      : RefreshIndicator(
+          onRefresh: _load,
+          child: _orders.isEmpty
+              ? ListView(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  children: [
+                    CiervoEmptyState(
+                      title: 'Sin domicilios disponibles',
+                      description:
+                          _error ?? 'Los pedidos aprobados apareceran aqui.',
+                      icon: Icons.delivery_dining_outlined,
+                    ),
+                  ],
+                )
+              : ListView.separated(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  itemCount: _orders.length,
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(height: AppSpacing.md),
+                  itemBuilder: (context, index) {
+                    final order = _orders[index];
+                    final canClaim =
+                        _profile?.isSettlementAccountVerified == true;
+                    return CiervoCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            order.businessName,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          Text('Recogida: ${order.businessAddress}'),
+                          Text('Entrega: ${order.deliveryAddress}'),
+                          const SizedBox(height: AppSpacing.sm),
+                          DeliveryPricingCard(
+                            pricing: order.effectivePricing,
+                            currency: order.currency ?? 'COP',
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          if (!canClaim)
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: AppSpacing.sm),
+                              child: Text(
+                                'Necesitas una cuenta de liquidacion aprobada para aceptar domicilios.',
                               ),
-                            CiervoButton(
-                              label: 'Aceptar domicilio',
-                              icon: Icons.check,
-                              state: _claimingId == order.id
-                                  ? CiervoButtonState.loading
-                                  : CiervoButtonState.normal,
-                              onPressed: canClaim && _claimingId == null
-                                  ? () => _claim(order)
-                                  : null,
                             ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-          );
+                          CiervoButton(
+                            label: 'Aceptar domicilio',
+                            icon: Icons.check,
+                            state: _claimingId == order.id
+                                ? CiervoButtonState.loading
+                                : CiervoButtonState.normal,
+                            onPressed: canClaim && _claimingId == null
+                                ? () => _claim(order)
+                                : null,
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+        );
 
   Future<void> _claim(AvailableDeliveryOrder order) async {
     if (_profile?.isSettlementAccountVerified != true) {
@@ -179,9 +174,9 @@ class _AvailableDeliveryOrdersPageState
         _load();
       },
       failure: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
         _load();
       },
     );

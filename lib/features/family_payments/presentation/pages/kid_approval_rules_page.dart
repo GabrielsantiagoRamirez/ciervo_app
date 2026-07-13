@@ -102,9 +102,9 @@ class _KidApprovalRulesPageState extends State<KidApprovalRulesPage> {
       success: (_) => ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Reglas de aprobación guardadas.')),
       ),
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 
@@ -118,92 +118,92 @@ class _KidApprovalRulesPageState extends State<KidApprovalRulesPage> {
               child: CiervoLoadingState(itemCount: 3),
             )
           : _error != null
-              ? Padding(
-                  padding: pagePaddingOf(context),
-                  child: CiervoErrorState(
-                    title: 'No pudimos cargar las reglas',
-                    description: _error!,
-                    onRetry: _load,
+          ? Padding(
+              padding: pagePaddingOf(context),
+              child: CiervoErrorState(
+                title: 'No pudimos cargar las reglas',
+                description: _error!,
+                onRetry: _load,
+              ),
+            )
+          : ListView(
+              padding: pagePaddingOf(context),
+              children: [
+                CiervoCard(
+                  child: TextField(
+                    controller: _thresholdController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Requerir aprobación desde (COP)',
+                      prefixIcon: Icon(Icons.price_check_outlined),
+                    ),
                   ),
-                )
-              : ListView(
-                  padding: pagePaddingOf(context),
-                  children: [
-                    CiervoCard(
-                      child: TextField(
-                        controller: _thresholdController,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Requerir aprobación desde (COP)',
-                          prefixIcon: Icon(Icons.price_check_outlined),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    CiervoCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            'Categorías siempre aprobadas',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          ..._categories.map((item) {
-                            final id = _categoryId(item);
-                            return CheckboxListTile(
-                              value: _alwaysApproved.contains(id),
-                              onChanged: (value) => setState(() {
-                                if (value == true) {
-                                  _alwaysApproved.add(id);
-                                  _alwaysManual.remove(id);
-                                } else {
-                                  _alwaysApproved.remove(id);
-                                }
-                              }),
-                              title: Text(_categoryName(item)),
-                            );
-                          }),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    CiervoCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            'Categorías siempre manuales',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          ..._categories.map((item) {
-                            final id = _categoryId(item);
-                            return CheckboxListTile(
-                              value: _alwaysManual.contains(id),
-                              onChanged: (value) => setState(() {
-                                if (value == true) {
-                                  _alwaysManual.add(id);
-                                  _alwaysApproved.remove(id);
-                                } else {
-                                  _alwaysManual.remove(id);
-                                }
-                              }),
-                              title: Text(_categoryName(item)),
-                            );
-                          }),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    CiervoButton(
-                      label: _saving ? 'Guardando...' : 'Guardar reglas',
-                      icon: Icons.save_outlined,
-                      state: _saving
-                          ? CiervoButtonState.loading
-                          : CiervoButtonState.normal,
-                      onPressed: _saving ? null : _save,
-                    ),
-                  ],
                 ),
+                const SizedBox(height: AppSpacing.sm),
+                CiervoCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Categorías siempre aprobadas',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      ..._categories.map((item) {
+                        final id = _categoryId(item);
+                        return CheckboxListTile(
+                          value: _alwaysApproved.contains(id),
+                          onChanged: (value) => setState(() {
+                            if (value == true) {
+                              _alwaysApproved.add(id);
+                              _alwaysManual.remove(id);
+                            } else {
+                              _alwaysApproved.remove(id);
+                            }
+                          }),
+                          title: Text(_categoryName(item)),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                CiervoCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Categorías siempre manuales',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      ..._categories.map((item) {
+                        final id = _categoryId(item);
+                        return CheckboxListTile(
+                          value: _alwaysManual.contains(id),
+                          onChanged: (value) => setState(() {
+                            if (value == true) {
+                              _alwaysManual.add(id);
+                              _alwaysApproved.remove(id);
+                            } else {
+                              _alwaysManual.remove(id);
+                            }
+                          }),
+                          title: Text(_categoryName(item)),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                CiervoButton(
+                  label: _saving ? 'Guardando...' : 'Guardar reglas',
+                  icon: Icons.save_outlined,
+                  state: _saving
+                      ? CiervoButtonState.loading
+                      : CiervoButtonState.normal,
+                  onPressed: _saving ? null : _save,
+                ),
+              ],
+            ),
     );
   }
 }

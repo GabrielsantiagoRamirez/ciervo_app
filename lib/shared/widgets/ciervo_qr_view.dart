@@ -48,11 +48,11 @@ class CiervoQrView extends StatelessWidget {
 
   /// Renderiza PNG con fondo blanco para compartir (evita cuadrado negro).
   static QrPainter sharePainter(String payload) => QrPainter(
-        data: payload,
-        version: QrVersions.auto,
-        errorCorrectionLevel: QrErrorCorrectLevel.M,
-        color: Colors.black,
-        emptyColor: Colors.white,
-        gapless: false,
-      );
+    data: payload,
+    version: QrVersions.auto,
+    errorCorrectionLevel: QrErrorCorrectLevel.M,
+    color: Colors.black,
+    emptyColor: Colors.white,
+    gapless: false,
+  );
 }

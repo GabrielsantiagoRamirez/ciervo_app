@@ -30,7 +30,9 @@ class FamilyChatRepository {
   });
 
   Future<Result<List<ChatConversation>>> conversations() => _guard(() async {
-    final response = await _client.dio.get<dynamic>('/api/family/conversations');
+    final response = await _client.dio.get<dynamic>(
+      '/api/family/conversations',
+    );
     return unwrapApiList(response.data)
         .whereType<Map>()
         .map((item) => conversationFromJson(Map<String, dynamic>.from(item)))
@@ -45,7 +47,8 @@ class FamilyChatRepository {
       '/api/family/conversations',
       data: {
         'childId': int.tryParse(childId) ?? childId,
-        'participantUserId': int.tryParse(participantUserId) ?? participantUserId,
+        'participantUserId':
+            int.tryParse(participantUserId) ?? participantUserId,
       },
     );
     return conversationFromJson(unwrapApiMap(response.data));

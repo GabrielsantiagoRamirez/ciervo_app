@@ -71,59 +71,57 @@ class _CashbackPageState extends State<CashbackPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Cashback y puntos')),
-        body: FutureBuilder<_CashbackState>(
-          future: _state,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState != ConnectionState.done) {
-              return const CiervoLoadingState(itemCount: 4);
-            }
-            if (snapshot.hasError) {
-              return Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: CiervoErrorState(
-                  title: 'No pudimos cargar cashback',
-                  description: UserErrorMessage.from(snapshot.error!),
-                  onRetry: () => setState(_load),
+    appBar: AppBar(title: const Text('Cashback y puntos')),
+    body: FutureBuilder<_CashbackState>(
+      future: _state,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const CiervoLoadingState(itemCount: 4);
+        }
+        if (snapshot.hasError) {
+          return Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: CiervoErrorState(
+              title: 'No pudimos cargar cashback',
+              description: UserErrorMessage.from(snapshot.error!),
+              onRetry: () => setState(_load),
+            ),
+          );
+        }
+        final state = snapshot.data ?? _CashbackState.empty();
+        return RefreshIndicator(
+          onRefresh: () async => setState(_load),
+          child: ListView(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            children: [
+              _PointsSummary(state: state),
+              const SizedBox(height: AppSpacing.md),
+              _HowToEarn(rules: state.rules),
+              const SizedBox(height: AppSpacing.md),
+              _Transactions(transactions: state.transactions),
+              const SizedBox(height: AppSpacing.md),
+              FilledButton.icon(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(builder: (_) => const QrWalletPage()),
                 ),
-              );
-            }
-            final state = snapshot.data ?? _CashbackState.empty();
-            return RefreshIndicator(
-              onRefresh: () async => setState(_load),
-              child: ListView(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                children: [
-                  _PointsSummary(state: state),
-                  const SizedBox(height: AppSpacing.md),
-                  _HowToEarn(rules: state.rules),
-                  const SizedBox(height: AppSpacing.md),
-                  _Transactions(transactions: state.transactions),
-                  const SizedBox(height: AppSpacing.md),
-                  FilledButton.icon(
-                    onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const QrWalletPage(),
-                      ),
-                    ),
-                    icon: const Icon(Icons.redeem_outlined),
-                    label: const Text('Ver beneficios disponibles'),
-                  ),
-                  if (state.errors.isNotEmpty) ...[
-                    const SizedBox(height: AppSpacing.md),
-                    CiervoCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: state.errors.map(Text.new).toList(),
-                      ),
-                    ),
-                  ],
-                ],
+                icon: const Icon(Icons.redeem_outlined),
+                label: const Text('Ver beneficios disponibles'),
               ),
-            );
-          },
-        ),
-      );
+              if (state.errors.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.md),
+                CiervoCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: state.errors.map(Text.new).toList(),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    ),
+  );
 }
 
 class _PointsSummary extends StatelessWidget {
@@ -133,20 +131,24 @@ class _PointsSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => CiervoCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Balance', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              state.points == null ? 'Puntos no disponibles' : '${state.points} puntos',
-              style: Theme.of(context).textTheme.displaySmall,
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text('Cashback acumulado y multiplicador se calculan segun tu membresia.'),
-          ],
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Balance', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          state.points == null
+              ? 'Puntos no disponibles'
+              : '${state.points} puntos',
+          style: Theme.of(context).textTheme.displaySmall,
         ),
-      );
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          'Cashback acumulado y multiplicador se calculan segun tu membresia.',
+        ),
+      ],
+    ),
+  );
 }
 
 class _HowToEarn extends StatelessWidget {
@@ -168,9 +170,14 @@ class _HowToEarn extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Como ganar puntos', style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            'Como ganar puntos',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: AppSpacing.sm),
-          ...rules.where((rule) => rule.isActive).map(
+          ...rules
+              .where((rule) => rule.isActive)
+              .map(
                 (rule) => Padding(
                   padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                   child: ListTile(
@@ -217,10 +224,14 @@ class _Transactions extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Historial', style: Theme.of(context).textTheme.titleLarge),
-          ...transactions.take(20).map(
+          ...transactions
+              .take(20)
+              .map(
                 (item) => ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: Text('${item['description'] ?? item['type'] ?? 'Movimiento'}'),
+                  title: Text(
+                    '${item['description'] ?? item['type'] ?? 'Movimiento'}',
+                  ),
                   subtitle: Text('${item['createdAt'] ?? item['date'] ?? ''}'),
                   trailing: Text('${item['points'] ?? item['amount'] ?? ''}'),
                 ),
@@ -240,11 +251,11 @@ class _CashbackState {
   });
 
   factory _CashbackState.empty() => const _CashbackState(
-        rules: [],
-        points: null,
-        transactions: [],
-        errors: [],
-      );
+    rules: [],
+    points: null,
+    transactions: [],
+    errors: [],
+  );
 
   final List<CashbackRule> rules;
   final int? points;

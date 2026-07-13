@@ -40,10 +40,8 @@ class KidParentalRulesHubPage extends StatelessWidget {
             subtitle: 'Tarjeta del tutor cuando no hay saldo Kids.',
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (_) => KidPaymentSourcePage(
-                  kidId: kidId,
-                  kidName: kidName,
-                ),
+                builder: (_) =>
+                    KidPaymentSourcePage(kidId: kidId, kidName: kidName),
               ),
             ),
           ),
@@ -102,9 +100,7 @@ class KidParentalRulesHubPage extends StatelessWidget {
             title: 'Geocerca',
             subtitle: 'Zona segura para pagos.',
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => KidGeofencePage(kidId: kidId),
-              ),
+              MaterialPageRoute(builder: (_) => KidGeofencePage(kidId: kidId)),
             ),
           ),
           _RuleTile(

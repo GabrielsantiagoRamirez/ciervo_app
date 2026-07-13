@@ -94,7 +94,9 @@ class _DeliveryAddressMapPickerState extends State<DeliveryAddressMapPicker> {
         if (lat == null || lng == null) {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No encontramos coordenadas para esa dirección.')),
+            const SnackBar(
+              content: Text('No encontramos coordenadas para esa dirección.'),
+            ),
           );
           return;
         }
@@ -196,10 +198,11 @@ class _DeliveryAddressMapPickerState extends State<DeliveryAddressMapPicker> {
                   final controller = _mapController;
                   if (controller == null) return;
                   final bounds = await controller.getVisibleRegion();
-                  final lat = (bounds.northeast.latitude +
-                          bounds.southwest.latitude) /
+                  final lat =
+                      (bounds.northeast.latitude + bounds.southwest.latitude) /
                       2;
-                  final lng = (bounds.northeast.longitude +
+                  final lng =
+                      (bounds.northeast.longitude +
                           bounds.southwest.longitude) /
                       2;
                   await _reverseGeocode(LatLng(lat, lng));
@@ -234,7 +237,9 @@ class _DeliveryAddressMapPickerState extends State<DeliveryAddressMapPicker> {
               child: Text(
                 _loadingAddress
                     ? 'Obteniendo dirección…'
-                    : (_address.isEmpty ? 'Mueve el mapa al punto de entrega' : _address),
+                    : (_address.isEmpty
+                          ? 'Mueve el mapa al punto de entrega'
+                          : _address),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),

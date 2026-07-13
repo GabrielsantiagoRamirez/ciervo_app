@@ -10,19 +10,19 @@ class AuthTokenRefresher {
   AuthTokenRefresher({
     required AppConfig config,
     required SessionManager sessionManager,
-  })  : _config = config,
-        _sessionManager = sessionManager,
-        _dio = Dio(
-          BaseOptions(
-            baseUrl: config.apiBaseUrl,
-            connectTimeout: config.connectTimeout,
-            receiveTimeout: config.receiveTimeout,
-            headers: const {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json',
-            },
-          ),
-        );
+  }) : _config = config,
+       _sessionManager = sessionManager,
+       _dio = Dio(
+         BaseOptions(
+           baseUrl: config.apiBaseUrl,
+           connectTimeout: config.connectTimeout,
+           receiveTimeout: config.receiveTimeout,
+           headers: const {
+             'Accept': 'application/json',
+             'Content-Type': 'application/json',
+           },
+         ),
+       );
 
   final AppConfig _config;
   final SessionManager _sessionManager;
@@ -52,10 +52,7 @@ class AuthTokenRefresher {
       }
 
       await _sessionManager.saveTokens(
-        AuthTokens(
-          accessToken: accessToken,
-          refreshToken: nextRefreshToken,
-        ),
+        AuthTokens(accessToken: accessToken, refreshToken: nextRefreshToken),
       );
       return accessToken;
     } catch (error) {

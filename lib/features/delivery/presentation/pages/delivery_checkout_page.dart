@@ -14,9 +14,9 @@ class DeliveryCheckoutPage extends OrderCheckoutPage {
     DeliveryAvailability? availability,
     super.key,
   }) : super(
-          initialFulfillment: availability?.deliveryAvailable == true
-              ? OrderFulfillmentType.delivery
-              : null,
-          deliveryAvailability: availability,
-        );
+         initialFulfillment: availability?.deliveryAvailable == true
+             ? OrderFulfillmentType.delivery
+             : null,
+         deliveryAvailability: availability,
+       );
 }

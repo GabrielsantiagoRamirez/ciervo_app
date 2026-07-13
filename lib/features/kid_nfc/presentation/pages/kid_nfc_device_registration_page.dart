@@ -55,9 +55,9 @@ class _KidNfcDeviceRegistrationPageState
     if (!mounted) return;
     setState(() => _scanning = false);
     if (uid == null || uid.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No pudimos leer el UID.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('No pudimos leer el UID.')));
       return;
     }
     setState(() => _uidController.text = uid);

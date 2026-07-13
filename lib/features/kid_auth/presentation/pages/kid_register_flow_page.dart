@@ -131,7 +131,9 @@ class _KidRegisterFlowPageState extends State<KidRegisterFlowPage> {
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   List<KidDocumentOption> get _documentOptions {
@@ -154,10 +156,7 @@ class _KidRegisterFlowPageState extends State<KidRegisterFlowPage> {
       body: PageView(
         controller: _pageController,
         physics: const NeverScrollableScrollPhysics(),
-        children: [
-          _buildVerifyStep(context),
-          _buildRegisterStep(context),
-        ],
+        children: [_buildVerifyStep(context), _buildRegisterStep(context)],
       ),
     );
   }
@@ -228,7 +227,9 @@ class _KidRegisterFlowPageState extends State<KidRegisterFlowPage> {
             child: ListTile(
               leading: const Icon(Icons.verified_user_outlined),
               title: const Text('Familia confirmada'),
-              subtitle: Text('Te vincularás con la familia de ${guardian.name}'),
+              subtitle: Text(
+                'Te vincularás con la familia de ${guardian.name}',
+              ),
             ),
           ),
         const SizedBox(height: AppSpacing.md),
@@ -236,10 +237,7 @@ class _KidRegisterFlowPageState extends State<KidRegisterFlowPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                'Tus datos',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+              Text('Tus datos', style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: AppSpacing.lg),
               TextField(
                 controller: _firstName,
@@ -261,12 +259,15 @@ class _KidRegisterFlowPageState extends State<KidRegisterFlowPage> {
                 onTap: () async {
                   final selected = await showCiervoDatePicker(
                     context,
-                    initialDate: _birthDate ??
+                    initialDate:
+                        _birthDate ??
                         DateTime.now().subtract(const Duration(days: 365 * 12)),
-                    firstDate:
-                        DateTime.now().subtract(const Duration(days: 365 * 26)),
-                    lastDate:
-                        DateTime.now().subtract(const Duration(days: 365 * 10)),
+                    firstDate: DateTime.now().subtract(
+                      const Duration(days: 365 * 26),
+                    ),
+                    lastDate: DateTime.now().subtract(
+                      const Duration(days: 365 * 10),
+                    ),
                     helpText: 'Fecha de nacimiento',
                   );
                   if (selected != null) {

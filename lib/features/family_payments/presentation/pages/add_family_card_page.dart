@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/country/country_registration.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/layout/responsive_layout.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -19,13 +20,20 @@ import 'mercado_pago_3ds_page.dart';
 enum _AddCardStep { form, validating, authenticating, success, error }
 
 class AddFamilyCardPage extends StatelessWidget {
-  const AddFamilyCardPage({super.key});
+  const AddFamilyCardPage({this.cubit, super.key});
+
+  final FamilyPaymentMethodsCubit? cubit;
 
   @override
   Widget build(BuildContext context) {
+    final view = const _AddFamilyCardView();
+    if (cubit != null) {
+      return BlocProvider.value(value: cubit!, child: view);
+    }
     return BlocProvider(
-      create: (_) => FamilyPaymentMethodsCubit(getIt<FamilyPaymentsRepository>()),
-      child: const _AddFamilyCardView(),
+      create: (_) =>
+          FamilyPaymentMethodsCubit(getIt<FamilyPaymentsRepository>()),
+      child: view,
     );
   }
 }
@@ -49,6 +57,46 @@ class _AddFamilyCardViewState extends State<_AddFamilyCardView> {
   String? _error;
   bool _submitting = false;
   bool _obscureCvv = false;
+  String _countryCode = CountryRegistration.defaultCountryCode();
+  late String _identificationType =
+      CountryRegistration.mercadoPagoIdentificationType(_countryCode);
+  bool _resolvingCountry = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _resolvePaymentCountry();
+  }
+
+  Future<void> _resolvePaymentCountry() async {
+    try {
+      final configResult = await getIt<PaymentsRepository>().config();
+      final fromConfig = configResult.when(
+        success: (config) =>
+            CountryRegistration.countryCodeFromCurrency(config.currency),
+        failure: (_) => null,
+      );
+      if (!mounted) return;
+      final resolved = fromConfig ?? CountryRegistration.defaultCountryCode();
+      setState(() {
+        _countryCode = resolved;
+        _identificationType =
+            CountryRegistration.mercadoPagoIdentificationType(resolved);
+        _resolvingCountry = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _resolvingCountry = false);
+    }
+  }
+
+  void _onCountryChanged(String countryCode) {
+    setState(() {
+      _countryCode = countryCode;
+      _identificationType =
+          CountryRegistration.mercadoPagoIdentificationType(countryCode);
+    });
+  }
 
   @override
   void dispose() {
@@ -63,7 +111,9 @@ class _AddFamilyCardViewState extends State<_AddFamilyCardView> {
   }
 
   String? _validateForm() {
-    final numberError = CardValidator.validateCardNumber(_numberController.text);
+    final numberError = CardValidator.validateCardNumber(
+      _numberController.text,
+    );
     if (numberError != null) return numberError;
     try {
       MercadoPagoCardExpiration.parse(
@@ -87,9 +137,9 @@ class _AddFamilyCardViewState extends State<_AddFamilyCardView> {
     if (_submitting) return;
     final validationError = _validateForm();
     if (validationError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(validationError)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(validationError)));
       return;
     }
 
@@ -127,7 +177,7 @@ class _AddFamilyCardViewState extends State<_AddFamilyCardView> {
         expirationMonth: expiration.month,
         expirationYear: expiration.year,
         cardholderName: _nameController.text,
-        identificationType: 'CC',
+        identificationType: _identificationType,
         identificationNumber: _documentController.text.trim(),
       );
 
@@ -153,20 +203,32 @@ class _AddFamilyCardViewState extends State<_AddFamilyCardView> {
             : _aliasController.text.trim(),
       );
 
+      if (flow.cardId.isEmpty) {
+        throw MercadoPagoTokenizationException(
+          'La tarjeta se procesó pero no recibimos confirmación del servidor. '
+          'Revisa Métodos de pago en unos segundos.',
+        );
+      }
+
       if (flow.requires3ds) {
         setState(() => _step = _AddCardStep.authenticating);
         final verified = await Navigator.of(context).push<bool>(
           MaterialPageRoute(
-            builder: (_) => MercadoPago3dsPage(
-              cardId: flow.cardId,
-              verificationUrl: flow.verificationUrl,
+            builder: (_) => BlocProvider.value(
+              value: cubit,
+              child: MercadoPago3dsPage(
+                cardId: flow.cardId,
+                verificationUrl: flow.verificationUrl,
+              ),
             ),
           ),
         );
         if (verified != true) {
           setState(() {
             _step = _AddCardStep.error;
-            _error = 'No se completó la autenticación 3DS.';
+            _error =
+                cubit.state.errorMessage ??
+                'No se completó la autenticación 3DS.';
             _submitting = false;
           });
           return;
@@ -176,7 +238,8 @@ class _AddFamilyCardViewState extends State<_AddFamilyCardView> {
         if (!verified) {
           setState(() {
             _step = _AddCardStep.error;
-            _error = 'No pudimos validar la tarjeta.';
+            _error =
+                cubit.state.errorMessage ?? 'No pudimos validar la tarjeta.';
             _submitting = false;
           });
           return;
@@ -188,6 +251,9 @@ class _AddFamilyCardViewState extends State<_AddFamilyCardView> {
         _step = _AddCardStep.success;
         _submitting = false;
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tarjeta registrada correctamente.')),
+      );
       await Future<void>.delayed(const Duration(milliseconds: 900));
       if (mounted) Navigator.of(context).pop(true);
     } catch (error) {
@@ -206,21 +272,21 @@ class _AddFamilyCardViewState extends State<_AddFamilyCardView> {
       appBar: AppBar(title: const Text('Agregar tarjeta')),
       body: switch (_step) {
         _AddCardStep.validating => _statusView(
-            context,
-            title: 'Validando...',
-            subtitle: 'Estamos verificando tu tarjeta de forma segura.',
-          ),
+          context,
+          title: 'Validando...',
+          subtitle: 'Estamos verificando tu tarjeta de forma segura.',
+        ),
         _AddCardStep.authenticating => _statusView(
-            context,
-            title: 'Autenticando...',
-            subtitle: 'Completa la verificación de tu banco.',
-          ),
+          context,
+          title: 'Autenticando...',
+          subtitle: 'Completa la verificación de tu banco.',
+        ),
         _AddCardStep.success => _statusView(
-            context,
-            title: 'Tarjeta agregada',
-            subtitle: 'Tu tarjeta quedó lista para pagos familiares.',
-            success: true,
-          ),
+          context,
+          title: 'Tarjeta agregada',
+          subtitle: 'Tu tarjeta quedó lista para pagos familiares.',
+          success: true,
+        ),
         _AddCardStep.error => _errorView(context),
         _ => _formView(context),
       },
@@ -239,10 +305,36 @@ class _AddFamilyCardViewState extends State<_AddFamilyCardView> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Tus datos se tokenizan con Mercado Pago. CIERVO nunca recibe el número completo ni el CVV.',
+                  'Tus datos se tokenizan con Mercado Pago según el país de tu cuenta. '
+                  'CIERVO nunca recibe el número completo ni el CVV.',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: AppSpacing.lg),
+                DropdownButtonFormField<String>(
+                  key: ValueKey('country-$_countryCode'),
+                  initialValue: _countryCode,
+                  decoration: const InputDecoration(
+                    labelText: 'País de la tarjeta / Mercado Pago',
+                    prefixIcon: Icon(Icons.public),
+                  ),
+                  items: CountryRegistration.paymentCountryCodes
+                      .map(
+                        (code) => DropdownMenuItem(
+                          value: code,
+                          child: Text(
+                            '${CountryRegistration.countryLabel(code)} '
+                            '(${CountryRegistration.currencyForCountry(code)})',
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: _resolvingCountry || _submitting
+                      ? null
+                      : (value) {
+                          if (value != null) _onCountryChanged(value);
+                        },
+                ),
+                const SizedBox(height: AppSpacing.md),
                 TextField(
                   controller: _aliasController,
                   decoration: const InputDecoration(
@@ -297,7 +389,9 @@ class _AddFamilyCardViewState extends State<_AddFamilyCardView> {
                         decoration: InputDecoration(
                           labelText: 'CVV',
                           suffixIcon: IconButton(
-                            tooltip: _obscureCvv ? 'Mostrar CVV' : 'Ocultar CVV',
+                            tooltip: _obscureCvv
+                                ? 'Mostrar CVV'
+                                : 'Ocultar CVV',
                             onPressed: () =>
                                 setState(() => _obscureCvv = !_obscureCvv),
                             icon: Icon(
@@ -321,12 +415,37 @@ class _AddFamilyCardViewState extends State<_AddFamilyCardView> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
+                DropdownButtonFormField<String>(
+                  key: ValueKey('doc-$_countryCode-$_identificationType'),
+                  initialValue: _identificationType,
+                  decoration: const InputDecoration(
+                    labelText: 'Tipo de documento',
+                    prefixIcon: Icon(Icons.badge_outlined),
+                  ),
+                  items: CountryRegistration.adultDocumentOptions(_countryCode)
+                      .map(
+                        (option) => DropdownMenuItem(
+                          value: option.code,
+                          child: Text(option.label),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => _identificationType = value);
+                    }
+                  },
+                ),
+                const SizedBox(height: AppSpacing.md),
                 TextField(
                   controller: _documentController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
+                  keyboardType: TextInputType.text,
+                  decoration: InputDecoration(
                     labelText: 'Documento del titular',
-                    prefixIcon: Icon(Icons.badge_outlined),
+                    prefixIcon: const Icon(Icons.numbers_outlined),
+                    helperText: CountryRegistration.documentHelperText(
+                      _countryCode,
+                    ),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
@@ -386,11 +505,21 @@ class _AddFamilyCardViewState extends State<_AddFamilyCardView> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 56, color: Theme.of(context).colorScheme.error),
+            Icon(
+              Icons.error_outline,
+              size: 56,
+              color: Theme.of(context).colorScheme.error,
+            ),
             const SizedBox(height: AppSpacing.lg),
-            Text('No pudimos agregar la tarjeta', style: Theme.of(context).textTheme.headlineSmall),
+            Text(
+              'No pudimos agregar la tarjeta',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
             const SizedBox(height: AppSpacing.sm),
-            Text(_error ?? 'Intenta nuevamente en unos segundos.', textAlign: TextAlign.center),
+            Text(
+              _error ?? 'Intenta nuevamente en unos segundos.',
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: AppSpacing.lg),
             CiervoButton(
               label: 'Reintentar',

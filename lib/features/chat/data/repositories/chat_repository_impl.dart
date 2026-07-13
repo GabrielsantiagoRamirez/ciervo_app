@@ -123,42 +123,45 @@ class ChatRepositoryImpl implements ChatRepository {
   );
 
   @override
-  Future<Result<ChatMessage>> sendMedia(String id, String path, String fileName) =>
-      _guard(() async {
-        final uploaded = await const ChatImageUploader().uploadForConversation(
-          conversationId: id,
-          localPath: path,
-        );
-        if (uploaded != null) {
-          return messageFromJson(
-            await _remote.sendTypedMessage(
-              id,
-              messageType: 'Image',
-              body: '',
-              mediaUrl: uploaded.mediaUrl,
-              storagePath: uploaded.storagePath,
-              mediaType: uploaded.mediaType,
-              attachmentUrl: uploaded.mediaUrl,
-            ),
-          );
-        }
-        return messageFromJson(await _remote.sendMedia(id, path, fileName));
-      });
+  Future<Result<ChatMessage>> sendMedia(
+    String id,
+    String path,
+    String fileName,
+  ) => _guard(() async {
+    final uploaded = await const ChatImageUploader().uploadForConversation(
+      conversationId: id,
+      localPath: path,
+    );
+    if (uploaded != null) {
+      return messageFromJson(
+        await _remote.sendTypedMessage(
+          id,
+          messageType: 'Image',
+          body: '',
+          mediaUrl: uploaded.mediaUrl,
+          storagePath: uploaded.storagePath,
+          mediaType: uploaded.mediaType,
+          attachmentUrl: uploaded.mediaUrl,
+        ),
+      );
+    }
+    return messageFromJson(await _remote.sendMedia(id, path, fileName));
+  });
 
   @override
   Future<Result<void>> markAsRead(String id) => _guard(() async {
-        await _remote.markAsRead(id);
-      });
+    await _remote.markAsRead(id);
+  });
 
   @override
   Future<Result<List<ChatButton>>> buttons() => _guard(() async {
-        final raw = await _remote.buttons();
-        return ChatButtonDto.listFrom(raw)
-            .map((dto) => dto.toDomain())
-            .where((button) => button.isVisibleOnMobile)
-            .toList()
-          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-      });
+    final raw = await _remote.buttons();
+    return ChatButtonDto.listFrom(raw)
+        .map((dto) => dto.toDomain())
+        .where((button) => button.isVisibleOnMobile)
+        .toList()
+      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+  });
 
   Future<Result<T>> _guard<T>(Future<T> Function() action) async {
     try {

@@ -34,9 +34,7 @@ class ChatInboxRepository {
             )
             .toList();
         final internalIds = internalItems.map((item) => item.id).toSet();
-        final chatIds = internalConversations
-            .map((c) => c.id)
-            .toSet();
+        final chatIds = internalConversations.map((c) => c.id).toSet();
         final merged = List<ChatInboxItem>.from(internalItems);
 
         familyResult.when(

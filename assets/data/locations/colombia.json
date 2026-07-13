@@ -1,0 +1,265 @@
+{
+  "source": "DANE DIVIPOLA (seed v1)",
+  "countryCode": "CO",
+  "departments": [
+    {
+      "code": "05",
+      "name": "Antioquia",
+      "cities": [
+        {"code": "05001", "name": "Medellín"},
+        {"code": "05088", "name": "Bello"},
+        {"code": "05360", "name": "Itagüí"},
+        {"code": "05631", "name": "Sabaneta"},
+        {"code": "05266", "name": "Envigado"}
+      ]
+    },
+    {
+      "code": "08",
+      "name": "Atlántico",
+      "cities": [
+        {"code": "08001", "name": "Barranquilla"},
+        {"code": "08296", "name": "Galapa"},
+        {"code": "08573", "name": "Puerto Colombia"},
+        {"code": "08758", "name": "Soledad"}
+      ]
+    },
+    {
+      "code": "11",
+      "name": "Bogotá D.C.",
+      "cities": [
+        {"code": "11001", "name": "Bogotá D.C."}
+      ]
+    },
+    {
+      "code": "13",
+      "name": "Bolívar",
+      "cities": [
+        {"code": "13001", "name": "Cartagena"},
+        {"code": "13647", "name": "San Juan Nepomuceno"},
+        {"code": "13654", "name": "San Pablo"}
+      ]
+    },
+    {
+      "code": "15",
+      "name": "Boyacá",
+      "cities": [
+        {"code": "15001", "name": "Tunja"},
+        {"code": "15238", "name": "Duitama"},
+        {"code": "15759", "name": "Sogamoso"}
+      ]
+    },
+    {
+      "code": "17",
+      "name": "Caldas",
+      "cities": [
+        {"code": "17001", "name": "Manizales"},
+        {"code": "17380", "name": "La Dorada"},
+        {"code": "17873", "name": "Villamaría"}
+      ]
+    },
+    {
+      "code": "25",
+      "name": "Cundinamarca",
+      "cities": [
+        {"code": "25001", "name": "Agua de Dios"},
+        {"code": "25019", "name": "Albán"},
+        {"code": "25035", "name": "Anapoima"},
+        {"code": "25040", "name": "Anolaima"},
+        {"code": "25053", "name": "Arbeláez"},
+        {"code": "25086", "name": "Beltrán"},
+        {"code": "25095", "name": "Bituima"},
+        {"code": "25099", "name": "Bojacá"},
+        {"code": "25120", "name": "Cabrera"},
+        {"code": "25123", "name": "Cachipay"},
+        {"code": "25126", "name": "Cajicá"},
+        {"code": "25148", "name": "Caparrapí"},
+        {"code": "25151", "name": "Cáqueza"},
+        {"code": "25154", "name": "Carmen de Carupa"},
+        {"code": "25168", "name": "Chaguaní"},
+        {"code": "25175", "name": "Chía"},
+        {"code": "25178", "name": "Chipaque"},
+        {"code": "25181", "name": "Choachí"},
+        {"code": "25183", "name": "Chocontá"},
+        {"code": "25200", "name": "Cogua"},
+        {"code": "25214", "name": "Cota"},
+        {"code": "25224", "name": "Cucunubá"},
+        {"code": "25245", "name": "El Colegio"},
+        {"code": "25258", "name": "El Peñón"},
+        {"code": "25260", "name": "El Rosal"},
+        {"code": "25269", "name": "Facatativá"},
+        {"code": "25279", "name": "Fómeque"},
+        {"code": "25281", "name": "Fosca"},
+        {"code": "25286", "name": "Funza"},
+        {"code": "25288", "name": "Fúquene"},
+        {"code": "25290", "name": "Fusagasugá"},
+        {"code": "25293", "name": "Gachalá"},
+        {"code": "25295", "name": "Gachancipá"},
+        {"code": "25297", "name": "Gachetá"},
+        {"code": "25299", "name": "Gama"},
+        {"code": "25307", "name": "Girardot"},
+        {"code": "25312", "name": "Granada"},
+        {"code": "25317", "name": "Guachetá"},
+        {"code": "25320", "name": "Guaduas"},
+        {"code": "25322", "name": "Guasca"},
+        {"code": "25324", "name": "Guataquí"},
+        {"code": "25326", "name": "Guatavita"},
+        {"code": "25328", "name": "Guayabal de Síquima"},
+        {"code": "25335", "name": "Guayabetal"},
+        {"code": "25339", "name": "Gutiérrez"},
+        {"code": "25368", "name": "Jerusalén"},
+        {"code": "25372", "name": "Junín"},
+        {"code": "25377", "name": "La Calera"},
+        {"code": "25386", "name": "La Mesa"},
+        {"code": "25394", "name": "La Palma"},
+        {"code": "25398", "name": "La Peña"},
+        {"code": "25402", "name": "La Vega"},
+        {"code": "25407", "name": "Lenguazaque"},
+        {"code": "25426", "name": "Machetá"},
+        {"code": "25430", "name": "Madrid"},
+        {"code": "25436", "name": "Manta"},
+        {"code": "25438", "name": "Medina"},
+        {"code": "25473", "name": "Mosquera"},
+        {"code": "25483", "name": "Nariño"},
+        {"code": "25486", "name": "Nemocón"},
+        {"code": "25488", "name": "Nilo"},
+        {"code": "25489", "name": "Nimaima"},
+        {"code": "25491", "name": "Nocaima"},
+        {"code": "25506", "name": "Venecia"},
+        {"code": "25513", "name": "Pacho"},
+        {"code": "25518", "name": "Paime"},
+        {"code": "25524", "name": "Pandi"},
+        {"code": "25530", "name": "Paratebueno"},
+        {"code": "25535", "name": "Pasca"},
+        {"code": "25572", "name": "Puerto Salgar"},
+        {"code": "25580", "name": "Pulí"},
+        {"code": "25592", "name": "Quebradanegra"},
+        {"code": "25594", "name": "Quetame"},
+        {"code": "25596", "name": "Quipile"},
+        {"code": "25599", "name": "Apulo"},
+        {"code": "25612", "name": "Ricaurte"},
+        {"code": "25645", "name": "San Antonio del Tequendama"},
+        {"code": "25649", "name": "San Bernardo"},
+        {"code": "25653", "name": "San Cayetano"},
+        {"code": "25658", "name": "San Francisco"},
+        {"code": "25662", "name": "San Juan de Rioseco"},
+        {"code": "25718", "name": "Sasaima"},
+        {"code": "25736", "name": "Sesquilé"},
+        {"code": "25740", "name": "Sibaté"},
+        {"code": "25743", "name": "Silvania"},
+        {"code": "25745", "name": "Simijaca"},
+        {"code": "25754", "name": "Soacha"},
+        {"code": "25758", "name": "Sopó"},
+        {"code": "25769", "name": "Subachoque"},
+        {"code": "25772", "name": "Suesca"},
+        {"code": "25777", "name": "Supatá"},
+        {"code": "25779", "name": "Susa"},
+        {"code": "25781", "name": "Sutatausa"},
+        {"code": "25785", "name": "Tabio"},
+        {"code": "25793", "name": "Tausa"},
+        {"code": "25797", "name": "Tena"},
+        {"code": "25799", "name": "Tenjo"},
+        {"code": "25805", "name": "Tibacuy"},
+        {"code": "25807", "name": "Tibirita"},
+        {"code": "25815", "name": "Tocaima"},
+        {"code": "25817", "name": "Tocancipá"},
+        {"code": "25823", "name": "Topaipí"},
+        {"code": "25839", "name": "Ubalá"},
+        {"code": "25841", "name": "Ubaque"},
+        {"code": "25843", "name": "Villa de San Diego de Ubaté"},
+        {"code": "25845", "name": "Une"},
+        {"code": "25851", "name": "Útica"},
+        {"code": "25862", "name": "Vergara"},
+        {"code": "25867", "name": "Vianí"},
+        {"code": "25871", "name": "Villagómez"},
+        {"code": "25873", "name": "Villapinzón"},
+        {"code": "25875", "name": "Villeta"},
+        {"code": "25878", "name": "Viotá"},
+        {"code": "25885", "name": "Yacopí"},
+        {"code": "25898", "name": "Zipacón"},
+        {"code": "25899", "name": "Zipaquirá"}
+      ]
+    },
+    {
+      "code": "47",
+      "name": "Magdalena",
+      "cities": [
+        {"code": "47001", "name": "Santa Marta"},
+        {"code": "47058", "name": "Aracataca"},
+        {"code": "47268", "name": "El Banco"}
+      ]
+    },
+    {
+      "code": "50",
+      "name": "Meta",
+      "cities": [
+        {"code": "50001", "name": "Villavicencio"},
+        {"code": "50006", "name": "Acacías"},
+        {"code": "50150", "name": "Granada"}
+      ]
+    },
+    {
+      "code": "52",
+      "name": "Nariño",
+      "cities": [
+        {"code": "52001", "name": "Pasto"},
+        {"code": "52356", "name": "Ipiales"},
+        {"code": "52835", "name": "Tumaco"}
+      ]
+    },
+    {
+      "code": "54",
+      "name": "Norte de Santander",
+      "cities": [
+        {"code": "54001", "name": "Cúcuta"},
+        {"code": "54405", "name": "Los Patios"},
+        {"code": "54553", "name": "Puerto Santander"}
+      ]
+    },
+    {
+      "code": "63",
+      "name": "Quindío",
+      "cities": [
+        {"code": "63001", "name": "Armenia"},
+        {"code": "63130", "name": "Calarcá"},
+        {"code": "63272", "name": "Filandia"}
+      ]
+    },
+    {
+      "code": "66",
+      "name": "Risaralda",
+      "cities": [
+        {"code": "66001", "name": "Pereira"},
+        {"code": "66170", "name": "Dosquebradas"},
+        {"code": "66400", "name": "La Virginia"}
+      ]
+    },
+    {
+      "code": "68",
+      "name": "Santander",
+      "cities": [
+        {"code": "68001", "name": "Bucaramanga"},
+        {"code": "68276", "name": "Floridablanca"},
+        {"code": "68432", "name": "Girón"}
+      ]
+    },
+    {
+      "code": "73",
+      "name": "Tolima",
+      "cities": [
+        {"code": "73001", "name": "Ibagué"},
+        {"code": "73024", "name": "Alpujarra"},
+        {"code": "73449", "name": "Melgar"}
+      ]
+    },
+    {
+      "code": "76",
+      "name": "Valle del Cauca",
+      "cities": [
+        {"code": "76001", "name": "Cali"},
+        {"code": "76109", "name": "Buenaventura"},
+        {"code": "76111", "name": "Buga"},
+        {"code": "76892", "name": "Yumbo"}
+      ]
+    }
+  ]
+}

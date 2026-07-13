@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-import '../../../../core/di/service_locator.dart';
 import '../../domain/entities/family_payment_card.dart';
-import '../../domain/repositories/family_payments_repository.dart';
 import '../cubit/family_payment_methods_cubit.dart';
 
-class MercadoPago3dsPage extends StatefulWidget {
+/// Requiere un [FamilyPaymentMethodsCubit] en el árbol (p. ej. vía [BlocProvider.value]).
+class MercadoPago3dsPage extends StatelessWidget {
   const MercadoPago3dsPage({
     required this.cardId,
     this.verificationUrl,
@@ -18,13 +17,29 @@ class MercadoPago3dsPage extends StatefulWidget {
   final String? verificationUrl;
 
   @override
-  State<MercadoPago3dsPage> createState() => _MercadoPago3dsPageState();
+  Widget build(BuildContext context) {
+    return _MercadoPago3dsView(
+      cardId: cardId,
+      verificationUrl: verificationUrl,
+    );
+  }
 }
 
-class _MercadoPago3dsPageState extends State<MercadoPago3dsPage> {
+class _MercadoPago3dsView extends StatefulWidget {
+  const _MercadoPago3dsView({required this.cardId, this.verificationUrl});
+
+  final String cardId;
+  final String? verificationUrl;
+
+  @override
+  State<_MercadoPago3dsView> createState() => _MercadoPago3dsViewState();
+}
+
+class _MercadoPago3dsViewState extends State<_MercadoPago3dsView> {
   late final WebViewController _controller;
   bool _loading = true;
   bool _verifying = false;
+  String? _error;
 
   @override
   void initState() {
@@ -51,70 +66,101 @@ class _MercadoPago3dsPageState extends State<MercadoPago3dsPage> {
     final url = widget.verificationUrl;
     if (url != null && url.isNotEmpty) {
       _controller.loadRequest(Uri.parse(url));
+    } else {
+      _loading = false;
     }
   }
 
   Future<void> _completeVerification() async {
     if (_verifying) return;
-    setState(() => _verifying = true);
+    setState(() {
+      _verifying = true;
+      _error = null;
+    });
     final cubit = context.read<FamilyPaymentMethodsCubit>();
     final ok = await cubit.verifyCard(widget.cardId);
     if (!mounted) return;
-    Navigator.of(context).pop(ok);
+    if (ok) {
+      Navigator.of(context).pop(true);
+      return;
+    }
+    setState(() {
+      _verifying = false;
+      _error =
+          cubit.state.errorMessage ??
+          'No pudimos validar la tarjeta después de la autenticación.';
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => FamilyPaymentMethodsCubit(getIt<FamilyPaymentsRepository>()),
-      child: Scaffold(
-        appBar: AppBar(title: const Text('Autenticación 3DS')),
-        body: Column(
-          children: [
-            if (_loading || _verifying)
-              const LinearProgressIndicator(minHeight: 2),
-            Expanded(
-              child: widget.verificationUrl == null ||
-                      widget.verificationUrl!.isEmpty
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text(
-                              'Confirma la autenticación cuando hayas completado el proceso con tu banco.',
-                            ),
-                            const SizedBox(height: 16),
-                            FilledButton(
-                              onPressed: _completeVerification,
-                              child: const Text('Ya autentiqué mi tarjeta'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  : WebViewWidget(controller: _controller),
+    return Scaffold(
+      appBar: AppBar(title: const Text('Autenticación 3DS')),
+      body: Column(
+        children: [
+          if (_loading || _verifying)
+            const LinearProgressIndicator(minHeight: 2),
+          if (_error != null)
+            MaterialBanner(
+              content: Text(_error!),
+              actions: [
+                TextButton(
+                  onPressed: _verifying ? null : _completeVerification,
+                  child: const Text('Reintentar'),
+                ),
+              ],
             ),
-          ],
-        ),
+          Expanded(
+            child:
+                widget.verificationUrl == null ||
+                    widget.verificationUrl!.isEmpty
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            'Confirma la autenticación cuando hayas completado el proceso con tu banco.',
+                          ),
+                          const SizedBox(height: 16),
+                          FilledButton(
+                            onPressed: _verifying
+                                ? null
+                                : _completeVerification,
+                            child: Text(
+                              _verifying
+                                  ? 'Validando...'
+                                  : 'Ya autentiqué mi tarjeta',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : WebViewWidget(controller: _controller),
+          ),
+        ],
       ),
     );
   }
 }
 
+/// Requiere un [FamilyPaymentMethodsCubit] en el árbol (p. ej. vía [BlocProvider.value]).
 class EditFamilyCardAliasPage extends StatefulWidget {
   const EditFamilyCardAliasPage({required this.card, super.key});
 
   final FamilyPaymentCard card;
 
   @override
-  State<EditFamilyCardAliasPage> createState() => _EditFamilyCardAliasPageState();
+  State<EditFamilyCardAliasPage> createState() =>
+      _EditFamilyCardAliasPageState();
 }
 
 class _EditFamilyCardAliasPageState extends State<EditFamilyCardAliasPage> {
   late final TextEditingController _controller;
   bool _saving = false;
+  String? _error;
 
   @override
   void initState() {
@@ -129,41 +175,55 @@ class _EditFamilyCardAliasPageState extends State<EditFamilyCardAliasPage> {
   }
 
   Future<void> _save() async {
-    setState(() => _saving = true);
-    final ok = await context.read<FamilyPaymentMethodsCubit>().updateAlias(
-          cardId: widget.card.id,
-          alias: _controller.text.trim(),
-        );
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    final cubit = context.read<FamilyPaymentMethodsCubit>();
+    final ok = await cubit.updateAlias(
+      cardId: widget.card.id,
+      alias: _controller.text.trim(),
+    );
     if (!mounted) return;
-    setState(() => _saving = false);
-    if (ok) Navigator.of(context).pop(true);
+    if (ok) {
+      Navigator.of(context).pop(true);
+      return;
+    }
+    setState(() {
+      _saving = false;
+      _error = cubit.state.errorMessage ?? 'No pudimos guardar el alias.';
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => FamilyPaymentMethodsCubit(getIt<FamilyPaymentsRepository>()),
-      child: Scaffold(
-        appBar: AppBar(title: const Text('Editar alias')),
-        body: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextField(
-                controller: _controller,
-                decoration: InputDecoration(
-                  labelText: 'Alias',
-                  helperText: widget.card.maskedNumber,
-                ),
+    return Scaffold(
+      appBar: AppBar(title: const Text('Editar alias')),
+      body: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (_error != null) ...[
+              Text(
+                _error!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: _saving ? null : _save,
-                child: Text(_saving ? 'Guardando...' : 'Guardar alias'),
-              ),
+              const SizedBox(height: 12),
             ],
-          ),
+            TextField(
+              controller: _controller,
+              decoration: InputDecoration(
+                labelText: 'Alias',
+                helperText: widget.card.maskedNumber,
+              ),
+            ),
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: _saving ? null : _save,
+              child: Text(_saving ? 'Guardando...' : 'Guardar alias'),
+            ),
+          ],
         ),
       ),
     );

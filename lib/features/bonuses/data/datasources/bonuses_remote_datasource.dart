@@ -39,15 +39,17 @@ class DioBonusesRemoteDataSource implements BonusesRemoteDataSource {
 
   @override
   Future<BonusDto> claim(String bonusId) async {
-    final response =
-        await _client.dio.post<dynamic>('/api/bonuses/$bonusId/claim');
+    final response = await _client.dio.post<dynamic>(
+      '/api/bonuses/$bonusId/claim',
+    );
     return BonusDto.fromJson(_map(unwrapApiResponse(response.data)));
   }
 
   @override
   Future<BonusDto> redeem(String bonusId) async {
-    final response =
-        await _client.dio.post<dynamic>('/api/bonuses/$bonusId/redeem');
+    final response = await _client.dio.post<dynamic>(
+      '/api/bonuses/$bonusId/redeem',
+    );
     return BonusDto.fromJson(_map(unwrapApiResponse(response.data)));
   }
 
@@ -73,5 +75,5 @@ class DioBonusesRemoteDataSource implements BonusesRemoteDataSource {
 Map<String, dynamic> _map(dynamic value) => value is Map<String, dynamic>
     ? value
     : value is Map
-        ? Map<String, dynamic>.from(value)
-        : <String, dynamic>{'id': '$value'};
+    ? Map<String, dynamic>.from(value)
+    : <String, dynamic>{'id': '$value'};

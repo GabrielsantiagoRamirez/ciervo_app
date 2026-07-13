@@ -6,7 +6,9 @@ abstract final class ReceiptShareText {
     final buffer = StringBuffer()
       ..writeln('Comprobante CIERVO')
       ..writeln(receipt.title)
-      ..writeln('Valor: ${receipt.currency} ${receipt.amount.toStringAsFixed(0)}')
+      ..writeln(
+        'Valor: ${receipt.currency} ${receipt.amount.toStringAsFixed(0)}',
+      )
       ..writeln('Estado: ${receipt.status}');
     if (receipt.description != null && receipt.description!.isNotEmpty) {
       buffer.writeln('Concepto: ${receipt.description}');
@@ -15,7 +17,8 @@ abstract final class ReceiptShareText {
       buffer.writeln('Fecha: ${receipt.date!.toLocal()}');
     }
     buffer.writeln('Referencia: ${receipt.id}');
-    if (receipt.publicReceiptUrl != null && receipt.publicReceiptUrl!.isNotEmpty) {
+    if (receipt.publicReceiptUrl != null &&
+        receipt.publicReceiptUrl!.isNotEmpty) {
       buffer.writeln(receipt.publicReceiptUrl);
     } else {
       buffer.writeln('¡Gracias por confiar en CIERVO!');

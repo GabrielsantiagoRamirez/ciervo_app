@@ -14,7 +14,8 @@ class ChildWalletCardView {
     final source = _unwrapCardJson(json);
     return ChildWalletCardView(
       id: _id(source),
-      displayName: _optional(source, const [
+      displayName:
+          _optional(source, const [
             'displayName',
             'DisplayName',
             'name',
@@ -82,7 +83,8 @@ class ChildWalletCardView {
   }
 
   static String _id(Map<String, dynamic> json) {
-    final raw = json['id'] ??
+    final raw =
+        json['id'] ??
         json['Id'] ??
         json['cardId'] ??
         json['CardId'] ??
@@ -137,8 +139,12 @@ class ChildWalletCardView {
     final statusId = json['statusId'] ?? json['StatusId'];
     if (statusId == 0 || statusId == '0') return true;
     final status =
-        _optional(json, const ['status', 'Status', 'statusName'])?.toLowerCase() ??
-            '';
+        _optional(json, const [
+          'status',
+          'Status',
+          'statusName',
+        ])?.toLowerCase() ??
+        '';
     return status.contains('block');
   }
 }

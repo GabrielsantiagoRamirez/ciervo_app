@@ -1,3 +1,4 @@
+import '../../../../core/country/country_registration.dart';
 import '../../../../core/errors/error_mapper.dart';
 import '../../../../core/result/result.dart';
 import '../../../payments/domain/entities/payment_intent.dart';
@@ -69,22 +70,43 @@ class WalletRepositoryImpl implements WalletRepository {
   Future<Result<RechargeIntent>> createRechargeIntent({
     required String cardId,
     required double amount,
+    String? currency,
   }) async {
-    final configResult = await _payments.config();
-    final currency = configResult.when(
-      success: (config) => config.currency,
-      failure: (_) => 'COP',
-    );
-    final key = 'wallet-recharge-$cardId-${DateTime.now().microsecondsSinceEpoch}';
+    // Preferir la moneda de la tarjeta (CLP/COP/…). El config global y el
+    // locale del dispositivo caen en COP/Colombia y abren Mercado Pago CO.
+    final resolvedCurrency = await _resolveRechargeCurrency(currency);
+    final key =
+        'wallet-recharge-$cardId-${DateTime.now().microsecondsSinceEpoch}';
     final result = await _payments.createWalletRecharge(
       walletCardId: cardId,
       amount: amount,
-      currency: currency,
+      currency: resolvedCurrency,
       idempotencyKey: key,
     );
     return result.when(
       success: (intent) => Success(_mapIntent(intent)),
       failure: (error) => Failure(error),
+    );
+  }
+
+  Future<String> _resolveRechargeCurrency(String? preferred) async {
+    final fromCard = preferred?.trim().toUpperCase();
+    if (fromCard != null && fromCard.isNotEmpty) {
+      return fromCard;
+    }
+
+    final configResult = await _payments.config();
+    return configResult.when(
+      success: (config) {
+        final fromConfig = config.currency.trim().toUpperCase();
+        if (fromConfig.isNotEmpty) return fromConfig;
+        return CountryRegistration.currencyForCountry(
+          CountryRegistration.defaultCountryCode(),
+        );
+      },
+      failure: (_) => CountryRegistration.currencyForCountry(
+        CountryRegistration.defaultCountryCode(),
+      ),
     );
   }
 
@@ -167,10 +189,10 @@ class WalletRepositoryImpl implements WalletRepository {
   }
 
   RechargeIntent _mapIntent(PaymentIntent intent) => RechargeIntent(
-        id: intent.id,
-        checkoutUrl: intent.checkoutUrl,
-        status: intent.status,
-      );
+    id: intent.id,
+    checkoutUrl: intent.checkoutUrl,
+    status: intent.status,
+  );
 
   @override
   Future<Result<ResolvedWalletUser>> resolveUser(String ciervoUserCode) async {
@@ -280,14 +302,13 @@ class WalletRepositoryImpl implements WalletRepository {
     String id, {
     bool useBackupCard = false,
     String? familyPaymentCardId,
-  }) =>
-      _paymentRequest(
-        () => _remoteDataSource.approvePaymentRequest(
-          id,
-          useBackupCard: useBackupCard,
-          familyPaymentCardId: familyPaymentCardId,
-        ),
-      );
+  }) => _paymentRequest(
+    () => _remoteDataSource.approvePaymentRequest(
+      id,
+      useBackupCard: useBackupCard,
+      familyPaymentCardId: familyPaymentCardId,
+    ),
+  );
 
   @override
   Future<Result<PaymentRequest>> rejectPaymentRequest(
@@ -330,7 +351,9 @@ class WalletRepositoryImpl implements WalletRepository {
   @override
   Future<Result<NfcSession>> nfcSession(int sessionId) async {
     try {
-      return Success((await _remoteDataSource.nfcSession(sessionId)).toDomain());
+      return Success(
+        (await _remoteDataSource.nfcSession(sessionId)).toDomain(),
+      );
     } catch (error) {
       return Failure(ErrorMapper.fromObject(error));
     }

@@ -58,8 +58,10 @@ class _KidUniversalNfcPayPageState extends State<KidUniversalNfcPayPage> {
     displayName: 'Mi billetera Kids',
   );
   int? _childProfileId;
-  String _currency = 'COP';
-  String _country = 'CO';
+  String _currency = CountryRegistration.currencyForCountry(
+    CountryRegistration.defaultCountryCode(),
+  );
+  String _country = CountryRegistration.defaultCountryCode();
   bool _loading = false;
   String? _error;
 
@@ -105,8 +107,7 @@ class _KidUniversalNfcPayPageState extends State<KidUniversalNfcPayPage> {
     return int.tryParse('$value');
   }
 
-  int? get _merchantId =>
-      widget.merchantId ?? int.tryParse(widget.businessId);
+  int? get _merchantId => widget.merchantId ?? int.tryParse(widget.businessId);
 
   @override
   Widget build(BuildContext context) {
@@ -267,7 +268,9 @@ class _KidUniversalNfcPayPageState extends State<KidUniversalNfcPayPage> {
               state: _loading
                   ? CiervoButtonState.loading
                   : CiervoButtonState.normal,
-              onPressed: !quote.sufficientFunds || _loading ? null : _createIntent,
+              onPressed: !quote.sufficientFunds || _loading
+                  ? null
+                  : _createIntent,
             ),
             if (!quote.sufficientFunds) ...[
               const SizedBox(height: AppSpacing.sm),

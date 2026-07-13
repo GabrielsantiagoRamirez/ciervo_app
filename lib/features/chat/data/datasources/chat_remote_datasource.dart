@@ -24,46 +24,40 @@ class ChatRemoteDataSource {
 
   Future<Map<String, dynamic>> createDirectConversation({
     required String targetUserId,
-  }) async =>
-      unwrapApiMap(
-        (await _client.dio.post<dynamic>(
-          '/api/chat/conversations',
-          data: {
-            'type': 'Direct',
-            'targetUserId': int.tryParse(targetUserId) ?? targetUserId,
-          },
-        )).data,
-      );
+  }) async => unwrapApiMap(
+    (await _client.dio.post<dynamic>(
+      '/api/chat/conversations',
+      data: {
+        'type': 'Direct',
+        'targetUserId': int.tryParse(targetUserId) ?? targetUserId,
+      },
+    )).data,
+  );
 
   Future<Map<String, dynamic>> forwardMessage({
     required String conversationId,
     required String messageId,
     required String targetConversationId,
     String? comment,
-  }) async =>
-      unwrapApiMap(
-        (await _client.dio.post<dynamic>(
-          '/api/chat/conversations/$conversationId/messages/$messageId/forward',
-          data: {
-            'targetConversationId':
-                int.tryParse(targetConversationId) ?? targetConversationId,
-            if (comment != null && comment.isNotEmpty) 'comment': comment,
-          },
-        )).data,
-      );
+  }) async => unwrapApiMap(
+    (await _client.dio.post<dynamic>(
+      '/api/chat/conversations/$conversationId/messages/$messageId/forward',
+      data: {
+        'targetConversationId':
+            int.tryParse(targetConversationId) ?? targetConversationId,
+        if (comment != null && comment.isNotEmpty) 'comment': comment,
+      },
+    )).data,
+  );
 
   Future<Map<String, dynamic>> createSupportConversation({
     required String title,
-  }) async =>
-      unwrapApiMap(
-        (await _client.dio.post<dynamic>(
-          '/api/chat/conversations',
-          data: {
-            'type': 'Support',
-            'title': title,
-          },
-        )).data,
-      );
+  }) async => unwrapApiMap(
+    (await _client.dio.post<dynamic>(
+      '/api/chat/conversations',
+      data: {'type': 'Support', 'title': title},
+    )).data,
+  );
 
   Future<Map<String, dynamic>> createBusinessConversation({
     required int businessId,
@@ -100,23 +94,21 @@ class ChatRemoteDataSource {
     String id,
     String path,
     String fileName,
-  ) async =>
-      unwrapApiMap(
-        (await _client.dio.post<dynamic>(
-          '/api/chat/conversations/$id/messages/media',
-          data: FormData.fromMap({
-            'file': await MultipartFile.fromFile(path, filename: fileName),
-          }),
-        )).data,
-      );
+  ) async => unwrapApiMap(
+    (await _client.dio.post<dynamic>(
+      '/api/chat/conversations/$id/messages/media',
+      data: FormData.fromMap({
+        'file': await MultipartFile.fromFile(path, filename: fileName),
+      }),
+    )).data,
+  );
 
   Future<void> markAsRead(String id) async {
     await _client.dio.post<void>('/api/chat/conversations/$id/read');
   }
 
-  Future<List<dynamic>> buttons() async => unwrapApiList(
-    (await _client.dio.get<dynamic>('/api/chat/buttons')).data,
-  );
+  Future<List<dynamic>> buttons() async =>
+      unwrapApiList((await _client.dio.get<dynamic>('/api/chat/buttons')).data);
 
   Future<Map<String, dynamic>> sendTypedMessage(
     String id, {
@@ -128,20 +120,19 @@ class ChatRemoteDataSource {
     String? thumbnailUrl,
     String? storagePath,
     String? mediaType,
-  }) async =>
-      unwrapApiMap(
-        (await _client.dio.post<dynamic>(
-          '/api/chat/conversations/$id/messages',
-          data: {
-            'messageType': messageType,
-            if (body != null) 'body': body,
-            if (metadataJson != null) 'metadataJson': metadataJson,
-            if (attachmentUrl != null) 'attachmentUrl': attachmentUrl,
-            if (mediaUrl != null) 'mediaUrl': mediaUrl,
-            if (thumbnailUrl != null) 'thumbnailUrl': thumbnailUrl,
-            if (storagePath != null) 'storagePath': storagePath,
-            if (mediaType != null) 'mediaType': mediaType,
-          },
-        )).data,
-      );
+  }) async => unwrapApiMap(
+    (await _client.dio.post<dynamic>(
+      '/api/chat/conversations/$id/messages',
+      data: {
+        'messageType': messageType,
+        if (body != null) 'body': body,
+        if (metadataJson != null) 'metadataJson': metadataJson,
+        if (attachmentUrl != null) 'attachmentUrl': attachmentUrl,
+        if (mediaUrl != null) 'mediaUrl': mediaUrl,
+        if (thumbnailUrl != null) 'thumbnailUrl': thumbnailUrl,
+        if (storagePath != null) 'storagePath': storagePath,
+        if (mediaType != null) 'mediaType': mediaType,
+      },
+    )).data,
+  );
 }

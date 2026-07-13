@@ -28,7 +28,8 @@ class NotificationsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => NotificationsCubit(getIt<NotificationsRepository>())..load(),
+      create: (_) =>
+          NotificationsCubit(getIt<NotificationsRepository>())..load(),
       child: const _NotificationsView(),
     );
   }
@@ -95,7 +96,9 @@ class _NotificationsViewState extends State<_NotificationsView> {
             await context.read<NotificationsCubit>().markAllAsRead();
             if (!context.mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Notificaciones marcadas como leidas.')),
+              const SnackBar(
+                content: Text('Notificaciones marcadas como leidas.'),
+              ),
             );
           },
           icon: const Icon(Icons.done_all),
@@ -144,7 +147,9 @@ class _NotificationsViewState extends State<_NotificationsView> {
                   selected: selected,
                   onSelected: (_) {
                     setState(() => _category = entry.key);
-                    context.read<NotificationsCubit>().load(category: entry.key);
+                    context.read<NotificationsCubit>().load(
+                      category: entry.key,
+                    );
                   },
                   selectedColor: Theme.of(context).colorScheme.primaryContainer,
                   checkmarkColor: Theme.of(context).colorScheme.primary,
@@ -158,170 +163,170 @@ class _NotificationsViewState extends State<_NotificationsView> {
             builder: (context, state) {
               return RefreshIndicator(
                 color: Theme.of(context).colorScheme.primary,
-                onRefresh: () =>
-                    context.read<NotificationsCubit>().load(category: _category),
+                onRefresh: () => context.read<NotificationsCubit>().load(
+                  category: _category,
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   child: switch (state.status) {
                     NotificationsStatus.initial ||
-                    NotificationsStatus.loading =>
-                      const CiervoLoadingState(),
+                    NotificationsStatus.loading => const CiervoLoadingState(),
                     NotificationsStatus.empty => const CiervoEmptyState(
-                        title: 'Sin notificaciones',
-                        description:
-                            'Aqui veras avisos de wallet, chat, delivery, reservas y seguridad.',
-                        icon: Icons.notifications_none,
-                      ),
+                      title: 'Sin notificaciones',
+                      description:
+                          'Aqui veras avisos de wallet, chat, delivery, reservas y seguridad.',
+                      icon: Icons.notifications_none,
+                    ),
                     NotificationsStatus.failure => CiervoErrorState(
-                        title: 'No pudimos cargar notificaciones',
-                        description: state.errorMessage ?? 'Intenta nuevamente.',
-                        onRetry: () => context
-                            .read<NotificationsCubit>()
-                            .load(category: _category),
+                      title: 'No pudimos cargar notificaciones',
+                      description: state.errorMessage ?? 'Intenta nuevamente.',
+                      onRetry: () => context.read<NotificationsCubit>().load(
+                        category: _category,
                       ),
+                    ),
                     _ => ListView.separated(
-                        itemCount: state.items.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: AppSpacing.sm),
-                        itemBuilder: (context, index) {
-                          final item = state.items[index];
-                          return Dismissible(
-                            key: ValueKey(item.id),
-                            direction: DismissDirection.endToStart,
-                            background: Container(
-                              alignment: Alignment.centerRight,
-                              padding: const EdgeInsets.only(right: 20),
-                              color: CiervoBrandColors.expense,
-                              child: const Icon(Icons.delete_outline),
-                            ),
-                            onDismissed: (_) => context
-                                .read<NotificationsCubit>()
-                                .deleteNotification(item.id),
-                            child: InkWell(
-                              onTap: () => _openNotification(context, item),
-                              child: CiervoCard(
-                                padding: const EdgeInsets.all(AppSpacing.md),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Image.asset(
-                                      'assets/notifications/ciervo_logo_gold.png',
-                                      width: 40,
-                                      height: 40,
-                                    ),
-                                    const SizedBox(width: AppSpacing.sm),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Expanded(
-                                                child: Text(
-                                                  item.title,
-                                                  maxLines: 2,
-                                                  overflow: TextOverflow.ellipsis,
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .titleMedium
-                                                      ?.copyWith(
-                                                        fontWeight: item.isRead
-                                                            ? FontWeight.w500
-                                                            : FontWeight.w700,
-                                                        color: item.isRead
-                                                            ? Theme.of(context)
+                      itemCount: state.items.length,
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(height: AppSpacing.sm),
+                      itemBuilder: (context, index) {
+                        final item = state.items[index];
+                        return Dismissible(
+                          key: ValueKey(item.id),
+                          direction: DismissDirection.endToStart,
+                          background: Container(
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 20),
+                            color: CiervoBrandColors.expense,
+                            child: const Icon(Icons.delete_outline),
+                          ),
+                          onDismissed: (_) => context
+                              .read<NotificationsCubit>()
+                              .deleteNotification(item.id),
+                          child: InkWell(
+                            onTap: () => _openNotification(context, item),
+                            child: CiervoCard(
+                              padding: const EdgeInsets.all(AppSpacing.md),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Image.asset(
+                                    'assets/notifications/ciervo_logo_gold.png',
+                                    width: 40,
+                                    height: 40,
+                                  ),
+                                  const SizedBox(width: AppSpacing.sm),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                item.title,
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .titleMedium
+                                                    ?.copyWith(
+                                                      fontWeight: item.isRead
+                                                          ? FontWeight.w500
+                                                          : FontWeight.w700,
+                                                      color: item.isRead
+                                                          ? Theme.of(context)
                                                                 .colorScheme
                                                                 .onSurfaceVariant
-                                                            : Theme.of(context)
+                                                          : Theme.of(context)
                                                                 .colorScheme
                                                                 .onSurface,
-                                                      ),
-                                                ),
-                                              ),
-                                              if (!item.isRead)
-                                                Container(
-                                                  width: 8,
-                                                  height: 8,
-                                                  margin: const EdgeInsets.only(
-                                                    left: AppSpacing.xs,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .primary,
-                                                    shape: BoxShape.circle,
-                                                  ),
-                                                ),
-                                            ],
-                                          ),
-                                          if ((item.category ?? item.type)
-                                              ?.isNotEmpty ==
-                                              true) ...[
-                                            const SizedBox(
-                                              height: AppSpacing.xxs,
-                                            ),
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(
-                                                horizontal: 8,
-                                                vertical: 2,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: CiervoBrandColors.gold
-                                                    .withValues(alpha: 0.14),
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                              ),
-                                              child: Text(
-                                                DisplayLabels.notificationPreference(
-                                                  item.category ?? item.type!,
-                                                ),
-                                                style: TextStyle(
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .primary,
-                                                  fontSize: 11,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
+                                                    ),
                                               ),
                                             ),
+                                            if (!item.isRead)
+                                              Container(
+                                                width: 8,
+                                                height: 8,
+                                                margin: const EdgeInsets.only(
+                                                  left: AppSpacing.xs,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: Theme.of(
+                                                    context,
+                                                  ).colorScheme.primary,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                              ),
                                           ],
-                                          const SizedBox(height: AppSpacing.xxs),
-                                          Text(
-                                            item.message,
-                                            maxLines: 3,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSurfaceVariant,
-                                              height: 1.35,
-                                            ),
+                                        ),
+                                        if ((item.category ?? item.type)
+                                                ?.isNotEmpty ==
+                                            true) ...[
+                                          const SizedBox(
+                                            height: AppSpacing.xxs,
                                           ),
-                                          if (item.date != null) ...[
-                                            const SizedBox(
-                                              height: AppSpacing.xxs,
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 2,
                                             ),
-                                            Text(
-                                              _formatNotificationDate(item.date!),
+                                            decoration: BoxDecoration(
+                                              color: CiervoBrandColors.gold
+                                                  .withValues(alpha: 0.14),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            child: Text(
+                                              DisplayLabels.notificationPreference(
+                                                item.category ?? item.type!,
+                                              ),
                                               style: TextStyle(
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .onSurfaceVariant,
-                                                fontSize: 12,
+                                                color: Theme.of(
+                                                  context,
+                                                ).colorScheme.primary,
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w600,
                                               ),
                                             ),
-                                          ],
+                                          ),
                                         ],
-                                      ),
+                                        const SizedBox(height: AppSpacing.xxs),
+                                        Text(
+                                          item.message,
+                                          maxLines: 3,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.onSurfaceVariant,
+                                            height: 1.35,
+                                          ),
+                                        ),
+                                        if (item.date != null) ...[
+                                          const SizedBox(
+                                            height: AppSpacing.xxs,
+                                          ),
+                                          Text(
+                                            _formatNotificationDate(item.date!),
+                                            style: TextStyle(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.onSurfaceVariant,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
+                                      ],
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             ),
-                          );
-                        },
-                      ),
+                          ),
+                        );
+                      },
+                    ),
                   },
                 ),
               );
@@ -402,9 +407,9 @@ class _NotificationDetailPage extends StatelessWidget {
               const SizedBox(height: AppSpacing.md),
               Text(
                 item.message,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      height: 1.4,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(height: 1.4),
               ),
               if (item.date != null) ...[
                 const SizedBox(height: AppSpacing.md),
@@ -541,17 +546,18 @@ class _NotificationPreferencesPageState
           .map((channel) => {'code': channel.code, 'enabled': channel.enabled})
           .toList(),
     };
-    final result =
-        await getIt<NotificationsRepository>().updatePreferences(payload);
+    final result = await getIt<NotificationsRepository>().updatePreferences(
+      payload,
+    );
     if (!mounted) return;
     setState(() => _saving = false);
     result.when(
       success: (_) => ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Preferencias actualizadas.')),
       ),
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 }
@@ -590,8 +596,7 @@ List<_NotificationChannelPref> _parseChannels(Map<String, dynamic> source) {
         .where((channel) => channel.code.isNotEmpty)
         .toList();
   }
-  return _boolMap(source)
-      .entries
+  return _boolMap(source).entries
       .map(
         (entry) => _NotificationChannelPref(
           code: entry.key,

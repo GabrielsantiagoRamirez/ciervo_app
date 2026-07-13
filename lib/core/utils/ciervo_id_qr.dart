@@ -1,6 +1,9 @@
 /// Utilidades para QR y payloads de CIERVO ID.
 abstract final class CiervoIdQr {
-  static final _codePattern = RegExp(r'CIERVO-[A-Z0-9-]+', caseSensitive: false);
+  static final _codePattern = RegExp(
+    r'CIERVO-[A-Z0-9-]+',
+    caseSensitive: false,
+  );
 
   static String payloadForCode(String code) {
     final normalized = code.trim().toUpperCase();
@@ -22,8 +25,8 @@ abstract final class CiervoIdQr {
         final fromUri = _codePattern.firstMatch(last);
         if (fromUri != null) return fromUri.group(0)!.toUpperCase();
       }
-      final queryCode = uri.queryParameters['ciervoUserCode'] ??
-          uri.queryParameters['code'];
+      final queryCode =
+          uri.queryParameters['ciervoUserCode'] ?? uri.queryParameters['code'];
       if (queryCode != null) {
         final fromQuery = _codePattern.firstMatch(queryCode);
         if (fromQuery != null) return fromQuery.group(0)!.toUpperCase();

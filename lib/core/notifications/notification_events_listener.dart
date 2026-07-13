@@ -99,7 +99,8 @@ class NotificationEventsListener {
             if (parsed != null && parsed > _sinceId) {
               _sinceId = parsed;
             }
-            final eventType = '${notification['eventType'] ?? notification['type'] ?? notification['category'] ?? ''}';
+            final eventType =
+                '${notification['eventType'] ?? notification['type'] ?? notification['category'] ?? ''}';
             if (eventType.toLowerCase().startsWith('membership.')) {
               unawaited(getIt<MembershipCubit>().loadFresh());
             }

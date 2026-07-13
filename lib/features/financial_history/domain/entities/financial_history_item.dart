@@ -39,8 +39,7 @@ class FinancialHistoryItem {
       direction.toLowerCase().contains('credit') ||
       direction.toLowerCase().contains('in');
 
-  String get displayTitle =>
-      description.isNotEmpty ? description : type;
+  String get displayTitle => description.isNotEmpty ? description : type;
 
   bool get hasReceipt => receiptId != null && receiptId! > 0;
 }

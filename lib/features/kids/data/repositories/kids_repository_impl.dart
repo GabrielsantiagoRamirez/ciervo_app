@@ -243,7 +243,9 @@ class KidsRepositoryImpl implements KidsRepository {
   }
 
   @override
-  Future<Result<Map<String, dynamic>>> childPaymentMethods(String childId) async {
+  Future<Result<Map<String, dynamic>>> childPaymentMethods(
+    String childId,
+  ) async {
     try {
       return Success(await _remoteDataSource.childPaymentMethods(childId));
     } catch (error) {

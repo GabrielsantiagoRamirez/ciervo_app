@@ -22,8 +22,8 @@ class FamilyPaymentMethodsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => FamilyPaymentMethodsCubit(getIt<FamilyPaymentsRepository>())
-        ..load(),
+      create: (_) =>
+          FamilyPaymentMethodsCubit(getIt<FamilyPaymentsRepository>())..load(),
       child: const _FamilyPaymentMethodsView(),
     );
   }
@@ -38,9 +38,9 @@ class _FamilyPaymentMethodsView extends StatelessWidget {
       listener: (context, state) {
         final message = state.errorMessage ?? state.successMessage;
         if (message != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(message)));
         }
       },
       builder: (context, state) {
@@ -48,11 +48,22 @@ class _FamilyPaymentMethodsView extends StatelessWidget {
           appBar: AppBar(title: const Text('Métodos de pago')),
           floatingActionButton: FloatingActionButton.extended(
             onPressed: () async {
+              final cubit = context.read<FamilyPaymentMethodsCubit>();
               final added = await Navigator.of(context).push<bool>(
-                MaterialPageRoute(builder: (_) => const AddFamilyCardPage()),
+                MaterialPageRoute(
+                  builder: (_) => AddFamilyCardPage(cubit: cubit),
+                ),
               );
-              if (added == true && context.mounted) {
-                context.read<FamilyPaymentMethodsCubit>().load();
+              if (!context.mounted) return;
+              if (added == true) {
+                await cubit.load();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Tu tarjeta ya está disponible para pagos familiares.',
+                    ),
+                  ),
+                );
               }
             },
             icon: const Icon(Icons.add_card),
@@ -69,7 +80,8 @@ class _FamilyPaymentMethodsView extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: AppSpacing.lg),
-                if (state.status == FamilyPaymentMethodsStatus.loading)
+                if (state.status == FamilyPaymentMethodsStatus.loading ||
+                    state.status == FamilyPaymentMethodsStatus.initial)
                   const CiervoLoadingState(itemCount: 3)
                 else if (state.status == FamilyPaymentMethodsStatus.failure)
                   CiervoErrorState(
@@ -81,10 +93,15 @@ class _FamilyPaymentMethodsView extends StatelessWidget {
                   const CiervoEmptyState(
                     title: 'Sin tarjetas registradas',
                     description:
-                        'Agrega una tarjeta Visa o Mastercard para respaldar pagos familiares.',
+                        'Aún no tienes tarjetas guardadas. Toca "Agregar tarjeta" para registrar una Visa o Mastercard y respaldar pagos familiares.',
                     icon: Icons.credit_card_off_outlined,
                   )
-                else
+                else ...[
+                  Text(
+                    '${state.cards.length} tarjeta${state.cards.length == 1 ? '' : 's'} registrada${state.cards.length == 1 ? '' : 's'}',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
                   ...state.cards.map(
                     (card) => Padding(
                       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -106,8 +123,8 @@ class _FamilyPaymentMethodsView extends StatelessWidget {
                                     onPressed: state.actionCardId == card.id
                                         ? null
                                         : () => context
-                                            .read<FamilyPaymentMethodsCubit>()
-                                            .setPrimary(card.id),
+                                              .read<FamilyPaymentMethodsCubit>()
+                                              .setPrimary(card.id),
                                     child: const Text('Principal'),
                                   ),
                                 if (!card.isBackup)
@@ -115,29 +132,54 @@ class _FamilyPaymentMethodsView extends StatelessWidget {
                                     onPressed: state.actionCardId == card.id
                                         ? null
                                         : () => context
-                                            .read<FamilyPaymentMethodsCubit>()
-                                            .setBackup(card.id),
+                                              .read<FamilyPaymentMethodsCubit>()
+                                              .setBackup(card.id),
                                     child: const Text('Respaldo'),
                                   ),
                                 OutlinedButton(
                                   onPressed: state.actionCardId == card.id
                                       ? null
-                                      : () => Navigator.of(context).push(
-                                            MaterialPageRoute(
-                                              builder: (_) =>
-                                                  EditFamilyCardAliasPage(
-                                                card: card,
-                                              ),
-                                            ),
-                                          ),
+                                      : () async {
+                                          final cubit = context
+                                              .read<
+                                                FamilyPaymentMethodsCubit
+                                              >();
+                                          final updated =
+                                              await Navigator.of(
+                                                context,
+                                              ).push<bool>(
+                                                MaterialPageRoute(
+                                                  builder: (_) =>
+                                                      BlocProvider.value(
+                                                        value: cubit,
+                                                        child:
+                                                            EditFamilyCardAliasPage(
+                                                              card: card,
+                                                            ),
+                                                      ),
+                                                ),
+                                              );
+                                          if (updated == true &&
+                                              context.mounted) {
+                                            await cubit.load();
+                                          }
+                                        },
                                   child: const Text('Editar alias'),
                                 ),
                                 OutlinedButton(
                                   onPressed: state.actionCardId == card.id
                                       ? null
-                                      : () => context
-                                          .read<FamilyPaymentMethodsCubit>()
-                                          .freeze(card.id),
+                                      : () {
+                                          final cubit = context
+                                              .read<
+                                                FamilyPaymentMethodsCubit
+                                              >();
+                                          if (card.isFrozen) {
+                                            cubit.unfreeze(card.id);
+                                          } else {
+                                            cubit.freeze(card.id);
+                                          }
+                                        },
                                   child: Text(
                                     card.isFrozen ? 'Descongelar' : 'Congelar',
                                   ),
@@ -149,6 +191,7 @@ class _FamilyPaymentMethodsView extends StatelessWidget {
                       ),
                     ),
                   ),
+                ],
               ],
             ),
           ),
@@ -188,7 +231,9 @@ class _FamilyPaymentMethodsView extends StatelessWidget {
               leading: Icon(
                 card.isFrozen ? Icons.ac_unit : Icons.ac_unit_outlined,
               ),
-              title: Text(card.isFrozen ? 'Descongelar tarjeta' : 'Congelar tarjeta'),
+              title: Text(
+                card.isFrozen ? 'Descongelar tarjeta' : 'Congelar tarjeta',
+              ),
               onTap: () => Navigator.pop(context, 'freeze'),
             ),
             ListTile(
@@ -204,11 +249,15 @@ class _FamilyPaymentMethodsView extends StatelessWidget {
     final cubit = context.read<FamilyPaymentMethodsCubit>();
     switch (action) {
       case 'alias':
-        await Navigator.of(context).push(
+        final updated = await Navigator.of(context).push<bool>(
           MaterialPageRoute(
-            builder: (_) => EditFamilyCardAliasPage(card: card),
+            builder: (_) => BlocProvider.value(
+              value: cubit,
+              child: EditFamilyCardAliasPage(card: card),
+            ),
           ),
         );
+        if (updated == true) await cubit.load();
       case 'primary':
         await cubit.setPrimary(card.id);
       case 'backup':

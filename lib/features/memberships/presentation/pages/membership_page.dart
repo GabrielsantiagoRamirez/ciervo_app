@@ -50,14 +50,8 @@ class _MembershipPageState extends State<MembershipPage>
       final benefitsResult = await repo.benefits();
       final invoicesResult = await repo.invoices();
       return _MembershipData(
-        plans: plansResult.when(
-          success: (v) => v,
-          failure: (e) => throw e,
-        ),
-        membership: meResult.when(
-          success: (v) => v,
-          failure: (_) => const {},
-        ),
+        plans: plansResult.when(success: (v) => v, failure: (e) => throw e),
+        membership: meResult.when(success: (v) => v, failure: (_) => const {}),
         benefits: benefitsResult.when(
           success: (v) => v,
           failure: (_) => const {},
@@ -138,9 +132,9 @@ class _MembershipPageState extends State<MembershipPage>
           setState(_load);
         },
         failure: (error) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(UserErrorMessage.from(error))),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
         },
       );
       return;
@@ -149,12 +143,15 @@ class _MembershipPageState extends State<MembershipPage>
     if (!plan.supportsCheckout) {
       setState(() => _subscribingPlanId = null);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Este plan no admite checkout automatico.')),
+        const SnackBar(
+          content: Text('Este plan no admite checkout automatico.'),
+        ),
       );
       return;
     }
 
-    final key = 'membership-${plan.id}-${DateTime.now().microsecondsSinceEpoch}';
+    final key =
+        'membership-${plan.id}-${DateTime.now().microsecondsSinceEpoch}';
     final intentResult = await paymentsRepo.createMembershipSubscribeIntent(
       membershipPlanId: plan.id,
       idempotencyKey: key,
@@ -182,7 +179,9 @@ class _MembershipPageState extends State<MembershipPage>
               setState(_load);
             } else if (finalIntent.isRejected) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Pago rechazado. Intenta nuevamente.')),
+                const SnackBar(
+                  content: Text('Pago rechazado. Intenta nuevamente.'),
+                ),
               );
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -203,81 +202,81 @@ class _MembershipPageState extends State<MembershipPage>
       },
       failure: (error) {
         setState(() => _subscribingPlanId = null);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       },
     );
   }
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: const Text('Membresia'),
-          bottom: TabBar(
+    appBar: AppBar(
+      title: const Text('Membresia'),
+      bottom: TabBar(
+        controller: _tabController,
+        isScrollable: false,
+        tabs: const [
+          Tab(text: 'Mi plan'),
+          Tab(text: 'Planes'),
+          Tab(text: 'Beneficios'),
+          Tab(text: 'Facturas'),
+        ],
+      ),
+    ),
+    body: FutureBuilder<_MembershipData>(
+      future: _data,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const CiervoLoadingState(itemCount: 4);
+        }
+        if (snapshot.hasError) {
+          return Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: CiervoErrorState(
+              title: 'No pudimos cargar membresias',
+              description: UserErrorMessage.from(snapshot.error!),
+              onRetry: () => setState(_load),
+            ),
+          );
+        }
+        final payload = snapshot.data!;
+        final plans = payload.plans;
+        if (plans.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(AppSpacing.lg),
+            child: CiervoEmptyState(
+              title: 'Sin planes disponibles',
+              description:
+                  'Por ahora no hay planes de membresía disponibles en tu país.',
+              icon: Icons.workspace_premium_outlined,
+            ),
+          );
+        }
+        return RefreshIndicator(
+          onRefresh: () async => setState(_load),
+          child: TabBarView(
             controller: _tabController,
-            isScrollable: false,
-            tabs: const [
-              Tab(text: 'Mi plan'),
-              Tab(text: 'Planes'),
-              Tab(text: 'Beneficios'),
-              Tab(text: 'Facturas'),
+            children: [
+              _MyMembership(
+                plans: plans,
+                membership: payload.membership,
+                isCurrentPlan: (plan) => _isCurrentPlan(plan, payload),
+              ),
+              _PlansList(
+                plans: plans,
+                isCurrentPlan: (plan) => _isCurrentPlan(plan, payload),
+                subscribingPlanId: _subscribingPlanId,
+                onSubscribe: _subscribe,
+              ),
+              _BenefitsView(benefits: payload.benefits),
+              _InvoicesView(invoices: payload.invoices),
             ],
           ),
-        ),
-        body: FutureBuilder<_MembershipData>(
-          future: _data,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState != ConnectionState.done) {
-              return const CiervoLoadingState(itemCount: 4);
-            }
-            if (snapshot.hasError) {
-              return Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: CiervoErrorState(
-                  title: 'No pudimos cargar membresias',
-                  description: UserErrorMessage.from(snapshot.error!),
-                  onRetry: () => setState(_load),
-                ),
-              );
-            }
-            final payload = snapshot.data!;
-            final plans = payload.plans;
-            if (plans.isEmpty) {
-              return const Padding(
-                padding: EdgeInsets.all(AppSpacing.lg),
-                child: CiervoEmptyState(
-                  title: 'Sin planes disponibles',
-                  description:
-                      'Por ahora no hay planes de membresía disponibles en tu país.',
-                  icon: Icons.workspace_premium_outlined,
-                ),
-              );
-            }
-            return RefreshIndicator(
-              onRefresh: () async => setState(_load),
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _MyMembership(
-                    plans: plans,
-                    membership: payload.membership,
-                    isCurrentPlan: (plan) => _isCurrentPlan(plan, payload),
-                  ),
-                  _PlansList(
-                    plans: plans,
-                    isCurrentPlan: (plan) => _isCurrentPlan(plan, payload),
-                    subscribingPlanId: _subscribingPlanId,
-                    onSubscribe: _subscribe,
-                  ),
-                  _BenefitsView(benefits: payload.benefits),
-                  _InvoicesView(invoices: payload.invoices),
-                ],
-              ),
-            );
-          },
-        ),
-      );
+        );
+      },
+    ),
+  );
 }
 
 class _MembershipData {
@@ -306,7 +305,8 @@ class _MyMembership extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final current = plans.where(isCurrentPlan).firstOrNull ??
+    final current =
+        plans.where(isCurrentPlan).firstOrNull ??
         plans.where((plan) => plan.code.toLowerCase() == 'free').firstOrNull ??
         plans.first;
     final next = plans
@@ -359,31 +359,31 @@ class _PlansList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListView.separated(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        itemCount: plans.length,
-        separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
-        itemBuilder: (context, index) {
-          final plan = plans[index];
-          final current = isCurrentPlan(plan);
-          return _PlanCard(
-            plan: plan,
-            highlighted: current,
-            actionLabel: current
-                ? 'Plan actual'
-                : plan.requiresCustomQuote
-                ? 'Cotizacion requerida'
-                : subscribingPlanId == plan.id
-                ? 'Procesando...'
-                : plan.isFree
-                ? 'Activar gratis'
-                : 'Pagar con Mercado Pago',
-            actionLoading: subscribingPlanId == plan.id,
-            onAction: current || plan.requiresCustomQuote
-                ? null
-                : () => onSubscribe(plan),
-          );
-        },
+    padding: const EdgeInsets.all(AppSpacing.lg),
+    itemCount: plans.length,
+    separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
+    itemBuilder: (context, index) {
+      final plan = plans[index];
+      final current = isCurrentPlan(plan);
+      return _PlanCard(
+        plan: plan,
+        highlighted: current,
+        actionLabel: current
+            ? 'Plan actual'
+            : plan.requiresCustomQuote
+            ? 'Cotizacion requerida'
+            : subscribingPlanId == plan.id
+            ? 'Procesando...'
+            : plan.isFree
+            ? 'Activar gratis'
+            : 'Pagar con Mercado Pago',
+        actionLoading: subscribingPlanId == plan.id,
+        onAction: current || plan.requiresCustomQuote
+            ? null
+            : () => onSubscribe(plan),
       );
+    },
+  );
 }
 
 class _BenefitsView extends StatelessWidget {
@@ -417,12 +417,18 @@ class _BenefitsView extends StatelessWidget {
                 const Text('No hay beneficios configurados para tu plan.')
               else ...[
                 if (items.isNotEmpty) ...[
-                  Text('Incluidos', style: Theme.of(context).textTheme.titleSmall),
+                  Text(
+                    'Incluidos',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
                   ...items.map((item) => Text('- $item')),
                 ],
                 if (limits.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.sm),
-                  Text('Límites', style: Theme.of(context).textTheme.titleSmall),
+                  Text(
+                    'Límites',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
                   ...limits.entries.map(
                     (e) => Text(
                       '${DisplayLabels.membershipLimitLabel(e.key)}: '
@@ -503,97 +509,97 @@ class _PlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => CiervoCard(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    padding: const EdgeInsets.all(AppSpacing.md),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.workspace_premium_outlined,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Text(
-                    plan.name.isEmpty ? plan.code : plan.name,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                ),
-                if (highlighted || plan.isCurrent)
-                  const Chip(label: Text('Actual')),
-                if (plan.isRecommended)
-                  Chip(
-                    label: const Text('Recomendado'),
-                    backgroundColor:
-                        Theme.of(context).colorScheme.primaryContainer,
-                  ),
-              ],
+            Icon(
+              Icons.workspace_premium_outlined,
+              color: Theme.of(context).colorScheme.primary,
             ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(plan.displayPrice),
-            if (plan.displayUsdReference.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.xxs),
-              Text(
-                'Referencia: ${plan.displayUsdReference}',
-                style: Theme.of(context).textTheme.bodySmall,
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                plan.name.isEmpty ? plan.code : plan.name,
+                style: Theme.of(context).textTheme.titleLarge,
               ),
-            ],
-            if (plan.description.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.xs),
-              Text(plan.description),
-            ],
-            if (plan.paymentProvider != null &&
-                plan.paymentProvider!.isNotEmpty &&
-                plan.paymentProvider!.toLowerCase() != 'mercadopago') ...[
-              const SizedBox(height: AppSpacing.xs),
-              Text('Proveedor: ${plan.paymentProvider}'),
-            ],
-            const SizedBox(height: AppSpacing.sm),
-            _line(
-              'Cashback',
-              plan.limits['cashbackPercent'] != null
-                  ? '${plan.limits['cashbackPercent']}%'
-                  : '${plan.cashbackMultiplier.toStringAsFixed(2)}x',
             ),
-            if (plan.benefits.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Text('Beneficios', style: Theme.of(context).textTheme.titleSmall),
-              ...plan.benefits.map((item) => Text('- $item')),
-            ],
-            if (plan.limits.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Text('Límites', style: Theme.of(context).textTheme.titleSmall),
-              ...plan.limits.entries.map(
-                (entry) => Text(
-                  '${DisplayLabels.membershipLimitLabel(entry.key)}: '
-                  '${DisplayLabels.membershipLimitValue(entry.value)}',
-                ),
+            if (highlighted || plan.isCurrent)
+              const Chip(label: Text('Actual')),
+            if (plan.isRecommended)
+              Chip(
+                label: const Text('Recomendado'),
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
               ),
-            ],
-            if (actionLabel != null) ...[
-              const SizedBox(height: AppSpacing.md),
-              CiervoButton(
-                label: actionLabel!,
-                icon: Icons.workspace_premium_outlined,
-                state: actionLoading
-                    ? CiervoButtonState.loading
-                    : CiervoButtonState.normal,
-                variant: highlighted
-                    ? CiervoButtonVariant.secondary
-                    : CiervoButtonVariant.primary,
-                onPressed: actionLoading ? null : onAction,
-              ),
-            ],
           ],
         ),
-      );
+        const SizedBox(height: AppSpacing.xs),
+        Text(plan.displayPrice),
+        if (plan.displayUsdReference.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.xxs),
+          Text(
+            'Referencia: ${plan.displayUsdReference}',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+        if (plan.description.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text(plan.description),
+        ],
+        if (plan.paymentProvider != null &&
+            plan.paymentProvider!.isNotEmpty &&
+            plan.paymentProvider!.toLowerCase() != 'mercadopago') ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text('Proveedor: ${plan.paymentProvider}'),
+        ],
+        const SizedBox(height: AppSpacing.sm),
+        _line(
+          'Cashback',
+          plan.limits['cashbackPercent'] != null
+              ? '${plan.limits['cashbackPercent']}%'
+              : '${plan.cashbackMultiplier.toStringAsFixed(2)}x',
+        ),
+        if (plan.benefits.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Text('Beneficios', style: Theme.of(context).textTheme.titleSmall),
+          ...plan.benefits.map((item) => Text('- $item')),
+        ],
+        if (plan.limits.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Text('Límites', style: Theme.of(context).textTheme.titleSmall),
+          ...plan.limits.entries.map(
+            (entry) => Text(
+              '${DisplayLabels.membershipLimitLabel(entry.key)}: '
+              '${DisplayLabels.membershipLimitValue(entry.value)}',
+            ),
+          ),
+        ],
+        if (actionLabel != null) ...[
+          const SizedBox(height: AppSpacing.md),
+          CiervoButton(
+            label: actionLabel!,
+            icon: Icons.workspace_premium_outlined,
+            state: actionLoading
+                ? CiervoButtonState.loading
+                : CiervoButtonState.normal,
+            variant: highlighted
+                ? CiervoButtonVariant.secondary
+                : CiervoButtonVariant.primary,
+            onPressed: actionLoading ? null : onAction,
+          ),
+        ],
+      ],
+    ),
+  );
 }
 
 Widget _line(String label, String value) => Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.xxs),
-      child: Text('$label: $value'),
-    );
+  padding: const EdgeInsets.only(top: AppSpacing.xxs),
+  child: Text('$label: $value'),
+);
 
-String _date(DateTime? value) =>
-    value == null ? 'Sin vencimiento' : value.toLocal().toString().substring(0, 10);
+String _date(DateTime? value) => value == null
+    ? 'Sin vencimiento'
+    : value.toLocal().toString().substring(0, 10);

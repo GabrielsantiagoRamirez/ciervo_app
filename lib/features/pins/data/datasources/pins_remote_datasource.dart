@@ -49,8 +49,7 @@ class DioPinsRemoteDataSource implements PinsRemoteDataSource {
         'kidsMode': kidsMode,
         'requireParentApproval': requireParentApproval,
         if (kidsMode && childProfileId != null)
-          'childProfileId':
-              int.tryParse(childProfileId) ?? childProfileId,
+          'childProfileId': int.tryParse(childProfileId) ?? childProfileId,
         if (kidsMode && childWalletCardId != null)
           'childWalletCardId':
               int.tryParse(childWalletCardId) ?? childWalletCardId,

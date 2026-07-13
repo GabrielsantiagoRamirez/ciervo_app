@@ -5,7 +5,7 @@
 #   powershell -ExecutionPolicy Bypass -File scripts/smoke_e2e_prod.ps1
 
 param(
-  [string]$BaseUrl = $(if ($env:CIERVO_API_BASE_URL) { $env:CIERVO_API_BASE_URL } else { "https://ciervo-backend-613568140358.southamerica-east1.run.app" }),
+  [string]$BaseUrl = $(if ($env:CIERVO_API_BASE_URL) { $env:CIERVO_API_BASE_URL } else { "https://api.ciervo.club" }),
   [string]$Email = $env:CIERVO_QA_EMAIL,
   [string]$Password = $env:CIERVO_QA_PASS
 )

@@ -6,10 +6,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../domain/entities/place_detail.dart';
 
 class PlaceDetailReviewTile extends StatelessWidget {
-  const PlaceDetailReviewTile({
-    required this.review,
-    super.key,
-  });
+  const PlaceDetailReviewTile({required this.review, super.key});
 
   final PlaceReview review;
 

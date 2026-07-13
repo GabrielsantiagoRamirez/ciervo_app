@@ -67,9 +67,9 @@ class _KidsNfcParentApprovalsPageState
         );
         _load();
       },
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 
@@ -101,14 +101,14 @@ class _KidsNfcParentApprovalsPageState
     setState(() => _actionId = null);
     result.when(
       success: (_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pago rechazado.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Pago rechazado.')));
         _load();
       },
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 
@@ -128,122 +128,118 @@ class _KidsNfcParentApprovalsPageState
                 children: const [CiervoLoadingState(itemCount: 3)],
               )
             : _error != null
-                ? ListView(
-                    padding: pagePaddingOf(context),
-                    children: [
-                      CiervoErrorState(
-                        title: 'No pudimos cargar solicitudes',
-                        description: _error!,
-                        onRetry: _load,
+            ? ListView(
+                padding: pagePaddingOf(context),
+                children: [
+                  CiervoErrorState(
+                    title: 'No pudimos cargar solicitudes',
+                    description: _error!,
+                    onRetry: _load,
+                  ),
+                ],
+              )
+            : _items.isEmpty
+            ? ListView(
+                padding: pagePaddingOf(context),
+                children: const [
+                  CiervoEmptyState(
+                    title: 'Sin solicitudes pendientes',
+                    description:
+                        'Cuando tu hijo intente pagar con NFC, aparecerá aquí.',
+                    icon: Icons.nfc_outlined,
+                  ),
+                ],
+              )
+            : ListView.separated(
+                padding: pagePaddingOf(context),
+                itemCount: _items.length,
+                separatorBuilder: (_, _) =>
+                    const SizedBox(height: AppSpacing.sm),
+                itemBuilder: (context, index) {
+                  final item = _items[index];
+                  final busy = _actionId == item.paymentIntentId;
+                  return Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: maxContentWidthOf(context),
                       ),
-                    ],
-                  )
-                : _items.isEmpty
-                    ? ListView(
-                        padding: pagePaddingOf(context),
-                        children: const [
-                          CiervoEmptyState(
-                            title: 'Sin solicitudes pendientes',
-                            description:
-                                'Cuando tu hijo intente pagar con NFC, aparecerá aquí.',
-                            icon: Icons.nfc_outlined,
-                          ),
-                        ],
-                      )
-                    : ListView.separated(
-                        padding: pagePaddingOf(context),
-                        itemCount: _items.length,
-                        separatorBuilder: (_, _) =>
-                            const SizedBox(height: AppSpacing.sm),
-                        itemBuilder: (context, index) {
-                          final item = _items[index];
-                          final busy = _actionId == item.paymentIntentId;
-                          return Center(
-                            child: ConstrainedBox(
-                              constraints: BoxConstraints(
-                                maxWidth: maxContentWidthOf(context),
-                              ),
-                              child: CiervoCard(
-                                showGradientOverlay: isDark,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        CircleAvatar(
-                                          backgroundColor: accent.withValues(
-                                            alpha: isDark ? 0.2 : 0.15,
-                                          ),
-                                          child: Icon(
-                                            Icons.nfc,
-                                            color: accent,
-                                          ),
-                                        ),
-                                        const SizedBox(width: AppSpacing.md),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                item.kidName,
-                                                style: theme.textTheme.titleMedium,
-                                              ),
-                                              Text(
-                                                item.merchantName,
-                                                style: theme.textTheme.bodySmall,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Text(
-                                          NfcPaymentUi.formatMoney(
-                                            item.amount,
-                                            item.currency,
-                                          ),
-                                          style: theme.textTheme.titleMedium
-                                              ?.copyWith(
-                                            fontWeight: FontWeight.w700,
-                                            color: accent,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: AppSpacing.lg),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: CiervoButton(
-                                            label: busy ? '...' : 'Autorizar',
-                                            icon: Icons.check,
-                                            state: busy
-                                                ? CiervoButtonState.loading
-                                                : CiervoButtonState.normal,
-                                            onPressed: busy
-                                                ? null
-                                                : () => _approve(item),
-                                          ),
-                                        ),
-                                        const SizedBox(width: AppSpacing.sm),
-                                        Expanded(
-                                          child: CiervoButton(
-                                            label: 'Rechazar',
-                                            variant: CiervoButtonVariant.secondary,
-                                            icon: Icons.close,
-                                            onPressed: busy
-                                                ? null
-                                                : () => _reject(item),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+                      child: CiervoCard(
+                        showGradientOverlay: isDark,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor: accent.withValues(
+                                    alpha: isDark ? 0.2 : 0.15,
+                                  ),
+                                  child: Icon(Icons.nfc, color: accent),
                                 ),
-                              ),
+                                const SizedBox(width: AppSpacing.md),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        item.kidName,
+                                        style: theme.textTheme.titleMedium,
+                                      ),
+                                      Text(
+                                        item.merchantName,
+                                        style: theme.textTheme.bodySmall,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Text(
+                                  NfcPaymentUi.formatMoney(
+                                    item.amount,
+                                    item.currency,
+                                  ),
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: accent,
+                                  ),
+                                ),
+                              ],
                             ),
-                          );
-                        },
+                            const SizedBox(height: AppSpacing.lg),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: CiervoButton(
+                                    label: busy ? '...' : 'Autorizar',
+                                    icon: Icons.check,
+                                    state: busy
+                                        ? CiervoButtonState.loading
+                                        : CiervoButtonState.normal,
+                                    onPressed: busy
+                                        ? null
+                                        : () => _approve(item),
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.sm),
+                                Expanded(
+                                  child: CiervoButton(
+                                    label: 'Rechazar',
+                                    variant: CiervoButtonVariant.secondary,
+                                    icon: Icons.close,
+                                    onPressed: busy
+                                        ? null
+                                        : () => _reject(item),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
+                    ),
+                  );
+                },
+              ),
       ),
     );
   }

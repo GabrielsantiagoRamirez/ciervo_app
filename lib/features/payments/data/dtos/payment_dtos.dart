@@ -1,3 +1,4 @@
+import '../../../../core/country/country_registration.dart';
 import '../../domain/entities/payment_config.dart';
 import '../../domain/entities/payment_history_item.dart';
 import '../../domain/entities/payment_intent.dart';
@@ -15,14 +16,17 @@ class PaymentConfigDto {
   });
 
   factory PaymentConfigDto.fromJson(Map<String, dynamic> json) {
+    final currencyRaw = _string(json, const ['currency']);
     return PaymentConfigDto(
       provider: _string(json, const ['provider']),
       enabled: _bool(json, const ['enabled'], defaultValue: true),
       isSandbox: _bool(json, const ['isSandbox', 'sandbox']),
       publicKey: _string(json, const ['publicKey', 'public_key']),
-      currency: _string(json, const ['currency']).isEmpty
-          ? 'COP'
-          : _string(json, const ['currency']),
+      currency: currencyRaw.isEmpty
+          ? CountryRegistration.currencyForCountry(
+              CountryRegistration.defaultCountryCode(),
+            )
+          : currencyRaw,
       successUrl: _stringOrNull(json, const ['successUrl']),
       failureUrl: _stringOrNull(json, const ['failureUrl']),
       pendingUrl: _stringOrNull(json, const ['pendingUrl']),
@@ -39,15 +43,15 @@ class PaymentConfigDto {
   final String? pendingUrl;
 
   PaymentConfig toDomain() => PaymentConfig(
-        provider: provider,
-        enabled: enabled,
-        isSandbox: isSandbox,
-        publicKey: publicKey,
-        currency: currency,
-        successUrl: successUrl,
-        failureUrl: failureUrl,
-        pendingUrl: pendingUrl,
-      );
+    provider: provider,
+    enabled: enabled,
+    isSandbox: isSandbox,
+    publicKey: publicKey,
+    currency: currency,
+    successUrl: successUrl,
+    failureUrl: failureUrl,
+    pendingUrl: pendingUrl,
+  );
 }
 
 class PaymentIntentDto {
@@ -64,11 +68,7 @@ class PaymentIntentDto {
 
   factory PaymentIntentDto.fromJson(Map<String, dynamic> json) {
     return PaymentIntentDto(
-      id: _string(json, const [
-        'paymentIntentId',
-        'id',
-        'intentId',
-      ]),
+      id: _string(json, const ['paymentIntentId', 'id', 'intentId']),
       type: _string(json, const ['type']),
       status: _string(json, const ['status']).isEmpty
           ? 'pending'
@@ -84,10 +84,7 @@ class PaymentIntentDto {
         'membershipPlanId',
         'planId',
       ]),
-      receiptUrl: _stringOrNull(json, const [
-        'publicReceiptUrl',
-        'receiptUrl',
-      ]),
+      receiptUrl: _stringOrNull(json, const ['publicReceiptUrl', 'receiptUrl']),
     );
   }
 
@@ -101,15 +98,15 @@ class PaymentIntentDto {
   final String? receiptUrl;
 
   PaymentIntent toDomain() => PaymentIntent(
-        id: id,
-        type: type,
-        status: status,
-        checkoutUrl: checkoutUrl,
-        amount: amount,
-        currency: currency,
-        membershipPlanId: membershipPlanId,
-        receiptUrl: receiptUrl,
-      );
+    id: id,
+    type: type,
+    status: status,
+    checkoutUrl: checkoutUrl,
+    amount: amount,
+    currency: currency,
+    membershipPlanId: membershipPlanId,
+    receiptUrl: receiptUrl,
+  );
 }
 
 class PaymentHistoryItemDto {
@@ -133,10 +130,7 @@ class PaymentHistoryItemDto {
           ? 'COP'
           : _string(json, const ['currency']),
       createdAt: _stringOrNull(json, const ['createdAt', 'paidAt']),
-      receiptUrl: _stringOrNull(json, const [
-        'publicReceiptUrl',
-        'receiptUrl',
-      ]),
+      receiptUrl: _stringOrNull(json, const ['publicReceiptUrl', 'receiptUrl']),
     );
   }
 
@@ -149,26 +143,27 @@ class PaymentHistoryItemDto {
   final String? receiptUrl;
 
   PaymentHistoryItem toDomain() => PaymentHistoryItem(
-        id: id,
-        type: type,
-        status: status,
-        amount: amount,
-        currency: currency,
-        createdAt: createdAt,
-        receiptUrl: receiptUrl,
-      );
+    id: id,
+    type: type,
+    status: status,
+    amount: amount,
+    currency: currency,
+    createdAt: createdAt,
+    receiptUrl: receiptUrl,
+  );
 
   static List<PaymentHistoryItemDto> listFrom(dynamic value) {
     final items = value is List
         ? value
         : value is Map<String, dynamic> && value['items'] is List
-            ? value['items'] as List
-            : const [];
+        ? value['items'] as List
+        : const [];
     return items
         .whereType<Map>()
-        .map((item) => PaymentHistoryItemDto.fromJson(
-              Map<String, dynamic>.from(item),
-            ))
+        .map(
+          (item) =>
+              PaymentHistoryItemDto.fromJson(Map<String, dynamic>.from(item)),
+        )
         .toList();
   }
 }

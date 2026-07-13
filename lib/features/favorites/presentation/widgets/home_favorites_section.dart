@@ -19,11 +19,7 @@ import '../pages/favorites_page.dart';
 import 'favorite_counts_badge.dart';
 
 class HomeFavoritesSection extends StatefulWidget {
-  const HomeFavoritesSection({
-    this.country,
-    this.city,
-    super.key,
-  });
+  const HomeFavoritesSection({this.country, this.city, super.key});
 
   final String? country;
   final String? city;
@@ -78,100 +74,100 @@ class _HomeFavoritesSectionState extends State<HomeFavoritesSection> {
 
   @override
   Widget build(BuildContext context) => FutureBuilder<_FavoritesPreview>(
-        future: _preview,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const SizedBox(
-              height: 120,
-              child: CiervoBrandLoader(
-                message: 'Cargando favoritos',
-                compact: true,
-              ),
-            );
-          }
-          final items = snapshot.data?.items ?? const [];
-          if (items.isEmpty) return const SizedBox.shrink();
+    future: _preview,
+    builder: (context, snapshot) {
+      if (snapshot.connectionState != ConnectionState.done) {
+        return const SizedBox(
+          height: 120,
+          child: CiervoBrandLoader(
+            message: 'Cargando favoritos',
+            compact: true,
+          ),
+        );
+      }
+      final items = snapshot.data?.items ?? const [];
+      if (items.isEmpty) return const SizedBox.shrink();
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Tus favoritos',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
+              const Expanded(
+                child: Text(
+                  'Tus favoritos',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
                   ),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const FavoritesPage(),
-                      ),
-                    ),
-                    child: const Text('Ver todos'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              SizedBox(
-                height: 200,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: items.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
-                  itemBuilder: (context, index) {
-                    final favorite = items[index];
-                    final place = HomePlace(
-                      id: favorite.businessId,
-                      name: favorite.name,
-                      category: favorite.category,
-                      rating: favorite.rating,
-                      priceLevel: favorite.priceLevel,
-                      distanceKm: favorite.distanceKm,
-                      matchPercent: 0,
-                      imageUrl: favorite.imageUrl,
-                      businessCategoryId: favorite.businessCategoryId,
-                      isFavorite: true,
-                      city: favorite.city,
-                      countryCode: favorite.country,
-                    );
-                    return SizedBox(
-                      width: 280,
-                      child: Stack(
-                        children: [
-                          HomePlaceCard(
-                            place: place,
-                            mode: context.watch<ExperienceModeCubit>().state.mode,
-                            isFavorite: true,
-                            onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => PlaceDetailPage(place: place),
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            right: AppSpacing.sm,
-                            bottom: 48,
-                            child: FavoriteCountsBadge(
-                              bonuses: favorite.activeBonusesCount,
-                              campaigns: favorite.activeCampaignsCount,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
                 ),
               ),
+              TextButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const FavoritesPage(),
+                  ),
+                ),
+                child: const Text('Ver todos'),
+              ),
             ],
-          );
-        },
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          SizedBox(
+            height: 200,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: items.length,
+              separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+              itemBuilder: (context, index) {
+                final favorite = items[index];
+                final place = HomePlace(
+                  id: favorite.businessId,
+                  name: favorite.name,
+                  category: favorite.category,
+                  rating: favorite.rating,
+                  priceLevel: favorite.priceLevel,
+                  distanceKm: favorite.distanceKm,
+                  matchPercent: 0,
+                  imageUrl: favorite.imageUrl,
+                  businessCategoryId: favorite.businessCategoryId,
+                  isFavorite: true,
+                  city: favorite.city,
+                  countryCode: favorite.country,
+                );
+                return SizedBox(
+                  width: 280,
+                  child: Stack(
+                    children: [
+                      HomePlaceCard(
+                        place: place,
+                        mode: context.watch<ExperienceModeCubit>().state.mode,
+                        isFavorite: true,
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => PlaceDetailPage(place: place),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        right: AppSpacing.sm,
+                        bottom: 48,
+                        child: FavoriteCountsBadge(
+                          bonuses: favorite.activeBonusesCount,
+                          campaigns: favorite.activeCampaignsCount,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       );
+    },
+  );
 }
 
 class _FavoritesPreview {

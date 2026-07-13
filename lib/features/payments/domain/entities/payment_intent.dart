@@ -39,15 +39,18 @@ class PaymentIntent {
       normalizedStatus == 'requiresexternalaction';
 
   bool get isTerminal =>
-      isApproved || isRejected || normalizedStatus == 'cancelled' || normalizedStatus == 'expired';
+      isApproved ||
+      isRejected ||
+      normalizedStatus == 'cancelled' ||
+      normalizedStatus == 'expired';
 
   String get statusLabel => switch (normalizedStatus) {
-        'pending' => 'Pendiente',
-        'processing' => 'Procesando',
-        'approved' || 'succeeded' => 'Aprobado',
-        'rejected' || 'failed' => 'Rechazado',
-        'cancelled' => 'Cancelado',
-        'expired' => 'Expirado',
-        _ => status,
-      };
+    'pending' => 'Pendiente',
+    'processing' => 'Procesando',
+    'approved' || 'succeeded' => 'Aprobado',
+    'rejected' || 'failed' => 'Rechazado',
+    'cancelled' => 'Cancelado',
+    'expired' => 'Expirado',
+    _ => status,
+  };
 }

@@ -91,19 +91,19 @@ class _KidWalletPageState extends State<KidWalletPage> {
       body: _loading
           ? const CiervoBrandLoader(message: 'Cargando tu wallet')
           : _error != null && _wallet == null
-              ? CiervoErrorState(
-                  title: 'No pudimos cargar tu wallet',
-                  description: _error!,
-                  onRetry: _load,
-                )
-              : KidPremiumWalletDashboard(
-                  userName: _userName,
-                  balance: _availableBalance,
-                  heldBalance: _num(_wallet?['heldBalance']),
-                  currency: '${_wallet?['currency'] ?? 'COP'}',
-                  movements: _movements(),
-                  onRefresh: _load,
-                ),
+          ? CiervoErrorState(
+              title: 'No pudimos cargar tu wallet',
+              description: _error!,
+              onRetry: _load,
+            )
+          : KidPremiumWalletDashboard(
+              userName: _userName,
+              balance: _availableBalance,
+              heldBalance: _num(_wallet?['heldBalance']),
+              currency: '${_wallet?['currency'] ?? 'COP'}',
+              movements: _movements(),
+              onRefresh: _load,
+            ),
     );
   }
 }

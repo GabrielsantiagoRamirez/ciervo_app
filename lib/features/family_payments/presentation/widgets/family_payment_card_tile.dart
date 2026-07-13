@@ -27,8 +27,8 @@ class FamilyPaymentCardTile extends StatelessWidget {
         width: 48,
         height: 48,
         child: Center(
-          child: CardBrandDetector.fromBrandString(card.brand) ==
-                  CardBrand.unknown
+          child:
+              CardBrandDetector.fromBrandString(card.brand) == CardBrand.unknown
               ? Icon(Icons.payment, color: colors.onPrimaryContainer)
               : CardBrandLogo(
                   brand: CardBrandDetector.fromBrandString(card.brand),
@@ -44,7 +44,9 @@ class FamilyPaymentCardTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('${card.brand.toUpperCase()} · ${card.maskedNumber}'),
-          Text('Expira ${card.expirationLabel} · ${DisplayLabels.familyCardStatus(card.status)}'),
+          Text(
+            'Expira ${card.expirationLabel} · ${DisplayLabels.familyCardStatus(card.status)}',
+          ),
           Wrap(
             spacing: 6,
             runSpacing: 4,

@@ -49,8 +49,9 @@ class _ChildWalletPageState extends State<ChildWalletPage> {
     final wallet = await _repository.childWallet(widget.childId);
     final cards = await _repository.childWalletCards(widget.childId);
     final history = await _repository.childWalletHistory(widget.childId);
-    final paymentMethods =
-        await _repository.childPaymentMethods(widget.childId);
+    final paymentMethods = await _repository.childPaymentMethods(
+      widget.childId,
+    );
     final profile = await _repository.child(widget.childId);
     if (!mounted) return;
     String? error;
@@ -135,7 +136,10 @@ class _ChildWalletPageState extends State<ChildWalletPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Tarjeta #${card.id}', style: Theme.of(context).textTheme.bodySmall),
+            Text(
+              'Tarjeta #${card.id}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
             const SizedBox(height: AppSpacing.sm),
             TextField(
               controller: controller,
@@ -150,7 +154,10 @@ class _ChildWalletPageState extends State<ChildWalletPage> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
           FilledButton(
             onPressed: () => Navigator.pop(
               context,
@@ -172,13 +179,17 @@ class _ChildWalletPageState extends State<ChildWalletPage> {
     result.when(
       success: (_) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Recarga de $currency ${amount.toStringAsFixed(0)} enviada.')),
+          SnackBar(
+            content: Text(
+              'Recarga de $currency ${amount.toStringAsFixed(0)} enviada.',
+            ),
+          ),
         );
         _load();
       },
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 
@@ -217,13 +228,18 @@ class _ChildWalletPageState extends State<ChildWalletPage> {
     final result = await _repository.createChildWalletCard(
       childId: widget.childId,
       displayName: displayName,
+      currency: _walletCurrency,
     );
     if (!mounted) return;
     setState(() => _creatingCard = false);
     result.when(
       success: (data) {
         final createdCard = ChildWalletCardView.fromMap(data);
-        setState(() => _highlightCardId = createdCard.id.isNotEmpty ? createdCard.id : null);
+        setState(
+          () => _highlightCardId = createdCard.id.isNotEmpty
+              ? createdCard.id
+              : null,
+        );
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -235,9 +251,9 @@ class _ChildWalletPageState extends State<ChildWalletPage> {
         );
         _load();
       },
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 
@@ -273,187 +289,225 @@ class _ChildWalletPageState extends State<ChildWalletPage> {
                 children: [
                   Center(
                     child: ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: maxContentWidthOf(context)),
+                      constraints: BoxConstraints(
+                        maxWidth: maxContentWidthOf(context),
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                  CiervoCard(
-                    showGradientOverlay: isDark,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Saldo disponible', style: theme.textTheme.bodySmall),
-                        Text(
-                          '$currency ${_num(_wallet?['availableBalance'] ?? _wallet?['balance']).toStringAsFixed(0)}',
-                          style: theme.textTheme.displaySmall?.copyWith(
-                            color: accent,
-                            fontWeight: FontWeight.w700,
+                          CiervoCard(
+                            showGradientOverlay: isDark,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Saldo disponible',
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                                Text(
+                                  '$currency ${_num(_wallet?['availableBalance'] ?? _wallet?['balance']).toStringAsFixed(0)}',
+                                  style: theme.textTheme.displaySmall?.copyWith(
+                                    color: accent,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                if (_num(_wallet?['heldBalance']) > 0)
+                                  Text(
+                                    'Retenido: $currency ${_num(_wallet?['heldBalance']).toStringAsFixed(0)}',
+                                    style: theme.textTheme.bodySmall,
+                                  ),
+                              ],
+                            ),
                           ),
-                        ),
-                        if (_num(_wallet?['heldBalance']) > 0)
-                          Text(
-                            'Retenido: $currency ${_num(_wallet?['heldBalance']).toStringAsFixed(0)}',
-                            style: theme.textTheme.bodySmall,
-                          ),
-                      ],
-                    ),
-                  ),
-                  if (_paymentHint != null) ...[
-                    const SizedBox(height: AppSpacing.md),
-                    Container(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primaryContainer.withValues(
-                          alpha: isDark ? 0.2 : 0.45,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(Icons.lightbulb_outline, color: accent, size: 20),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: Text(_paymentHint!, style: theme.textTheme.bodySmall),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: AppSpacing.lg),
-                  CiervoCard(
-                    child: ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: Icon(Icons.point_of_sale_outlined, color: accent),
-                      title: const Text('Pagar en comercio permitido'),
-                      subtitle: const Text(
-                        'Usa la wallet Kids en un comercio autorizado.',
-                      ),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => ChildBusinessPaymentPage(
-                            childId: widget.childId,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  CiervoCard(
-                    child: ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: Icon(Icons.credit_card_outlined, color: accent),
-                      title: const Text('Medios de pago'),
-                      subtitle: const Text(
-                        'Tarjetas virtuales Kids y respaldo del tutor.',
-                      ),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => ChildPaymentMethodsPage(
-                            childId: widget.childId,
-                            childName: _childName,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Tarjetas',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                      ),
-                      TextButton.icon(
-                        onPressed: _creatingCard ? null : _createCard,
-                        icon: _creatingCard
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.add_card_outlined),
-                        label: Text(_creatingCard ? 'Creando...' : 'Nueva tarjeta'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  if (_cards.isEmpty)
-                    const CiervoEmptyState(
-                      title: 'Sin tarjetas',
-                      description: 'Este menor aún no tiene tarjetas wallet.',
-                      icon: Icons.credit_card_outlined,
-                    )
-                  else
-                    ..._cards.map(
-                      (card) => Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                        child: CiervoCard(
-                          showGradientOverlay:
-                              _highlightCardId == card.id && isDark,
-                          child: ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            leading: CircleAvatar(
-                              backgroundColor: accent.withValues(
-                                alpha: isDark ? 0.22 : 0.14,
+                          if (_paymentHint != null) ...[
+                            const SizedBox(height: AppSpacing.md),
+                            Container(
+                              padding: const EdgeInsets.all(AppSpacing.md),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.primaryContainer
+                                    .withValues(alpha: isDark ? 0.2 : 0.45),
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              child: Text(
-                                card.displayName.isNotEmpty
-                                    ? card.displayName.substring(0, 1).toUpperCase()
-                                    : '#',
-                                style: TextStyle(color: accent),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Icon(
+                                    Icons.lightbulb_outline,
+                                    color: accent,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: AppSpacing.sm),
+                                  Expanded(
+                                    child: Text(
+                                      _paymentHint!,
+                                      style: theme.textTheme.bodySmall,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            title: Text(card.displayName),
-                            subtitle: Text(
-                              '${card.subtitle}\nDisponible: ${card.currency} ${card.balance.toStringAsFixed(0)}',
-                            ),
-                            isThreeLine: true,
-                            trailing: IconButton(
-                              tooltip: 'Recargar tarjeta',
-                              icon: const Icon(Icons.account_balance_wallet_outlined),
-                              onPressed: card.isBlocked
-                                  ? null
-                                  : () => _recharge(card),
-                            ),
-                            tileColor: _highlightCardId == card.id
-                                ? theme.colorScheme.primaryContainer.withValues(
-                                    alpha: isDark ? 0.28 : 0.35,
-                                  )
-                                : null,
-                          ),
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: AppSpacing.lg),
-                  Text('Historial', style: theme.textTheme.titleLarge),
-                  const SizedBox(height: AppSpacing.sm),
-                  if (_history.isEmpty)
-                    const CiervoEmptyState(
-                      title: 'Sin movimientos',
-                      description: 'Aún no hay transacciones registradas.',
-                      icon: Icons.receipt_long_outlined,
-                    )
-                  else
-                    ..._history.map(
-                      (item) => Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                        child: CiervoCard(
-                          child: ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            title: Text('${item['description'] ?? item['type'] ?? 'Movimiento'}'),
-                            subtitle: Text('${item['createdAt'] ?? ''}'),
-                            trailing: Text(
-                              '$currency ${_num(item['amount']).toStringAsFixed(0)}',
+                          ],
+                          const SizedBox(height: AppSpacing.lg),
+                          CiervoCard(
+                            child: ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: Icon(
+                                Icons.point_of_sale_outlined,
+                                color: accent,
+                              ),
+                              title: const Text('Pagar en comercio permitido'),
+                              subtitle: const Text(
+                                'Usa la wallet Kids en un comercio autorizado.',
+                              ),
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => ChildBusinessPaymentPage(
+                                    childId: widget.childId,
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                    ),
+                          const SizedBox(height: AppSpacing.sm),
+                          CiervoCard(
+                            child: ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: Icon(
+                                Icons.credit_card_outlined,
+                                color: accent,
+                              ),
+                              title: const Text('Medios de pago'),
+                              subtitle: const Text(
+                                'Tarjetas virtuales Kids y respaldo del tutor.',
+                              ),
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => ChildPaymentMethodsPage(
+                                    childId: widget.childId,
+                                    childName: _childName,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  'Tarjetas',
+                                  style: Theme.of(context).textTheme.titleLarge,
+                                ),
+                              ),
+                              TextButton.icon(
+                                onPressed: _creatingCard ? null : _createCard,
+                                icon: _creatingCard
+                                    ? const SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Icon(Icons.add_card_outlined),
+                                label: Text(
+                                  _creatingCard
+                                      ? 'Creando...'
+                                      : 'Nueva tarjeta',
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          if (_cards.isEmpty)
+                            const CiervoEmptyState(
+                              title: 'Sin tarjetas',
+                              description:
+                                  'Este menor aún no tiene tarjetas wallet.',
+                              icon: Icons.credit_card_outlined,
+                            )
+                          else
+                            ..._cards.map(
+                              (card) => Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: AppSpacing.sm,
+                                ),
+                                child: CiervoCard(
+                                  showGradientOverlay:
+                                      _highlightCardId == card.id && isDark,
+                                  child: ListTile(
+                                    contentPadding: EdgeInsets.zero,
+                                    leading: CircleAvatar(
+                                      backgroundColor: accent.withValues(
+                                        alpha: isDark ? 0.22 : 0.14,
+                                      ),
+                                      child: Text(
+                                        card.displayName.isNotEmpty
+                                            ? card.displayName
+                                                  .substring(0, 1)
+                                                  .toUpperCase()
+                                            : '#',
+                                        style: TextStyle(color: accent),
+                                      ),
+                                    ),
+                                    title: Text(card.displayName),
+                                    subtitle: Text(
+                                      '${card.subtitle}\nDisponible: ${card.currency} ${card.balance.toStringAsFixed(0)}',
+                                    ),
+                                    isThreeLine: true,
+                                    trailing: IconButton(
+                                      tooltip: 'Recargar tarjeta',
+                                      icon: const Icon(
+                                        Icons.account_balance_wallet_outlined,
+                                      ),
+                                      onPressed: card.isBlocked
+                                          ? null
+                                          : () => _recharge(card),
+                                    ),
+                                    tileColor: _highlightCardId == card.id
+                                        ? theme.colorScheme.primaryContainer
+                                              .withValues(
+                                                alpha: isDark ? 0.28 : 0.35,
+                                              )
+                                        : null,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          const SizedBox(height: AppSpacing.lg),
+                          Text('Historial', style: theme.textTheme.titleLarge),
+                          const SizedBox(height: AppSpacing.sm),
+                          if (_history.isEmpty)
+                            const CiervoEmptyState(
+                              title: 'Sin movimientos',
+                              description:
+                                  'Aún no hay transacciones registradas.',
+                              icon: Icons.receipt_long_outlined,
+                            )
+                          else
+                            ..._history.map(
+                              (item) => Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: AppSpacing.sm,
+                                ),
+                                child: CiervoCard(
+                                  child: ListTile(
+                                    contentPadding: EdgeInsets.zero,
+                                    title: Text(
+                                      '${item['description'] ?? item['type'] ?? 'Movimiento'}',
+                                    ),
+                                    subtitle: Text(
+                                      '${item['createdAt'] ?? ''}',
+                                    ),
+                                    trailing: Text(
+                                      '$currency ${_num(item['amount']).toStringAsFixed(0)}',
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     ),

@@ -65,7 +65,8 @@ class _KidNfcPayPageState extends State<KidNfcPayPage> {
   }
 
   String get _sessionStatus =>
-      '${_session?['status'] ?? _session?['sessionStatus'] ?? ''}'.toLowerCase();
+      '${_session?['status'] ?? _session?['sessionStatus'] ?? ''}'
+          .toLowerCase();
 
   Future<void> _createSession() async {
     final amount = double.tryParse(_amount.text.replaceAll(',', '').trim());

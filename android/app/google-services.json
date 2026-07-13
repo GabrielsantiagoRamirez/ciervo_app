@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "613568140358-iel89rc7e05l9gtbosi8i1lkv2p3v5os.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.company.ciervoclub",
+            "certificate_hash": "6cfe40bb4bcef4a1621b38cb7c8ac5b1f66e75e3"
+          }
+        },
+        {
           "client_id": "613568140358-fio9sg78tfu2qkcbn33ljs34enkar98g.apps.googleusercontent.com",
           "client_type": 3
         }

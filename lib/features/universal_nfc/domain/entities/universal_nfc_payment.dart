@@ -74,8 +74,7 @@ class UniversalNfcPayment {
 
   bool get isPendingNfcTap => status.toLowerCase() == 'pendingnfctap';
 
-  bool get isApproved =>
-      status.toLowerCase() == 'approved' || approved == true;
+  bool get isApproved => status.toLowerCase() == 'approved' || approved == true;
 
   bool get isRejected => status.toLowerCase() == 'rejected';
 

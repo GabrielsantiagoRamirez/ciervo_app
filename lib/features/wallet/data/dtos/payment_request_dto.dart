@@ -22,7 +22,8 @@ class PaymentRequestDto {
   });
 
   factory PaymentRequestDto.fromJson(Map<String, dynamic> json) {
-    final requester = _personMap(json, 'requester') ??
+    final requester =
+        _personMap(json, 'requester') ??
         _personMap(json, 'sender') ??
         _personMap(json, 'from');
     final payer = _personMap(json, 'payer') ?? _personMap(json, 'to');
@@ -41,55 +42,58 @@ class PaymentRequestDto {
         'concept',
         'reason',
       ]),
-      payerName: _optionalString(json, const [
-        'payerName',
-        'payerFullName',
-        'targetName',
-        'targetFullName',
-      ]) ??
+      payerName:
+          _optionalString(json, const [
+            'payerName',
+            'payerFullName',
+            'targetName',
+            'targetFullName',
+          ]) ??
           _personName(payer),
       targetName: _optionalString(json, const [
         'targetName',
         'targetFullName',
         'beneficiaryName',
       ]),
-      requesterName: _optionalString(json, const [
-        'requesterName',
-        'requesterFullName',
-        'senderName',
-        'senderFullName',
-        'fromName',
-      ]) ??
+      requesterName:
+          _optionalString(json, const [
+            'requesterName',
+            'requesterFullName',
+            'senderName',
+            'senderFullName',
+            'fromName',
+          ]) ??
           _personName(requester),
-      requesterUsername: _optionalString(json, const [
-        'requesterUsername',
-        'senderUsername',
-        'fromUsername',
-        'username',
-      ]) ??
+      requesterUsername:
+          _optionalString(json, const [
+            'requesterUsername',
+            'senderUsername',
+            'fromUsername',
+            'username',
+          ]) ??
           _personField(requester, const ['username', 'userName']),
-      requesterCiervoId: _optionalString(json, const [
-        'requesterCiervoUserCode',
-        'requesterCiervoId',
-        'senderCiervoUserCode',
-        'senderCiervoId',
-        'fromCiervoUserCode',
-      ]) ??
+      requesterCiervoId:
+          _optionalString(json, const [
+            'requesterCiervoUserCode',
+            'requesterCiervoId',
+            'senderCiervoUserCode',
+            'senderCiervoId',
+            'fromCiervoUserCode',
+          ]) ??
           _personField(requester, const [
             'ciervoUserCode',
             'ciervoId',
             'publicCode',
           ]),
-      payerUsername: _optionalString(json, const [
-        'payerUsername',
-        'targetUsername',
-      ]) ??
+      payerUsername:
+          _optionalString(json, const ['payerUsername', 'targetUsername']) ??
           _personField(payer, const ['username', 'userName']),
-      payerCiervoId: _optionalString(json, const [
-        'payerCiervoUserCode',
-        'payerCiervoId',
-        'targetCiervoUserCode',
-      ]) ??
+      payerCiervoId:
+          _optionalString(json, const [
+            'payerCiervoUserCode',
+            'payerCiervoId',
+            'targetCiervoUserCode',
+          ]) ??
           _personField(payer, const ['ciervoUserCode', 'ciervoId']),
       statusLabel: _optionalString(json, const [
         'statusLabel',
@@ -194,10 +198,7 @@ class PaymentRequestDto {
     return display.isEmpty ? null : display;
   }
 
-  static String? _personField(
-    Map<String, dynamic>? person,
-    List<String> keys,
-  ) {
+  static String? _personField(Map<String, dynamic>? person, List<String> keys) {
     if (person == null) return null;
     return _optionalString(person, keys);
   }

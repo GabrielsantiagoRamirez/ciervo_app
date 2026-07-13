@@ -37,7 +37,9 @@ abstract interface class UniversalNfcRepository {
 
   Future<Result<List<KidsNfcParentApproval>>> kidsApprovals();
 
-  Future<Result<UniversalNfcPayment>> approveKidsPayment(String paymentIntentId);
+  Future<Result<UniversalNfcPayment>> approveKidsPayment(
+    String paymentIntentId,
+  );
 
   Future<Result<UniversalNfcPayment>> rejectKidsPayment(
     String paymentIntentId, {

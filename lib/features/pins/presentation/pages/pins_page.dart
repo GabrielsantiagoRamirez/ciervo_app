@@ -100,8 +100,9 @@ class _PinsPageState extends State<PinsPage> {
               final kidId = getIt<SelectedKidContext>().kidId;
               String? childWalletCardId;
               if (kidId != null) {
-                final cards =
-                    await getIt<KidsRepository>().childWalletCards(kidId);
+                final cards = await getIt<KidsRepository>().childWalletCards(
+                  kidId,
+                );
                 cards.when(
                   success: (items) {
                     for (final item in items) {
@@ -189,14 +190,14 @@ class _PinsPageState extends State<PinsPage> {
     if (!mounted) return;
     result.when(
       success: (_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('PIN cancelado.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('PIN cancelado.')));
         _load();
       },
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 
@@ -227,9 +228,7 @@ class _PinsPageState extends State<PinsPage> {
                       child: Text(_error!),
                     ),
                   if (_pins.isEmpty)
-                    CiervoCard(
-                      child: Text('No tienes PINs activos.'),
-                    )
+                    CiervoCard(child: Text('No tienes PINs activos.'))
                   else
                     ..._pins.map(
                       (pin) => Padding(

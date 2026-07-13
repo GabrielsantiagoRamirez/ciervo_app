@@ -106,15 +106,15 @@ class _KidProfilePageState extends State<KidProfilePage> {
           }
           _uploadingPhoto = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Foto actualizada.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Foto actualizada.')));
       },
       failure: (error) {
         setState(() => _uploadingPhoto = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       },
     );
   }
@@ -154,15 +154,15 @@ class _KidProfilePageState extends State<KidProfilePage> {
       success: (_) {
         setState(() => _savingNickname = false);
         _load();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Apodo guardado.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Apodo guardado.')));
       },
       failure: (error) {
         setState(() => _savingNickname = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       },
     );
   }
@@ -206,7 +206,7 @@ class _KidProfilePageState extends State<KidProfilePage> {
                                         ? Text(
                                             profile.firstName.isNotEmpty
                                                 ? profile.firstName[0]
-                                                    .toUpperCase()
+                                                      .toUpperCase()
                                                 : 'K',
                                           )
                                         : null,

@@ -16,7 +16,8 @@ Future<void> showInsufficientBalanceDialog(
   int? businessId,
   int? bookingId,
 }) async {
-  final body = description ??
+  final body =
+      description ??
       (amount != null
           ? 'Necesitas ${currency ?? 'COP'} ${amount.toStringAsFixed(0)} y tu saldo no alcanza.'
           : 'No tienes saldo suficiente en tu wallet.');
@@ -95,9 +96,9 @@ Future<void> showInsufficientBalanceDialog(
       );
     case 'recharge':
     case 'wallet':
-      await Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const WalletPage()),
-      );
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const WalletPage()));
   }
 }
 
@@ -119,7 +120,9 @@ class LowBalanceBanner extends StatelessWidget {
     if (balance > threshold) return const SizedBox.shrink();
 
     return Card(
-      color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.35),
+      color: Theme.of(
+        context,
+      ).colorScheme.errorContainer.withValues(alpha: 0.35),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -167,7 +170,9 @@ class LowBalanceBanner extends StatelessWidget {
                 ),
                 TextButton.icon(
                   onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(builder: (_) => const ChatInboxPage()),
+                    MaterialPageRoute<void>(
+                      builder: (_) => const ChatInboxPage(),
+                    ),
                   ),
                   icon: const Icon(Icons.chat_outlined, size: 18),
                   label: const Text('Chat'),

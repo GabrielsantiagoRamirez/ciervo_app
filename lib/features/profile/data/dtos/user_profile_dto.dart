@@ -12,6 +12,7 @@ class UserProfileDto {
     this.nightOperationalId,
     this.identityDocument,
     this.documentType,
+    this.birthDate,
     this.photoUrl,
     this.imageUrl,
     this.thumbnailUrl,
@@ -65,6 +66,9 @@ class UserProfileDto {
         'documentType',
         'identityDocumentType',
       ]),
+      birthDate: DateTime.tryParse(
+        '${source['birthDate'] ?? source['BirthDate'] ?? source['dateOfBirth'] ?? ''}',
+      ),
       photoUrl: _optionalString(source, const [
         'photoUrl',
         'PhotoUrl',
@@ -76,10 +80,7 @@ class UserProfileDto {
         'avatarMediaId',
         'mediaId',
       ]),
-      imageUrl: _optionalString(source, const [
-        'imageUrl',
-        'ImageUrl',
-      ]),
+      imageUrl: _optionalString(source, const ['imageUrl', 'ImageUrl']),
       thumbnailUrl: _optionalString(source, const [
         'thumbnailUrl',
         'ThumbnailUrl',
@@ -93,12 +94,20 @@ class UserProfileDto {
       ),
       currentLatitude: _double(source['currentLatitude']),
       currentLongitude: _double(source['currentLongitude']),
-      locationUpdatedAt: DateTime.tryParse('${source['locationUpdatedAt'] ?? ''}'),
+      locationUpdatedAt: DateTime.tryParse(
+        '${source['locationUpdatedAt'] ?? ''}',
+      ),
       city: _optionalString(source, const ['city']),
-      countryCode: _optionalString(source, const ['countryCode', 'CountryCode']),
+      countryCode: _optionalString(source, const [
+        'countryCode',
+        'CountryCode',
+      ]),
       emailVerified: _bool(source, const ['emailVerified', 'EmailVerified']),
       phoneVerified: _bool(source, const ['phoneVerified', 'PhoneVerified']),
-      authProvider: _optionalString(source, const ['authProvider', 'AuthProvider']),
+      authProvider: _optionalString(source, const [
+        'authProvider',
+        'AuthProvider',
+      ]),
     );
   }
 
@@ -112,6 +121,7 @@ class UserProfileDto {
   final String? nightOperationalId;
   final String? identityDocument;
   final String? documentType;
+  final DateTime? birthDate;
   final String? photoUrl;
   final String? imageUrl;
   final String? thumbnailUrl;
@@ -138,6 +148,7 @@ class UserProfileDto {
       nightOperationalId: nightOperationalId,
       identityDocument: identityDocument,
       documentType: documentType,
+      birthDate: birthDate,
       photoUrl: photoUrl,
       imageUrl: imageUrl,
       thumbnailUrl: thumbnailUrl,

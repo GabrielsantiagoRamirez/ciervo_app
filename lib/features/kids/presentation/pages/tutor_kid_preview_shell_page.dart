@@ -58,8 +58,8 @@ class _TutorKidPreviewShellPageState extends State<TutorKidPreviewShellPage> {
                       child: Text(
                         'Vista previa: ${widget.childName}',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     TextButton(
@@ -107,25 +107,22 @@ class _TutorKidPreviewShellPageState extends State<TutorKidPreviewShellPage> {
   }
 
   Widget _pageForIndex(int index) => switch (index) {
-        0 => _TutorKidPreviewHome(
-            childId: widget.childId,
-            childName: widget.childName,
-          ),
-        1 => AllowedBusinessesPage(childId: widget.childId),
-        2 => FamilyChatPage(childId: widget.childId),
-        3 => ChildWalletPage(childId: widget.childId),
-        _ => _TutorKidPreviewHome(
-            childId: widget.childId,
-            childName: widget.childName,
-          ),
-      };
+    0 => _TutorKidPreviewHome(
+      childId: widget.childId,
+      childName: widget.childName,
+    ),
+    1 => AllowedBusinessesPage(childId: widget.childId),
+    2 => FamilyChatPage(childId: widget.childId),
+    3 => ChildWalletPage(childId: widget.childId),
+    _ => _TutorKidPreviewHome(
+      childId: widget.childId,
+      childName: widget.childName,
+    ),
+  };
 }
 
 class _TutorKidPreviewHome extends StatefulWidget {
-  const _TutorKidPreviewHome({
-    required this.childId,
-    required this.childName,
-  });
+  const _TutorKidPreviewHome({required this.childId, required this.childName});
 
   final String childId;
   final String childName;
@@ -163,9 +160,7 @@ class _TutorKidPreviewHomeState extends State<_TutorKidPreviewHome> {
 
   @override
   Widget build(BuildContext context) {
-    final balance = _num(
-      _wallet?['availableBalance'] ?? _wallet?['balance'],
-    );
+    final balance = _num(_wallet?['availableBalance'] ?? _wallet?['balance']);
     final currency = '${_wallet?['currency'] ?? 'COP'}';
 
     return Scaffold(

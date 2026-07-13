@@ -14,7 +14,9 @@ class StaffScannerRepository {
   final NetworkClient _client;
 
   Future<Result<StaffPermissions>> permissions() => _guard(() async {
-    final response = await _client.dio.get<dynamic>('/api/staff/me/permissions');
+    final response = await _client.dio.get<dynamic>(
+      '/api/staff/me/permissions',
+    );
     return _permissionsFromJson(unwrapApiMap(response.data));
   });
 
@@ -22,38 +24,35 @@ class StaffScannerRepository {
     required String payload,
     double? latitude,
     double? longitude,
-  }) =>
-      _guard(() async {
-        final response = await _client.dio.post<dynamic>(
-          '/api/qr/validate',
-          data: _scanPayload(payload, latitude, longitude),
-        );
-        return _validationFromJson(unwrapApiMap(response.data));
-      });
+  }) => _guard(() async {
+    final response = await _client.dio.post<dynamic>(
+      '/api/qr/validate',
+      data: _scanPayload(payload, latitude, longitude),
+    );
+    return _validationFromJson(unwrapApiMap(response.data));
+  });
 
   Future<Result<StaffQrRedeemResult>> redeem({
     required String payload,
     String? qrId,
     double? latitude,
     double? longitude,
-  }) =>
-      _guard(() async {
-        final response = await _client.dio.post<dynamic>(
-          '/api/qr/redeem',
-          data: {
-            ..._scanPayload(payload, latitude, longitude),
-            if (qrId != null && qrId.isNotEmpty) 'qrId': qrId,
-          },
-        );
-        return _redeemFromJson(unwrapApiMap(response.data));
-      });
+  }) => _guard(() async {
+    final response = await _client.dio.post<dynamic>(
+      '/api/qr/redeem',
+      data: {
+        ..._scanPayload(payload, latitude, longitude),
+        if (qrId != null && qrId.isNotEmpty) 'qrId': qrId,
+      },
+    );
+    return _redeemFromJson(unwrapApiMap(response.data));
+  });
 
   Future<Result<List<StaffQrScanAudit>>> history() => _guard(() async {
     final response = await _client.dio.get<dynamic>('/api/staff/qr-scans/me');
-    return unwrapApiList(response.data)
-        .whereType<Map<String, dynamic>>()
-        .map(_auditFromJson)
-        .toList();
+    return unwrapApiList(
+      response.data,
+    ).whereType<Map<String, dynamic>>().map(_auditFromJson).toList();
   });
 
   Future<Result<T>> _guard<T>(Future<T> Function() action) async {
@@ -69,17 +68,16 @@ Map<String, dynamic> _scanPayload(
   String payload,
   double? latitude,
   double? longitude,
-) =>
-    {
-      'token': payload,
-      'payload': payload,
-      'qrPayload': payload,
-      'scannedAt': DateTime.now().toUtc().toIso8601String(),
-      'deviceInfo':
-          '${Platform.operatingSystem} ${Platform.operatingSystemVersion}',
-      if (latitude != null) 'latitude': latitude,
-      if (longitude != null) 'longitude': longitude,
-    };
+) => {
+  'token': payload,
+  'payload': payload,
+  'qrPayload': payload,
+  'scannedAt': DateTime.now().toUtc().toIso8601String(),
+  'deviceInfo':
+      '${Platform.operatingSystem} ${Platform.operatingSystemVersion}',
+  if (latitude != null) 'latitude': latitude,
+  if (longitude != null) 'longitude': longitude,
+};
 
 StaffPermissions _permissionsFromJson(Map<String, dynamic> json) =>
     StaffPermissions(
@@ -89,7 +87,8 @@ StaffPermissions _permissionsFromJson(Map<String, dynamic> json) =>
       staffName: _string(json['staffName'] ?? json['name']),
       roleName: _string(json['roleName']),
       permissions: _stringList(json['permissions']),
-      canUseMobileScanner: json['canUseMobileScanner'] == true ||
+      canUseMobileScanner:
+          json['canUseMobileScanner'] == true ||
           _stringList(json['permissions']).contains('qr.scan'),
     );
 

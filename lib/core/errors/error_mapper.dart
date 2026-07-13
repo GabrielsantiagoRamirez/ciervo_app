@@ -24,8 +24,8 @@ abstract final class ErrorMapper {
     final data = response?.data;
     final backendMessage = data is Map<String, dynamic>
         ? data['message']?.toString() ??
-            data['msg']?.toString() ??
-            data['error']?.toString()
+              data['msg']?.toString() ??
+              data['error']?.toString()
         : null;
 
     return AppException(

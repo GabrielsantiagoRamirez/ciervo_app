@@ -61,10 +61,7 @@ class _SecureShipmentListPageState extends State<SecureShipmentListPage>
       success: (items) => _received = items,
       failure: (e) => _error ??= UserErrorMessage.from(e),
     );
-    reportResult.when(
-      success: (r) => _report = r,
-      failure: (_) {},
-    );
+    reportResult.when(success: (r) => _report = r, failure: (_) {});
     setState(() => _loading = false);
   }
 
@@ -201,12 +198,11 @@ class _ReportCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Tu resumen',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text('Tu resumen', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: AppSpacing.sm),
-            Text('${report.totalCount} envíos · ${report.completedCount} completados'),
+            Text(
+              '${report.totalCount} envíos · ${report.completedCount} completados',
+            ),
             Text(
               'Volumen: ${report.currency} ${report.totalVolume.toStringAsFixed(0)}',
             ),

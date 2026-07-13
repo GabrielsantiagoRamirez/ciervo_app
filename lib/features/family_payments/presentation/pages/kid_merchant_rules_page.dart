@@ -73,10 +73,8 @@ class _KidMerchantRulesPageState extends State<KidMerchantRulesPage> {
     });
   }
 
-  List<Map<String, dynamic>> _mapList(List<dynamic> items) => items
-      .whereType<Map>()
-      .map((e) => Map<String, dynamic>.from(e))
-      .toList();
+  List<Map<String, dynamic>> _mapList(List<dynamic> items) =>
+      items.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
 
   Future<void> _searchBusinesses() async {
     final query = _searchController.text.trim();
@@ -94,9 +92,9 @@ class _KidMerchantRulesPageState extends State<KidMerchantRulesPage> {
       }),
       failure: (error) {
         setState(() => _searching = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       },
     );
   }
@@ -113,9 +111,9 @@ class _KidMerchantRulesPageState extends State<KidMerchantRulesPage> {
       success: (_) => ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Reglas de comercios guardadas.')),
       ),
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 
@@ -141,190 +139,182 @@ class _KidMerchantRulesPageState extends State<KidMerchantRulesPage> {
               child: CiervoLoadingState(itemCount: 4),
             )
           : _error != null
-              ? Padding(
-                  padding: pagePaddingOf(context),
-                  child: CiervoErrorState(
-                    title: 'No pudimos cargar las reglas',
-                    description: _error!,
-                    onRetry: _load,
+          ? Padding(
+              padding: pagePaddingOf(context),
+              child: CiervoErrorState(
+                title: 'No pudimos cargar las reglas',
+                description: _error!,
+                onRetry: _load,
+              ),
+            )
+          : ListView(
+              padding: pagePaddingOf(context),
+              children: [
+                CiervoCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Categorías permitidas',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      ..._categories.map((item) {
+                        final id = _categoryId(item);
+                        final allowed = _rules.allowedCategoryIds.contains(id);
+                        final blocked = _rules.blockedCategoryIds.contains(id);
+                        return CheckboxListTile(
+                          value: allowed,
+                          secondary: blocked
+                              ? const Icon(Icons.block, color: Colors.red)
+                              : null,
+                          title: Text(_categoryName(item)),
+                          subtitle: blocked
+                              ? const Text('Bloqueada')
+                              : allowed
+                              ? const Text('Permitida')
+                              : null,
+                          onChanged: (value) => setState(() {
+                            final allowedIds = List<int>.from(
+                              _rules.allowedCategoryIds,
+                            );
+                            final blockedIds = List<int>.from(
+                              _rules.blockedCategoryIds,
+                            );
+                            blockedIds.remove(id);
+                            if (value == true) {
+                              if (!allowedIds.contains(id)) {
+                                allowedIds.add(id);
+                              }
+                            } else {
+                              allowedIds.remove(id);
+                            }
+                            _rules = KidMerchantRules(
+                              allowedCategoryIds: allowedIds,
+                              blockedCategoryIds: blockedIds,
+                              allowedBusinessIds: _rules.allowedBusinessIds,
+                              blockedBusinessIds: _rules.blockedBusinessIds,
+                            );
+                          }),
+                        );
+                      }),
+                    ],
                   ),
-                )
-              : ListView(
-                  padding: pagePaddingOf(context),
-                  children: [
-                    CiervoCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                CiervoCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Buscar comercio',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      Row(
                         children: [
-                          Text(
-                            'Categorías permitidas',
-                            style: Theme.of(context).textTheme.titleMedium,
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              decoration: const InputDecoration(
+                                hintText: 'Nombre del comercio',
+                              ),
+                            ),
                           ),
-                          ..._categories.map(
-                            (item) {
-                              final id = _categoryId(item);
-                              final allowed =
-                                  _rules.allowedCategoryIds.contains(id);
-                              final blocked =
-                                  _rules.blockedCategoryIds.contains(id);
-                              return CheckboxListTile(
-                                value: allowed,
-                                secondary: blocked
-                                    ? const Icon(Icons.block, color: Colors.red)
-                                    : null,
-                                title: Text(_categoryName(item)),
-                                subtitle: blocked
-                                    ? const Text('Bloqueada')
-                                    : allowed
-                                        ? const Text('Permitida')
-                                        : null,
-                                onChanged: (value) => setState(() {
-                                  final allowedIds =
-                                      List<int>.from(_rules.allowedCategoryIds);
-                                  final blockedIds =
-                                      List<int>.from(_rules.blockedCategoryIds);
-                                  blockedIds.remove(id);
-                                  if (value == true) {
-                                    if (!allowedIds.contains(id)) {
-                                      allowedIds.add(id);
-                                    }
-                                  } else {
-                                    allowedIds.remove(id);
-                                  }
-                                  _rules = KidMerchantRules(
-                                    allowedCategoryIds: allowedIds,
-                                    blockedCategoryIds: blockedIds,
-                                    allowedBusinessIds:
-                                        _rules.allowedBusinessIds,
-                                    blockedBusinessIds:
-                                        _rules.blockedBusinessIds,
-                                  );
-                                }),
-                              );
-                            },
+                          IconButton(
+                            onPressed: _searching ? null : _searchBusinesses,
+                            icon: _searching
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.search),
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    CiervoCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            'Buscar comercio',
-                            style: Theme.of(context).textTheme.titleMedium,
+                      ..._searchResults.map((item) {
+                        final id = _businessId(item);
+                        final allowed = _rules.allowedBusinessIds.contains(id);
+                        final blocked = _rules.blockedBusinessIds.contains(id);
+                        return ListTile(
+                          title: Text(_businessName(item)),
+                          subtitle: Text(
+                            blocked
+                                ? 'Bloqueado'
+                                : allowed
+                                ? 'Permitido'
+                                : 'Sin regla',
                           ),
-                          Row(
+                          trailing: Wrap(
+                            spacing: 4,
                             children: [
-                              Expanded(
-                                child: TextField(
-                                  controller: _searchController,
-                                  decoration: const InputDecoration(
-                                    hintText: 'Nombre del comercio',
-                                  ),
-                                ),
+                              IconButton(
+                                tooltip: 'Permitir',
+                                onPressed: () => setState(() {
+                                  final allowedIds = List<String>.from(
+                                    _rules.allowedBusinessIds,
+                                  );
+                                  final blockedIds = List<String>.from(
+                                    _rules.blockedBusinessIds,
+                                  );
+                                  blockedIds.remove(id);
+                                  if (!allowedIds.contains(id)) {
+                                    allowedIds.add(id);
+                                  }
+                                  _rules = KidMerchantRules(
+                                    allowedCategoryIds:
+                                        _rules.allowedCategoryIds,
+                                    blockedCategoryIds:
+                                        _rules.blockedCategoryIds,
+                                    allowedBusinessIds: allowedIds,
+                                    blockedBusinessIds: blockedIds,
+                                  );
+                                }),
+                                icon: const Icon(Icons.check_circle_outline),
                               ),
                               IconButton(
-                                onPressed: _searching ? null : _searchBusinesses,
-                                icon: _searching
-                                    ? const SizedBox(
-                                        width: 18,
-                                        height: 18,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : const Icon(Icons.search),
+                                tooltip: 'Bloquear',
+                                onPressed: () => setState(() {
+                                  final allowedIds = List<String>.from(
+                                    _rules.allowedBusinessIds,
+                                  );
+                                  final blockedIds = List<String>.from(
+                                    _rules.blockedBusinessIds,
+                                  );
+                                  allowedIds.remove(id);
+                                  if (!blockedIds.contains(id)) {
+                                    blockedIds.add(id);
+                                  }
+                                  _rules = KidMerchantRules(
+                                    allowedCategoryIds:
+                                        _rules.allowedCategoryIds,
+                                    blockedCategoryIds:
+                                        _rules.blockedCategoryIds,
+                                    allowedBusinessIds: allowedIds,
+                                    blockedBusinessIds: blockedIds,
+                                  );
+                                }),
+                                icon: const Icon(Icons.block),
                               ),
                             ],
                           ),
-                          ..._searchResults.map(
-                            (item) {
-                              final id = _businessId(item);
-                              final allowed =
-                                  _rules.allowedBusinessIds.contains(id);
-                              final blocked =
-                                  _rules.blockedBusinessIds.contains(id);
-                              return ListTile(
-                                title: Text(_businessName(item)),
-                                subtitle: Text(
-                                  blocked
-                                      ? 'Bloqueado'
-                                      : allowed
-                                          ? 'Permitido'
-                                          : 'Sin regla',
-                                ),
-                                trailing: Wrap(
-                                  spacing: 4,
-                                  children: [
-                                    IconButton(
-                                      tooltip: 'Permitir',
-                                      onPressed: () => setState(() {
-                                        final allowedIds = List<String>.from(
-                                          _rules.allowedBusinessIds,
-                                        );
-                                        final blockedIds = List<String>.from(
-                                          _rules.blockedBusinessIds,
-                                        );
-                                        blockedIds.remove(id);
-                                        if (!allowedIds.contains(id)) {
-                                          allowedIds.add(id);
-                                        }
-                                        _rules = KidMerchantRules(
-                                          allowedCategoryIds:
-                                              _rules.allowedCategoryIds,
-                                          blockedCategoryIds:
-                                              _rules.blockedCategoryIds,
-                                          allowedBusinessIds: allowedIds,
-                                          blockedBusinessIds: blockedIds,
-                                        );
-                                      }),
-                                      icon: const Icon(Icons.check_circle_outline),
-                                    ),
-                                    IconButton(
-                                      tooltip: 'Bloquear',
-                                      onPressed: () => setState(() {
-                                        final allowedIds = List<String>.from(
-                                          _rules.allowedBusinessIds,
-                                        );
-                                        final blockedIds = List<String>.from(
-                                          _rules.blockedBusinessIds,
-                                        );
-                                        allowedIds.remove(id);
-                                        if (!blockedIds.contains(id)) {
-                                          blockedIds.add(id);
-                                        }
-                                        _rules = KidMerchantRules(
-                                          allowedCategoryIds:
-                                              _rules.allowedCategoryIds,
-                                          blockedCategoryIds:
-                                              _rules.blockedCategoryIds,
-                                          allowedBusinessIds: allowedIds,
-                                          blockedBusinessIds: blockedIds,
-                                        );
-                                      }),
-                                      icon: const Icon(Icons.block),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    CiervoButton(
-                      label: _saving ? 'Guardando...' : 'Guardar reglas',
-                      icon: Icons.save_outlined,
-                      state: _saving
-                          ? CiervoButtonState.loading
-                          : CiervoButtonState.normal,
-                      onPressed: _saving ? null : _save,
-                    ),
-                  ],
+                        );
+                      }),
+                    ],
+                  ),
                 ),
+                const SizedBox(height: AppSpacing.lg),
+                CiervoButton(
+                  label: _saving ? 'Guardando...' : 'Guardar reglas',
+                  icon: Icons.save_outlined,
+                  state: _saving
+                      ? CiervoButtonState.loading
+                      : CiervoButtonState.normal,
+                  onPressed: _saving ? null : _save,
+                ),
+              ],
+            ),
     );
   }
 }

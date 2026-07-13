@@ -89,9 +89,9 @@ class _UniversalNfcSessionPageState extends State<UniversalNfcSessionPage> {
         }
       },
       failure: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       },
     );
   }
@@ -135,9 +135,11 @@ class _UniversalNfcSessionPageState extends State<UniversalNfcSessionPage> {
     if (_finished) return;
     _finished = true;
     _pollTimer?.cancel();
-    final message = payment.message ??
-        NfcPaymentUi.rejectReasonMessage(payment.reason);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    final message =
+        payment.message ?? NfcPaymentUi.rejectReasonMessage(payment.reason);
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
     Navigator.of(context).pop(false);
   }
 
@@ -226,7 +228,9 @@ class _UniversalNfcSessionPageState extends State<UniversalNfcSessionPage> {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: theme.shadowColor.withValues(alpha: 0.12),
+                                color: theme.shadowColor.withValues(
+                                  alpha: 0.12,
+                                ),
                                 blurRadius: 12,
                                 offset: const Offset(0, 4),
                               ),
@@ -244,7 +248,9 @@ class _UniversalNfcSessionPageState extends State<UniversalNfcSessionPage> {
                       ),
                     const SizedBox(height: AppSpacing.lg),
                     CiervoButton(
-                      label: _confirming ? 'Confirmando...' : 'Ya acerqué mi celular',
+                      label: _confirming
+                          ? 'Confirmando...'
+                          : 'Ya acerqué mi celular',
                       icon: Icons.check_circle_outline,
                       state: _confirming
                           ? CiervoButtonState.loading
@@ -278,9 +284,17 @@ class _UniversalNfcSessionPageState extends State<UniversalNfcSessionPage> {
       children: [
         Icon(icon, size: 72, color: theme.colorScheme.secondary),
         const SizedBox(height: AppSpacing.md),
-        Text(title, style: theme.textTheme.titleMedium, textAlign: TextAlign.center),
+        Text(
+          title,
+          style: theme.textTheme.titleMedium,
+          textAlign: TextAlign.center,
+        ),
         const SizedBox(height: AppSpacing.sm),
-        Text(subtitle, textAlign: TextAlign.center, style: theme.textTheme.bodyMedium),
+        Text(
+          subtitle,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodyMedium,
+        ),
         const SizedBox(height: AppSpacing.lg),
         const CircularProgressIndicator(),
       ],

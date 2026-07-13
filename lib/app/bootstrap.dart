@@ -48,12 +48,12 @@ class _BootstrapRootState extends State<_BootstrapRoot> {
         Bloc.observer = AppBlocObserver();
 
         try {
-          await getIt<SessionManager>()
-              .restore()
-              .timeout(const Duration(seconds: 8));
-          await getIt<AuthBootstrapService>()
-              .reconcile()
-              .timeout(const Duration(seconds: 12));
+          await getIt<SessionManager>().restore().timeout(
+            const Duration(seconds: 8),
+          );
+          await getIt<AuthBootstrapService>().reconcile().timeout(
+            const Duration(seconds: 12),
+          );
         } on TimeoutException {
           debugPrint('[bootstrap] session restore timeout');
           getIt<SessionManager>().markUnauthenticated();
@@ -145,11 +145,10 @@ class _BootstrapRootState extends State<_BootstrapRoot> {
         return MultiBlocProvider(
           providers: [
             BlocProvider(
-              create: (_) => ExperienceModeCubit(getIt<SecureStorage>())..restore(),
+              create: (_) =>
+                  ExperienceModeCubit(getIt<SecureStorage>())..restore(),
             ),
-            BlocProvider.value(
-              value: getIt<MembershipCubit>(),
-            ),
+            BlocProvider.value(value: getIt<MembershipCubit>()),
           ],
           child: const CiervoApp(),
         );

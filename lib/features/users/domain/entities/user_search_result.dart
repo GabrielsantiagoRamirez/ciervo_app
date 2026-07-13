@@ -53,7 +53,9 @@ class UserSearchResult {
       );
 
   static String _name(Map<String, dynamic> json) {
-    final direct = _optional(json['displayName'] ?? json['fullName'] ?? json['name']);
+    final direct = _optional(
+      json['displayName'] ?? json['fullName'] ?? json['name'],
+    );
     if (direct != null) return direct;
     final first = _optional(json['firstName']);
     final last = _optional(json['lastName']);

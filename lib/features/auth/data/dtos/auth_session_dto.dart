@@ -26,35 +26,35 @@ class AuthSessionDto {
       'token',
       'jwt',
     ]);
-    final refreshToken = _optionalString(source, const [
-          'refreshToken',
-          'refresh_token',
-        ]) ??
+    final refreshToken =
+        _optionalString(source, const ['refreshToken', 'refresh_token']) ??
         accessToken;
 
     return AuthSessionDto(
       accessToken: accessToken,
       refreshToken: refreshToken,
-      userId: _optionalString(userMap, const [
-        'id',
-        'userId',
-        'clientId',
-      ]) ??
+      userId:
+          _optionalString(userMap, const ['id', 'userId', 'clientId']) ??
           _optionalString(source, const ['userId']),
-      email: _optionalString(userMap, const ['email', 'mail']) ??
+      email:
+          _optionalString(userMap, const ['email', 'mail']) ??
           _optionalString(source, const ['email']),
-      phone: _optionalString(userMap, const [
+      phone:
+          _optionalString(userMap, const [
             'phone',
             'phoneNumber',
             'mobile',
             'telefono',
           ]) ??
           _optionalString(source, const ['phone', 'phoneNumber']),
-      fullName: _optionalString(userMap, const ['fullName', 'name']) ??
+      fullName:
+          _optionalString(userMap, const ['fullName', 'name']) ??
           _optionalString(source, const ['fullName', 'name']),
-      roleId: _optionalString(userMap, const ['roleId', 'role']) ??
+      roleId:
+          _optionalString(userMap, const ['roleId', 'role']) ??
           _optionalString(source, const ['roleId', 'role']),
-      accountKind: _optionalString(userMap, const ['accountKind']) ??
+      accountKind:
+          _optionalString(userMap, const ['accountKind']) ??
           _optionalString(source, const ['accountKind']),
       authAction: _optionalString(source, const ['authAction']),
       linkedLegacy: source['linkedLegacy'] == true,

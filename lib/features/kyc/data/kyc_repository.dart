@@ -56,23 +56,22 @@ class KycRepository {
     int? selfieMediaId,
     String? notes,
     String subjectRole = 'Client',
-  }) =>
-      _guard(() async {
-        await _client.dio.post<dynamic>(
-          '/api/kyc/submit',
-          data: {
-            'subjectRole': subjectRole,
-            'documentType': documentType,
-            'documentNumber': documentNumber,
-            'country': country,
-            'frontDocumentMediaId': frontDocumentMediaId,
-            if (backDocumentMediaId != null)
-              'backDocumentMediaId': backDocumentMediaId,
-            if (selfieMediaId != null) 'selfieMediaId': selfieMediaId,
-            if (notes != null && notes.isNotEmpty) 'notes': notes,
-          },
-        );
-      });
+  }) => _guard(() async {
+    await _client.dio.post<dynamic>(
+      '/api/kyc/submit',
+      data: {
+        'subjectRole': subjectRole,
+        'documentType': documentType,
+        'documentNumber': documentNumber,
+        'country': country,
+        'frontDocumentMediaId': frontDocumentMediaId,
+        if (backDocumentMediaId != null)
+          'backDocumentMediaId': backDocumentMediaId,
+        if (selfieMediaId != null) 'selfieMediaId': selfieMediaId,
+        if (notes != null && notes.isNotEmpty) 'notes': notes,
+      },
+    );
+  });
 
   Future<Result<T>> _guard<T>(Future<T> Function() action) async {
     try {
@@ -93,8 +92,12 @@ KycSubmission _fromJson(Map<String, dynamic> json) => KycSubmission(
         json['identityDocument'],
   ),
   rejectionReason: _s(json['rejectionReason'] ?? json['reason']),
-  submittedAt: DateTime.tryParse('${json['submittedAt'] ?? json['createdAt'] ?? ''}'),
-  reviewedAt: DateTime.tryParse('${json['reviewedAt'] ?? json['updatedAt'] ?? ''}'),
+  submittedAt: DateTime.tryParse(
+    '${json['submittedAt'] ?? json['createdAt'] ?? ''}',
+  ),
+  reviewedAt: DateTime.tryParse(
+    '${json['reviewedAt'] ?? json['updatedAt'] ?? ''}',
+  ),
 );
 
 String? _s(dynamic value) =>

@@ -62,7 +62,9 @@ class _ChildBusinessPaymentPageState extends State<ChildBusinessPaymentPage> {
       _error = null;
     });
     final childResult = await _repository.child(widget.childId);
-    final businessesResult = await _repository.allowedBusinesses(widget.childId);
+    final businessesResult = await _repository.allowedBusinesses(
+      widget.childId,
+    );
     final limitsResult = await _repository.spendingLimits(widget.childId);
     final walletResult = await _repository.childWallet(widget.childId);
     final cardsResult = await _repository.childWalletCards(widget.childId);
@@ -102,8 +104,9 @@ class _ChildBusinessPaymentPageState extends State<ChildBusinessPaymentPage> {
       },
       failure: (e) => error ??= UserErrorMessage.from(e),
     );
-    _selectedBusinessId ??=
-        _businesses.isNotEmpty ? _businessId(_businesses.first) : null;
+    _selectedBusinessId ??= _businesses.isNotEmpty
+        ? _businessId(_businesses.first)
+        : null;
 
     setState(() {
       _loading = false;
@@ -144,9 +147,7 @@ class _ChildBusinessPaymentPageState extends State<ChildBusinessPaymentPage> {
   double get _availableBalance {
     final card = _selectedCard;
     if (card != null) {
-      return _num(
-        card['availableBalance'] ?? card['balance'],
-      );
+      return _num(card['availableBalance'] ?? card['balance']);
     }
     return _num(_wallet?['availableBalance'] ?? _wallet?['balance']);
   }
@@ -178,19 +179,20 @@ class _ChildBusinessPaymentPageState extends State<ChildBusinessPaymentPage> {
   }
 
   Future<void> _pay() async {
-    final amount =
-        double.tryParse(_amountController.text.trim().replaceAll(',', '.'));
+    final amount = double.tryParse(
+      _amountController.text.trim().replaceAll(',', '.'),
+    );
     if (amount == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ingresa un monto valido.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Ingresa un monto valido.')));
       return;
     }
     final validation = _validatePayment(amount);
     if (validation != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(validation)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(validation)));
       return;
     }
 
@@ -235,7 +237,9 @@ class _ChildBusinessPaymentPageState extends State<ChildBusinessPaymentPage> {
 
     await result.when(
       success: (payload) async {
-        final detail = FamilyPaymentRecordDto.fromJson(payload).toDetailDomain();
+        final detail = FamilyPaymentRecordDto.fromJson(
+          payload,
+        ).toDetailDomain();
         if (detail.usedParentCard) {
           await showFamilyPaymentResultDialog(context, payment: detail);
           if (mounted) _load();
@@ -244,12 +248,13 @@ class _ChildBusinessPaymentPageState extends State<ChildBusinessPaymentPage> {
         final confirmation = ActionConfirmation.fromJson(
           payload,
           fallbackTitle: 'Pago Kids confirmado',
-          fallbackCode: payload['paymentId']?.toString() ??
+          fallbackCode:
+              payload['paymentId']?.toString() ??
               payload['transactionId']?.toString() ??
               payload['id']?.toString(),
         );
-        final userCode = confirmation.userCiervoCode ??
-            await resolveCurrentCiervoUserCode();
+        final userCode =
+            confirmation.userCiervoCode ?? await resolveCurrentCiervoUserCode();
         if (!mounted) return;
         await showCiervoPaymentReceipt(
           context,
@@ -261,7 +266,8 @@ class _ChildBusinessPaymentPageState extends State<ChildBusinessPaymentPage> {
             amount: confirmation.amount ?? amount,
             currency: confirmation.currency ?? 'COP',
             status: confirmation.status ?? 'Completado',
-            publicReceiptUrl: confirmation.publicReceiptUrl ??
+            publicReceiptUrl:
+                confirmation.publicReceiptUrl ??
                 payload['receiptUrl']?.toString() ??
                 payload['publicReceiptUrl']?.toString(),
             shareDescription:
@@ -273,9 +279,9 @@ class _ChildBusinessPaymentPageState extends State<ChildBusinessPaymentPage> {
         if (mounted) _load();
       },
       failure: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       },
     );
   }
@@ -319,22 +325,20 @@ class _ChildBusinessPaymentPageState extends State<ChildBusinessPaymentPage> {
                               children: [
                                 Text(
                                   _child?.fullName ?? 'Menor',
-                                  style:
-                                      Theme.of(context).textTheme.titleLarge,
+                                  style: Theme.of(context).textTheme.titleLarge,
                                 ),
                                 const SizedBox(height: AppSpacing.xs),
                                 Text(
                                   'Saldo disponible: COP ${_availableBalance.toStringAsFixed(0)}',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
+                                  style: Theme.of(context).textTheme.titleMedium
                                       ?.copyWith(color: AppColors.primary),
                                 ),
                                 if (_num(_wallet?['heldBalance']) > 0)
                                   Text(
                                     'Retenido: COP ${_num(_wallet?['heldBalance']).toStringAsFixed(0)}',
-                                    style:
-                                        Theme.of(context).textTheme.bodySmall,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
                                   ),
                               ],
                             ),
@@ -350,8 +354,9 @@ class _ChildBusinessPaymentPageState extends State<ChildBusinessPaymentPage> {
                                 children: [
                                   Text(
                                     'Límites de gasto',
-                                    style:
-                                        Theme.of(context).textTheme.titleMedium,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleMedium,
                                   ),
                                   const SizedBox(height: AppSpacing.xs),
                                   if (_num(_limits?['dailyLimit']) > 0)
@@ -384,8 +389,9 @@ class _ChildBusinessPaymentPageState extends State<ChildBusinessPaymentPage> {
                                 children: [
                                   Text(
                                     'Comercio permitido',
-                                    style:
-                                        Theme.of(context).textTheme.titleMedium,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleMedium,
                                   ),
                                   const SizedBox(height: AppSpacing.sm),
                                   DropdownButtonFormField<String>(
@@ -405,23 +411,24 @@ class _ChildBusinessPaymentPageState extends State<ChildBusinessPaymentPage> {
                                     onChanged: _paying
                                         ? null
                                         : (value) => setState(
-                                              () => _selectedBusinessId = value,
-                                            ),
+                                            () => _selectedBusinessId = value,
+                                          ),
                                   ),
                                   if (_cards.length > 1) ...[
                                     const SizedBox(height: AppSpacing.md),
                                     Text(
                                       'Tarjeta Kids',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.titleMedium,
                                     ),
                                     const SizedBox(height: AppSpacing.sm),
                                     DropdownButtonFormField<String>(
                                       value: _selectedCardId,
                                       decoration: const InputDecoration(
-                                        prefixIcon:
-                                            Icon(Icons.credit_card_outlined),
+                                        prefixIcon: Icon(
+                                          Icons.credit_card_outlined,
+                                        ),
                                       ),
                                       items: _cards
                                           .map(
@@ -437,8 +444,8 @@ class _ChildBusinessPaymentPageState extends State<ChildBusinessPaymentPage> {
                                       onChanged: _paying
                                           ? null
                                           : (value) => setState(
-                                                () => _selectedCardId = value,
-                                              ),
+                                              () => _selectedCardId = value,
+                                            ),
                                     ),
                                   ],
                                   const SizedBox(height: AppSpacing.md),

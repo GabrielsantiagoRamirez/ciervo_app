@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -33,43 +34,46 @@ class _AccountRouteGateState extends State<AccountRouteGate> {
     final token = await getIt<SessionManager>().accessToken();
     if (token == null || token.isEmpty) return null;
     final claims = AuthTokenClaims.fromJwt(token);
-    debugPrint('[AUTH] JWT recibido: $token');
-    debugPrint('[AUTH] accountKind: ${claims.accountKind}');
-    debugPrint('[AUTH] role: ${claims.role}');
-    debugPrint('[AUTH] businessRoleId: ${claims.businessRoleId}');
+    if (kDebugMode) {
+      debugPrint('[AUTH] JWT recibido len=${token.length}');
+      debugPrint('[AUTH] accountKind: ${claims.accountKind}');
+      debugPrint('[AUTH] role: ${claims.role}');
+      debugPrint('[AUTH] businessRoleId: ${claims.businessRoleId}');
+    }
     return claims;
   }
 
   @override
   Widget build(BuildContext context) => FutureBuilder<AuthTokenClaims?>(
-        future: _claims,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Scaffold(
-              body: CiervoBrandLoader(message: 'Preparando tu cuenta'),
-            );
-          }
+    future: _claims,
+    builder: (context, snapshot) {
+      if (snapshot.connectionState != ConnectionState.done) {
+        return const Scaffold(
+          body: CiervoBrandLoader(message: 'Preparando tu cuenta'),
+        );
+      }
 
-          final claims = snapshot.data;
-          final routeKind = claims?.routeKind ?? 'Client';
-          debugPrint('[AUTH] ruta elegida: $routeKind');
+      final claims = snapshot.data;
+      final routeKind = claims?.routeKind ?? 'Client';
+      if (kDebugMode) {
+        debugPrint('[AUTH] ruta elegida: $routeKind');
+      }
 
-          return switch (routeKind) {
-            'Staff' => const StaffModeGate(),
-            'Kid' => const KidShellPage(),
-            'BusinessOwner' => const _AdminPlaceholder(
-                title: 'Dashboard dueño',
-                description:
-                    'Tu cuenta fue identificada como dueño de negocio.',
-              ),
-            'SuperAdmin' => const _AdminPlaceholder(
-                title: 'Dashboard superadmin',
-                description: 'Tu cuenta fue identificada como superadmin.',
-              ),
-            _ => const _ClientEntry(),
-          };
-        },
-      );
+      return switch (routeKind) {
+        'Staff' => const StaffModeGate(),
+        'Kid' => const KidShellPage(),
+        'BusinessOwner' => const _AdminPlaceholder(
+          title: 'Dashboard dueño',
+          description: 'Tu cuenta fue identificada como dueño de negocio.',
+        ),
+        'SuperAdmin' => const _AdminPlaceholder(
+          title: 'Dashboard superadmin',
+          description: 'Tu cuenta fue identificada como superadmin.',
+        ),
+        _ => const _ClientEntry(),
+      };
+    },
+  );
 }
 
 class _ClientEntry extends StatelessWidget {
@@ -85,32 +89,26 @@ class _ClientEntry extends StatelessWidget {
 }
 
 class _AdminPlaceholder extends StatelessWidget {
-  const _AdminPlaceholder({
-    required this.title,
-    required this.description,
-  });
+  const _AdminPlaceholder({required this.title, required this.description});
 
   final String title;
   final String description;
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: Text(title),
-          actions: [
-            IconButton(
-              tooltip: 'Cerrar sesion',
-              onPressed: () => getIt<AuthRepository>().logout(),
-              icon: const Icon(Icons.logout),
-            ),
-          ],
+    appBar: AppBar(
+      title: Text(title),
+      actions: [
+        IconButton(
+          tooltip: 'Cerrar sesion',
+          onPressed: () => getIt<AuthRepository>().logout(),
+          icon: const Icon(Icons.logout),
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(24),
-          child: CiervoErrorState(
-            title: title,
-            description: description,
-          ),
-        ),
-      );
+      ],
+    ),
+    body: Padding(
+      padding: const EdgeInsets.all(24),
+      child: CiervoErrorState(title: title, description: description),
+    ),
+  );
 }

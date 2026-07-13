@@ -19,7 +19,9 @@ class LoyaltySummary {
   final int progressPercent;
 
   factory LoyaltySummary.fromJson(Map<String, dynamic> json) {
-    final points = _int(json['pointsAvailable'] ?? json['points'] ?? json['balance']);
+    final points = _int(
+      json['pointsAvailable'] ?? json['points'] ?? json['balance'],
+    );
     final cashback = _int(
       json['cashbackAvailable'] ?? json['cashback'] ?? points,
     );
@@ -81,35 +83,35 @@ class LoyaltyRepository {
   final NetworkClient _client;
 
   Future<Result<LoyaltySummary>> summary() => _guard(() async {
-        final response =
-            await _client.dio.get<dynamic>('/api/wallet/loyalty/summary');
-        return LoyaltySummary.fromJson(unwrapApiMap(response.data));
-      });
+    final response = await _client.dio.get<dynamic>(
+      '/api/wallet/loyalty/summary',
+    );
+    return LoyaltySummary.fromJson(unwrapApiMap(response.data));
+  });
 
   Future<Result<List<Map<String, dynamic>>>> history({
     int page = 1,
     int pageSize = 20,
-  }) =>
-      _guard(() async {
-        final response = await _client.dio.get<dynamic>(
-          '/api/wallet/history',
-          queryParameters: {'page': page, 'pageSize': pageSize},
-        );
-        final value = unwrapApiResponse(response.data);
-        if (value is List) {
-          return value
-              .whereType<Map>()
-              .map((e) => Map<String, dynamic>.from(e))
-              .toList();
-        }
-        if (value is Map && value['items'] is List) {
-          return (value['items'] as List)
-              .whereType<Map>()
-              .map((e) => Map<String, dynamic>.from(e))
-              .toList();
-        }
-        return const <Map<String, dynamic>>[];
-      });
+  }) => _guard(() async {
+    final response = await _client.dio.get<dynamic>(
+      '/api/wallet/history',
+      queryParameters: {'page': page, 'pageSize': pageSize},
+    );
+    final value = unwrapApiResponse(response.data);
+    if (value is List) {
+      return value
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
+    }
+    if (value is Map && value['items'] is List) {
+      return (value['items'] as List)
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
+    }
+    return const <Map<String, dynamic>>[];
+  });
 
   Future<Result<LoyaltyPurchaseResult>> processPurchase({
     required String idempotencyKey,
@@ -118,21 +120,20 @@ class LoyaltyRepository {
     int? businessId,
     int? paymentIntentId,
     String eventType = 'wallet_payment',
-  }) =>
-      _guard(() async {
-        final response = await _client.dio.post<dynamic>(
-          '/api/loyalty/process-purchase',
-          data: {
-            'idempotencyKey': idempotencyKey,
-            'amount': amount,
-            'currency': currency,
-            'eventType': eventType,
-            if (businessId != null) 'businessId': businessId,
-            if (paymentIntentId != null) 'paymentIntentId': paymentIntentId,
-          },
-        );
-        return LoyaltyPurchaseResult.fromJson(unwrapApiMap(response.data));
-      });
+  }) => _guard(() async {
+    final response = await _client.dio.post<dynamic>(
+      '/api/loyalty/process-purchase',
+      data: {
+        'idempotencyKey': idempotencyKey,
+        'amount': amount,
+        'currency': currency,
+        'eventType': eventType,
+        if (businessId != null) 'businessId': businessId,
+        if (paymentIntentId != null) 'paymentIntentId': paymentIntentId,
+      },
+    );
+    return LoyaltyPurchaseResult.fromJson(unwrapApiMap(response.data));
+  });
 
   Future<Result<T>> _guard<T>(Future<T> Function() run) async {
     try {

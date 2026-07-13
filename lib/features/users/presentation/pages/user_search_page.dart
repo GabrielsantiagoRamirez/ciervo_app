@@ -186,9 +186,9 @@ class _UserSearchPageState extends State<UserSearchPage> {
           ),
         );
       },
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 
@@ -205,16 +205,17 @@ class _UserSearchPageState extends State<UserSearchPage> {
                 backgroundImage: user.photoUrl != null
                     ? NetworkImage(user.photoUrl!)
                     : null,
-                child:
-                    user.photoUrl == null ? const Icon(Icons.person_outline) : null,
+                child: user.photoUrl == null
+                    ? const Icon(Icons.person_outline)
+                    : null,
               ),
               title: Text(user.fullName),
               subtitle: Text(
                 DisplayFormatters.identityLine(
-                  username: user.username,
-                  displayName: user.fullName,
-                  ciervoId: user.ciervoUserCode,
-                ).isEmpty
+                      username: user.username,
+                      displayName: user.fullName,
+                      ciervoId: user.ciervoUserCode,
+                    ).isEmpty
                     ? [
                         if (user.distanceLabel != null) user.distanceLabel,
                         if (user.city != null) user.city,
@@ -344,8 +345,8 @@ class _UserSearchPageState extends State<UserSearchPage> {
         widget.pickRecipient
             ? 'Elegir destinatario'
             : widget.selectMode
-                ? 'Invitar amigo'
-                : 'Buscar personas',
+            ? 'Invitar amigo'
+            : 'Buscar personas',
       ),
     ),
     body: ListView(
@@ -399,8 +400,8 @@ class _UserSearchPageState extends State<UserSearchPage> {
             _error!,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ] else if (!_loading &&
             _error == null &&
@@ -411,11 +412,14 @@ class _UserSearchPageState extends State<UserSearchPage> {
             'Busca por nombre, teléfono o usuario para invitar.',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
-        if (!_loading && _error == null && _results.isEmpty && _controller.text.trim().length >= 2)
+        if (!_loading &&
+            _error == null &&
+            _results.isEmpty &&
+            _controller.text.trim().length >= 2)
           const Padding(
             padding: EdgeInsets.only(top: AppSpacing.xl),
             child: CiervoEmptyState(
@@ -442,8 +446,9 @@ class _UserSearchPageState extends State<UserSearchPage> {
           return ListTile(
             contentPadding: EdgeInsets.zero,
             leading: CircleAvatar(
-              backgroundImage:
-                  user.photoUrl != null ? NetworkImage(user.photoUrl!) : null,
+              backgroundImage: user.photoUrl != null
+                  ? NetworkImage(user.photoUrl!)
+                  : null,
               child: user.photoUrl == null
                   ? const Icon(Icons.person_outline)
                   : null,
@@ -459,26 +464,20 @@ class _UserSearchPageState extends State<UserSearchPage> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : user.canStartConversation
-                    ? PopupMenuButton<String>(
-                        onSelected: (value) {
-                          if (value == 'chat') {
-                            _openDirectChat(user);
-                          } else if (value == 'more') {
-                            _showUserActions(user);
-                          }
-                        },
-                        itemBuilder: (context) => const [
-                          PopupMenuItem(
-                            value: 'chat',
-                            child: Text('Abrir chat'),
-                          ),
-                          PopupMenuItem(
-                            value: 'more',
-                            child: Text('Mas acciones'),
-                          ),
-                        ],
-                      )
-                    : const Icon(Icons.block, size: 20),
+                ? PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'chat') {
+                        _openDirectChat(user);
+                      } else if (value == 'more') {
+                        _showUserActions(user);
+                      }
+                    },
+                    itemBuilder: (context) => const [
+                      PopupMenuItem(value: 'chat', child: Text('Abrir chat')),
+                      PopupMenuItem(value: 'more', child: Text('Mas acciones')),
+                    ],
+                  )
+                : const Icon(Icons.block, size: 20),
             onTap: user.canStartConversation && !opening
                 ? () {
                     if (widget.pickRecipient) {

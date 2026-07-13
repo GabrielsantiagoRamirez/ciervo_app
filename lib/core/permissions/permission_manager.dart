@@ -23,7 +23,10 @@ class PermissionManager {
     if (!context.mounted) return false;
 
     if (showExplanation) {
-      final accepted = await showPermissionExplanationModal(context, kind: kind);
+      final accepted = await showPermissionExplanationModal(
+        context,
+        kind: kind,
+      );
       if (!accepted || !context.mounted) return false;
     }
 

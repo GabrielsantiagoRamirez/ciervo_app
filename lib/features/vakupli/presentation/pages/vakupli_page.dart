@@ -113,7 +113,8 @@ class _VakupliPageState extends State<VakupliPage>
     if (plan.id == null) return;
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => VakupliPlanDetailPage(plan: plan, repository: _repository),
+        builder: (_) =>
+            VakupliPlanDetailPage(plan: plan, repository: _repository),
       ),
     );
     _loadPlans();
@@ -171,7 +172,8 @@ class _PlansTab extends StatelessWidget {
               children: const [
                 CiervoEmptyState(
                   title: 'Sin planes activos',
-                  description: 'Crea un plan y comparte el link con tus amigos.',
+                  description:
+                      'Crea un plan y comparte el link con tus amigos.',
                   icon: Icons.event_outlined,
                 ),
               ],
@@ -246,9 +248,9 @@ class _VakupliCreatePlanTabState extends State<VakupliCreatePlanTab> {
       }),
       success: (_) {
         setState(() => _submitting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Plan creado.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Plan creado.')));
         widget.onCreated();
       },
     );
@@ -277,7 +279,9 @@ class _VakupliCreatePlanTabState extends State<VakupliCreatePlanTab> {
         TextField(
           controller: _description,
           maxLines: 2,
-          decoration: const InputDecoration(labelText: 'Descripción (opcional)'),
+          decoration: const InputDecoration(
+            labelText: 'Descripción (opcional)',
+          ),
         ),
         const SizedBox(height: AppSpacing.lg),
         VakupliSplitSelector(
@@ -418,16 +422,14 @@ class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
     final result = await widget.repository.inviteToPlan(
       planId: planId,
       userId: userId,
-      amount: widget.plan.totalAmount > 0
-          ? widget.plan.totalAmount
-          : 10000,
+      amount: widget.plan.totalAmount > 0 ? widget.plan.totalAmount : 10000,
     );
     if (!mounted) return;
     result.when(
       success: (_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invitación enviada.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Invitación enviada.')));
       },
       failure: (error) {
         final message = UserErrorMessage.from(error);
@@ -459,9 +461,9 @@ class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
         );
       },
       failure: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       },
     );
   }

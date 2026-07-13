@@ -31,9 +31,9 @@ Future<void> showCiervoIdQrDialog(
           SelectableText(
             code,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primary,
-                ),
+              fontWeight: FontWeight.w700,
+              color: AppColors.primary,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSpacing.xs),

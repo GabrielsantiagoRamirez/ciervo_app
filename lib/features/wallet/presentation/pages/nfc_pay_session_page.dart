@@ -112,8 +112,7 @@ class _NfcPaySessionPageState extends State<NfcPaySessionPage> {
             title: widget.isDelivery
                 ? 'Pago delivery NFC confirmado'
                 : 'Pago NFC confirmado',
-            confirmationCode:
-                '${session.receiptId ?? session.id}',
+            confirmationCode: '${session.receiptId ?? session.id}',
             businessName: widget.businessName,
             amount: session.amount,
             currency: session.currency ?? 'COP',
@@ -153,10 +152,9 @@ class _NfcPaySessionPageState extends State<NfcPaySessionPage> {
     super.dispose();
   }
 
-  String get _qrData =>
-      _session.nfcPayload?.token.isNotEmpty == true
-          ? _session.nfcPayload!.token
-          : _session.token;
+  String get _qrData => _session.nfcPayload?.token.isNotEmpty == true
+      ? _session.nfcPayload!.token
+      : _session.token;
 
   @override
   Widget build(BuildContext context) {

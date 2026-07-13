@@ -75,7 +75,9 @@ class _AuthEmailVerificationStepState extends State<AuthEmailVerificationStep> {
     }
 
     final email = widget.email.trim();
-    final result = await getIt<AuthRepository>().sendEmailVerificationCode(email);
+    final result = await getIt<AuthRepository>().sendEmailVerificationCode(
+      email,
+    );
     return result.when(
       success: (_) {
         _startResendCooldown();
@@ -121,8 +123,9 @@ class _AuthEmailVerificationStepState extends State<AuthEmailVerificationStep> {
       _sending = true;
       _message = null;
     });
-    final result =
-        await getIt<AuthRepository>().sendEmailVerificationCode(email);
+    final result = await getIt<AuthRepository>().sendEmailVerificationCode(
+      email,
+    );
     if (!mounted) return;
     var sent = false;
     setState(() {
@@ -210,8 +213,8 @@ class _AuthEmailVerificationStepState extends State<AuthEmailVerificationStep> {
             'Este correo ya está registrado pero aún no está verificado. '
             'Confírmalo con el código o inicia sesión si ya lo verificaste.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: AppSpacing.lg),
           CiervoButton(
@@ -254,9 +257,7 @@ class _AuthEmailVerificationStepState extends State<AuthEmailVerificationStep> {
               _message!,
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: _isSuccess
-                    ? colorScheme.primary
-                    : colorScheme.error,
+                color: _isSuccess ? colorScheme.primary : colorScheme.error,
               ),
             ),
           ],

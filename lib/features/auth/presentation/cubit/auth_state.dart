@@ -1,10 +1,7 @@
 enum AuthSubmissionStatus { idle, loading, success, failure }
 
 class AuthState {
-  const AuthState({
-    this.status = AuthSubmissionStatus.idle,
-    this.errorMessage,
-  });
+  const AuthState({this.status = AuthSubmissionStatus.idle, this.errorMessage});
 
   final AuthSubmissionStatus status;
   final String? errorMessage;

@@ -1,0 +1,166 @@
+{
+  "source": "INE Chile (seed v1)",
+  "countryCode": "CL",
+  "regions": [
+    {
+      "code": "15",
+      "name": "Arica y Parinacota",
+      "provinces": [
+        {
+          "code": "151",
+          "name": "Arica",
+          "communes": [
+            {"code": "15101", "name": "Arica"},
+            {"code": "15102", "name": "Camarones"}
+          ]
+        },
+        {
+          "code": "152",
+          "name": "Parinacota",
+          "communes": [
+            {"code": "15201", "name": "Putre"},
+            {"code": "15202", "name": "General Lagos"}
+          ]
+        }
+      ]
+    },
+    {
+      "code": "01",
+      "name": "Tarapacá",
+      "provinces": [
+        {
+          "code": "011",
+          "name": "Iquique",
+          "communes": [
+            {"code": "01101", "name": "Iquique"},
+            {"code": "01107", "name": "Alto Hospicio"}
+          ]
+        }
+      ]
+    },
+    {
+      "code": "13",
+      "name": "Región Metropolitana de Santiago",
+      "provinces": [
+        {
+          "code": "131",
+          "name": "Santiago",
+          "communes": [
+            {"code": "13101", "name": "Santiago"},
+            {"code": "13102", "name": "Cerrillos"},
+            {"code": "13103", "name": "Cerro Navia"},
+            {"code": "13104", "name": "Conchalí"},
+            {"code": "13105", "name": "El Bosque"},
+            {"code": "13106", "name": "Estación Central"},
+            {"code": "13107", "name": "Huechuraba"},
+            {"code": "13108", "name": "Independencia"},
+            {"code": "13109", "name": "La Cisterna"},
+            {"code": "13110", "name": "La Florida"},
+            {"code": "13111", "name": "La Granja"},
+            {"code": "13112", "name": "La Pintana"},
+            {"code": "13113", "name": "La Reina"},
+            {"code": "13114", "name": "Las Condes"},
+            {"code": "13115", "name": "Lo Barnechea"},
+            {"code": "13116", "name": "Lo Espejo"},
+            {"code": "13117", "name": "Lo Prado"},
+            {"code": "13118", "name": "Macul"},
+            {"code": "13119", "name": "Maipú"},
+            {"code": "13120", "name": "Ñuñoa"},
+            {"code": "13121", "name": "Pedro Aguirre Cerda"},
+            {"code": "13122", "name": "Peñalolén"},
+            {"code": "13123", "name": "Providencia"},
+            {"code": "13124", "name": "Pudahuel"},
+            {"code": "13125", "name": "Quilicura"},
+            {"code": "13126", "name": "Quinta Normal"},
+            {"code": "13127", "name": "Recoleta"},
+            {"code": "13128", "name": "Renca"},
+            {"code": "13129", "name": "San Joaquín"},
+            {"code": "13130", "name": "San Miguel"},
+            {"code": "13131", "name": "San Ramón"},
+            {"code": "13132", "name": "Vitacura"}
+          ]
+        },
+        {
+          "code": "132",
+          "name": "Cordillera",
+          "communes": [
+            {"code": "13201", "name": "Puente Alto"},
+            {"code": "13202", "name": "Pirque"},
+            {"code": "13203", "name": "San José de Maipo"}
+          ]
+        },
+        {
+          "code": "133",
+          "name": "Chacabuco",
+          "communes": [
+            {"code": "13301", "name": "Colina"},
+            {"code": "13302", "name": "Lampa"},
+            {"code": "13303", "name": "Tiltil"}
+          ]
+        },
+        {
+          "code": "134",
+          "name": "Maipo",
+          "communes": [
+            {"code": "13401", "name": "San Bernardo"},
+            {"code": "13402", "name": "Buin"},
+            {"code": "13403", "name": "Calera de Tango"},
+            {"code": "13404", "name": "Paine"}
+          ]
+        },
+        {
+          "code": "135",
+          "name": "Melipilla",
+          "communes": [
+            {"code": "13501", "name": "Melipilla"},
+            {"code": "13502", "name": "Alhué"},
+            {"code": "13503", "name": "Curacaví"},
+            {"code": "13504", "name": "María Pinto"},
+            {"code": "13505", "name": "San Pedro"}
+          ]
+        },
+        {
+          "code": "136",
+          "name": "Talagante",
+          "communes": [
+            {"code": "13601", "name": "Talagante"},
+            {"code": "13602", "name": "El Monte"},
+            {"code": "13603", "name": "Isla de Maipo"},
+            {"code": "13604", "name": "Padre Hurtado"},
+            {"code": "13605", "name": "Peñaflor"}
+          ]
+        }
+      ]
+    },
+    {
+      "code": "05",
+      "name": "Valparaíso",
+      "provinces": [
+        {
+          "code": "051",
+          "name": "Valparaíso",
+          "communes": [
+            {"code": "05101", "name": "Valparaíso"},
+            {"code": "05102", "name": "Casablanca"},
+            {"code": "05109", "name": "Viña del Mar"}
+          ]
+        }
+      ]
+    },
+    {
+      "code": "08",
+      "name": "Biobío",
+      "provinces": [
+        {
+          "code": "081",
+          "name": "Concepción",
+          "communes": [
+            {"code": "08101", "name": "Concepción"},
+            {"code": "08102", "name": "Coronel"},
+            {"code": "08110", "name": "Talcahuano"}
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -12,7 +12,8 @@ Future<void> processLoyaltyAfterPurchase(
   String? transactionId,
 }) async {
   if (amount <= 0) return;
-  final keySeed = paymentIntentId?.toString() ??
+  final keySeed =
+      paymentIntentId?.toString() ??
       transactionId ??
       '${businessId ?? 'pay'}-${amount.toStringAsFixed(2)}-${DateTime.now().millisecondsSinceEpoch}';
   final result = await getIt<LoyaltyRepository>().processPurchase(
@@ -32,9 +33,9 @@ Future<void> processLoyaltyAfterPurchase(
       if (value.cashbackGenerated > 0) {
         parts.add('${value.cashbackGenerated} cashback');
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('¡Ganaste ${parts.join(' y ')}!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('¡Ganaste ${parts.join(' y ')}!')));
     },
     failure: (_) {},
   );

@@ -88,8 +88,7 @@ class _KidBusinessesPageState extends State<KidBusinessesPage> {
             else if (_items.isEmpty)
               const CiervoEmptyState(
                 title: 'Sin comercios',
-                description:
-                    'Tu tutor aún no ha habilitado comercios para ti.',
+                description: 'Tu tutor aún no ha habilitado comercios para ti.',
                 icon: Icons.storefront_outlined,
               )
             else
@@ -103,17 +102,19 @@ class _KidBusinessesPageState extends State<KidBusinessesPage> {
                       title: Text('${item['name'] ?? 'Comercio'}'),
                       subtitle: Text(
                         [
-                          if (item['ciervoUserCode'] != null)
-                            '@${item['ciervoUserCode']}',
-                          item['categoryName'] ?? item['category'],
-                          item['city'],
-                          item['country'] != null
-                              ? CountryRegistration.countryLabel(
-                                  '${item['country']}',
-                                )
-                              : item['zone'],
-                          if (item['status'] != null) '${item['status']}',
-                        ].where((v) => v != null && '$v'.isNotEmpty).join(' · '),
+                              if (item['ciervoUserCode'] != null)
+                                '@${item['ciervoUserCode']}',
+                              item['categoryName'] ?? item['category'],
+                              item['city'],
+                              item['country'] != null
+                                  ? CountryRegistration.countryLabel(
+                                      '${item['country']}',
+                                    )
+                                  : item['zone'],
+                              if (item['status'] != null) '${item['status']}',
+                            ]
+                            .where((v) => v != null && '$v'.isNotEmpty)
+                            .join(' · '),
                       ),
                       trailing: item['isOpen'] == false
                           ? const Text('Cerrado')

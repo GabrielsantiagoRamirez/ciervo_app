@@ -23,14 +23,14 @@ enum KidPaymentApprovalMode {
   }
 
   String get apiValue => switch (this) {
-        KidPaymentApprovalMode.autoApproval => 'AUTO_APPROVAL',
-        KidPaymentApprovalMode.manualApproval => 'MANUAL_APPROVAL',
-      };
+    KidPaymentApprovalMode.autoApproval => 'AUTO_APPROVAL',
+    KidPaymentApprovalMode.manualApproval => 'MANUAL_APPROVAL',
+  };
 
   String get label => switch (this) {
-        KidPaymentApprovalMode.autoApproval => 'Aprobación automática',
-        KidPaymentApprovalMode.manualApproval => 'Requiere aprobación',
-      };
+    KidPaymentApprovalMode.autoApproval => 'Aprobación automática',
+    KidPaymentApprovalMode.manualApproval => 'Requiere aprobación',
+  };
 }
 
 class KidSpendingLimits {
@@ -72,10 +72,7 @@ class KidScheduleRules {
 }
 
 class KidAutoPaymentRules {
-  const KidAutoPaymentRules({
-    this.enabled = false,
-    this.maxAutomaticAmount,
-  });
+  const KidAutoPaymentRules({this.enabled = false, this.maxAutomaticAmount});
 
   final bool enabled;
   final double? maxAutomaticAmount;

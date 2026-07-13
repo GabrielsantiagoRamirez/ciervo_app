@@ -46,11 +46,7 @@ class CiervoWalletPalette {
         surfaceHigh: CiervoBrandColors.surfaceHigh,
         textPrimary: CiervoBrandColors.textPrimary,
         textMuted: CiervoBrandColors.textMuted,
-        cardGradient: [
-          Color(0xFF1A1712),
-          Color(0xFF0D0D0D),
-          Color(0xFF14110A),
-        ],
+        cardGradient: [Color(0xFF1A1712), Color(0xFF0D0D0D), Color(0xFF14110A)],
         cardBorderAlpha: 0.35,
       );
     }
@@ -60,11 +56,7 @@ class CiervoWalletPalette {
       surfaceHigh: AppColors.daySurfaceHigh,
       textPrimary: AppColors.dayText,
       textMuted: AppColors.dayTextMuted,
-      cardGradient: [
-        Color(0xFFFFF8E8),
-        Color(0xFFF8F4EA),
-        Color(0xFFE8DFC8),
-      ],
+      cardGradient: [Color(0xFFFFF8E8), Color(0xFFF8F4EA), Color(0xFFE8DFC8)],
       cardBorderAlpha: 0.45,
     );
   }
@@ -112,8 +104,9 @@ class CiervoDigitalCard extends StatelessWidget {
                 colors: palette.cardGradient,
               ),
               border: Border.all(
-                color: CiervoBrandColors.gold
-                    .withValues(alpha: palette.cardBorderAlpha),
+                color: CiervoBrandColors.gold.withValues(
+                  alpha: palette.cardBorderAlpha,
+                ),
               ),
               boxShadow: [
                 BoxShadow(
@@ -167,8 +160,9 @@ class CiervoDigitalCard extends StatelessWidget {
                                 'ENTRETENIMIENTO SIN LÍMITES',
                                 maxLines: 1,
                                 style: TextStyle(
-                                  color: CiervoBrandColors.goldSoft
-                                      .withValues(alpha: 0.8),
+                                  color: CiervoBrandColors.goldSoft.withValues(
+                                    alpha: 0.8,
+                                  ),
                                   fontSize: isCompact ? 7 : 8,
                                   letterSpacing: 1.2,
                                 ),
@@ -177,7 +171,9 @@ class CiervoDigitalCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                      SizedBox(width: isCompact ? AppSpacing.sm : AppSpacing.md),
+                      SizedBox(
+                        width: isCompact ? AppSpacing.sm : AppSpacing.md,
+                      ),
                       Expanded(
                         flex: 6,
                         child: Column(
@@ -211,7 +207,9 @@ class CiervoDigitalCard extends StatelessWidget {
                                 ),
                               ],
                             ),
-                            SizedBox(height: isCompact ? AppSpacing.sm : AppSpacing.md),
+                            SizedBox(
+                              height: isCompact ? AppSpacing.sm : AppSpacing.md,
+                            ),
                             Expanded(
                               child: Align(
                                 alignment: Alignment.centerRight,
@@ -284,8 +282,9 @@ class CiervoDigitalCard extends StatelessWidget {
                                   style: OutlinedButton.styleFrom(
                                     foregroundColor: CiervoBrandColors.gold,
                                     side: BorderSide(
-                                      color: CiervoBrandColors.gold
-                                          .withValues(alpha: 0.6),
+                                      color: CiervoBrandColors.gold.withValues(
+                                        alpha: 0.6,
+                                      ),
                                     ),
                                     padding: EdgeInsets.symmetric(
                                       horizontal: isCompact ? 8 : 10,
@@ -345,12 +344,7 @@ class _WavePatternPainter extends CustomPainter {
       final path = Path();
       final y = size.height * (0.2 + i * 0.12);
       path.moveTo(0, y);
-      path.quadraticBezierTo(
-        size.width * 0.5,
-        y + 18,
-        size.width,
-        y - 6,
-      );
+      path.quadraticBezierTo(size.width * 0.5, y + 18, size.width, y - 6);
       canvas.drawPath(path, paint);
     }
   }

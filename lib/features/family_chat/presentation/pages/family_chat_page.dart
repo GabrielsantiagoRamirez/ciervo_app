@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/notifications/notifications_sync.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
@@ -25,18 +28,31 @@ class _FamilyChatPageState extends State<FamilyChatPage> {
   List<ChatConversation> _items = const [];
   String? _error;
   bool _loading = true;
+  StreamSubscription<void>? _syncSubscription;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _syncSubscription = getIt<NotificationsSync>().onRefresh.listen((_) {
+      if (!mounted) return;
+      _load(silent: true);
+    });
   }
 
-  Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+  @override
+  void dispose() {
+    _syncSubscription?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _load({bool silent = false}) async {
+    if (!silent) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    }
     final result = await _repository.conversations();
     if (!mounted) return;
     result.when(
@@ -44,10 +60,13 @@ class _FamilyChatPageState extends State<FamilyChatPage> {
         _items = items;
         _loading = false;
       }),
-      failure: (error) => setState(() {
-        _error = UserErrorMessage.from(error);
-        _loading = false;
-      }),
+      failure: (error) {
+        if (silent) return;
+        setState(() {
+          _error = UserErrorMessage.from(error);
+          _loading = false;
+        });
+      },
     );
   }
 
@@ -102,9 +121,9 @@ class _FamilyChatPageState extends State<FamilyChatPage> {
         );
         await _load();
       },
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 
@@ -149,13 +168,35 @@ class _FamilyChatPageState extends State<FamilyChatPage> {
               separatorBuilder: (_, _) => const Divider(height: 1),
               itemBuilder: (context, index) {
                 final item = _items[index];
+                final hasUnread = item.unreadCount > 0;
+                final preview =
+                    item.lastMessage?.trim() ?? 'Conversación entre tutores';
                 return ListTile(
+                  tileColor: hasUnread
+                      ? Theme.of(
+                          context,
+                        ).colorScheme.primaryContainer.withValues(alpha: 0.12)
+                      : null,
                   leading: const CircleAvatar(
                     child: Icon(Icons.family_restroom),
                   ),
-                  title: Text(item.title),
+                  title: Text(
+                    item.title,
+                    style: hasUnread
+                        ? Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          )
+                        : null,
+                  ),
                   subtitle: Text(
-                    item.lastMessage ?? 'Conversación entre tutores',
+                    preview,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: hasUnread
+                        ? Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          )
+                        : null,
                   ),
                   trailing: item.unreadCount > 0
                       ? Badge(label: Text('${item.unreadCount}'))
@@ -177,10 +218,7 @@ class _FamilyChatPageState extends State<FamilyChatPage> {
 }
 
 class _FamilyChatSelection {
-  const _FamilyChatSelection({
-    required this.childId,
-    required this.member,
-  });
+  const _FamilyChatSelection({required this.childId, required this.member});
 
   final String childId;
   final FamilyMember member;
@@ -208,7 +246,8 @@ class _FamilyChatPickerSheetState extends State<_FamilyChatPickerSheet> {
   @override
   void initState() {
     super.initState();
-    _childId = widget.initialChildId ??
+    _childId =
+        widget.initialChildId ??
         (widget.children.length == 1 ? widget.children.first.id : null);
   }
 

@@ -37,10 +37,7 @@ class NotificationDeepLink {
     return _openByType(context, item);
   }
 
-  static bool openFromPayload(
-    BuildContext context,
-    Map<String, dynamic> data,
-  ) {
+  static bool openFromPayload(BuildContext context, Map<String, dynamic> data) {
     if (FamilyPaymentNavigation.openFromPayload(context, data)) {
       return true;
     }
@@ -85,7 +82,8 @@ class NotificationDeepLink {
       _push(context, const ChatInboxPage());
       return true;
     }
-    if (lower.contains('/payment-request') || lower.contains('/payment_request')) {
+    if (lower.contains('/payment-request') ||
+        lower.contains('/payment_request')) {
       _push(context, const PaymentRequestsPage());
       return true;
     }
@@ -106,7 +104,8 @@ class NotificationDeepLink {
       _push(context, const BonusesCatalogPage());
       return true;
     }
-    if (lower.contains('/secure-shipment') || lower.contains('/secure_shipment')) {
+    if (lower.contains('/secure-shipment') ||
+        lower.contains('/secure_shipment')) {
       final id = _segmentId(path);
       if (id != null) {
         _push(context, SecureShipmentDetailPage(publicId: id));
@@ -161,8 +160,8 @@ class NotificationDeepLink {
     Map<String, dynamic> data,
   ) {
     final text = '$type $category'.toLowerCase();
-    final publicId = data['resourceId']?.toString() ??
-        data['publicId']?.toString();
+    final publicId =
+        data['resourceId']?.toString() ?? data['publicId']?.toString();
     if (text.contains('secure_shipment') ||
         text.contains('secure shipment') ||
         text.startsWith('secure_')) {
@@ -176,7 +175,8 @@ class NotificationDeepLink {
     if (text.contains('chat.message') ||
         text.contains('message.received') ||
         (text.contains('message') && text.contains('chat'))) {
-      final conversationId = data['conversationId']?.toString() ??
+      final conversationId =
+          data['conversationId']?.toString() ??
           data['chatConversationId']?.toString() ??
           data['resourceId']?.toString();
       if (conversationId != null && conversationId.isNotEmpty) {
@@ -264,7 +264,9 @@ class NotificationDeepLink {
       _push(context, const WalletPage());
       return true;
     }
-    if (text.contains('delivery') || text.contains('pedido') || text.contains('order')) {
+    if (text.contains('delivery') ||
+        text.contains('pedido') ||
+        text.contains('order')) {
       final orderId = data['orderId']?.toString();
       if (orderId != null && orderId.isNotEmpty) {
         _push(context, CustomerOrderDetailPage(orderId: orderId));
@@ -312,9 +314,6 @@ class NotificationDeepLink {
     final isKid =
         token != null && AuthTokenClaims.fromJwt(token).routeKind == 'Kid';
     if (!context.mounted) return;
-    _push(
-      context,
-      isKid ? const KidWalletPage() : const UniversalNfcPayPage(),
-    );
+    _push(context, isKid ? const KidWalletPage() : const UniversalNfcPayPage());
   }
 }

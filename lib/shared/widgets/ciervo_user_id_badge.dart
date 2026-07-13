@@ -44,9 +44,8 @@ Future<String?> resolveCiervoUserCodeForSession() async {
   if (claims.routeKind == 'Kid') {
     final result = await getIt<KidMeRepository>().profile();
     return result.when(
-      success: (profile) => profile.ciervoUserCode.isNotEmpty
-          ? profile.ciervoUserCode
-          : null,
+      success: (profile) =>
+          profile.ciervoUserCode.isNotEmpty ? profile.ciervoUserCode : null,
       failure: (_) => null,
     );
   }
@@ -133,11 +132,12 @@ class _CiervoUserIdBadgeState extends State<CiervoUserIdBadge> {
     final kidContext = getIt<SelectedKidContext>();
     setState(() {
       _id = code;
-      _label = widget.labelOverride ??
+      _label =
+          widget.labelOverride ??
           (kidContext.isActive
               ? (kidContext.kidName == null
-                  ? 'ID MENOR'
-                  : 'ID ${kidContext.kidName!.toUpperCase()}')
+                    ? 'ID MENOR'
+                    : 'ID ${kidContext.kidName!.toUpperCase()}')
               : 'CIERVO ID');
       _loading = false;
     });
@@ -153,8 +153,9 @@ class _CiervoUserIdBadgeState extends State<CiervoUserIdBadge> {
     final background = isDark
         ? Colors.black.withValues(alpha: 0.72)
         : Colors.white.withValues(alpha: 0.92);
-    final borderColor =
-        CiervoBrandColors.gold.withValues(alpha: isDark ? 0.5 : 0.65);
+    final borderColor = CiervoBrandColors.gold.withValues(
+      alpha: isDark ? 0.5 : 0.65,
+    );
     final textColor = isDark ? Colors.white : AppColors.dayText;
 
     return Material(

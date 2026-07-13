@@ -15,10 +15,9 @@ class BookingRepository {
 
   Future<Result<List<Booking>>> getMine() => _guard(() async {
     final response = await _client.dio.get<dynamic>('/api/bookings/me');
-    return unwrapApiList(response.data)
-        .whereType<Map<String, dynamic>>()
-        .map(_bookingFromJson)
-        .toList();
+    return unwrapApiList(
+      response.data,
+    ).whereType<Map<String, dynamic>>().map(_bookingFromJson).toList();
   });
 
   Future<Result<Booking>> getByCode(String publicCode) => _guard(() async {

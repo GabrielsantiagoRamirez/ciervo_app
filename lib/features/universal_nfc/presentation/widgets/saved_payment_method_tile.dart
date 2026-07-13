@@ -45,10 +45,7 @@ class SavedPaymentMethodTile extends StatelessWidget {
       ),
       title: Text(method.label),
       subtitle: Text(
-        [
-          if (method.isDefault) 'Predeterminado',
-          method.type,
-        ].join(' · '),
+        [if (method.isDefault) 'Predeterminado', method.type].join(' · '),
       ),
       trailing: selected
           ? Icon(Icons.check_circle, color: theme.colorScheme.primary)

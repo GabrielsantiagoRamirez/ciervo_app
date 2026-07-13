@@ -29,8 +29,9 @@ class FamilyPaymentMethodsState {
       status: status ?? this.status,
       cards: cards ?? this.cards,
       errorMessage: clearMessages ? null : errorMessage ?? this.errorMessage,
-      successMessage:
-          clearMessages ? null : successMessage ?? this.successMessage,
+      successMessage: clearMessages
+          ? null
+          : successMessage ?? this.successMessage,
       actionCardId: actionCardId ?? this.actionCardId,
     );
   }

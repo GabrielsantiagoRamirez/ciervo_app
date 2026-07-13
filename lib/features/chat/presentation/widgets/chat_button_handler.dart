@@ -21,16 +21,15 @@ IconData iconForChatButton(String code) {
     'payforme' || 'pagapormi' => Icons.request_page_outlined,
     'requestapproval' ||
     'solicitaraprobacion' ||
-    'approval' =>
-      Icons.verified_user_outlined,
+    'approval' => Icons.verified_user_outlined,
     'rechargeaccount' ||
     'recargarcuenta' ||
     'recharge' ||
     'recargar' ||
-    'rechargeid' =>
-      Icons.add_card_outlined,
-    'memberships' || 'membresias' || 'membership' =>
-      Icons.workspace_premium_outlined,
+    'rechargeid' => Icons.add_card_outlined,
+    'memberships' ||
+    'membresias' ||
+    'membership' => Icons.workspace_premium_outlined,
     'trips' || 'viajes' => Icons.flight_outlined,
     'transport' || 'transporte' => Icons.directions_bus_outlined,
     'delivery' || 'domicilios' => Icons.delivery_dining_outlined,
@@ -58,9 +57,9 @@ Future<void> handleChatButtonTap(
   if (!button.visibility.isEnabled) {
     final message = button.message?.trim();
     if (message != null && message.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     }
     return;
   }
@@ -69,9 +68,7 @@ Future<void> handleChatButtonTap(
   if (familyKidMode && !isKidAllowedFamilyChatAction(code)) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text(
-          'Esta acción no está disponible en tu cuenta Kids.',
-        ),
+        content: Text('Esta acción no está disponible en tu cuenta Kids.'),
       ),
     );
     return;
@@ -146,9 +143,7 @@ Future<void> handleChatButtonTap(
     case 'domicilios':
       if (businessId != null) {
         await Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => const CustomerOrdersPage(),
-          ),
+          MaterialPageRoute<void>(builder: (_) => const CustomerOrdersPage()),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -159,34 +154,34 @@ Future<void> handleChatButtonTap(
       }
       return;
     case 'qr':
-      await Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const QrHubPage()),
-      );
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const QrHubPage()));
       return;
     case 'memberships':
     case 'membresias':
     case 'membership':
-      await Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const MembershipPage()),
-      );
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const MembershipPage()));
       return;
     case 'trips':
     case 'viajes':
-      await Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const TransportPage()),
-      );
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const TransportPage()));
       return;
     case 'transport':
     case 'transporte':
-      await Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const TransportPage()),
-      );
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const TransportPage()));
       return;
     case 'wallet':
     case 'miwallet':
-      await Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const WalletPage()),
-      );
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const WalletPage()));
       return;
     case 'nfc':
     case 'paynfc':
@@ -215,7 +210,9 @@ Future<void> showChatButtonsSheet(
   final visible = buttons.visibleOnMobile();
   if (visible.isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('No hay acciones disponibles en este chat.')),
+      const SnackBar(
+        content: Text('No hay acciones disponibles en este chat.'),
+      ),
     );
     return;
   }

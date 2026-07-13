@@ -1,6 +1,7 @@
 /// Genera claves idempotentes para operaciones de envío seguro.
 abstract final class SecureShipmentKeys {
-  static String create() => 'ss-create-${DateTime.now().microsecondsSinceEpoch}';
+  static String create() =>
+      'ss-create-${DateTime.now().microsecondsSinceEpoch}';
 
   static String hold() => 'ss-hold-${DateTime.now().microsecondsSinceEpoch}';
 

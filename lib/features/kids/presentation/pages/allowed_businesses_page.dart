@@ -17,10 +17,10 @@ class AllowedBusinessesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => BlocProvider(
-        create: (_) => KidsCubit(getIt<KidsRepository>())
-          ..loadBusinessCandidates(childId),
-        child: _AllowedBusinessesView(childId: childId),
-      );
+    create: (_) =>
+        KidsCubit(getIt<KidsRepository>())..loadBusinessCandidates(childId),
+    child: _AllowedBusinessesView(childId: childId),
+  );
 }
 
 class _AllowedBusinessesView extends StatefulWidget {
@@ -74,11 +74,11 @@ class _AllowedBusinessesViewState extends State<_AllowedBusinessesView> {
     _debounce = Timer(const Duration(milliseconds: 350), () {
       if (!mounted) return;
       context.read<KidsCubit>().loadBusinessCandidates(
-            widget.childId,
-            query: _searchController.text.trim(),
-            city: _city,
-            categoryId: _categoryId,
-          );
+        widget.childId,
+        query: _searchController.text.trim(),
+        city: _city,
+        categoryId: _categoryId,
+      );
     });
   }
 
@@ -87,19 +87,20 @@ class _AllowedBusinessesViewState extends State<_AllowedBusinessesView> {
     return BlocConsumer<KidsCubit, KidsState>(
       listener: (context, state) {
         if (state.errorMessage != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.errorMessage!)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.errorMessage!)));
         }
       },
       builder: (context, state) {
         _initialize(state.overview['allowedBusinesses']);
-        final cities = _businesses
-            .map((item) => _label(item, 'city'))
-            .where((v) => v.isNotEmpty)
-            .toSet()
-            .toList()
-          ..sort();
+        final cities =
+            _businesses
+                .map((item) => _label(item, 'city'))
+                .where((v) => v.isNotEmpty)
+                .toSet()
+                .toList()
+              ..sort();
         final categories = <int, String>{};
         for (final item in _businesses) {
           final id = int.tryParse(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/country/country_registration.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -9,6 +10,7 @@ import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../catalogs/data/catalog_repository.dart';
+import '../../../catalogs/data/settlement_catalog_seed.dart';
 import '../../../catalogs/domain/entities/settlement_catalog.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../domain/entities/delivery_models.dart';
@@ -108,6 +110,7 @@ class _DeliverySettlementAccountPageState
         if ((countryCode ?? '').isEmpty) {
           countryCode = 'CO';
         }
+        _countries = SettlementCatalogSeed.countries;
         _error ??= UserErrorMessage.from(error);
       },
     );
@@ -135,7 +138,7 @@ class _DeliverySettlementAccountPageState
       banks.when(
         success: (value) => _banks = value,
         failure: (error) {
-          _banks = const [];
+          _banks = SettlementCatalogSeed.banksFor(_countryCode!);
           _error ??= UserErrorMessage.from(error);
         },
       );
@@ -143,11 +146,15 @@ class _DeliverySettlementAccountPageState
       methods.when(
         success: (value) {
           _methods = value;
-          _methodCode = _current?.settlementMethod ??
+          _methodCode =
+              _current?.settlementMethod ??
               (value.isNotEmpty ? value.first.code : null);
         },
         failure: (error) {
-          _methods = const [];
+          _methods = SettlementCatalogSeed.methodsFor(_countryCode!);
+          _methodCode =
+              _current?.settlementMethod ??
+              (_methods.isNotEmpty ? _methods.first.code : null);
           _error ??= UserErrorMessage.from(error);
         },
       );
@@ -156,6 +163,8 @@ class _DeliverySettlementAccountPageState
         success: (value) => value,
         failure: (_) => SettlementPolicy.fallback,
       );
+
+      _applyCurrentAccount();
 
       _loading = false;
     });
@@ -179,22 +188,47 @@ class _DeliverySettlementAccountPageState
     setState(() {
       banks.when(
         success: (value) => _banks = value,
-        failure: (error) => _error = UserErrorMessage.from(error),
+        failure: (error) {
+          _banks = SettlementCatalogSeed.banksFor(code);
+          _error = UserErrorMessage.from(error);
+        },
       );
       methods.when(
         success: (value) {
           _methods = value;
           _methodCode = value.isNotEmpty ? value.first.code : null;
         },
-        failure: (error) => _error = UserErrorMessage.from(error),
+        failure: (error) {
+          _methods = SettlementCatalogSeed.methodsFor(code);
+          _methodCode = _methods.isNotEmpty ? _methods.first.code : null;
+          _error = UserErrorMessage.from(error);
+        },
       );
       _policy = policy.when(
         success: (value) => value,
         failure: (_) => SettlementPolicy.fallback,
       );
+      _accountType = null;
       _loading = false;
     });
   }
+
+  void _applyCurrentAccount() {
+    final current = _current;
+    if (current == null) return;
+
+    _accountType = current.accountType;
+    if (current.bankName != null && _banks.isNotEmpty) {
+      final bankName = current.bankName!.toLowerCase();
+      _bankId = _banks
+          .where((bank) => bank.name.toLowerCase() == bankName)
+          .map((bank) => bank.id)
+          .firstOrNull;
+    }
+  }
+
+  List<({String value, String label})> get _accountTypeOptions =>
+      SettlementCatalogSeed.accountTypesFor(_countryCode ?? 'CO');
 
   @override
   Widget build(BuildContext context) {
@@ -212,7 +246,8 @@ class _DeliverySettlementAccountPageState
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: CiervoErrorState(
             title: 'País no disponible',
-            description: _error ?? 'No podemos configurar liquidaciones en tu país.',
+            description:
+                _error ?? 'No podemos configurar liquidaciones en tu país.',
             onRetry: _load,
           ),
         ),
@@ -256,7 +291,8 @@ class _DeliverySettlementAccountPageState
                     ),
                   ),
                 ),
-              if (_current != null) _StatusCard(details: _current!),
+              if (_current != null)
+                _StatusCard(details: _current!, countryCode: _countryCode),
               CiervoCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -279,15 +315,15 @@ class _DeliverySettlementAccountPageState
               if (_countries.length > 1)
                 DropdownButtonFormField<String>(
                   value: _countryCode,
+                  isExpanded: true,
                   decoration: const InputDecoration(labelText: 'País'),
                   items: _countries
                       .map(
                         (country) => DropdownMenuItem(
                           value: country.code,
                           child: Text(
-                            country.currency == null
-                                ? country.name
-                                : '${country.name} (${country.currency})',
+                            _countryDisplayName(country),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       )
@@ -304,6 +340,7 @@ class _DeliverySettlementAccountPageState
               const SizedBox(height: AppSpacing.md),
               DropdownButtonFormField<String>(
                 value: _methodCode,
+                isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: 'Método de liquidación',
                 ),
@@ -311,7 +348,7 @@ class _DeliverySettlementAccountPageState
                     .map(
                       (item) => DropdownMenuItem(
                         value: item.code,
-                        child: Text(item.name),
+                        child: Text(item.name, overflow: TextOverflow.ellipsis),
                       ),
                     )
                     .toList(),
@@ -340,14 +377,18 @@ class _DeliverySettlementAccountPageState
     );
   }
 
+  String _countryDisplayName(SettlementCountry country) {
+    final name = country.name.trim().isEmpty || country.name == country.code
+        ? CountryRegistration.countryLabel(country.code)
+        : country.name;
+    final currency = country.currency;
+    return currency == null || currency.isEmpty ? name : '$name ($currency)';
+  }
+
   String _countryLabel() {
     final match = _countries.where((c) => c.code == _countryCode).firstOrNull;
-    if (match != null) {
-      return match.currency == null
-          ? match.name
-          : '${match.name} (${match.currency})';
-    }
-    return _countryCode ?? '';
+    if (match != null) return _countryDisplayName(match);
+    return CountryRegistration.countryLabel(_countryCode ?? '');
   }
 
   List<Widget> _buildDynamicFields() {
@@ -384,9 +425,7 @@ class _DeliverySettlementAccountPageState
             padding: const EdgeInsets.only(bottom: AppSpacing.md),
             child: Text(
               'No hay bancos disponibles para ${_countryLabel()}.',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.error,
-              ),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           );
         }
@@ -394,20 +433,23 @@ class _DeliverySettlementAccountPageState
           padding: const EdgeInsets.only(bottom: AppSpacing.md),
           child: DropdownButtonFormField<String>(
             value: _bankId,
+            isExpanded: true,
             decoration: InputDecoration(
-              labelText: DisplayLabels.settlementFieldLabel(field),
+              labelText: DisplayLabels.settlementFieldLabel(
+                field,
+                countryCode: _countryCode,
+              ),
             ),
             items: _banks
                 .map(
                   (bank) => DropdownMenuItem(
                     value: bank.id,
-                    child: Text(bank.name),
+                    child: Text(bank.name, overflow: TextOverflow.ellipsis),
                   ),
                 )
                 .toList(),
             onChanged: (value) => setState(() => _bankId = value),
-            validator: (value) =>
-                value == null ? 'Selecciona un banco' : null,
+            validator: (value) => value == null ? 'Selecciona un banco' : null,
           ),
         );
       case 'accounttype':
@@ -415,13 +457,21 @@ class _DeliverySettlementAccountPageState
           padding: const EdgeInsets.only(bottom: AppSpacing.md),
           child: DropdownButtonFormField<String>(
             value: _accountType,
+            isExpanded: true,
             decoration: InputDecoration(
-              labelText: DisplayLabels.settlementFieldLabel(field),
+              labelText: DisplayLabels.settlementFieldLabel(
+                field,
+                countryCode: _countryCode,
+              ),
             ),
-            items: const [
-              DropdownMenuItem(value: 'Savings', child: Text('Ahorros')),
-              DropdownMenuItem(value: 'Checking', child: Text('Corriente')),
-            ],
+            items: _accountTypeOptions
+                .map(
+                  (option) => DropdownMenuItem(
+                    value: option.value,
+                    child: Text(option.label, overflow: TextOverflow.ellipsis),
+                  ),
+                )
+                .toList(),
             onChanged: (value) => setState(() => _accountType = value),
             validator: (value) =>
                 value == null ? 'Selecciona el tipo de cuenta' : null,
@@ -433,7 +483,10 @@ class _DeliverySettlementAccountPageState
           child: TextFormField(
             controller: _accountNumber,
             decoration: InputDecoration(
-              labelText: DisplayLabels.settlementFieldLabel(field),
+              labelText: DisplayLabels.settlementFieldLabel(
+                field,
+                countryCode: _countryCode,
+              ),
             ),
             validator: (value) => value == null || value.trim().isEmpty
                 ? 'Ingresa el número de cuenta'
@@ -446,7 +499,10 @@ class _DeliverySettlementAccountPageState
           child: TextFormField(
             controller: _holderName,
             decoration: InputDecoration(
-              labelText: DisplayLabels.settlementFieldLabel(field),
+              labelText: DisplayLabels.settlementFieldLabel(
+                field,
+                countryCode: _countryCode,
+              ),
             ),
             validator: (value) => value == null || value.trim().isEmpty
                 ? 'Ingresa el nombre del titular'
@@ -459,10 +515,15 @@ class _DeliverySettlementAccountPageState
           child: TextFormField(
             controller: _documentNumber,
             decoration: InputDecoration(
-              labelText: DisplayLabels.settlementFieldLabel(field),
+              labelText: DisplayLabels.settlementFieldLabel(
+                field,
+                countryCode: _countryCode,
+              ),
             ),
             validator: (value) => value == null || value.trim().isEmpty
-                ? 'Ingresa el documento'
+                ? _countryCode?.toUpperCase() == 'CL'
+                      ? 'Ingresa el RUT'
+                      : 'Ingresa el documento'
                 : null,
           ),
         );
@@ -473,7 +534,13 @@ class _DeliverySettlementAccountPageState
             controller: _phoneNumber,
             keyboardType: TextInputType.phone,
             decoration: InputDecoration(
-              labelText: DisplayLabels.settlementFieldLabel(field),
+              labelText: DisplayLabels.settlementFieldLabel(
+                field,
+                countryCode: _countryCode,
+              ),
+              hintText: _countryCode?.toUpperCase() == 'CL'
+                  ? '+56 9 XXXX XXXX'
+                  : '+57 3XX XXX XXXX',
             ),
             validator: (value) => value == null || value.trim().isEmpty
                 ? 'Ingresa el teléfono'
@@ -486,7 +553,10 @@ class _DeliverySettlementAccountPageState
           child: TextFormField(
             controller: _walletIdentifier,
             decoration: InputDecoration(
-              labelText: DisplayLabels.settlementFieldLabel(field),
+              labelText: DisplayLabels.settlementFieldLabel(
+                field,
+                countryCode: _countryCode,
+              ),
             ),
             validator: (value) => value == null || value.trim().isEmpty
                 ? 'Ingresa el identificador de billetera'
@@ -537,8 +607,9 @@ class _DeliverySettlementAccountPageState
       walletIdentifier: pick('walletidentifier'),
     );
 
-    final result =
-        await getIt<DeliveryRepository>().updateSettlementAccount(account);
+    final result = await getIt<DeliveryRepository>().updateSettlementAccount(
+      account,
+    );
     if (!mounted) return;
     setState(() => _saving = false);
     result.when(
@@ -552,17 +623,18 @@ class _DeliverySettlementAccountPageState
         );
         _load();
       },
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 }
 
 class _StatusCard extends StatelessWidget {
-  const _StatusCard({required this.details});
+  const _StatusCard({required this.details, required this.countryCode});
 
   final DeliverySettlementAccountDetails details;
+  final String? countryCode;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -580,6 +652,10 @@ class _StatusCard extends StatelessWidget {
             Text('Motivo: ${details.rejectionReason}'),
           ],
           if (details.bankName != null) Text('Banco: ${details.bankName}'),
+          if (details.accountType != null)
+            Text(
+              'Tipo: ${DisplayLabels.settlementAccountType(details.accountType, countryCode: countryCode)}',
+            ),
           if (details.maskedAccountNumber != null)
             Text('Cuenta: ${details.maskedAccountNumber}'),
           if (details.maskedPhone != null)

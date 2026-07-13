@@ -33,7 +33,7 @@ import '../../../financial_history/presentation/pages/financial_history_page.dar
 import '../../../cashback/presentation/pages/cashback_page.dart';
 import '../../../qr_hub/presentation/pages/qr_hub_page.dart';
 import '../../../qr_wallet/presentation/pages/qr_wallet_page.dart';
-import '../../../reservations/presentation/pages/reservations_page.dart';
+// import '../../../reservations/presentation/pages/reservations_page.dart';
 import '../../../delivery/presentation/pages/delivery_page.dart';
 import '../../../delivery/presentation/pages/customer_orders_page.dart';
 import '../../../bonuses/presentation/pages/bonuses_pages.dart';
@@ -43,7 +43,6 @@ import '../../domain/entities/user_profile.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../../../wallet/domain/repositories/wallet_repository.dart';
 import '../widgets/email_verification_sheet.dart';
-import '../widgets/phone_verification_sheet.dart';
 import '../cubit/profile_cubit.dart';
 import '../cubit/profile_state.dart';
 import 'edit_profile_page.dart';
@@ -367,20 +366,6 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
             runSpacing: AppSpacing.sm,
             children: [
               _InfoChip(
-                icon: Icons.phone_outlined,
-                label: profile.phone.isEmpty
-                    ? 'Telefono pendiente'
-                    : profile.phone,
-              ),
-              _InfoChip(
-                icon: profile.phoneVerified
-                    ? Icons.verified_outlined
-                    : Icons.phone_iphone_outlined,
-                label: profile.phoneVerified
-                    ? 'Teléfono verificado'
-                    : 'Teléfono sin verificar',
-              ),
-              _InfoChip(
                 icon: profile.emailVerified
                     ? Icons.mark_email_read_outlined
                     : Icons.mark_email_unread_outlined,
@@ -417,15 +402,6 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
                     email: profile.email,
                   ),
                 ),
-              if (!profile.phoneVerified && profile.phone.isNotEmpty)
-                ActionChip(
-                  avatar: const Icon(Icons.phone_iphone_outlined, size: 18),
-                  label: const Text('Verificar teléfono'),
-                  onPressed: () => showPhoneVerificationSheet(
-                    context,
-                    phone: profile.phone,
-                  ),
-                ),
               _InfoChip(
                 icon: Icons.verified_user_outlined,
                 label: _profileStatus(profile),
@@ -441,8 +417,7 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
     final complete =
         profile.firstName.isNotEmpty &&
         profile.lastName.isNotEmpty &&
-        profile.email.isNotEmpty &&
-        profile.phone.isNotEmpty;
+        profile.email.isNotEmpty;
     return complete ? 'Perfil activo' : 'Perfil por completar';
   }
 }
@@ -526,8 +501,7 @@ class _CompleteProfileBanner extends StatelessWidget {
     final complete =
         profile.firstName.isNotEmpty &&
         profile.lastName.isNotEmpty &&
-        profile.email.isNotEmpty &&
-        profile.phone.isNotEmpty;
+        profile.email.isNotEmpty;
     if (complete) {
       return const SizedBox.shrink();
     }
@@ -677,13 +651,14 @@ class _AccountActions extends StatelessWidget {
             title: 'Editar perfil',
             onTap: () => _openEditProfile(context),
           ),
-          _ActionTile(
-            icon: Icons.event_available_outlined,
-            title: 'Mis reservas',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const ReservationsPage()),
-            ),
-          ),
+          // Mis reservas vive en el menú inferior; no duplicar aquí.
+          // _ActionTile(
+          //   icon: Icons.event_available_outlined,
+          //   title: 'Mis reservas',
+          //   onTap: () => Navigator.of(context).push(
+          //     MaterialPageRoute<void>(builder: (_) => const ReservationsPage()),
+          //   ),
+          // ),
           _ActionTile(
             icon: Icons.qr_code_2_outlined,
             title: 'QR Ciervo',
@@ -797,7 +772,6 @@ class _ProfileFormState extends State<_ProfileForm> {
   late final TextEditingController _firstNameController;
   late final TextEditingController _lastNameController;
   late final TextEditingController _emailController;
-  late final TextEditingController _phoneController;
 
   @override
   void initState() {
@@ -807,7 +781,6 @@ class _ProfileFormState extends State<_ProfileForm> {
     );
     _lastNameController = TextEditingController(text: widget.profile.lastName);
     _emailController = TextEditingController(text: widget.profile.email);
-    _phoneController = TextEditingController(text: widget.profile.phone);
   }
 
   @override
@@ -818,7 +791,6 @@ class _ProfileFormState extends State<_ProfileForm> {
       _firstNameController.text = widget.profile.firstName;
       _lastNameController.text = widget.profile.lastName;
       _emailController.text = widget.profile.email;
-      _phoneController.text = widget.profile.phone;
     }
   }
 
@@ -827,7 +799,6 @@ class _ProfileFormState extends State<_ProfileForm> {
     _firstNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
-    _phoneController.dispose();
     super.dispose();
   }
 
@@ -839,7 +810,6 @@ class _ProfileFormState extends State<_ProfileForm> {
       firstName: _firstNameController.text,
       lastName: _lastNameController.text,
       email: _emailController.text,
-      phone: _phoneController.text,
     );
   }
 
@@ -883,16 +853,6 @@ class _ProfileFormState extends State<_ProfileForm> {
               decoration: const InputDecoration(
                 hintText: 'Correo electronico',
                 prefixIcon: Icon(Icons.mail_outline),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            TextFormField(
-              controller: _phoneController,
-              validator: (value) => InputValidators.phone(value ?? ''),
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                hintText: 'Telefono',
-                prefixIcon: Icon(Icons.phone_outlined),
               ),
             ),
             const SizedBox(height: AppSpacing.lg),

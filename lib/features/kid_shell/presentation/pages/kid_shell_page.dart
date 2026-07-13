@@ -24,12 +24,12 @@ class _KidShellPageState extends State<KidShellPage> {
   int _index = 0;
 
   Widget _pageForIndex(int index) => switch (index) {
-        0 => const KidHomePage(),
-        1 => const KidBusinessesPage(),
-        2 => const KidFamilyPage(),
-        3 => const KidProfilePage(),
-        _ => const KidHomePage(),
-      };
+    0 => const KidHomePage(),
+    1 => const KidBusinessesPage(),
+    2 => const KidFamilyPage(),
+    3 => const KidProfilePage(),
+    _ => const KidHomePage(),
+  };
 
   @override
   Widget build(BuildContext context) {

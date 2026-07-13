@@ -76,9 +76,9 @@ class _GuardianKidNfcAssociatePageState
       },
       failure: (error) {
         setState(() => _loading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       },
     );
   }
@@ -95,7 +95,10 @@ class _GuardianKidNfcAssociatePageState
       fallback: 'Wallet Kids',
     );
     final balance = card['availableBalance'] ?? card['balance'];
-    final currency = DisplayFormatters.safeText(card['currency'], fallback: 'COP');
+    final currency = DisplayFormatters.safeText(
+      card['currency'],
+      fallback: 'COP',
+    );
     if (balance == null) return name;
     return '$name · ${DisplayFormatters.formatMoney(balance, currency: currency)}';
   }
@@ -112,9 +115,9 @@ class _GuardianKidNfcAssociatePageState
     if (!mounted) return;
     setState(() => _scanning = false);
     if (uid == null || uid.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No pudimos leer el UID.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('No pudimos leer el UID.')));
       return;
     }
     setState(() => _uidController.text = uid);
@@ -156,16 +159,14 @@ class _GuardianKidNfcAssociatePageState
       success: (_) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Tarjeta NFC vinculada para ${widget.childName}.',
-            ),
+            content: Text('Tarjeta NFC vinculada para ${widget.childName}.'),
           ),
         );
         Navigator.of(context).pop(true);
       },
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 
@@ -185,9 +186,9 @@ class _GuardianKidNfcAssociatePageState
           const SnackBar(content: Text('ID público copiado al portapapeles.')),
         );
       },
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 

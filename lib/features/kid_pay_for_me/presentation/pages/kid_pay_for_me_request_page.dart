@@ -73,7 +73,8 @@ class _KidPayForMeRequestPageState extends State<KidPayForMeRequestPage> {
     if (!mounted) return;
     profileResult.when(
       success: (profile) {
-        _country = profile.countryCode.toUpperCase();
+        final code = profile.countryCode.trim().toUpperCase();
+        _country = code.isNotEmpty ? code : 'CO';
         _currency = CountryRegistration.currencyForCountry(_country);
       },
       failure: (_) {},
@@ -106,7 +107,17 @@ class _KidPayForMeRequestPageState extends State<KidPayForMeRequestPage> {
         final location = await getIt<LocationService>().currentLocation();
         latitude = location.latitude;
         longitude = location.longitude;
-      } catch (_) {}
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'No pudimos incluir tu ubicación. La solicitud se enviará igual.',
+              ),
+            ),
+          );
+        }
+      }
     }
 
     final result = await _repository.requestPayForMe(
@@ -129,7 +140,9 @@ class _KidPayForMeRequestPageState extends State<KidPayForMeRequestPage> {
         Navigator.of(context).pop(true);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Solicitud enviada. Tu tutor la verá en el chat familiar.'),
+            content: Text(
+              'Solicitud enviada. Tu tutor la verá en el chat familiar.',
+            ),
           ),
         );
       },
@@ -163,6 +176,23 @@ class _KidPayForMeRequestPageState extends State<KidPayForMeRequestPage> {
                     'Tu tutor recibirá la solicitud en el chat familiar.',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    'Moneda de la solicitud: $_currency '
+                    '(${CountryRegistration.countryLabel(_country)}).',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  if (widget.businessId == null ||
+                      widget.businessId!.trim().isEmpty) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      'Para pagar en un comercio, ábrelo desde Comercios y '
+                      'usa Paga por mí allí. Así el tutor ve el lugar exacto.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

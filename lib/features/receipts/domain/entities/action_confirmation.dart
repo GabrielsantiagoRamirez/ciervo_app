@@ -23,13 +23,14 @@ class ActionConfirmation {
       title: _string(json, const ['shareTitle', 'title']).isEmpty
           ? fallbackTitle
           : _string(json, const ['shareTitle', 'title']),
-      confirmationCode: _string(json, const [
-        'confirmationCode',
-        'reference',
-        'publicCode',
-        'code',
-        'id',
-      ]).isEmpty
+      confirmationCode:
+          _string(json, const [
+            'confirmationCode',
+            'reference',
+            'publicCode',
+            'code',
+            'id',
+          ]).isEmpty
           ? fallbackCode ?? ''
           : _string(json, const [
               'confirmationCode',

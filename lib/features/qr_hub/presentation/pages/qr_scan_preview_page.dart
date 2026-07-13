@@ -57,9 +57,9 @@ class _QrScanPreviewPageState extends State<QrScanPreviewPage> {
         Navigator.of(context).pop(true);
       },
       failure: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       },
     );
     if (mounted) setState(() => _redeeming = false);

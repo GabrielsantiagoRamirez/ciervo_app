@@ -65,6 +65,14 @@ abstract interface class AuthRepository {
     required String code,
   });
 
+  Future<Result<void>> requestPasswordRecovery(String email);
+
+  Future<Result<void>> recoverPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  });
+
   Future<Result<void>> logout();
 
   /// Borra tokens locales sin llamar APIs autenticadas (migración Firebase).

@@ -49,8 +49,7 @@ class _KidAutoPaymentPageState extends State<KidAutoPaymentPage> {
     result.when(
       success: (rules) {
         _enabled = rules.enabled;
-        _maxAmountController.text =
-            rules.maxAutomaticAmount?.toString() ?? '';
+        _maxAmountController.text = rules.maxAutomaticAmount?.toString() ?? '';
         setState(() => _loading = false);
       },
       failure: (error) => setState(() {
@@ -77,9 +76,9 @@ class _KidAutoPaymentPageState extends State<KidAutoPaymentPage> {
       success: (_) => ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Pago automático actualizado.')),
       ),
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 
@@ -93,49 +92,49 @@ class _KidAutoPaymentPageState extends State<KidAutoPaymentPage> {
               child: CiervoLoadingState(itemCount: 2),
             )
           : _error != null
-              ? Padding(
-                  padding: pagePaddingOf(context),
-                  child: CiervoErrorState(
-                    title: 'No pudimos cargar la configuración',
-                    description: _error!,
-                    onRetry: _load,
-                  ),
-                )
-              : SingleChildScrollView(
-                  padding: pagePaddingOf(context),
-                  child: CiervoCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        SwitchListTile(
-                          title: const Text('Pago automático'),
-                          subtitle: const Text(
-                            'Usa tu tarjeta cuando el menor no tenga saldo.',
-                          ),
-                          value: _enabled,
-                          onChanged: (value) => setState(() => _enabled = value),
-                        ),
-                        TextField(
-                          controller: _maxAmountController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: 'Monto máximo automático (COP)',
-                            prefixIcon: Icon(Icons.payments_outlined),
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-                        CiervoButton(
-                          label: _saving ? 'Guardando...' : 'Guardar',
-                          icon: Icons.save_outlined,
-                          state: _saving
-                              ? CiervoButtonState.loading
-                              : CiervoButtonState.normal,
-                          onPressed: _saving ? null : _save,
-                        ),
-                      ],
+          ? Padding(
+              padding: pagePaddingOf(context),
+              child: CiervoErrorState(
+                title: 'No pudimos cargar la configuración',
+                description: _error!,
+                onRetry: _load,
+              ),
+            )
+          : SingleChildScrollView(
+              padding: pagePaddingOf(context),
+              child: CiervoCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SwitchListTile(
+                      title: const Text('Pago automático'),
+                      subtitle: const Text(
+                        'Usa tu tarjeta cuando el menor no tenga saldo.',
+                      ),
+                      value: _enabled,
+                      onChanged: (value) => setState(() => _enabled = value),
                     ),
-                  ),
+                    TextField(
+                      controller: _maxAmountController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Monto máximo automático (COP)',
+                        prefixIcon: Icon(Icons.payments_outlined),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    CiervoButton(
+                      label: _saving ? 'Guardando...' : 'Guardar',
+                      icon: Icons.save_outlined,
+                      state: _saving
+                          ? CiervoButtonState.loading
+                          : CiervoButtonState.normal,
+                      onPressed: _saving ? null : _save,
+                    ),
+                  ],
                 ),
+              ),
+            ),
     );
   }
 }

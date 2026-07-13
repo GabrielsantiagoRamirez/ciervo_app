@@ -60,9 +60,7 @@ class _KidPayForMeListPageState extends State<KidPayForMeListPage> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           await Navigator.of(context).push<bool>(
-            MaterialPageRoute(
-              builder: (_) => const KidPayForMeRequestPage(),
-            ),
+            MaterialPageRoute(builder: (_) => const KidPayForMeRequestPage()),
           );
           await _load();
         },
@@ -99,10 +97,12 @@ class _KidPayForMeListPageState extends State<KidPayForMeListPage> {
             : ListView.separated(
                 padding: pagePaddingOf(context),
                 itemCount: _items.length,
-                separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+                separatorBuilder: (_, _) =>
+                    const SizedBox(height: AppSpacing.sm),
                 itemBuilder: (context, index) {
                   final item = _items[index];
-                  final status = '${item['status'] ?? item['requestStatus'] ?? ''}';
+                  final status =
+                      '${item['status'] ?? item['requestStatus'] ?? ''}';
                   final color = PayForMeLabels.statusColor(context, status);
                   return CiervoCard(
                     child: Column(
@@ -146,8 +146,8 @@ class _KidPayForMeListPageState extends State<KidPayForMeListPage> {
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                         if (DisplayFormatters.formatBackendDate(
-                              item['createdAt'] ?? item['requestedAt'],
-                            ).isNotEmpty)
+                          item['createdAt'] ?? item['requestedAt'],
+                        ).isNotEmpty)
                           Text(
                             DisplayFormatters.formatBackendDate(
                               item['createdAt'] ?? item['requestedAt'],

@@ -6,10 +6,7 @@ import '../../../../shared/widgets/ciervo_card.dart';
 import '../../domain/entities/place_detail.dart';
 
 class PlaceDetailPromotionCard extends StatelessWidget {
-  const PlaceDetailPromotionCard({
-    required this.promotion,
-    super.key,
-  });
+  const PlaceDetailPromotionCard({required this.promotion, super.key});
 
   final PlacePromotion promotion;
 

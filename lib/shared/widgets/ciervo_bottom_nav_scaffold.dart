@@ -66,12 +66,17 @@ class _CiervoBottomNavScaffoldState extends State<CiervoBottomNavScaffold> {
                     setState(() => _selectedIndex = index);
                     context.read<NotificationBadgesCubit>().refresh();
                   },
-                  indicatorColor: Theme.of(context).colorScheme.primaryContainer,
+                  indicatorColor: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer,
                   backgroundColor: Colors.transparent,
                   destinations: [
                     NavigationDestination(
                       icon: _badgedIcon(Icons.home_outlined, badges.total),
-                      selectedIcon: _badgedIcon(Icons.home_rounded, badges.total),
+                      selectedIcon: _badgedIcon(
+                        Icons.home_rounded,
+                        badges.total,
+                      ),
                       label: 'Inicio',
                     ),
                     const NavigationDestination(
@@ -81,7 +86,10 @@ class _CiervoBottomNavScaffoldState extends State<CiervoBottomNavScaffold> {
                     ),
                     NavigationDestination(
                       icon: _badgedIcon(Icons.forum_outlined, badges.chat),
-                      selectedIcon: _badgedIcon(Icons.forum_rounded, badges.chat),
+                      selectedIcon: _badgedIcon(
+                        Icons.forum_rounded,
+                        badges.chat,
+                      ),
                       label: 'Chat',
                     ),
                     NavigationDestination(
@@ -97,7 +105,10 @@ class _CiervoBottomNavScaffoldState extends State<CiervoBottomNavScaffold> {
                     ),
                     NavigationDestination(
                       icon: _badgedIcon(Icons.person_outline, badges.promos),
-                      selectedIcon: _badgedIcon(Icons.person_rounded, badges.promos),
+                      selectedIcon: _badgedIcon(
+                        Icons.person_rounded,
+                        badges.promos,
+                      ),
                       label: 'Perfil',
                     ),
                   ],

@@ -37,8 +37,7 @@ class _FakeFamilyPaymentsRemoteDataSource
     required String holderName,
     String? alias,
     required String idempotencyKey,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<void> approvePayment(String paymentId) => throw UnimplementedError();
@@ -79,8 +78,7 @@ class _FakeFamilyPaymentsRemoteDataSource
     String kidId, {
     int page = 1,
     int pageSize = 20,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<KidScheduleRulesDto> kidSchedule(String kidId) =>
@@ -104,8 +102,7 @@ class _FakeFamilyPaymentsRemoteDataSource
     String? cardId,
     int page = 1,
     int pageSize = 20,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<void> rejectPayment(String paymentId, {String? reason}) =>
@@ -115,50 +112,43 @@ class _FakeFamilyPaymentsRemoteDataSource
   Future<KidApprovalRulesDto> saveKidApprovalRules(
     String kidId,
     Map<String, dynamic> data,
-  ) =>
-      throw UnimplementedError();
+  ) => throw UnimplementedError();
 
   @override
   Future<KidAutoPaymentRulesDto> saveKidAutoPayment(
     String kidId,
     Map<String, dynamic> data,
-  ) =>
-      throw UnimplementedError();
+  ) => throw UnimplementedError();
 
   @override
   Future<KidGeofenceRulesDto> saveKidGeofence(
     String kidId,
     Map<String, dynamic> data,
-  ) =>
-      throw UnimplementedError();
+  ) => throw UnimplementedError();
 
   @override
   Future<KidSpendingLimitsDto> saveKidLimits(
     String kidId,
     Map<String, dynamic> data,
-  ) =>
-      throw UnimplementedError();
+  ) => throw UnimplementedError();
 
   @override
   Future<KidMerchantRulesDto> saveKidMerchantRules(
     String kidId,
     Map<String, dynamic> data,
-  ) =>
-      throw UnimplementedError();
+  ) => throw UnimplementedError();
 
   @override
   Future<KidPaymentSourceDto> saveKidPaymentSource(
     String kidId,
     Map<String, dynamic> data,
-  ) =>
-      throw UnimplementedError();
+  ) => throw UnimplementedError();
 
   @override
   Future<KidScheduleRulesDto> saveKidSchedule(
     String kidId,
     Map<String, dynamic> data,
-  ) =>
-      throw UnimplementedError();
+  ) => throw UnimplementedError();
 
   @override
   Future<FamilyPaymentCardDto> unfreezeCard(String cardId) =>
@@ -170,8 +160,7 @@ class _FakeFamilyPaymentsRemoteDataSource
     String? alias,
     bool? isPrimary,
     bool? isBackup,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<FamilyPaymentCardDto> verifyCard(String cardId) =>

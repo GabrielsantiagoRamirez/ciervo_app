@@ -41,10 +41,7 @@ class ChatButtonsBar extends StatelessWidget {
         children: [
           for (final button in effective) ...[
             ActionChip(
-              avatar: Icon(
-                iconForChatButton(button.code),
-                size: 18,
-              ),
+              avatar: Icon(iconForChatButton(button.code), size: 18),
               label: Text(button.label),
               onPressed: !enabled
                   ? null
@@ -71,20 +68,20 @@ class ChatButtonsBar extends StatelessWidget {
   }
 
   List<ChatButton> _fallbackButtons() => const [
-        ChatButton(
-          code: 'pay',
-          label: 'Pagar',
-          visibility: ChatButtonVisibility.productionReady,
-        ),
-        ChatButton(
-          code: 'pay_for_me',
-          label: 'Paga por mí',
-          visibility: ChatButtonVisibility.productionReady,
-        ),
-        ChatButton(
-          code: 'gift',
-          label: 'Regalo',
-          visibility: ChatButtonVisibility.productionReady,
-        ),
-      ];
+    ChatButton(
+      code: 'pay',
+      label: 'Pagar',
+      visibility: ChatButtonVisibility.productionReady,
+    ),
+    ChatButton(
+      code: 'pay_for_me',
+      label: 'Paga por mí',
+      visibility: ChatButtonVisibility.productionReady,
+    ),
+    ChatButton(
+      code: 'gift',
+      label: 'Regalo',
+      visibility: ChatButtonVisibility.productionReady,
+    ),
+  ];
 }

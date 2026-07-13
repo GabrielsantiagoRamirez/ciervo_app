@@ -6,11 +6,7 @@ import '../../../shared/widgets/ciervo_card.dart';
 import 'open_settings_button.dart';
 
 class PermissionDeniedState extends StatelessWidget {
-  const PermissionDeniedState({
-    required this.kind,
-    this.onRetry,
-    super.key,
-  });
+  const PermissionDeniedState({required this.kind, this.onRetry, super.key});
 
   final AppPermissionKind kind;
   final VoidCallback? onRetry;
@@ -40,8 +36,8 @@ class PermissionDeniedState extends StatelessWidget {
             kind.explanation,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: AppSpacing.lg),
           if (onRetry != null)

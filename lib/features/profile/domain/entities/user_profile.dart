@@ -10,6 +10,7 @@ class UserProfile {
     this.nightOperationalId,
     this.identityDocument,
     this.documentType,
+    this.birthDate,
     this.photoUrl,
     this.imageUrl,
     this.thumbnailUrl,
@@ -35,6 +36,7 @@ class UserProfile {
   final String? nightOperationalId;
   final String? identityDocument;
   final String? documentType;
+  final DateTime? birthDate;
   final String? photoUrl;
   final String? imageUrl;
   final String? thumbnailUrl;
@@ -61,32 +63,32 @@ class UserProfile {
     String? ciervoUserCode,
     String? username,
     String? nightOperationalId,
-  }) =>
-      UserProfile(
-        id: id,
-        firstName: firstName,
-        lastName: lastName,
-        email: email,
-        phone: phone,
-        ciervoUserCode: ciervoUserCode ?? this.ciervoUserCode,
-        username: username ?? this.username,
-        nightOperationalId: nightOperationalId ?? this.nightOperationalId,
-        identityDocument: identityDocument,
-        documentType: documentType,
-        photoUrl: photoUrl ?? this.photoUrl,
-        imageUrl: imageUrl ?? this.imageUrl,
-        thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
-        storagePath: storagePath ?? this.storagePath,
-        photoUpdatedAt: photoUpdatedAt ?? this.photoUpdatedAt,
-        currentLatitude: currentLatitude,
-        currentLongitude: currentLongitude,
-        locationUpdatedAt: locationUpdatedAt,
-        city: city,
-        countryCode: countryCode ?? this.countryCode,
-        emailVerified: emailVerified ?? this.emailVerified,
-        phoneVerified: phoneVerified ?? this.phoneVerified,
-        authProvider: authProvider,
-      );
+  }) => UserProfile(
+    id: id,
+    firstName: firstName,
+    lastName: lastName,
+    email: email,
+    phone: phone,
+    ciervoUserCode: ciervoUserCode ?? this.ciervoUserCode,
+    username: username ?? this.username,
+    nightOperationalId: nightOperationalId ?? this.nightOperationalId,
+    identityDocument: identityDocument,
+    documentType: documentType,
+    birthDate: birthDate,
+    photoUrl: photoUrl ?? this.photoUrl,
+    imageUrl: imageUrl ?? this.imageUrl,
+    thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
+    storagePath: storagePath ?? this.storagePath,
+    photoUpdatedAt: photoUpdatedAt ?? this.photoUpdatedAt,
+    currentLatitude: currentLatitude,
+    currentLongitude: currentLongitude,
+    locationUpdatedAt: locationUpdatedAt,
+    city: city,
+    countryCode: countryCode ?? this.countryCode,
+    emailVerified: emailVerified ?? this.emailVerified,
+    phoneVerified: phoneVerified ?? this.phoneVerified,
+    authProvider: authProvider,
+  );
 
   String get fullName {
     final value = '$firstName $lastName'.trim();

@@ -16,23 +16,22 @@ Future<void> showReportSheet(
   String? subjectLabel,
   bool allowBlockUser = false,
   VoidCallback? onCompleted,
-}) =>
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (sheetContext) => _ReportSheet(
-        targetType: targetType,
-        targetId: targetId,
-        reportedUserId: reportedUserId,
-        subjectLabel: subjectLabel,
-        allowBlockUser: allowBlockUser,
-        onCompleted: onCompleted,
-      ),
-    );
+}) => showModalBottomSheet<void>(
+  context: context,
+  isScrollControlled: true,
+  backgroundColor: Theme.of(context).colorScheme.surface,
+  shape: const RoundedRectangleBorder(
+    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+  ),
+  builder: (sheetContext) => _ReportSheet(
+    targetType: targetType,
+    targetId: targetId,
+    reportedUserId: reportedUserId,
+    subjectLabel: subjectLabel,
+    allowBlockUser: allowBlockUser,
+    onCompleted: onCompleted,
+  ),
+);
 
 class _ReportSheet extends StatefulWidget {
   const _ReportSheet({
@@ -101,8 +100,9 @@ class _ReportSheetState extends State<_ReportSheet> {
     await reportResult.when(
       success: (_) async {
         if (alsoBlock && widget.reportedUserId != null) {
-          final blockResult =
-              await repository.blockUser(widget.reportedUserId!);
+          final blockResult = await repository.blockUser(
+            widget.reportedUserId!,
+          );
           if (!mounted) return;
           blockResult.when(
             success: (_) {
@@ -136,9 +136,9 @@ class _ReportSheetState extends State<_ReportSheet> {
       },
       failure: (error) {
         setState(() => _loading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       },
     );
   }
@@ -184,7 +184,9 @@ class _ReportSheetState extends State<_ReportSheet> {
               contentPadding: EdgeInsets.zero,
               value: reason,
               groupValue: _selectedReason,
-              onChanged: _loading ? null : (value) => setState(() => _selectedReason = value),
+              onChanged: _loading
+                  ? null
+                  : (value) => setState(() => _selectedReason = value),
               title: Text(reason.label, style: const TextStyle(fontSize: 14)),
             ),
           ),
@@ -202,10 +204,12 @@ class _ReportSheetState extends State<_ReportSheet> {
           ],
           const SizedBox(height: AppSpacing.md),
           if (_loading)
-            const Center(child: Padding(
-              padding: EdgeInsets.all(AppSpacing.md),
-              child: CircularProgressIndicator(),
-            ))
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(AppSpacing.md),
+                child: CircularProgressIndicator(),
+              ),
+            )
           else ...[
             SizedBox(
               width: double.infinity,
@@ -253,9 +257,9 @@ Future<void> showBlockUserFlow(
         const SnackBar(content: Text('Usuario bloqueado correctamente.')),
       );
     },
-    failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(UserErrorMessage.from(error))),
-    ),
+    failure: (error) => ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
   );
 }
 
@@ -299,9 +303,9 @@ Future<void> showBlockContentFlow(
         const SnackBar(content: Text('Contenido bloqueado correctamente.')),
       );
     },
-    failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(UserErrorMessage.from(error))),
-    ),
+    failure: (error) => ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
   );
 }
 

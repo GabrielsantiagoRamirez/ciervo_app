@@ -17,8 +17,8 @@ class LinkChildRequest {
   final bool isPrimaryGuardian;
 
   Map<String, dynamic> toJson() => {
-        'kidsPublicId': kidsPublicId.trim(),
-        'relationshipType': relationshipType,
-        'isPrimaryGuardian': isPrimaryGuardian,
-      };
+    'kidsPublicId': kidsPublicId.trim(),
+    'relationshipType': relationshipType,
+    'isPrimaryGuardian': isPrimaryGuardian,
+  };
 }

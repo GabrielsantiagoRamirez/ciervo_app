@@ -41,15 +41,14 @@ class _StaffOrdersPageState extends State<StaffOrdersPage> {
   }
 
   void _reload() {
-    _orders = getIt<StaffOrdersRepository>().orders(
-      businessId: widget.permissions.businessId!,
-      status: _status,
-    ).then(
-      (result) => result.when(
-        success: (value) => value,
-        failure: (error) => throw error,
-      ),
-    );
+    _orders = getIt<StaffOrdersRepository>()
+        .orders(businessId: widget.permissions.businessId!, status: _status)
+        .then(
+          (result) => result.when(
+            success: (value) => value,
+            failure: (error) => throw error,
+          ),
+        );
   }
 
   @override
@@ -111,19 +110,24 @@ class _StaffOrdersPageState extends State<StaffOrdersPage> {
                 return ListView.separated(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   itemCount: orders.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(height: AppSpacing.sm),
                   itemBuilder: (context, index) {
                     final order = orders[index];
                     return Card(
                       child: ListTile(
-                        title: Text(order.reference.isEmpty
-                            ? 'Pedido #${order.id}'
-                            : order.reference),
-                        subtitle: Text([
-                          order.customerName,
-                          order.deliveryAddress,
-                          staffOrderStatusLabel(order.status),
-                        ].where((item) => item.isNotEmpty).join('\n')),
+                        title: Text(
+                          order.reference.isEmpty
+                              ? 'Pedido #${order.id}'
+                              : order.reference,
+                        ),
+                        subtitle: Text(
+                          [
+                            order.customerName,
+                            order.deliveryAddress,
+                            staffOrderStatusLabel(order.status),
+                          ].where((item) => item.isNotEmpty).join('\n'),
+                        ),
                         trailing: Text('\$${order.total}'),
                         onTap: () async {
                           await Navigator.of(context).push<void>(

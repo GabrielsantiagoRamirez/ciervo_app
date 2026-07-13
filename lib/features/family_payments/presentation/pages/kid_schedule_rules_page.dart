@@ -101,12 +101,12 @@ class _KidScheduleRulesPageState extends State<KidScheduleRulesPage> {
     if (!mounted) return;
     setState(() => _saving = false);
     result.when(
-      success: (_) => ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Horarios guardados.')),
-      ),
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      success: (_) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Horarios guardados.'))),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 
@@ -120,72 +120,76 @@ class _KidScheduleRulesPageState extends State<KidScheduleRulesPage> {
               child: CiervoLoadingState(itemCount: 3),
             )
           : _error != null
-              ? Padding(
-                  padding: pagePaddingOf(context),
-                  child: CiervoErrorState(
-                    title: 'No pudimos cargar los horarios',
-                    description: _error!,
-                    onRetry: _load,
-                  ),
-                )
-              : SingleChildScrollView(
-                  padding: pagePaddingOf(context),
-                  child: CiervoCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        ListTile(
-                          leading: const Icon(Icons.access_time),
-                          title: const Text('Hora inicio'),
-                          subtitle: Text(_formatTime(_start).isEmpty
-                              ? 'Seleccionar'
-                              : _formatTime(_start)),
-                          onTap: () => _pickTime(start: true),
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.access_time_filled),
-                          title: const Text('Hora fin'),
-                          subtitle: Text(_formatTime(_end).isEmpty
-                              ? 'Seleccionar'
-                              : _formatTime(_end)),
-                          onTap: () => _pickTime(start: false),
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        Text(
-                          'Días permitidos',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        Wrap(
-                          spacing: 8,
-                          children: List.generate(7, (index) {
-                            final day = index + 1;
-                            final selected = _days.contains(day);
-                            return FilterChip(
-                              label: Text(_dayLabels[index]),
-                              selected: selected,
-                              onSelected: (value) => setState(() {
-                                if (value) {
-                                  _days.add(day);
-                                } else {
-                                  _days.remove(day);
-                                }
-                              }),
-                            );
-                          }),
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-                        CiervoButton(
-                          label: _saving ? 'Guardando...' : 'Guardar horarios',
-                          icon: Icons.save_outlined,
-                          state: _saving
-                              ? CiervoButtonState.loading
-                              : CiervoButtonState.normal,
-                          onPressed: _saving ? null : _save,
-                        ),
-                      ],
+          ? Padding(
+              padding: pagePaddingOf(context),
+              child: CiervoErrorState(
+                title: 'No pudimos cargar los horarios',
+                description: _error!,
+                onRetry: _load,
+              ),
+            )
+          : SingleChildScrollView(
+              padding: pagePaddingOf(context),
+              child: CiervoCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.access_time),
+                      title: const Text('Hora inicio'),
+                      subtitle: Text(
+                        _formatTime(_start).isEmpty
+                            ? 'Seleccionar'
+                            : _formatTime(_start),
+                      ),
+                      onTap: () => _pickTime(start: true),
                     ),
-                  ),
+                    ListTile(
+                      leading: const Icon(Icons.access_time_filled),
+                      title: const Text('Hora fin'),
+                      subtitle: Text(
+                        _formatTime(_end).isEmpty
+                            ? 'Seleccionar'
+                            : _formatTime(_end),
+                      ),
+                      onTap: () => _pickTime(start: false),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      'Días permitidos',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    Wrap(
+                      spacing: 8,
+                      children: List.generate(7, (index) {
+                        final day = index + 1;
+                        final selected = _days.contains(day);
+                        return FilterChip(
+                          label: Text(_dayLabels[index]),
+                          selected: selected,
+                          onSelected: (value) => setState(() {
+                            if (value) {
+                              _days.add(day);
+                            } else {
+                              _days.remove(day);
+                            }
+                          }),
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    CiervoButton(
+                      label: _saving ? 'Guardando...' : 'Guardar horarios',
+                      icon: Icons.save_outlined,
+                      state: _saving
+                          ? CiervoButtonState.loading
+                          : CiervoButtonState.normal,
+                      onPressed: _saving ? null : _save,
+                    ),
+                  ],
                 ),
+              ),
+            ),
     );
   }
 }

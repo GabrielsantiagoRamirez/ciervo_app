@@ -49,7 +49,6 @@ class _EditProfileViewState extends State<_EditProfileView> {
   late final TextEditingController _firstName;
   late final TextEditingController _lastName;
   late final TextEditingController _email;
-  late final TextEditingController _phone;
   late final TextEditingController _username;
 
   @override
@@ -58,7 +57,6 @@ class _EditProfileViewState extends State<_EditProfileView> {
     _firstName = TextEditingController(text: widget.profile.firstName);
     _lastName = TextEditingController(text: widget.profile.lastName);
     _email = TextEditingController(text: widget.profile.email);
-    _phone = TextEditingController(text: widget.profile.phone);
     _username = TextEditingController(text: widget.profile.username ?? '');
   }
 
@@ -67,7 +65,6 @@ class _EditProfileViewState extends State<_EditProfileView> {
     _firstName.dispose();
     _lastName.dispose();
     _email.dispose();
-    _phone.dispose();
     _username.dispose();
     super.dispose();
   }
@@ -198,21 +195,6 @@ class _EditProfileViewState extends State<_EditProfileView> {
                             InputValidators.email(value ?? ''),
                       ),
                       _field(
-                        controller: _phone,
-                        label: 'Teléfono',
-                        icon: Icons.phone_outlined,
-                        keyboardType: TextInputType.phone,
-                        readOnly: widget.profile.phoneVerified,
-                        helperText: widget.profile.phoneVerified
-                            ? 'Verificado. Para cambiarlo debes volver a confirmarlo.'
-                            : null,
-                        onTap: widget.profile.phoneVerified
-                            ? () => _promptVerifiedFieldChange(context, 'teléfono')
-                            : null,
-                        validator: (value) =>
-                            InputValidators.phone(value ?? ''),
-                      ),
-                      _field(
                         controller: _username,
                         label: 'Usuario (@username)',
                         icon: Icons.alternate_email,
@@ -340,7 +322,6 @@ class _EditProfileViewState extends State<_EditProfileView> {
       firstName: _firstName.text.trim(),
       lastName: _lastName.text.trim(),
       email: _email.text.trim(),
-      phone: _phone.text.trim(),
       username: _username.text.trim(),
     );
   }

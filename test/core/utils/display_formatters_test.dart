@@ -5,7 +5,10 @@ void main() {
   group('DisplayFormatters.safeText', () {
     test('returns fallback for null and literal null', () {
       expect(DisplayFormatters.safeText(null, fallback: 'Usuario'), 'Usuario');
-      expect(DisplayFormatters.safeText('null', fallback: 'Usuario'), 'Usuario');
+      expect(
+        DisplayFormatters.safeText('null', fallback: 'Usuario'),
+        'Usuario',
+      );
       expect(DisplayFormatters.safeText('  ', fallback: 'Usuario'), 'Usuario');
     });
 

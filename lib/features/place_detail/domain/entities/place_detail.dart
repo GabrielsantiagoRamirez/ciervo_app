@@ -31,10 +31,7 @@ class PlaceDetail {
 }
 
 class PlacePromotion {
-  const PlacePromotion({
-    required this.title,
-    required this.description,
-  });
+  const PlacePromotion({required this.title, required this.description});
 
   final String title;
   final String description;

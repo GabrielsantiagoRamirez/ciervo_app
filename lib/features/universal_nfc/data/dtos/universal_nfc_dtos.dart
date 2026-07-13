@@ -37,20 +37,20 @@ class PaymentQuoteDto {
   }
 
   PaymentQuote toDomain() => PaymentQuote(
-        subtotal: subtotal,
-        fee: fee,
-        tax: tax,
-        discount: discount,
-        cashback: cashback,
-        total: total,
-        currency: currency,
-        type: type,
-        paymentMethod: paymentMethod,
-        feeApplies: feeApplies,
-        feePercentage: feePercentage,
-        availableBalance: availableBalance,
-        sufficientFunds: sufficientFunds,
-      );
+    subtotal: subtotal,
+    fee: fee,
+    tax: tax,
+    discount: discount,
+    cashback: cashback,
+    total: total,
+    currency: currency,
+    type: type,
+    paymentMethod: paymentMethod,
+    feeApplies: feeApplies,
+    feePercentage: feePercentage,
+    availableBalance: availableBalance,
+    sufficientFunds: sufficientFunds,
+  );
 
   final double subtotal;
   final double fee;
@@ -97,29 +97,30 @@ class SavedPaymentMethodDto {
   });
 
   SavedPaymentMethod toDomain() => SavedPaymentMethod(
-        id: id,
-        type: type,
-        brand: brand,
-        status: status,
-        isDefault: isDefault,
-        isTokenized: isTokenized,
-        last4: last4,
-        displayName: displayName,
-        expiryMonth: expiryMonth,
-        expiryYear: expiryYear,
-      );
+    id: id,
+    type: type,
+    brand: brand,
+    status: status,
+    isDefault: isDefault,
+    isTokenized: isTokenized,
+    last4: last4,
+    displayName: displayName,
+    expiryMonth: expiryMonth,
+    expiryYear: expiryYear,
+  );
 
   static List<SavedPaymentMethodDto> listFrom(dynamic value) {
     if (value is List) {
       return value
           .whereType<Map>()
-          .map((e) => SavedPaymentMethodDto.fromJson(
-                Map<String, dynamic>.from(e),
-              ))
+          .map(
+            (e) => SavedPaymentMethodDto.fromJson(Map<String, dynamic>.from(e)),
+          )
           .toList();
     }
     if (value is Map) {
-      final items = value['items'] ?? value['methods'] ?? value['paymentMethods'];
+      final items =
+          value['items'] ?? value['methods'] ?? value['paymentMethods'];
       if (items is List) return listFrom(items);
     }
     return const [];
@@ -178,21 +179,21 @@ class UniversalNfcPaymentDto {
   });
 
   UniversalNfcPayment toDomain() => UniversalNfcPayment(
-        paymentIntentId: paymentIntentId,
-        status: status,
-        amount: amount,
-        currency: currency,
-        nfcPayload: nfcPayload,
-        merchantName: merchantName,
-        subtotal: subtotal,
-        fee: fee,
-        total: total,
-        receiptId: receiptId,
-        reason: reason,
-        message: message,
-        newBalance: newBalance,
-        approved: approved,
-      );
+    paymentIntentId: paymentIntentId,
+    status: status,
+    amount: amount,
+    currency: currency,
+    nfcPayload: nfcPayload,
+    merchantName: merchantName,
+    subtotal: subtotal,
+    fee: fee,
+    total: total,
+    receiptId: receiptId,
+    reason: reason,
+    message: message,
+    newBalance: newBalance,
+    approved: approved,
+  );
 
   final String paymentIntentId;
   final String status;
@@ -213,14 +214,9 @@ class UniversalNfcPaymentDto {
 class KidsNfcParentApprovalDto {
   factory KidsNfcParentApprovalDto.fromJson(Map<String, dynamic> json) {
     return KidsNfcParentApprovalDto(
-      paymentIntentId: _string(
-        json['paymentIntentId'] ?? json['id'],
-      ),
+      paymentIntentId: _string(json['paymentIntentId'] ?? json['id']),
       kidId: _string(json['kidId'] ?? json['childProfileId']),
-      kidName: _string(
-        json['kidName'] ?? json['childName'],
-        fallback: 'Menor',
-      ),
+      kidName: _string(json['kidName'] ?? json['childName'], fallback: 'Menor'),
       amount: _num(json['amount']),
       currency: _string(json['currency'], fallback: 'COP'),
       merchantName: _string(
@@ -244,23 +240,24 @@ class KidsNfcParentApprovalDto {
   });
 
   KidsNfcParentApproval toDomain() => KidsNfcParentApproval(
-        paymentIntentId: paymentIntentId,
-        kidId: kidId,
-        kidName: kidName,
-        amount: amount,
-        currency: currency,
-        merchantName: merchantName,
-        requestedAt: requestedAt,
-        approvalId: approvalId,
-      );
+    paymentIntentId: paymentIntentId,
+    kidId: kidId,
+    kidName: kidName,
+    amount: amount,
+    currency: currency,
+    merchantName: merchantName,
+    requestedAt: requestedAt,
+    approvalId: approvalId,
+  );
 
   static List<KidsNfcParentApprovalDto> listFrom(dynamic value) {
     if (value is List) {
       return value
           .whereType<Map>()
-          .map((e) => KidsNfcParentApprovalDto.fromJson(
-                Map<String, dynamic>.from(e),
-              ))
+          .map(
+            (e) =>
+                KidsNfcParentApprovalDto.fromJson(Map<String, dynamic>.from(e)),
+          )
           .toList();
     }
     if (value is Map) {

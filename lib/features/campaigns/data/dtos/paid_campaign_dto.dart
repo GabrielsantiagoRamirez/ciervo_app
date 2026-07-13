@@ -35,12 +35,16 @@ class PaidCampaignDto {
   final double? distanceKm;
   final DateTime? publishedAt;
 
-  factory PaidCampaignDto.fromJson(Map<String, dynamic> json) => PaidCampaignDto(
+  factory PaidCampaignDto.fromJson(Map<String, dynamic> json) =>
+      PaidCampaignDto(
         id: _string(json, const ['id', 'campaignId', 'adsCampaignId']),
         title: _string(json, const ['title', 'name', 'headline']),
         description: _string(json, const ['description', 'body', 'message']),
         imageUrl: _media(json),
-        status: _string(json, const ['status', 'campaignStatus'], fallback: 'ACTIVE'),
+        status: _string(json, const [
+          'status',
+          'campaignStatus',
+        ], fallback: 'ACTIVE'),
         businessId: _nullable(json['businessId'] ?? json['business']?['id']),
         businessName: _nullable(
           json['businessName'] ?? json['business']?['name'],
@@ -58,22 +62,22 @@ class PaidCampaignDto {
       );
 
   PaidCampaign toEntity() => PaidCampaign(
-        id: id,
-        title: title,
-        description: description,
-        imageUrl: imageUrl,
-        status: status,
-        businessId: businessId,
-        businessName: businessName,
-        bonusId: bonusId,
-        promotionId: promotionId,
-        deepLink: deepLink,
-        city: city,
-        zone: zone,
-        country: country,
-        distanceKm: distanceKm,
-        publishedAt: publishedAt,
-      );
+    id: id,
+    title: title,
+    description: description,
+    imageUrl: imageUrl,
+    status: status,
+    businessId: businessId,
+    businessName: businessName,
+    bonusId: bonusId,
+    promotionId: promotionId,
+    deepLink: deepLink,
+    city: city,
+    zone: zone,
+    country: country,
+    distanceKm: distanceKm,
+    publishedAt: publishedAt,
+  );
 
   static List<PaidCampaignDto> listFromResponse(dynamic response) {
     final items = _unwrapList(response);
@@ -89,8 +93,8 @@ List<Map<String, dynamic>> _unwrapList(dynamic response) {
   final items = source is List
       ? source
       : source is Map<String, dynamic> && source['items'] is List
-          ? source['items'] as List
-          : const [];
+      ? source['items'] as List
+      : const [];
   return items
       .whereType<Map>()
       .map((item) => Map<String, dynamic>.from(item))

@@ -5,7 +5,9 @@ import 'package:ciervo_clud/features/family_payments/domain/entities/family_paym
 import 'package:ciervo_clud/features/family_payments/presentation/widgets/family_payment_card_tile.dart';
 
 void main() {
-  testWidgets('FamilyPaymentCardTile muestra alias, marca y chips', (tester) async {
+  testWidgets('FamilyPaymentCardTile muestra alias, marca y chips', (
+    tester,
+  ) async {
     const card = FamilyPaymentCard(
       id: '1',
       brand: 'visa',
@@ -21,10 +23,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: FamilyPaymentCardTile(
-            card: card,
-            onTap: () {},
-          ),
+          body: FamilyPaymentCardTile(card: card, onTap: () {}),
         ),
       ),
     );

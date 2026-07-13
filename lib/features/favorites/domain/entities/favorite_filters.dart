@@ -9,11 +9,11 @@ enum FavoriteSortBy {
   final String apiValue;
 
   String get label => switch (this) {
-        FavoriteSortBy.recent => 'Recientes',
-        FavoriteSortBy.name => 'Nombre',
-        FavoriteSortBy.distance => 'Distancia',
-        FavoriteSortBy.mostVisited => 'Mas visitados',
-      };
+    FavoriteSortBy.recent => 'Recientes',
+    FavoriteSortBy.name => 'Nombre',
+    FavoriteSortBy.distance => 'Distancia',
+    FavoriteSortBy.mostVisited => 'Mas visitados',
+  };
 }
 
 class FavoriteFilters {
@@ -42,17 +42,17 @@ class FavoriteFilters {
   final int pageSize;
 
   Map<String, dynamic> toQueryParameters() => {
-        if (country != null && country!.isNotEmpty) 'country': country,
-        if (city != null && city!.isNotEmpty) 'city': city,
-        if (zone != null && zone!.isNotEmpty) 'zone': zone,
-        if (categoryId != null) 'categoryId': categoryId,
-        if (nearLat != null) 'nearLat': nearLat,
-        if (nearLng != null) 'nearLng': nearLng,
-        if (radiusKm != null) 'radiusKm': radiusKm,
-        'sortBy': sortBy.apiValue,
-        'page': page,
-        'pageSize': pageSize,
-      };
+    if (country != null && country!.isNotEmpty) 'country': country,
+    if (city != null && city!.isNotEmpty) 'city': city,
+    if (zone != null && zone!.isNotEmpty) 'zone': zone,
+    if (categoryId != null) 'categoryId': categoryId,
+    if (nearLat != null) 'nearLat': nearLat,
+    if (nearLng != null) 'nearLng': nearLng,
+    if (radiusKm != null) 'radiusKm': radiusKm,
+    'sortBy': sortBy.apiValue,
+    'page': page,
+    'pageSize': pageSize,
+  };
 
   FavoriteFilters copyWith({
     String? country,
@@ -65,17 +65,16 @@ class FavoriteFilters {
     FavoriteSortBy? sortBy,
     int? page,
     int? pageSize,
-  }) =>
-      FavoriteFilters(
-        country: country ?? this.country,
-        city: city ?? this.city,
-        zone: zone ?? this.zone,
-        categoryId: categoryId ?? this.categoryId,
-        nearLat: nearLat ?? this.nearLat,
-        nearLng: nearLng ?? this.nearLng,
-        radiusKm: radiusKm ?? this.radiusKm,
-        sortBy: sortBy ?? this.sortBy,
-        page: page ?? this.page,
-        pageSize: pageSize ?? this.pageSize,
-      );
+  }) => FavoriteFilters(
+    country: country ?? this.country,
+    city: city ?? this.city,
+    zone: zone ?? this.zone,
+    categoryId: categoryId ?? this.categoryId,
+    nearLat: nearLat ?? this.nearLat,
+    nearLng: nearLng ?? this.nearLng,
+    radiusKm: radiusKm ?? this.radiusKm,
+    sortBy: sortBy ?? this.sortBy,
+    page: page ?? this.page,
+    pageSize: pageSize ?? this.pageSize,
+  );
 }

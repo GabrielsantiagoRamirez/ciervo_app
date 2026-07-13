@@ -38,9 +38,9 @@ class _KidLoginAccessCardState extends State<KidLoginAccessCard> {
   Future<void> _copyUsername(String username) async {
     await Clipboard.setData(ClipboardData(text: username));
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Usuario copiado.')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Usuario copiado.')));
   }
 
   Future<void> _createAccount() async {
@@ -48,7 +48,9 @@ class _KidLoginAccessCardState extends State<KidLoginAccessCard> {
     final pin = _pinController.text.trim();
     if (username.length < 3) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('El usuario debe tener al menos 3 caracteres.')),
+        const SnackBar(
+          content: Text('El usuario debe tener al menos 3 caracteres.'),
+        ),
       );
       return;
     }
@@ -59,10 +61,10 @@ class _KidLoginAccessCardState extends State<KidLoginAccessCard> {
       return;
     }
     await context.read<KidsCubit>().createKidAccount(
-          childId: widget.childId,
-          username: username,
-          pin: pin,
-        );
+      childId: widget.childId,
+      username: username,
+      pin: pin,
+    );
   }
 
   Future<void> _updatePin() async {
@@ -74,9 +76,9 @@ class _KidLoginAccessCardState extends State<KidLoginAccessCard> {
       return;
     }
     await context.read<KidsCubit>().updateKidPin(
-          childId: widget.childId,
-          pin: pin,
-        );
+      childId: widget.childId,
+      pin: pin,
+    );
     if (mounted) _newPinController.clear();
   }
 
@@ -118,9 +120,8 @@ class _KidLoginAccessCardState extends State<KidLoginAccessCard> {
                         const SizedBox(height: 4),
                         Text(
                           username,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                       ],
                     ),
@@ -140,7 +141,8 @@ class _KidLoginAccessCardState extends State<KidLoginAccessCard> {
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
                 labelText: 'Nuevo PIN',
-                helperText: 'Actualiza el PIN por seguridad cuando lo necesites.',
+                helperText:
+                    'Actualiza el PIN por seguridad cuando lo necesites.',
               ),
             ),
             const SizedBox(height: AppSpacing.sm),

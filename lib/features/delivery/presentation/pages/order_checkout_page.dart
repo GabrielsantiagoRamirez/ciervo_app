@@ -57,8 +57,10 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
   @override
   void initState() {
     super.initState();
-    _selectedPosition =
-        LatLng(widget.initialLocation.latitude, widget.initialLocation.longitude);
+    _selectedPosition = LatLng(
+      widget.initialLocation.latitude,
+      widget.initialLocation.longitude,
+    );
     for (final product in widget.products) {
       _quantities[product.id] = 0;
     }
@@ -121,9 +123,10 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
           fulfillment = deliveryOk
               ? OrderFulfillmentType.delivery
               : pickupOk
-                  ? OrderFulfillmentType.pickup
-                  : null;
-        } else if (fulfillment == OrderFulfillmentType.delivery && !deliveryOk) {
+              ? OrderFulfillmentType.pickup
+              : null;
+        } else if (fulfillment == OrderFulfillmentType.delivery &&
+            !deliveryOk) {
           fulfillment = pickupOk ? OrderFulfillmentType.pickup : null;
         } else if (fulfillment == OrderFulfillmentType.pickup && !pickupOk) {
           fulfillment = deliveryOk ? OrderFulfillmentType.delivery : null;
@@ -309,9 +312,8 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
                       ),
                 detail: 'Sin costo de envío',
                 icon: Icons.storefront_outlined,
-                onTap: () => setState(
-                  () => _fulfillment = OrderFulfillmentType.pickup,
-                ),
+                onTap: () =>
+                    setState(() => _fulfillment = OrderFulfillmentType.pickup),
               ),
             if (deliveryAvailable) ...[
               const SizedBox(height: AppSpacing.sm),
@@ -335,9 +337,14 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
             ],
             if (_quoteError != null) ...[
               const SizedBox(height: AppSpacing.sm),
-              Text(_quoteError!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              Text(
+                _quoteError!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
             ],
-            if (!pickupAvailable && !deliveryAvailable && _selectedItems.isNotEmpty)
+            if (!pickupAvailable &&
+                !deliveryAvailable &&
+                _selectedItems.isNotEmpty)
               Text(
                 _quote?.pickup?.reason ??
                     _quote?.delivery?.reason ??
@@ -508,7 +515,8 @@ class _FulfillmentCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (selected) Icon(Icons.check_circle, color: colorScheme.primary),
+              if (selected)
+                Icon(Icons.check_circle, color: colorScheme.primary),
             ],
           ),
         ),
@@ -530,23 +538,21 @@ class _AmountRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: prominent
-                  ? Theme.of(context).textTheme.titleMedium
-                  : null,
-            ),
-          ),
-          Text(
-            value,
-            style: prominent
-                ? Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    )
-                : null,
-          ),
-        ],
-      );
+    children: [
+      Expanded(
+        child: Text(
+          label,
+          style: prominent ? Theme.of(context).textTheme.titleMedium : null,
+        ),
+      ),
+      Text(
+        value,
+        style: prominent
+            ? Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)
+            : null,
+      ),
+    ],
+  );
 }

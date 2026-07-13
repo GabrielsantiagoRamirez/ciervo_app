@@ -92,9 +92,9 @@ class _FavoritesPageState extends State<FavoritesPage> {
     double? lng = _filters.nearLng;
     if (lat == null || lng == null) {
       try {
-      final location = await getIt<LocationService>().currentLocation();
-      lat = location.latitude;
-      lng = location.longitude;
+        final location = await getIt<LocationService>().currentLocation();
+        lat = location.latitude;
+        lng = location.longitude;
       } catch (_) {}
     }
 
@@ -134,7 +134,9 @@ class _FavoritesPageState extends State<FavoritesPage> {
   }
 
   Future<void> _openFilters() async {
-    final countryController = TextEditingController(text: _filters.country ?? '');
+    final countryController = TextEditingController(
+      text: _filters.country ?? '',
+    );
     final cityController = TextEditingController(text: _filters.city ?? '');
     final zoneController = TextEditingController(text: _filters.zone ?? '');
     final radiusController = TextEditingController(
@@ -158,11 +160,16 @@ class _FavoritesPageState extends State<FavoritesPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Filtrar favoritos', style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                'Filtrar favoritos',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const SizedBox(height: AppSpacing.md),
               TextField(
                 controller: countryController,
-                decoration: const InputDecoration(labelText: 'Pais (CO, CL...)'),
+                decoration: const InputDecoration(
+                  labelText: 'Pais (CO, CL...)',
+                ),
               ),
               TextField(
                 controller: cityController,
@@ -182,7 +189,10 @@ class _FavoritesPageState extends State<FavoritesPage> {
                 value: categoryId,
                 decoration: const InputDecoration(labelText: 'Categoría'),
                 items: [
-                  const DropdownMenuItem<int?>(value: null, child: Text('Todas')),
+                  const DropdownMenuItem<int?>(
+                    value: null,
+                    child: Text('Todas'),
+                  ),
                   ..._categories.map(
                     (c) => DropdownMenuItem<int?>(
                       value: c['id'] as int,
@@ -240,22 +250,22 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: const Text('Mis favoritos'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.filter_list),
-              tooltip: 'Filtros',
-              onPressed: _openFilters,
-            ),
-          ],
+    appBar: AppBar(
+      title: const Text('Mis favoritos'),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.filter_list),
+          tooltip: 'Filtros',
+          onPressed: _openFilters,
         ),
-        body: RefreshIndicator(
-          onRefresh: () => _load(reset: true),
-          color: AppColors.primary,
-          child: _body(),
-        ),
-      );
+      ],
+    ),
+    body: RefreshIndicator(
+      onRefresh: () => _load(reset: true),
+      color: AppColors.primary,
+      child: _body(),
+    ),
+  );
 
   Widget _body() {
     if (_loading) return const CiervoLoadingState(itemCount: 4);
@@ -329,17 +339,17 @@ class _FavoritesPageState extends State<FavoritesPage> {
   }
 
   HomePlace _placeFrom(FavoriteBusiness favorite) => HomePlace(
-        id: favorite.businessId,
-        name: favorite.name,
-        category: favorite.category,
-        rating: favorite.rating,
-        priceLevel: favorite.priceLevel,
-        distanceKm: favorite.distanceKm,
-        matchPercent: 0,
-        imageUrl: favorite.imageUrl,
-        businessCategoryId: favorite.businessCategoryId,
-        isFavorite: true,
-        city: favorite.city,
-        countryCode: favorite.country,
-      );
+    id: favorite.businessId,
+    name: favorite.name,
+    category: favorite.category,
+    rating: favorite.rating,
+    priceLevel: favorite.priceLevel,
+    distanceKm: favorite.distanceKm,
+    matchPercent: 0,
+    imageUrl: favorite.imageUrl,
+    businessCategoryId: favorite.businessCategoryId,
+    isFavorite: true,
+    city: favorite.city,
+    countryCode: favorite.country,
+  );
 }

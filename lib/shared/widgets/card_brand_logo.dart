@@ -3,11 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/utils/card_brand_detector.dart';
 
 class CardBrandLogo extends StatelessWidget {
-  const CardBrandLogo({
-    required this.brand,
-    this.height = 28,
-    super.key,
-  });
+  const CardBrandLogo({required this.brand, this.height = 28, super.key});
 
   final CardBrand brand;
   final double height;

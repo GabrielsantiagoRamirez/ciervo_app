@@ -10,10 +10,7 @@ import '../../features/users/data/user_search_repository.dart';
 
 /// Matchea contactos del dispositivo contra usuarios CIERVO vía batch API.
 class ContactsMatcher {
-  ContactsMatcher(
-    this._userSearchRepository,
-    this._permissionService,
-  );
+  ContactsMatcher(this._userSearchRepository, this._permissionService);
 
   final UserSearchRepository _userSearchRepository;
   final AppPermissionService _permissionService;
@@ -25,7 +22,9 @@ class ContactsMatcher {
     final granted = await _permissionService.requestContactsIfNeeded();
     if (!granted) {
       return Failure(
-        AppException(message: const AppContactsPermissionException().toString()),
+        AppException(
+          message: const AppContactsPermissionException().toString(),
+        ),
       );
     }
 
@@ -99,5 +98,6 @@ class AppContactsPermissionException implements Exception {
   const AppContactsPermissionException();
 
   @override
-  String toString() => 'Necesitamos permiso de contactos para encontrar amigos en Ciervo.';
+  String toString() =>
+      'Necesitamos permiso de contactos para encontrar amigos en Ciervo.';
 }

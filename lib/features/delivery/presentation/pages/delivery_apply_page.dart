@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../core/country/country_registration.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -12,6 +13,7 @@ import '../../../../core/utils/input_validators.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../media/data/media_repository.dart';
+import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../domain/repositories/delivery_repository.dart';
 
 const _vehicles = <String, String>{
@@ -32,13 +34,25 @@ class _DeliveryApplyPageState extends State<DeliveryApplyPage> {
   final _phone = TextEditingController();
   final _plate = TextEditingController();
   DateTime? _birthDate;
+  String _countryCode = CountryRegistration.defaultCountryCode();
+  String? _documentType;
   String _vehicle = 'Bike';
   String? _vehiclePhotoPath;
   String? _vehiclePhotoName;
+  bool _loadingProfile = true;
   bool _saving = false;
 
   bool get _needsPlate => _vehicle == 'Motorcycle' || _vehicle == 'Car';
   bool get _needsVehiclePhoto => true;
+
+  List<AdultDocumentOption> get _documentOptions =>
+      CountryRegistration.adultDocumentOptions(_countryCode);
+
+  @override
+  void initState() {
+    super.initState();
+    _prefillFromProfile();
+  }
 
   @override
   void dispose() {
@@ -48,11 +62,48 @@ class _DeliveryApplyPageState extends State<DeliveryApplyPage> {
     super.dispose();
   }
 
+  Future<void> _prefillFromProfile() async {
+    final result = await getIt<ProfileRepository>().getMe();
+    if (!mounted) return;
+    result.when(
+      success: (profile) {
+        final country = (profile.countryCode ?? '').trim().toUpperCase();
+        final options = CountryRegistration.adultDocumentOptions(
+          country.isNotEmpty ? country : _countryCode,
+        );
+        final savedType = (profile.documentType ?? '').trim().toUpperCase();
+        final matchedType = options
+            .where((item) => item.code.toUpperCase() == savedType)
+            .map((item) => item.code)
+            .firstOrNull;
+
+        setState(() {
+          _countryCode = country.isNotEmpty ? country : _countryCode;
+          if ((profile.identityDocument ?? '').trim().isNotEmpty) {
+            _document.text = profile.identityDocument!.trim();
+          }
+          if (profile.phone.trim().isNotEmpty) {
+            _phone.text = profile.phone.trim();
+          }
+          if (profile.birthDate != null) {
+            _birthDate = profile.birthDate;
+          }
+          _documentType = matchedType ?? options.firstOrNull?.code;
+          _loadingProfile = false;
+        });
+      },
+      failure: (_) => setState(() {
+        _documentType = _documentOptions.firstOrNull?.code;
+        _loadingProfile = false;
+      }),
+    );
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Inscripción domiciliario')),
     body: AbsorbPointer(
-      absorbing: _saving,
+      absorbing: _saving || _loadingProfile,
       child: ListView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
@@ -61,6 +112,15 @@ class _DeliveryApplyPageState extends State<DeliveryApplyPage> {
               'Completa tus datos. Revisaremos tu solicitud antes de activar tu perfil.',
             ),
           ),
+          if (_loadingProfile) ...[
+            const SizedBox(height: AppSpacing.lg),
+            const LinearProgressIndicator(),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'Cargando tus datos de perfil…',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
           const SizedBox(height: AppSpacing.lg),
           Form(
             key: _key,
@@ -74,13 +134,37 @@ class _DeliveryApplyPageState extends State<DeliveryApplyPage> {
                         ? 'Fecha de nacimiento'
                         : '${_birthDate!.day.toString().padLeft(2, '0')}/${_birthDate!.month.toString().padLeft(2, '0')}/${_birthDate!.year}',
                   ),
+                  subtitle: _birthDate != null
+                      ? const Text('Tomada de tu perfil (puedes cambiarla)')
+                      : const Text('Selecciona tu fecha de nacimiento'),
                   trailing: const Icon(Icons.calendar_month),
                   onTap: _pickDate,
                 ),
+                DropdownButtonFormField<String>(
+                  key: ValueKey('document-$_documentType-$_countryCode'),
+                  initialValue: _documentType,
+                  decoration: const InputDecoration(
+                    labelText: 'Tipo de documento',
+                  ),
+                  items: _documentOptions
+                      .map(
+                        (item) => DropdownMenuItem(
+                          value: item.code,
+                          child: Text(item.label),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) => setState(() => _documentType = value),
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? 'Selecciona el tipo de documento.'
+                      : null,
+                ),
+                const SizedBox(height: AppSpacing.md),
                 TextFormField(
                   controller: _document,
                   decoration: const InputDecoration(
                     labelText: 'Número de documento',
+                    helperText: 'Se completa con tu perfil si ya lo tienes',
                   ),
                   validator: (v) =>
                       InputValidators.requiredText(v ?? '', 'tu documento'),
@@ -89,12 +173,15 @@ class _DeliveryApplyPageState extends State<DeliveryApplyPage> {
                 TextFormField(
                   controller: _phone,
                   keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(labelText: 'Teléfono'),
+                  decoration: const InputDecoration(
+                    labelText: 'Teléfono',
+                    helperText: 'Se completa con tu perfil si ya lo tienes',
+                  ),
                   validator: (v) => InputValidators.phone(v ?? ''),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 DropdownButtonFormField<String>(
-                  value: _vehicle,
+                  initialValue: _vehicle,
                   decoration: const InputDecoration(
                     labelText: 'Tipo de vehículo',
                   ),
@@ -191,6 +278,10 @@ class _DeliveryApplyPageState extends State<DeliveryApplyPage> {
       _message('Selecciona tu fecha de nacimiento.');
       return;
     }
+    if (_documentType == null || _documentType!.trim().isEmpty) {
+      _message('Selecciona el tipo de documento.');
+      return;
+    }
     if (_needsVehiclePhoto && _vehiclePhotoPath == null) {
       _message('Sube una foto de tu vehículo.');
       return;
@@ -229,6 +320,7 @@ class _DeliveryApplyPageState extends State<DeliveryApplyPage> {
     final payload = <String, dynamic>{
       'birthDate':
           '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}',
+      'documentType': _documentType,
       'documentNumber': _document.text.trim(),
       'phone': _phone.text.trim(),
       'vehicleType': _vehicle,

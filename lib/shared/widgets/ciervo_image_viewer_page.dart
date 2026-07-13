@@ -83,10 +83,8 @@ void openCiervoImageViewer(
   if (filtered.isEmpty) return;
   Navigator.of(context).push(
     MaterialPageRoute<void>(
-      builder: (_) => CiervoImageViewerPage(
-        images: filtered,
-        initialIndex: initialIndex,
-      ),
+      builder: (_) =>
+          CiervoImageViewerPage(images: filtered, initialIndex: initialIndex),
     ),
   );
 }

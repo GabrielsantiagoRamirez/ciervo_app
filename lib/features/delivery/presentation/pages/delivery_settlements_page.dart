@@ -59,8 +59,7 @@ class _DeliverySettlementsPageState extends State<DeliverySettlementsPage> {
                     children: [
                       CiervoEmptyState(
                         title: 'Sin liquidaciones',
-                        description:
-                            _error ?? 'Tus ganancias apareceran aqui.',
+                        description: _error ?? 'Tus ganancias apareceran aqui.',
                         icon: Icons.payments_outlined,
                       ),
                     ],

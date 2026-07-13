@@ -68,15 +68,19 @@ class _CustomerOrdersPageState extends State<CustomerOrdersPage> {
                       return ListTile(
                         leading: const Icon(Icons.local_shipping_outlined),
                         title: Text(order.businessName),
-                        subtitle: Text([
-                          if ((order.reference ?? '').isNotEmpty) order.reference!,
-                          deliveryStatusLabel(order.status),
-                        ].join(' - ')),
+                        subtitle: Text(
+                          [
+                            if ((order.reference ?? '').isNotEmpty)
+                              order.reference!,
+                            deliveryStatusLabel(order.status),
+                          ].join(' - '),
+                        ),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () async {
                           await Navigator.of(context).push(
                             MaterialPageRoute<void>(
-                              builder: (_) => CustomerOrderDetailPage(orderId: order.id),
+                              builder: (_) =>
+                                  CustomerOrderDetailPage(orderId: order.id),
                             ),
                           );
                           _load();

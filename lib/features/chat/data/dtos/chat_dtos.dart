@@ -4,7 +4,8 @@ import '../../../../core/utils/display_formatters.dart';
 
 ChatConversation conversationFromJson(Map<String, dynamic> json) {
   final type = '${json['type'] ?? json['conversationType'] ?? ''}';
-  final participantCount = _nullableInt(json['participantCount']) ??
+  final participantCount =
+      _nullableInt(json['participantCount']) ??
       _nullableInt(json['membersCount']) ??
       (json['participants'] is List
           ? (json['participants'] as List).length
@@ -25,7 +26,10 @@ ChatConversation conversationFromJson(Map<String, dynamic> json) {
         'peerName',
         'otherDisplayName',
       ]),
-      firstName: _optionalString(json, const ['peerFirstName', 'otherFirstName']),
+      firstName: _optionalString(json, const [
+        'peerFirstName',
+        'otherFirstName',
+      ]),
       lastName: _optionalString(json, const ['peerLastName', 'otherLastName']),
       conversationType: type,
       participantCount: participantCount,
@@ -65,8 +69,7 @@ ChatMessage messageFromJson(Map<String, dynamic> json) {
     'mediaId',
     'attachmentUrl',
   ]);
-  final updatedRaw =
-      json['updatedAt'] ?? json['createdAt'] ?? json['sentAt'];
+  final updatedRaw = json['updatedAt'] ?? json['createdAt'] ?? json['sentAt'];
   return ChatMessage(
     id: '${json['id'] ?? json['messageId'] ?? ''}',
     body: json['body']?.toString() ?? '',

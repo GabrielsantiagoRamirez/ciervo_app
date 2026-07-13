@@ -193,7 +193,11 @@ class _BrandPanel extends StatelessWidget {
             ),
             child: Column(
               children: [
-                Icon(Icons.workspace_premium, color: CiervoBrandColors.gold, size: 20),
+                Icon(
+                  Icons.workspace_premium,
+                  color: CiervoBrandColors.gold,
+                  size: 20,
+                ),
                 const SizedBox(height: 4),
                 Text(
                   'PREMIUM',
@@ -231,10 +235,15 @@ class _DetailsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final amountText = _formatAmount(confirmation.amount, confirmation.currency);
-    final refLabel = referenceLabel ??
+    final amountText = _formatAmount(
+      confirmation.amount,
+      confirmation.currency,
+    );
+    final refLabel =
+        referenceLabel ??
         (confirmation.businessName != null ? 'Comercio' : 'Referencia');
-    final refValue = referenceValue ??
+    final refValue =
+        referenceValue ??
         confirmation.businessName ??
         (confirmation.confirmationCode.isNotEmpty
             ? confirmation.confirmationCode
@@ -281,7 +290,11 @@ class _DetailsPanel extends StatelessWidget {
                   color: CiervoBrandColors.gold,
                   border: Border.all(color: palette.background, width: 2),
                 ),
-                child: Icon(Icons.check_rounded, color: palette.background, size: 22),
+                child: Icon(
+                  Icons.check_rounded,
+                  color: palette.background,
+                  size: 22,
+                ),
               ),
             ],
           ),
@@ -339,7 +352,11 @@ class _DetailsPanel extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
-              Icon(Icons.verified_user_outlined, color: CiervoBrandColors.gold, size: 16),
+              Icon(
+                Icons.verified_user_outlined,
+                color: CiervoBrandColors.gold,
+                size: 16,
+              ),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
@@ -417,7 +434,10 @@ class _ReceiptRow extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          Divider(height: 1, color: CiervoBrandColors.gold.withValues(alpha: 0.2)),
+          Divider(
+            height: 1,
+            color: CiervoBrandColors.gold.withValues(alpha: 0.2),
+          ),
         ],
       ),
     );
@@ -457,7 +477,11 @@ class _CopyableReceiptRow extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.badge_outlined, size: 18, color: CiervoBrandColors.gold),
+              Icon(
+                Icons.badge_outlined,
+                size: 18,
+                color: CiervoBrandColors.gold,
+              ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(

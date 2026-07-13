@@ -16,7 +16,9 @@ class AuthTokenClaims {
     }
 
     try {
-      final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
+      final payload = utf8.decode(
+        base64Url.decode(base64Url.normalize(parts[1])),
+      );
       final decoded = jsonDecode(payload);
       final claims = decoded is Map<String, dynamic>
           ? decoded
@@ -101,9 +103,7 @@ class AuthTokenClaims {
     if (values.contains('staff') || values.contains('employee')) {
       return 'Staff';
     }
-    if (values.contains('kid') ||
-        role?.toLowerCase() == 'kid' ||
-        role == '4') {
+    if (values.contains('kid') || role?.toLowerCase() == 'kid' || role == '4') {
       return 'Kid';
     }
     return 'Client';

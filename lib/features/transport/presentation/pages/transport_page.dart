@@ -196,9 +196,9 @@ class _TransportPageState extends State<TransportPage> {
         );
         _reload();
       },
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 
@@ -222,9 +222,9 @@ class _TransportPageState extends State<TransportPage> {
           ],
         ),
       ),
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 }
@@ -264,7 +264,10 @@ class _CardTile extends StatelessWidget {
                 const SizedBox(height: AppSpacing.xxs),
                 Text(
                   status,
-                  style: TextStyle(color: statusColor, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: statusColor,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 if (card.balance != null)
                   Text(
@@ -285,10 +288,7 @@ class _CardTile extends StatelessWidget {
 }
 
 class _TransportState {
-  const _TransportState({
-    this.cards = const [],
-    this.discounts = const [],
-  });
+  const _TransportState({this.cards = const [], this.discounts = const []});
 
   final List<TransportCard> cards;
   final List<Map<String, dynamic>> discounts;

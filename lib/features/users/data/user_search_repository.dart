@@ -41,7 +41,10 @@ class UserSearchRepository {
           : value;
       final items = (itemsRaw is List ? itemsRaw : unwrapApiList(response.data))
           .whereType<Map>()
-          .map((item) => UserSearchResult.fromJson(Map<String, dynamic>.from(item)))
+          .map(
+            (item) =>
+                UserSearchResult.fromJson(Map<String, dynamic>.from(item)),
+          )
           .where((user) => user.userId.isNotEmpty)
           .toList();
       return Success(items);
@@ -73,7 +76,10 @@ class UserSearchRepository {
           : value;
       final items = (itemsRaw is List ? itemsRaw : unwrapApiList(response.data))
           .whereType<Map>()
-          .map((item) => UserSearchResult.fromJson(Map<String, dynamic>.from(item)))
+          .map(
+            (item) =>
+                UserSearchResult.fromJson(Map<String, dynamic>.from(item)),
+          )
           .where((user) => user.userId.isNotEmpty)
           .toList();
       return Success(items);

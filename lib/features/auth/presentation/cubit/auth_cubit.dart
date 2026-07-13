@@ -15,10 +15,7 @@ class AuthCubit extends Cubit<AuthState> {
     bool emitFailure = true,
   }) async {
     emit(
-      state.copyWith(
-        status: AuthSubmissionStatus.loading,
-        clearError: true,
-      ),
+      state.copyWith(status: AuthSubmissionStatus.loading, clearError: true),
     );
 
     final result = await _authRepository.login(
@@ -28,10 +25,7 @@ class AuthCubit extends Cubit<AuthState> {
 
     result.when(
       success: (_) => emit(
-        state.copyWith(
-          status: AuthSubmissionStatus.success,
-          clearError: true,
-        ),
+        state.copyWith(status: AuthSubmissionStatus.success, clearError: true),
       ),
       failure: (error) {
         if (emitFailure) {
@@ -43,10 +37,7 @@ class AuthCubit extends Cubit<AuthState> {
           );
         } else {
           emit(
-            state.copyWith(
-              status: AuthSubmissionStatus.idle,
-              clearError: true,
-            ),
+            state.copyWith(status: AuthSubmissionStatus.idle, clearError: true),
           );
         }
       },
@@ -64,10 +55,7 @@ class AuthCubit extends Cubit<AuthState> {
     required String countryCode,
   }) async {
     emit(
-      state.copyWith(
-        status: AuthSubmissionStatus.loading,
-        clearError: true,
-      ),
+      state.copyWith(status: AuthSubmissionStatus.loading, clearError: true),
     );
 
     final result = await _authRepository.register(
@@ -83,10 +71,7 @@ class AuthCubit extends Cubit<AuthState> {
 
     result.when(
       success: (_) => emit(
-        state.copyWith(
-          status: AuthSubmissionStatus.success,
-          clearError: true,
-        ),
+        state.copyWith(status: AuthSubmissionStatus.success, clearError: true),
       ),
       failure: (error) => emit(
         state.copyWith(

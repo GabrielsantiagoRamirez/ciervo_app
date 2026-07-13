@@ -3,10 +3,7 @@ import 'display_labels.dart';
 /// Helpers de presentación para evitar nulls, IDs técnicos y montos sin formato.
 abstract final class DisplayFormatters {
   /// Convierte null, "null" o vacío en [fallback].
-  static String safeText(
-    Object? value, {
-    String fallback = '',
-  }) {
+  static String safeText(Object? value, {String fallback = ''}) {
     if (value == null) return fallback;
     final text = value.toString().trim();
     if (text.isEmpty || text.toLowerCase() == 'null') return fallback;
@@ -81,10 +78,7 @@ abstract final class DisplayFormatters {
     return parts.join(' · ');
   }
 
-  static String formatMoney(
-    num? amount, {
-    String currency = 'COP',
-  }) {
+  static String formatMoney(num? amount, {String currency = 'COP'}) {
     final value = (amount?.toDouble() ?? 0).round();
     final digits = value.abs().toString();
     final buffer = StringBuffer();
@@ -122,10 +116,7 @@ abstract final class DisplayFormatters {
     return DateTime.tryParse(text);
   }
 
-  static String formatBackendDate(
-    Object? value, {
-    bool includeTime = true,
-  }) =>
+  static String formatBackendDate(Object? value, {bool includeTime = true}) =>
       formatDate(parseBackendDate(value), includeTime: includeTime);
 
   /// Título de chat directo o grupal.
@@ -154,7 +145,9 @@ abstract final class DisplayFormatters {
 
     if (type.contains('family')) return 'Chat familiar';
     if (type.contains('business')) return 'Chat comercial';
-    if (type.contains('group') && participantCount != null && participantCount > 0) {
+    if (type.contains('group') &&
+        participantCount != null &&
+        participantCount > 0) {
       return '$title ($participantCount)';
     }
 

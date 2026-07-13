@@ -125,9 +125,7 @@ Future<void> configureDependencies() async {
     ..registerLazySingleton<SecureStorage>(
       () => FlutterSecureStorageAdapter(
         const FlutterSecureStorage(
-          aOptions: AndroidOptions(
-            encryptedSharedPreferences: true,
-          ),
+          aOptions: AndroidOptions(encryptedSharedPreferences: true),
         ),
       ),
     )
@@ -259,9 +257,7 @@ Future<void> configureDependencies() async {
     ..registerLazySingleton<MembershipCubit>(
       () => MembershipCubit(getIt<MembershipsRepository>()),
     )
-    ..registerLazySingleton<FirebaseStorageService>(
-      FirebaseStorageService.new,
-    )
+    ..registerLazySingleton<FirebaseStorageService>(FirebaseStorageService.new)
     ..registerLazySingleton<LoyaltyRepository>(
       () => LoyaltyRepository(getIt<NetworkClient>()),
     )
@@ -302,7 +298,8 @@ Future<void> configureDependencies() async {
       () => DioFamilyPaymentsRemoteDataSource(getIt<NetworkClient>()),
     )
     ..registerLazySingleton<FamilyPaymentsRepository>(
-      () => FamilyPaymentsRepositoryImpl(getIt<FamilyPaymentsRemoteDataSource>()),
+      () =>
+          FamilyPaymentsRepositoryImpl(getIt<FamilyPaymentsRemoteDataSource>()),
     )
     ..registerLazySingleton<UniversalNfcRemoteDataSource>(
       () => DioUniversalNfcRemoteDataSource(getIt<NetworkClient>()),
@@ -428,9 +425,7 @@ Future<void> configureDependencies() async {
       ),
     )
     ..registerLazySingleton<PromotionsRepository>(
-      () => PromotionsRepository(
-        getIt<NetworkClient>(),
-        getIt<SecureStorage>(),
-      ),
+      () =>
+          PromotionsRepository(getIt<NetworkClient>(), getIt<SecureStorage>()),
     );
 }

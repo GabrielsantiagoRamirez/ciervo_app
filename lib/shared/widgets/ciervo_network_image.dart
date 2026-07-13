@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Imagen de red para signed URLs del backend (GCS ~60 min).
-/// No usar cache agresivo: refrescar con [onRetry] si expira.
+/// Si expira, el usuario puede tocar el fallback para reintentar vía [onRetry].
 class CiervoNetworkImage extends StatelessWidget {
   const CiervoNetworkImage({
     required this.url,
@@ -39,15 +39,15 @@ class CiervoNetworkImage extends StatelessWidget {
         );
       },
       errorBuilder: (context, error, stackTrace) {
-        if (onRetry != null) {
-          WidgetsBinding.instance.addPostFrameCallback((_) => onRetry!());
-        }
-        return fallback ??
+        final errorWidget =
+            fallback ??
             SizedBox(
               width: width,
               height: height,
               child: const Icon(Icons.broken_image_outlined),
             );
+        if (onRetry == null) return errorWidget;
+        return GestureDetector(onTap: onRetry, child: errorWidget);
       },
     );
 

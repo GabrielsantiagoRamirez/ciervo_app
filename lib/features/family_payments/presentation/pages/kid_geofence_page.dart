@@ -113,12 +113,12 @@ class _KidGeofencePageState extends State<KidGeofencePage> {
     if (!mounted) return;
     setState(() => _saving = false);
     result.when(
-      success: (_) => ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Geocerca guardada.')),
-      ),
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      success: (_) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Geocerca guardada.'))),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 
@@ -132,93 +132,94 @@ class _KidGeofencePageState extends State<KidGeofencePage> {
               child: CiervoLoadingState(itemCount: 3),
             )
           : _error != null
-              ? Padding(
-                  padding: pagePaddingOf(context),
-                  child: CiervoErrorState(
-                    title: 'No pudimos cargar la geocerca',
-                    description: _error!,
-                    onRetry: _load,
+          ? Padding(
+              padding: pagePaddingOf(context),
+              child: CiervoErrorState(
+                title: 'No pudimos cargar la geocerca',
+                description: _error!,
+                onRetry: _load,
+              ),
+            )
+          : ListView(
+              padding: pagePaddingOf(context),
+              children: [
+                CiervoCard(
+                  child: SwitchListTile(
+                    title: const Text('Geocerca activa'),
+                    subtitle: const Text(
+                      'Solo permite pagos dentro de la zona segura.',
+                    ),
+                    value: _enabled,
+                    onChanged: (value) => setState(() => _enabled = value),
                   ),
-                )
-              : ListView(
-                  padding: pagePaddingOf(context),
-                  children: [
-                    CiervoCard(
-                      child: SwitchListTile(
-                        title: const Text('Geocerca activa'),
-                        subtitle: const Text(
-                          'Solo permite pagos dentro de la zona segura.',
-                        ),
-                        value: _enabled,
-                        onChanged: (value) => setState(() => _enabled = value),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    CiervoCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          SizedBox(
-                            height: 260,
-                            child: _center == null
-                                ? const Center(child: Text('Selecciona un centro'))
-                                : GoogleMap(
-                                    initialCameraPosition: CameraPosition(
-                                      target: _center!,
-                                      zoom: 14,
-                                    ),
-                                    circles: {
-                                      Circle(
-                                        circleId: const CircleId('geofence'),
-                                        center: _center!,
-                                        radius: _radius,
-                                        fillColor: Theme.of(context)
-                                            .colorScheme
-                                            .primary
-                                            .withValues(alpha: 0.15),
-                                        strokeColor:
-                                            Theme.of(context).colorScheme.primary,
-                                      ),
-                                    },
-                                    onTap: (position) =>
-                                        setState(() => _center = position),
-                                    markers: {
-                                      Marker(
-                                        markerId: const MarkerId('center'),
-                                        position: _center!,
-                                      ),
-                                    },
-                                  ),
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          OutlinedButton.icon(
-                            onPressed: _useCurrentLocation,
-                            icon: const Icon(Icons.my_location),
-                            label: const Text('Usar mi ubicación'),
-                          ),
-                          Text('Radio: ${_radius.toStringAsFixed(0)} m'),
-                          Slider(
-                            value: _radius,
-                            min: 100,
-                            max: 5000,
-                            divisions: 49,
-                            label: '${_radius.toStringAsFixed(0)} m',
-                            onChanged: (value) => setState(() => _radius = value),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    CiervoButton(
-                      label: _saving ? 'Guardando...' : 'Guardar geocerca',
-                      icon: Icons.save_outlined,
-                      state: _saving
-                          ? CiervoButtonState.loading
-                          : CiervoButtonState.normal,
-                      onPressed: _saving ? null : _save,
-                    ),
-                  ],
                 ),
+                const SizedBox(height: AppSpacing.sm),
+                CiervoCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(
+                        height: 260,
+                        child: _center == null
+                            ? const Center(child: Text('Selecciona un centro'))
+                            : GoogleMap(
+                                initialCameraPosition: CameraPosition(
+                                  target: _center!,
+                                  zoom: 14,
+                                ),
+                                circles: {
+                                  Circle(
+                                    circleId: const CircleId('geofence'),
+                                    center: _center!,
+                                    radius: _radius,
+                                    fillColor: Theme.of(context)
+                                        .colorScheme
+                                        .primary
+                                        .withValues(alpha: 0.15),
+                                    strokeColor: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                  ),
+                                },
+                                onTap: (position) =>
+                                    setState(() => _center = position),
+                                markers: {
+                                  Marker(
+                                    markerId: const MarkerId('center'),
+                                    position: _center!,
+                                  ),
+                                },
+                              ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      OutlinedButton.icon(
+                        onPressed: _useCurrentLocation,
+                        icon: const Icon(Icons.my_location),
+                        label: const Text('Usar mi ubicación'),
+                      ),
+                      Text('Radio: ${_radius.toStringAsFixed(0)} m'),
+                      Slider(
+                        value: _radius,
+                        min: 100,
+                        max: 5000,
+                        divisions: 49,
+                        label: '${_radius.toStringAsFixed(0)} m',
+                        onChanged: (value) => setState(() => _radius = value),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                CiervoButton(
+                  label: _saving ? 'Guardando...' : 'Guardar geocerca',
+                  icon: Icons.save_outlined,
+                  state: _saving
+                      ? CiervoButtonState.loading
+                      : CiervoButtonState.normal,
+                  onPressed: _saving ? null : _save,
+                ),
+              ],
+            ),
     );
   }
 }

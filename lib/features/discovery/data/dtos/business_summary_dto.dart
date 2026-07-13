@@ -146,18 +146,32 @@ class BusinessSummaryDto {
 
   static String _mediaUrl(Map<String, dynamic> json) {
     final direct = _string(json, const [
-      'imageMediaId', 'coverMediaId', 'logoMediaId', 'eventImageMediaId',
-      'promotionImageMediaId', 'mediaId',
+      'imageMediaId',
+      'coverMediaId',
+      'logoMediaId',
+      'eventImageMediaId',
+      'promotionImageMediaId',
+      'mediaId',
     ]);
     if (direct.isNotEmpty) return direct;
-    for (final key in const ['cover', 'logo', 'image', 'eventImage', 'promotionImage']) {
+    for (final key in const [
+      'cover',
+      'logo',
+      'image',
+      'eventImage',
+      'promotionImage',
+    ]) {
       final media = json[key];
       if (media is Map) {
-        final id = _string(Map<String, dynamic>.from(media), const ['id', 'mediaId']);
+        final id = _string(Map<String, dynamic>.from(media), const [
+          'id',
+          'mediaId',
+        ]);
         if (id.isNotEmpty) return id;
       }
     }
-    final gallery = json['gallery'] ??
+    final gallery =
+        json['gallery'] ??
         json['galleryImages'] ??
         json['imagenes'] ??
         json['Imagenes'];
@@ -165,7 +179,10 @@ class BusinessSummaryDto {
       final first = gallery.first;
       if (first is String) return first;
       if (first is Map) {
-        return _string(Map<String, dynamic>.from(first), const ['id', 'mediaId']);
+        return _string(Map<String, dynamic>.from(first), const [
+          'id',
+          'mediaId',
+        ]);
       }
     }
     return '';

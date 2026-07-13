@@ -53,8 +53,9 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
   }
 
   Future<void> _load() async {
-    final result =
-        await getIt<DeliveryRepository>().customerOrder(widget.orderId);
+    final result = await getIt<DeliveryRepository>().customerOrder(
+      widget.orderId,
+    );
     if (!mounted) return;
     result.when(
       success: (order) {
@@ -80,8 +81,9 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
   }
 
   Future<void> _refreshOrderQuiet() async {
-    final result =
-        await getIt<DeliveryRepository>().customerOrder(widget.orderId);
+    final result = await getIt<DeliveryRepository>().customerOrder(
+      widget.orderId,
+    );
     if (!mounted) return;
     result.when(
       success: (order) => setState(() => _order = order),
@@ -162,7 +164,8 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
       WalletCard? selected;
       cards.when(
         success: (items) {
-          selected = items.where((card) => card.isPrimary).firstOrNull ??
+          selected =
+              items.where((card) => card.isPrimary).firstOrNull ??
               items.firstOrNull;
           walletCardId = selected?.id;
         },
@@ -172,7 +175,9 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
         if (mounted) {
           setState(() => _busy = false);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No tienes tarjeta wallet disponible.')),
+            const SnackBar(
+              content: Text('No tienes tarjeta wallet disponible.'),
+            ),
           );
         }
         return;
@@ -196,10 +201,11 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
     if (method == 'mercadopago') {
       final key =
           'delivery-${widget.orderId}-${DateTime.now().microsecondsSinceEpoch}';
-      final intentResult = await getIt<PaymentsRepository>().createDeliveryPayment(
-        deliveryOrderId: widget.orderId,
-        idempotencyKey: key,
-      );
+      final intentResult = await getIt<PaymentsRepository>()
+          .createDeliveryPayment(
+            deliveryOrderId: widget.orderId,
+            idempotencyKey: key,
+          );
       if (!mounted) return;
       await intentResult.when(
         success: (intent) async {
@@ -215,9 +221,9 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
           poll.when(
             success: (finalIntent) {
               if (finalIntent.isApproved) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Pago aprobado.')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('Pago aprobado.')));
                 _load();
               } else if (finalIntent.isRejected) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -226,7 +232,9 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Pago ${finalIntent.statusLabel.toLowerCase()}.'),
+                    content: Text(
+                      'Pago ${finalIntent.statusLabel.toLowerCase()}.',
+                    ),
                   ),
                 );
               }
@@ -238,9 +246,9 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
         },
         failure: (error) {
           setState(() => _busy = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(UserErrorMessage.from(error))),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
         },
       );
       return;
@@ -276,17 +284,20 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
               context,
               confirmation: ActionConfirmation(
                 title: 'Pago de domicilio confirmado',
-                confirmationCode: order.reference ??
+                confirmationCode:
+                    order.reference ??
                     order.confirmation?.confirmationCode ??
                     order.id,
                 userCiervoCode:
-                    order.userCiervoCode ?? order.confirmation?.userCiervoCode ?? userCode,
+                    order.userCiervoCode ??
+                    order.confirmation?.userCiervoCode ??
+                    userCode,
                 businessName: order.businessName,
                 amount: order.totalAmount,
                 currency: order.currency ?? 'COP',
                 status: 'Pago realizado con éxito',
-                publicReceiptUrl: order.publicUrl ??
-                    order.confirmation?.publicReceiptUrl,
+                publicReceiptUrl:
+                    order.publicUrl ?? order.confirmation?.publicReceiptUrl,
                 shareDescription:
                     '¡Gracias por confiar en CIERVO! Tu entretenimiento, nuestra misión.',
               ),
@@ -302,24 +313,23 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
             content: Text(
               method == 'wallet' || method == 'KidsWallet'
                   ? (payment.message ??
-                      'Pago ${deliveryPaymentStatusLabel(payment.paymentStatus)}')
+                        'Pago ${deliveryPaymentStatusLabel(payment.paymentStatus)}')
                   : (payment.message ??
-                      'Pedido actualizado: ${deliveryPaymentStatusLabel(payment.paymentStatus)}'),
+                        'Pedido actualizado: ${deliveryPaymentStatusLabel(payment.paymentStatus)}'),
             ),
           ),
         );
         _load();
       },
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 
   Future<void> _startDeliveryNfcSession() async {
     setState(() => _busy = true);
-    final result =
-        await getIt<DeliveryRepository>().createOrderNfcSession(
+    final result = await getIt<DeliveryRepository>().createOrderNfcSession(
       orderId: widget.orderId,
     );
     if (!mounted) return;
@@ -358,9 +368,9 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
             child: const Text('Cancelar'),
           ),
           FilledButton(
-            onPressed: () => Navigator.of(context).pop(
-              double.tryParse(amountController.text.replaceAll(',', '.')),
-            ),
+            onPressed: () => Navigator.of(
+              context,
+            ).pop(double.tryParse(amountController.text.replaceAll(',', '.'))),
             child: const Text('Enviar'),
           ),
         ],
@@ -376,13 +386,13 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
     setState(() => _busy = false);
     result.when(
       success: (_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Propina enviada.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Propina enviada.')));
       },
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 
@@ -418,13 +428,13 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
     setState(() => _busy = false);
     result.when(
       success: (_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Devolucion registrada.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Devolucion registrada.')));
       },
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 
@@ -482,9 +492,9 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
           const SnackBar(content: Text('Gracias por tu calificacion.')),
         );
       },
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 
@@ -531,7 +541,8 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
                                 ),
                                 courier: _latLng(
                                   _trackedCourierLat ?? _order!.courierLatitude,
-                                  _trackedCourierLng ?? _order!.courierLongitude,
+                                  _trackedCourierLng ??
+                                      _order!.courierLongitude,
                                 ),
                               ),
                             ],
@@ -555,7 +566,9 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
                                   ? 'Retiro en local'
                                   : 'Domicilio',
                             ),
-                          Text('Estado: ${deliveryStatusLabel(_order!.status)}'),
+                          Text(
+                            'Estado: ${deliveryStatusLabel(_order!.status)}',
+                          ),
                           Text(
                             'Pago: ${deliveryPaymentStatusLabel(_order!.paymentStatus)}',
                           ),
@@ -613,8 +626,7 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
                         CiervoButton(
                           label: 'Pagar con Wallet Kids',
                           icon: Icons.child_care_outlined,
-                          onPressed:
-                              _busy ? null : () => _pay('KidsWallet'),
+                          onPressed: _busy ? null : () => _pay('KidsWallet'),
                         ),
                         const SizedBox(height: AppSpacing.sm),
                       ],
@@ -664,7 +676,9 @@ class _CustomerOrderDetailPageState extends State<CustomerOrderDetailPage> {
                             CiervoButton(
                               label: 'Acercar celular para pagar',
                               icon: Icons.nfc,
-                              onPressed: _busy ? null : _startDeliveryNfcSession,
+                              onPressed: _busy
+                                  ? null
+                                  : _startDeliveryNfcSession,
                             ),
                           ],
                         ),

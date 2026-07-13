@@ -86,42 +86,39 @@ class _PaidCampaignBannerSectionState extends State<PaidCampaignBannerSection> {
 
   @override
   Widget build(BuildContext context) => FutureBuilder<List<PaidCampaign>>(
-        future: _campaigns,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const SizedBox(
-              height: 120,
-              child: CiervoBrandLoader(
-                message: 'Cargando campañas',
-                compact: true,
-              ),
-            );
-          }
-          final items = snapshot.data ?? const [];
-          if (items.isEmpty) return const SizedBox.shrink();
+    future: _campaigns,
+    builder: (context, snapshot) {
+      if (snapshot.connectionState != ConnectionState.done) {
+        return const SizedBox(
+          height: 120,
+          child: CiervoBrandLoader(message: 'Cargando campañas', compact: true),
+        );
+      }
+      final items = snapshot.data ?? const [];
+      if (items.isEmpty) return const SizedBox.shrink();
 
-          final title = widget.compactTitle ?? 'Campañas destacadas';
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: AppSpacing.sm),
-              SizedBox(
-                height: 168,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: items.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
-                  itemBuilder: (context, index) => _CampaignBanner(
-                    campaign: items[index],
-                    onTap: () => _open(context, items[index]),
-                  ),
-                ),
+      final title = widget.compactTitle ?? 'Campañas destacadas';
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: AppSpacing.sm),
+          SizedBox(
+            height: 168,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: items.length,
+              separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+              itemBuilder: (context, index) => _CampaignBanner(
+                campaign: items[index],
+                onTap: () => _open(context, items[index]),
               ),
-            ],
-          );
-        },
+            ),
+          ),
+        ],
       );
+    },
+  );
 
   Future<void> _open(BuildContext context, PaidCampaign campaign) async {
     await getIt<CampaignsRepository>().registerClick(campaign.id);
@@ -166,77 +163,75 @@ class _CampaignBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SizedBox(
-        width: 280,
-        child: InkWell(
+    width: 280,
+    child: InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: onTap,
+      child: CiervoCard(
+        padding: EdgeInsets.zero,
+        child: ClipRRect(
           borderRadius: BorderRadius.circular(18),
-          onTap: onTap,
-          child: CiervoCard(
-            padding: EdgeInsets.zero,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(18),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  if (campaign.imageUrl.isNotEmpty)
-                    AuthenticatedMediaImage(
-                      mediaId: campaign.imageUrl,
-                      thumbnail: true,
-                      fit: BoxFit.cover,
-                    )
-                  else
-                    const ColoredBox(color: AppColors.surfaceHigh),
-                  ColoredBox(color: Colors.black.withValues(alpha: 0.45)),
-                  Padding(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.xs,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.85),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Text(
-                            'Patrocinado',
-                            style: TextStyle(
-                              color: Color(0xFF111111),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (campaign.imageUrl.isNotEmpty)
+                AuthenticatedMediaImage(
+                  mediaId: campaign.imageUrl,
+                  thumbnail: true,
+                  fit: BoxFit.cover,
+                )
+              else
+                const ColoredBox(color: AppColors.surfaceHigh),
+              ColoredBox(color: Colors.black.withValues(alpha: 0.45)),
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.xs,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.85),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        'Patrocinado',
+                        style: TextStyle(
+                          color: Color(0xFF111111),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
                         ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(
-                          campaign.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(color: Colors.white),
-                        ),
-                        if (campaign.description.isNotEmpty)
-                          Text(
-                            campaign.description,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(color: Colors.white70),
-                          ),
-                      ],
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      campaign.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleMedium?.copyWith(color: Colors.white),
+                    ),
+                    if (campaign.description.isNotEmpty)
+                      Text(
+                        campaign.description,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodySmall?.copyWith(color: Colors.white70),
+                      ),
+                  ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
-      );
+      ),
+    ),
+  );
 }

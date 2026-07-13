@@ -19,6 +19,7 @@ abstract interface class WalletRepository {
   Future<Result<RechargeIntent>> createRechargeIntent({
     required String cardId,
     required double amount,
+    String? currency,
   });
   Future<Result<RechargeIntent>> rechargeIntent(String intentId);
   Future<Result<CiervoWalletIdentity>> myCiervoId();

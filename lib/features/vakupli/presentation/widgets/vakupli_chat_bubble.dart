@@ -7,10 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/vakupli_plan.dart';
 
 class VakupliChatBubble extends StatelessWidget {
-  const VakupliChatBubble({
-    required this.message,
-    super.key,
-  });
+  const VakupliChatBubble({required this.message, super.key});
 
   final VakupliMessage message;
 

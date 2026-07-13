@@ -144,42 +144,41 @@ class ReceiptDetailPage extends StatelessWidget {
               child: state.status == ReceiptsStatus.loading
                   ? const CiervoLoadingState(itemCount: 2)
                   : receipt == null
-                      ? const CiervoEmptyState(
-                          title: 'Recibo no disponible',
-                          description: 'No encontramos el detalle solicitado.',
-                        )
-                      : ListView(
-                          children: [
-                            CiervoPaymentReceipt(
-                              confirmation: ActionConfirmation(
-                                title: receipt.title,
-                                confirmationCode: receipt.id,
-                                userCiervoCode: receipt.userCiervoCode,
-                                amount: receipt.amount,
-                                currency: receipt.currency,
-                                status:
-                                    DisplayLabels.receiptStatus(receipt.status),
-                                date: receipt.date?.toIso8601String(),
-                                publicReceiptUrl: receipt.publicReceiptUrl,
-                                shareDescription: receipt.shareDescription ??
-                                    receipt.description ??
-                                    '¡Gracias por confiar en CIERVO!',
-                              ),
-                              referenceLabel: 'Concepto',
-                              referenceValue:
-                                  receipt.description ?? receipt.title,
-                            ),
-                            const SizedBox(height: AppSpacing.lg),
-                            FilledButton.icon(
-                              onPressed: () => CiervoShare.shareText(
-                                ReceiptShareText.fromReceipt(receipt),
-                                subject: 'Comprobante CIERVO',
-                              ),
-                              icon: const Icon(Icons.share_outlined),
-                              label: const Text('Compartir comprobante'),
-                            ),
-                          ],
+                  ? const CiervoEmptyState(
+                      title: 'Recibo no disponible',
+                      description: 'No encontramos el detalle solicitado.',
+                    )
+                  : ListView(
+                      children: [
+                        CiervoPaymentReceipt(
+                          confirmation: ActionConfirmation(
+                            title: receipt.title,
+                            confirmationCode: receipt.id,
+                            userCiervoCode: receipt.userCiervoCode,
+                            amount: receipt.amount,
+                            currency: receipt.currency,
+                            status: DisplayLabels.receiptStatus(receipt.status),
+                            date: receipt.date?.toIso8601String(),
+                            publicReceiptUrl: receipt.publicReceiptUrl,
+                            shareDescription:
+                                receipt.shareDescription ??
+                                receipt.description ??
+                                '¡Gracias por confiar en CIERVO!',
+                          ),
+                          referenceLabel: 'Concepto',
+                          referenceValue: receipt.description ?? receipt.title,
                         ),
+                        const SizedBox(height: AppSpacing.lg),
+                        FilledButton.icon(
+                          onPressed: () => CiervoShare.shareText(
+                            ReceiptShareText.fromReceipt(receipt),
+                            subject: 'Comprobante CIERVO',
+                          ),
+                          icon: const Icon(Icons.share_outlined),
+                          label: const Text('Compartir comprobante'),
+                        ),
+                      ],
+                    ),
             ),
           );
         },

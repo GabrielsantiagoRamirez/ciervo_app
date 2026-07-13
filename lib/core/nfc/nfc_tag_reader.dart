@@ -54,6 +54,7 @@ abstract final class NfcTagReader {
     return null;
   }
 
-  static String _bytesToHex(Uint8List bytes) =>
-      bytes.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join();
+  static String _bytesToHex(Uint8List bytes) => bytes
+      .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
+      .join();
 }

@@ -21,8 +21,15 @@ class FinancialHistoryItemDto {
   });
 
   factory FinancialHistoryItemDto.fromJson(Map<String, dynamic> json) {
-    final sourceId = _i(json, const ['sourceId', 'id', 'movementId', 'transactionId']);
-    final source = _s(json, const ['source']).isEmpty ? 'movement' : _s(json, const ['source']);
+    final sourceId = _i(json, const [
+      'sourceId',
+      'id',
+      'movementId',
+      'transactionId',
+    ]);
+    final source = _s(json, const ['source']).isEmpty
+        ? 'movement'
+        : _s(json, const ['source']);
     return FinancialHistoryItemDto(
       id: sourceId > 0 ? '$source:$sourceId' : _s(json, const ['id']),
       source: source,
@@ -63,23 +70,23 @@ class FinancialHistoryItemDto {
   final double? balanceAfter;
 
   FinancialHistoryItem toDomain() => FinancialHistoryItem(
-        id: id,
-        source: source,
-        sourceId: sourceId,
-        type: type,
-        direction: direction,
-        amount: amount,
-        currency: currency,
-        status: status,
-        date: date,
-        description: description,
-        receiptId: receiptId,
-        paymentIntentId: paymentIntentId,
-        referenceType: referenceType,
-        referenceId: referenceId,
-        balanceBefore: balanceBefore,
-        balanceAfter: balanceAfter,
-      );
+    id: id,
+    source: source,
+    sourceId: sourceId,
+    type: type,
+    direction: direction,
+    amount: amount,
+    currency: currency,
+    status: status,
+    date: date,
+    description: description,
+    receiptId: receiptId,
+    paymentIntentId: paymentIntentId,
+    referenceType: referenceType,
+    referenceId: referenceId,
+    balanceBefore: balanceBefore,
+    balanceAfter: balanceAfter,
+  );
 
   static List<FinancialHistoryItemDto> listFrom(dynamic value) {
     final source = value is Map<String, dynamic>
@@ -88,8 +95,8 @@ class FinancialHistoryItemDto {
     final items = source is List
         ? source
         : source is Map<String, dynamic> && source['items'] is List
-            ? source['items'] as List
-            : const [];
+        ? source['items'] as List
+        : const [];
     return items
         .whereType<Map<String, dynamic>>()
         .map(FinancialHistoryItemDto.fromJson)

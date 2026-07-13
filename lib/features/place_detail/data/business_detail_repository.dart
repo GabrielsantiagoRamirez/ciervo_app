@@ -16,17 +16,17 @@ class BusinessDetailRepository {
     String businessId, {
     AppLocation? location,
   }) => _guard(() async {
-        final response = await _client.dio.get<dynamic>(
-          '/api/businesses/$businessId/public-detail',
-          queryParameters: {
-            if (location != null) ...{
-              'latitude': location.latitude,
-              'longitude': location.longitude,
-            },
-          },
-        );
-        return BusinessPublicDetail.fromJson(unwrapApiMap(response.data));
-      });
+    final response = await _client.dio.get<dynamic>(
+      '/api/businesses/$businessId/public-detail',
+      queryParameters: {
+        if (location != null) ...{
+          'latitude': location.latitude,
+          'longitude': location.longitude,
+        },
+      },
+    );
+    return BusinessPublicDetail.fromJson(unwrapApiMap(response.data));
+  });
 
   Future<Result<List<BusinessProduct>>> products(String businessId) =>
       _guard(() async {
@@ -40,9 +40,8 @@ class BusinessDetailRepository {
             .toList();
       });
 
-  Future<Result<List<ReservableOption>>> reservableOptions(
-    String businessId,
-  ) => _guard(() async {
+  Future<Result<List<ReservableOption>>> reservableOptions(String businessId) =>
+      _guard(() async {
         final response = await _client.dio.get<dynamic>(
           '/api/businesses/$businessId/reservable-options',
         );
@@ -57,17 +56,17 @@ class BusinessDetailRepository {
     String businessId, {
     AppLocation? location,
   }) => _guard(() async {
-        final response = await _client.dio.get<dynamic>(
-          '/api/businesses/$businessId/delivery-availability',
-          queryParameters: {
-            if (location != null) ...{
-              'latitude': location.latitude,
-              'longitude': location.longitude,
-            },
-          },
-        );
-        return DeliveryAvailability.fromJson(unwrapApiMap(response.data));
-      });
+    final response = await _client.dio.get<dynamic>(
+      '/api/businesses/$businessId/delivery-availability',
+      queryParameters: {
+        if (location != null) ...{
+          'latitude': location.latitude,
+          'longitude': location.longitude,
+        },
+      },
+    );
+    return DeliveryAvailability.fromJson(unwrapApiMap(response.data));
+  });
 
   Future<Result<T>> _guard<T>(Future<T> Function() action) async {
     try {
@@ -118,14 +117,16 @@ class BusinessPublicDetail {
       BusinessPublicDetail(
         name: _string(json, const ['name', 'businessName', 'title']),
         description: _string(json, const ['description']),
-        categoryName: _categoryName(json['category']) ??
+        categoryName:
+            _categoryName(json['category']) ??
             _string(json, const ['categoryName', 'category']),
         address: _string(json, const ['address']),
         city: _string(json, const ['city']),
         latitude: _doubleOrNull(json['latitude']),
         longitude: _doubleOrNull(json['longitude']),
         distanceKm: _doubleOrNull(json['distanceKm']) ?? 0,
-        imageUrl: _mediaUrl(json['media']) ??
+        imageUrl:
+            _mediaUrl(json['media']) ??
             _string(json, const ['coverUrl', 'mainImageUrl', 'imageUrl']),
         gallery: _gallery(json['media']),
         products: _list(json['products'])
@@ -156,8 +157,9 @@ class BusinessPublicDetail {
         canReview: _bool(json['canReview']),
         reviewSourceType: _stringOrNull(json, const ['reviewSourceType']),
         reviewSourceId: _intOrNull(json['reviewSourceId']),
-        reviewEligibilityReason:
-            _stringOrNull(json, const ['reviewEligibilityReason']),
+        reviewEligibilityReason: _stringOrNull(json, const [
+          'reviewEligibilityReason',
+        ]),
         isFavorite: _bool(json['isFavorite']),
       );
 
@@ -241,20 +243,67 @@ class ReservableOption {
     required this.name,
     required this.capacity,
     required this.isActive,
+    this.price,
+    this.currency,
+    this.requiresPrepayment = false,
+    this.prepaymentAmount,
   });
 
-  factory ReservableOption.fromJson(Map<String, dynamic> json) =>
-      ReservableOption(
-        id: _int(json['id'] ?? json['reservableOptionId']),
-        name: _string(json, const ['name', 'title', 'type']),
-        capacity: _int(json['capacity'] ?? json['maxPeople'] ?? json['people']),
-        isActive: _bool(json['isActive'], fallback: true),
-      );
+  factory ReservableOption.fromJson(Map<String, dynamic> json) {
+    final price =
+        _num(json['price'] ?? json['amount'] ?? json['basePrice']);
+    final prepaidAmount = _num(
+      json['prepaymentAmount'] ??
+          json['prepaidAmount'] ??
+          json['depositAmount'] ??
+          json['advancePaymentAmount'],
+    );
+    final requiresPrepayment = _bool(
+          json['requiresPrepayment'] ??
+              json['requiresPrepaid'] ??
+              json['prepaidRequired'] ??
+              json['requiresDeposit'] ??
+              json['requiresAdvancePayment'] ??
+              json['requiresPayment'],
+        ) ||
+        (prepaidAmount != null && prepaidAmount > 0);
+    return ReservableOption(
+      id: _int(json['id'] ?? json['reservableOptionId']),
+      name: _string(json, const ['name', 'title', 'type']),
+      capacity: _int(json['capacity'] ?? json['maxPeople'] ?? json['people']),
+      isActive: _bool(json['isActive'], fallback: true),
+      price: price,
+      currency: _stringOrNull(json, const ['currency', 'currencyCode']),
+      requiresPrepayment: requiresPrepayment,
+      prepaymentAmount: prepaidAmount ?? (requiresPrepayment ? price : null),
+    );
+  }
 
   final int id;
   final String name;
   final int capacity;
   final bool isActive;
+  final num? price;
+  final String? currency;
+  final bool requiresPrepayment;
+  final num? prepaymentAmount;
+
+  String get displayName => name.isEmpty ? 'Opción $id' : name;
+
+  String paymentLabel({String fallbackCurrency = 'COP'}) {
+    final code = (currency ?? fallbackCurrency).trim();
+    if (requiresPrepayment) {
+      final amount = prepaymentAmount ?? price;
+      if (amount != null && amount > 0) {
+        return 'Pago anticipado: $code ${amount.toStringAsFixed(0)}';
+      }
+      return 'Requiere pago anticipado';
+    }
+    if (price != null && price! > 0) {
+      return 'Precio: $code ${price!.toStringAsFixed(0)} · Sin anticipo';
+    }
+    return 'Sin pago anticipado';
+  }
 }
 
 class DeliveryAvailability {
@@ -334,11 +383,7 @@ String? _categoryName(dynamic value) {
 String? _mediaUrl(dynamic value) {
   if (value is! Map) return null;
   final media = Map<String, dynamic>.from(value);
-  return _stringOrNull(media, const [
-    'mainImageUrl',
-    'coverUrl',
-    'logoUrl',
-  ]);
+  return _stringOrNull(media, const ['mainImageUrl', 'coverUrl', 'logoUrl']);
 }
 
 List<String> _gallery(dynamic value) {
@@ -374,19 +419,19 @@ List<String> _gallery(dynamic value) {
 }
 
 PlacePromotion _promotionFromJson(Map<String, dynamic> json) => PlacePromotion(
-      title: _string(json, const ['title', 'name']),
-      description: _string(json, const ['description']),
-    );
+  title: _string(json, const ['title', 'name']),
+  description: _string(json, const ['description']),
+);
 
 PlaceReview _reviewFromJson(Map<String, dynamic> json) => PlaceReview(
-      id: _intOrNull(json['id'] ?? json['reviewId']),
-      userName: _string(json, const [
-        'userDisplayName',
-        'userName',
-        'clientName',
-        'name',
-      ]),
-      comment: _string(json, const ['comment', 'description']),
-      rating: _doubleOrNull(json['rating']) ?? 0,
-      timeAgo: _string(json, const ['createdAt', 'updatedAt']),
-    );
+  id: _intOrNull(json['id'] ?? json['reviewId']),
+  userName: _string(json, const [
+    'userDisplayName',
+    'userName',
+    'clientName',
+    'name',
+  ]),
+  comment: _string(json, const ['comment', 'description']),
+  rating: _doubleOrNull(json['rating']) ?? 0,
+  timeAgo: _string(json, const ['createdAt', 'updatedAt']),
+);

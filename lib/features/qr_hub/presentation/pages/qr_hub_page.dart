@@ -42,9 +42,9 @@ class QrHubPage extends StatelessWidget {
                 'Para eventos, reservas, accesos y cuando te deban escanear.',
             icon: Icons.qr_code_2_outlined,
             color: Theme.of(context).colorScheme.primaryContainer,
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const MyQrPage()),
-            ),
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute<void>(builder: (_) => const MyQrPage())),
           ),
           const SizedBox(height: AppSpacing.md),
           _HubActionCard(
@@ -54,9 +54,9 @@ class QrHubPage extends StatelessWidget {
                 'Para pagar en comercios, activar cupones o iniciar un flujo externo.',
             icon: Icons.qr_code_scanner,
             color: Theme.of(context).colorScheme.secondaryContainer,
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const ScanQrPage()),
-            ),
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute<void>(builder: (_) => const ScanQrPage())),
           ),
         ],
       ),
@@ -82,11 +82,11 @@ class _MyQrPageState extends State<MyQrPage> {
 
   void _reload() {
     _identity = getIt<WalletRepository>().myCiervoId().then(
-          (result) => result.when(
-            success: (value) => value,
-            failure: (error) => throw error,
-          ),
-        );
+      (result) => result.when(
+        success: (value) => value,
+        failure: (error) => throw error,
+      ),
+    );
   }
 
   @override
@@ -147,10 +147,7 @@ class _MyQrPageState extends State<MyQrPage> {
 }
 
 class ScanQrPage extends StatefulWidget {
-  const ScanQrPage({
-    this.chatConversationId,
-    super.key,
-  });
+  const ScanQrPage({this.chatConversationId, super.key});
 
   final String? chatConversationId;
 
@@ -294,84 +291,79 @@ class _ScanQrPageState extends State<ScanQrPage> {
       ),
       body: switch (_source) {
         _ScanSource.choosing => ListView(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            children: [
-              Text(
-                'Elige como quieres leer el codigo',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          children: [
+            Text(
+              'Elige como quieres leer el codigo',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _ScanOptionCard(
+              title: 'Usar camara',
+              subtitle: 'Apunta al QR en tiempo real',
+              icon: Icons.photo_camera_outlined,
+              color: Theme.of(context).colorScheme.primaryContainer,
+              onTap: _startCamera,
+            ),
+            const SizedBox(height: CiervoPageLayout.cardGap),
+            _ScanOptionCard(
+              title: 'Elegir de galeria',
+              subtitle: 'Selecciona una foto que ya tengas',
+              icon: Icons.photo_library_outlined,
+              color: Theme.of(context).colorScheme.secondaryContainer,
+              onTap: _busy ? null : _pickFromGallery,
+            ),
+            if (_photosDenied) ...[
               const SizedBox(height: AppSpacing.md),
-              _ScanOptionCard(
-                title: 'Usar camara',
-                subtitle: 'Apunta al QR en tiempo real',
-                icon: Icons.photo_camera_outlined,
-                color: Theme.of(context).colorScheme.primaryContainer,
-                onTap: _startCamera,
+              PermissionDeniedState(
+                kind: AppPermissionKind.photos,
+                onRetry: _pickFromGallery,
               ),
-              const SizedBox(height: CiervoPageLayout.cardGap),
-              _ScanOptionCard(
-                title: 'Elegir de galeria',
-                subtitle: 'Selecciona una foto que ya tengas',
-                icon: Icons.photo_library_outlined,
-                color: Theme.of(context).colorScheme.secondaryContainer,
-                onTap: _busy ? null : _pickFromGallery,
-              ),
-              if (_photosDenied) ...[
-                const SizedBox(height: AppSpacing.md),
-                PermissionDeniedState(
-                  kind: AppPermissionKind.photos,
-                  onRetry: _pickFromGallery,
-                ),
-              ] else if (_error != null) ...[
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  _error!,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.error,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                const OpenSettingsButton(),
-              ],
-              if (_busy)
-                const Padding(
-                  padding: EdgeInsets.only(top: AppSpacing.lg),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-              const SizedBox(height: AppSpacing.lg),
+            ] else if (_error != null) ...[
+              const SizedBox(height: AppSpacing.md),
               Text(
-                'No uses esta opcion si te van a escanear a ti: usa Mi QR.',
+                _error!,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              const OpenSettingsButton(),
+            ],
+            if (_busy)
+              const Padding(
+                padding: EdgeInsets.only(top: AppSpacing.lg),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              'No uses esta opcion si te van a escanear a ti: usa Mi QR.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
+        _ScanSource.camera => Column(
+          children: [
+            Expanded(
+              child: _cameraReady
+                  ? MobileScanner(controller: _controller, onDetect: _onDetect)
+                  : Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        child: Text(_error ?? 'Preparando camara…'),
+                      ),
+                    ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Text(
+                'Apunta al QR del comercio, cupon o persona.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
-            ],
-          ),
-        _ScanSource.camera => Column(
-            children: [
-              Expanded(
-                child: _cameraReady
-                    ? MobileScanner(
-                        controller: _controller,
-                        onDetect: _onDetect,
-                      )
-                    : Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(AppSpacing.lg),
-                          child: Text(_error ?? 'Preparando camara…'),
-                        ),
-                      ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Text(
-                  'Apunta al QR del comercio, cupon o persona.',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
+        ),
         _ScanSource.gallery => const SizedBox.shrink(),
       },
     );
@@ -414,7 +406,10 @@ class _ScanOptionCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(title, style: Theme.of(context).textTheme.titleMedium),
-                    Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+                    Text(
+                      subtitle,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
                   ],
                 ),
               ),

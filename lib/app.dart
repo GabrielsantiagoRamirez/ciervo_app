@@ -53,12 +53,11 @@ class _CiervoAppState extends State<CiervoApp> with WidgetsBindingObserver {
       context.read<ExperienceModeCubit>(),
       navigatorKey: rootNavigatorKey,
     );
-    _sessionSubscription =
-        _sessionManager.stream.listen(_onSessionChanged);
-    _notificationsSyncSubscription =
-        getIt<NotificationsSync>().onRefresh.listen((_) {
-      _badgesCubit.refresh();
-    });
+    _sessionSubscription = _sessionManager.stream.listen(_onSessionChanged);
+    _notificationsSyncSubscription = getIt<NotificationsSync>().onRefresh
+        .listen((_) {
+          _badgesCubit.refresh();
+        });
     _onSessionChanged(_sessionManager.state);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _ensureEntryPermissions();
@@ -136,10 +135,7 @@ class _CiervoAppState extends State<CiervoApp> with WidgetsBindingObserver {
             title: 'CIERVO CLUB',
             debugShowCheckedModeBanner: false,
             locale: const Locale('es', 'CO'),
-            supportedLocales: const [
-              Locale('es', 'CO'),
-              Locale('es'),
-            ],
+            supportedLocales: const [Locale('es', 'CO'), Locale('es')],
             localizationsDelegates: const [
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
@@ -153,9 +149,7 @@ class _CiervoAppState extends State<CiervoApp> with WidgetsBindingObserver {
             routerConfig: _router,
             builder: (context, child) {
               return DismissKeyboardScope(
-                child: CiervoUserIdOverlay(
-                  child: child ?? const SplashPage(),
-                ),
+                child: CiervoUserIdOverlay(child: child ?? const SplashPage()),
               );
             },
           );

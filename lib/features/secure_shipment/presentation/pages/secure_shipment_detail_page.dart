@@ -16,7 +16,8 @@ import '../../../wallet/domain/repositories/wallet_repository.dart';
 import '../../../wallet/presentation/pages/recharge_page.dart';
 import '../../data/secure_shipment_repository.dart';
 import '../../domain/models/secure_shipment.dart';
-import '../widgets/shipment_status_chip.dart' show ShipmentStatusChip, showSecureShipmentPinModal;
+import '../widgets/shipment_status_chip.dart'
+    show ShipmentStatusChip, showSecureShipmentPinModal;
 
 class SecureShipmentDetailPage extends StatefulWidget {
   const SecureShipmentDetailPage({required this.publicId, super.key});
@@ -52,10 +53,7 @@ class _SecureShipmentDetailPageState extends State<SecureShipmentDetailPage> {
 
   Future<void> _bootstrap() async {
     final profile = await getIt<ProfileRepository>().getMe();
-    profile.when(
-      success: (p) => _currentUserId = p.id,
-      failure: (_) {},
-    );
+    profile.when(success: (p) => _currentUserId = p.id, failure: (_) {});
     await _load();
   }
 
@@ -95,33 +93,33 @@ class _SecureShipmentDetailPageState extends State<SecureShipmentDetailPage> {
   }
 
   Future<void> _accept() => _run(() async {
-        final result = await _repository.acceptShipment(widget.publicId);
-        if (!mounted) return;
-        result.when(
-          success: (_) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Envío aceptado.')),
-            );
-            _load();
-            _showHoldDialog();
-          },
-          failure: (e) => _showError(UserErrorMessage.from(e)),
-        );
-      });
+    final result = await _repository.acceptShipment(widget.publicId);
+    if (!mounted) return;
+    result.when(
+      success: (_) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Envío aceptado.')));
+        _load();
+        _showHoldDialog();
+      },
+      failure: (e) => _showError(UserErrorMessage.from(e)),
+    );
+  });
 
   Future<void> _reject() => _run(() async {
-        final result = await _repository.rejectShipment(widget.publicId);
-        if (!mounted) return;
-        result.when(
-          success: (_) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Envío rechazado.')),
-            );
-            _load();
-          },
-          failure: (e) => _showError(UserErrorMessage.from(e)),
-        );
-      });
+    final result = await _repository.rejectShipment(widget.publicId);
+    if (!mounted) return;
+    result.when(
+      success: (_) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Envío rechazado.')));
+        _load();
+      },
+      failure: (e) => _showError(UserErrorMessage.from(e)),
+    );
+  });
 
   Future<void> _cancel() async {
     final ok = await showDialog<bool>(
@@ -132,8 +130,14 @@ class _SecureShipmentDetailPageState extends State<SecureShipmentDetailPage> {
           'Se liberará la retención de fondos si existe. ¿Continuar?',
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('No')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Sí, cancelar')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('No'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Sí, cancelar'),
+          ),
         ],
       ),
     );
@@ -143,9 +147,9 @@ class _SecureShipmentDetailPageState extends State<SecureShipmentDetailPage> {
       if (!mounted) return;
       result.when(
         success: (_) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Envío cancelado.')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Envío cancelado.')));
           _load();
         },
         failure: (e) => _showError(UserErrorMessage.from(e)),
@@ -191,7 +195,9 @@ class _SecureShipmentDetailPageState extends State<SecureShipmentDetailPage> {
                     .map(
                       (c) => DropdownMenuItem(
                         value: c,
-                        child: Text('${c.name} · ${c.availableBalance.toStringAsFixed(0)}'),
+                        child: Text(
+                          '${c.name} · ${c.availableBalance.toStringAsFixed(0)}',
+                        ),
                       ),
                     )
                     .toList(),
@@ -200,8 +206,14 @@ class _SecureShipmentDetailPageState extends State<SecureShipmentDetailPage> {
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Después')),
-            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Retener')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Después'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Retener'),
+            ),
           ],
         ),
       ),
@@ -238,47 +250,55 @@ class _SecureShipmentDetailPageState extends State<SecureShipmentDetailPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Saldo insuficiente'),
-        content: const Text('Recarga tu wallet para retener el monto del envío.'),
+        content: const Text(
+          'Recarga tu wallet para retener el monto del envío.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Recargar')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Recargar'),
+          ),
         ],
       ),
     );
     if (go == true && mounted) {
-      await Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => RechargePage(card: card)),
-      );
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => RechargePage(card: card)));
     }
   }
 
   Future<void> _generatePin() => _run(() async {
-        final result = await _repository.generatePins(publicId: widget.publicId);
-        if (!mounted) return;
-        result.when(
-          success: (pinResult) async {
-            if (pinResult.pin != null && pinResult.pin!.isNotEmpty) {
-              await showSecureShipmentPinModal(
-                context,
-                pin: pinResult.pin!,
-                expiresAt: pinResult.expiresAt,
-              );
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    pinResult.pinHint != null
-                        ? 'PIN ya entregado · termina en ${pinResult.pinHint}'
-                        : 'PIN generado. Revisa tus notificaciones.',
-                  ),
-                ),
-              );
-            }
-            _load();
-          },
-          failure: (e) => _showError(UserErrorMessage.from(e)),
-        );
-      });
+    final result = await _repository.generatePins(publicId: widget.publicId);
+    if (!mounted) return;
+    result.when(
+      success: (pinResult) async {
+        if (pinResult.pin != null && pinResult.pin!.isNotEmpty) {
+          await showSecureShipmentPinModal(
+            context,
+            pin: pinResult.pin!,
+            expiresAt: pinResult.expiresAt,
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                pinResult.pinHint != null
+                    ? 'PIN ya entregado · termina en ${pinResult.pinHint}'
+                    : 'PIN generado. Revisa tus notificaciones.',
+              ),
+            ),
+          );
+        }
+        _load();
+      },
+      failure: (e) => _showError(UserErrorMessage.from(e)),
+    );
+  });
 
   Future<void> _validatePin(String role) async {
     if (_pinBlockedUntil != null &&
@@ -301,16 +321,18 @@ class _SecureShipmentDetailPageState extends State<SecureShipmentDetailPage> {
       result.when(
         success: (_) {
           _pinInput.clear();
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('PIN validado.')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('PIN validado.')));
           _load();
         },
         failure: (e) {
           final msg = UserErrorMessage.from(e).toLowerCase();
           if (msg.contains('bloque') || msg.contains('15')) {
             setState(() {
-              _pinBlockedUntil = DateTime.now().add(const Duration(minutes: 15));
+              _pinBlockedUntil = DateTime.now().add(
+                const Duration(minutes: 15),
+              );
             });
           }
           _showError(UserErrorMessage.from(e));
@@ -320,30 +342,30 @@ class _SecureShipmentDetailPageState extends State<SecureShipmentDetailPage> {
   }
 
   Future<void> _synchronize() => _run(() async {
-        final result = await _repository.synchronizePins(publicId: widget.publicId);
-        if (!mounted) return;
-        result.when(
-          success: (_) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Entrega confirmada.')),
-            );
-            _load();
-          },
-          failure: (e) => _showError(UserErrorMessage.from(e)),
-        );
-      });
+    final result = await _repository.synchronizePins(publicId: widget.publicId);
+    if (!mounted) return;
+    result.when(
+      success: (_) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Entrega confirmada.')));
+        _load();
+      },
+      failure: (e) => _showError(UserErrorMessage.from(e)),
+    );
+  });
 
   Future<void> _executePayment() => _run(() async {
-        final result = await _repository.executePayment(publicId: widget.publicId);
-        if (!mounted) return;
-        result.when(
-          success: (_) async {
-            await _showReceipt();
-            _load();
-          },
-          failure: (e) => _showError(UserErrorMessage.from(e)),
-        );
-      });
+    final result = await _repository.executePayment(publicId: widget.publicId);
+    if (!mounted) return;
+    result.when(
+      success: (_) async {
+        await _showReceipt();
+        _load();
+      },
+      failure: (e) => _showError(UserErrorMessage.from(e)),
+    );
+  });
 
   Future<void> _showReceipt() async {
     final result = await _repository.getReceipt(widget.publicId);
@@ -386,7 +408,10 @@ class _SecureShipmentDetailPageState extends State<SecureShipmentDetailPage> {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancelar'),
+            ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, c.text.trim()),
               child: const Text('Enviar'),
@@ -405,7 +430,9 @@ class _SecureShipmentDetailPageState extends State<SecureShipmentDetailPage> {
       result.when(
         success: (_) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Disputa registrada. Fondos congelados.')),
+            const SnackBar(
+              content: Text('Disputa registrada. Fondos congelados.'),
+            ),
           );
           _load();
         },
@@ -415,7 +442,9 @@ class _SecureShipmentDetailPageState extends State<SecureShipmentDetailPage> {
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -451,7 +480,9 @@ class _SecureShipmentDetailPageState extends State<SecureShipmentDetailPage> {
                                 style: Theme.of(context).textTheme.titleLarge,
                               ),
                             ),
-                            ShipmentStatusChip(statusName: _shipment!.statusName),
+                            ShipmentStatusChip(
+                              statusName: _shipment!.statusName,
+                            ),
                           ],
                         ),
                         const SizedBox(height: AppSpacing.sm),
@@ -649,10 +680,12 @@ class _InfoSection extends StatelessWidget {
           children: [
             Text(title, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: AppSpacing.sm),
-            ...lines.map((l) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text(l),
-                )),
+            ...lines.map(
+              (l) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(l),
+              ),
+            ),
           ],
         ),
       ),

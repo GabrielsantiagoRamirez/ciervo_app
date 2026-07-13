@@ -92,7 +92,8 @@ class _ChatGiftPageState extends State<ChatGiftPage> {
     if (_sending || _blockedKid) return false;
     final amount =
         double.tryParse(_amountController.text.replaceAll(',', '.')) ?? 0;
-    final hasRecipient = _targetUserId != null ||
+    final hasRecipient =
+        _targetUserId != null ||
         _pickedRecipient != null ||
         _codeController.text.trim().isNotEmpty;
     return amount > 0 && hasRecipient;
@@ -164,9 +165,9 @@ class _ChatGiftPageState extends State<ChatGiftPage> {
       success: (_) => ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Tu CIERVO ID fue enviado al chat.')),
       ),
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 
@@ -218,7 +219,7 @@ class _ChatGiftPageState extends State<ChatGiftPage> {
                         onChanged: _sending
                             ? null
                             : (value) =>
-                                setState(() => _giftType = value ?? 'Money'),
+                                  setState(() => _giftType = value ?? 'Money'),
                       ),
                       const SizedBox(height: AppSpacing.md),
                       TextField(
@@ -269,8 +270,8 @@ class _ChatGiftPageState extends State<ChatGiftPage> {
                           onPressed: _sending
                               ? null
                               : () => context.read<WalletCubit>().resolveUser(
-                                    _codeController.text.trim(),
-                                  ),
+                                  _codeController.text.trim(),
+                                ),
                         ),
                       ],
                       if (_pickedRecipient != null) ...[
@@ -279,7 +280,9 @@ class _ChatGiftPageState extends State<ChatGiftPage> {
                           contentPadding: EdgeInsets.zero,
                           leading: const Icon(Icons.person_outline),
                           title: Text(_pickedRecipient!.fullName),
-                          subtitle: Text(_pickedRecipient!.ciervoUserCode ?? ''),
+                          subtitle: Text(
+                            _pickedRecipient!.ciervoUserCode ?? '',
+                          ),
                         ),
                       ] else if (resolved != null) ...[
                         const SizedBox(height: AppSpacing.md),
@@ -365,9 +368,9 @@ class _ChatGiftPageState extends State<ChatGiftPage> {
       Navigator.of(context).pop(true);
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
     } finally {
       if (mounted) setState(() => _sending = false);
     }

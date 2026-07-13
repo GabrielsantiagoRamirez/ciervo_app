@@ -26,9 +26,15 @@ class CiervoButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final style = switch (variant) {
-      CiervoButtonVariant.primary => AppComponentStyles.primaryButton(colorScheme),
-      CiervoButtonVariant.secondary => AppComponentStyles.secondaryButton(colorScheme),
-      CiervoButtonVariant.danger => AppComponentStyles.dangerButton(colorScheme),
+      CiervoButtonVariant.primary => AppComponentStyles.primaryButton(
+        colorScheme,
+      ),
+      CiervoButtonVariant.secondary => AppComponentStyles.secondaryButton(
+        colorScheme,
+      ),
+      CiervoButtonVariant.danger => AppComponentStyles.dangerButton(
+        colorScheme,
+      ),
     };
     final effectiveIcon = switch (state) {
       CiervoButtonState.success => Icons.check_circle_outline,

@@ -33,18 +33,12 @@ class ChatConversationPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => BlocProvider(
     create: (_) => ChatCubit(getIt<ChatRepository>())..open(conversationId),
-    child: _ConversationView(
-      title: title,
-      conversationId: conversationId,
-    ),
+    child: _ConversationView(title: title, conversationId: conversationId),
   );
 }
 
 class _ConversationView extends StatefulWidget {
-  const _ConversationView({
-    this.title,
-    required this.conversationId,
-  });
+  const _ConversationView({this.title, required this.conversationId});
   final String? title;
   final String conversationId;
   @override
@@ -108,12 +102,12 @@ class _ConversationViewState extends State<_ConversationView> {
             onPressed: state.conversation?.canSend == false
                 ? null
                 : () => showChatButtonsSheet(
-                      context,
-                      buttons: state.chatButtons,
-                      conversationId: widget.conversationId,
-                      businessId: state.conversation?.businessId,
-                      businessName: state.conversation?.title,
-                    ),
+                    context,
+                    buttons: state.chatButtons,
+                    conversationId: widget.conversationId,
+                    businessId: state.conversation?.businessId,
+                    businessName: state.conversation?.title,
+                  ),
           ),
         ],
       ),
@@ -156,30 +150,34 @@ class _ConversationViewState extends State<_ConversationView> {
                           );
                         },
                         child: Align(
-                        alignment: message.isMine
-                            ? Alignment.centerRight
-                            : Alignment.centerLeft,
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-                          padding: const EdgeInsets.all(AppSpacing.md),
-                          constraints: BoxConstraints(
-                            maxWidth: MediaQuery.sizeOf(context).width * .78,
+                          alignment: message.isMine
+                              ? Alignment.centerRight
+                              : Alignment.centerLeft,
+                          child: Container(
+                            margin: const EdgeInsets.only(
+                              bottom: AppSpacing.sm,
+                            ),
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            constraints: BoxConstraints(
+                              maxWidth: MediaQuery.sizeOf(context).width * .78,
+                            ),
+                            decoration: BoxDecoration(
+                              color: message.isMine
+                                  ? Theme.of(
+                                      context,
+                                    ).colorScheme.primaryContainer
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: message.bookingReceipt != null
+                                ? _BookingReceiptCard(
+                                    receipt: message.bookingReceipt!,
+                                  )
+                                : _MessageContent(message: message),
                           ),
-                          decoration: BoxDecoration(
-                            color: message.isMine
-                                ? Theme.of(context).colorScheme.primaryContainer
-                                : Theme.of(
-                                    context,
-                                  ).colorScheme.surfaceContainerHighest,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: message.bookingReceipt != null
-                              ? _BookingReceiptCard(
-                                  receipt: message.bookingReceipt!,
-                                )
-                              : _MessageContent(message: message),
                         ),
-                      ),
                       );
                     },
                   ),
@@ -270,9 +268,9 @@ class _ConversationViewState extends State<_ConversationView> {
       fileName: media.name,
     );
     if (validationError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(validationError)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(validationError)));
       return;
     }
     context.read<ChatCubit>().sendMedia(media.path, media.name);
@@ -377,16 +375,18 @@ class _BookingReceiptCard extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.start,
     mainAxisSize: MainAxisSize.min,
     children: [
-      Row(children: [
-        const Icon(Icons.receipt_long_outlined, size: 20),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            receipt.publicCode,
-            style: Theme.of(context).textTheme.titleMedium,
+      Row(
+        children: [
+          const Icon(Icons.receipt_long_outlined, size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              receipt.publicCode,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
           ),
-        ),
-      ]),
+        ],
+      ),
       const Divider(),
       _line('Negocio', receipt.business),
       _line('Cliente', receipt.client),

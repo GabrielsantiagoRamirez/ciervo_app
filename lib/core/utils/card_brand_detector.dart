@@ -4,10 +4,10 @@ enum CardBrand {
   unknown;
 
   String get label => switch (this) {
-        CardBrand.visa => 'Visa',
-        CardBrand.mastercard => 'Mastercard',
-        CardBrand.unknown => '',
-      };
+    CardBrand.visa => 'Visa',
+    CardBrand.mastercard => 'Mastercard',
+    CardBrand.unknown => '',
+  };
 }
 
 abstract final class CardBrandDetector {
@@ -43,8 +43,8 @@ abstract final class CardBrandDetector {
 
   /// Código de marca que espera el backend CIERVO (`VISA`, `MASTERCARD`, …).
   static String apiBrandCode(CardBrand brand) => switch (brand) {
-        CardBrand.visa => 'VISA',
-        CardBrand.mastercard => 'MASTERCARD',
-        CardBrand.unknown => 'UNKNOWN',
-      };
+    CardBrand.visa => 'VISA',
+    CardBrand.mastercard => 'MASTERCARD',
+    CardBrand.unknown => 'UNKNOWN',
+  };
 }

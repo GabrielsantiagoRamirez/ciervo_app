@@ -37,7 +37,8 @@ class _PhoneVerificationSheet extends StatefulWidget {
   final String phone;
 
   @override
-  State<_PhoneVerificationSheet> createState() => _PhoneVerificationSheetState();
+  State<_PhoneVerificationSheet> createState() =>
+      _PhoneVerificationSheetState();
 }
 
 class _PhoneVerificationSheetState extends State<_PhoneVerificationSheet> {
@@ -151,10 +152,11 @@ class _PhoneVerificationSheetState extends State<_PhoneVerificationSheet> {
               Container(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: (_isSuccess
-                          ? colorScheme.primaryContainer
-                          : colorScheme.errorContainer)
-                      .withValues(alpha: 0.65),
+                  color:
+                      (_isSuccess
+                              ? colorScheme.primaryContainer
+                              : colorScheme.errorContainer)
+                          .withValues(alpha: 0.65),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(

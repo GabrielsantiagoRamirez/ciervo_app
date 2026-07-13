@@ -31,7 +31,9 @@ class FamilyPaymentCardDto {
   factory FamilyPaymentCardDto.fromJson(Map<String, dynamic> json) {
     return FamilyPaymentCardDto(
       id: _string(json['id'] ?? json['cardId']),
-      brand: _string(json['brand'] ?? json['paymentMethodId'] ?? json['cardBrand']),
+      brand: _string(
+        json['brand'] ?? json['paymentMethodId'] ?? json['cardBrand'],
+      ),
       lastFour: _string(
         json['lastFour'] ??
             json['last4'] ??
@@ -48,42 +50,59 @@ class FamilyPaymentCardDto {
         json['expirationYear'] ?? json['expYear'] ?? json['expiryYear'],
       ),
       alias: _string(json['alias'] ?? json['displayName'] ?? json['nickname']),
-      isFrozen: json['isFrozen'] == true ||
+      isFrozen:
+          json['isFrozen'] == true ||
           json['frozen'] == true ||
           _string(json['status']).toLowerCase().contains('frozen'),
     );
   }
 
   FamilyPaymentCard toDomain() => FamilyPaymentCard(
-        id: id,
-        brand: brand,
-        lastFour: lastFour,
-        status: status,
-        isPrimary: isPrimary,
-        isBackup: isBackup,
-        expirationMonth: expirationMonth,
-        expirationYear: expirationYear,
-        alias: alias,
-        isFrozen: isFrozen,
-      );
+    id: id,
+    brand: brand,
+    lastFour: lastFour,
+    status: status,
+    isPrimary: isPrimary,
+    isBackup: isBackup,
+    expirationMonth: expirationMonth,
+    expirationYear: expirationYear,
+    alias: alias,
+    isFrozen: isFrozen,
+  );
 
   static List<FamilyPaymentCardDto> listFrom(dynamic value) {
     if (value is List) {
       return value
           .whereType<Map>()
-          .map((item) => FamilyPaymentCardDto.fromJson(
-                Map<String, dynamic>.from(item),
-              ))
+          .map(
+            (item) =>
+                FamilyPaymentCardDto.fromJson(Map<String, dynamic>.from(item)),
+          )
           .toList();
     }
     if (value is Map) {
-      final items = value['items'] ?? value['cards'];
+      final map = Map<String, dynamic>.from(value);
+      final items =
+          map['items'] ??
+          map['cards'] ??
+          map['paymentMethods'] ??
+          map['results'] ??
+          map['content'];
       if (items is List) return listFrom(items);
-      if (value.isNotEmpty) {
-        return [FamilyPaymentCardDto.fromJson(Map<String, dynamic>.from(value))];
+      final data = map['data'];
+      if (data != null) return listFrom(data);
+      if (_looksLikeCardMap(map)) {
+        return [FamilyPaymentCardDto.fromJson(map)];
       }
     }
     return const [];
+  }
+
+  static bool _looksLikeCardMap(Map<String, dynamic> json) {
+    return json.containsKey('id') ||
+        json.containsKey('cardId') ||
+        json.containsKey('last4') ||
+        json.containsKey('lastFour');
   }
 }
 
@@ -105,7 +124,8 @@ class AddFamilyCardResponseDto {
           map['authenticationUrl'],
     );
     final status = _string(map['status']).toLowerCase();
-    final requires3ds = json['requires3ds'] == true ||
+    final requires3ds =
+        json['requires3ds'] == true ||
         json['requires3DS'] == true ||
         json['requiresVerification'] == true ||
         status == 'pending_verification' ||
@@ -122,10 +142,10 @@ class AddFamilyCardResponseDto {
   }
 
   AddFamilyCardResult toDomain() => AddFamilyCardResult(
-        card: card.toDomain(),
-        requires3ds: requires3ds,
-        verificationUrl: verificationUrl,
-      );
+    card: card.toDomain(),
+    requires3ds: requires3ds,
+    verificationUrl: verificationUrl,
+  );
 
   final FamilyPaymentCardDto card;
   final bool requires3ds;
@@ -163,7 +183,9 @@ class FamilyPaymentRecordDto {
             json['storeName'] ??
             'Comercio',
       ),
-      createdAt: _date(json['createdAt'] ?? json['paidAt'] ?? json['requestedAt']),
+      createdAt: _date(
+        json['createdAt'] ?? json['paidAt'] ?? json['requestedAt'],
+      ),
       kidId: _nullableString(json['kidId'] ?? json['childProfileId']),
       kidName: _nullableString(json['kidName'] ?? json['childName']),
       fundingSource: _nullableString(
@@ -174,10 +196,12 @@ class FamilyPaymentRecordDto {
         json['cardLastFour'] ?? json['parentCardLastFour'],
       ),
       city: _nullableString(json['city'] ?? json['merchantCity']),
-      usedParentCard: json['usedParentCard'] == true ||
+      usedParentCard:
+          json['usedParentCard'] == true ||
           json['parentCardUsed'] == true ||
           _string(json['fundingSource']).toLowerCase().contains('parent'),
-      requiresParentApproval: json['requiresParentApproval'] == true ||
+      requiresParentApproval:
+          json['requiresParentApproval'] == true ||
           json['pendingParentApproval'] == true,
       publicReceiptUrl: _nullableString(
         json['publicReceiptUrl'] ?? json['receiptUrl'],
@@ -186,45 +210,47 @@ class FamilyPaymentRecordDto {
   }
 
   FamilyPaymentRecord toDomain() => FamilyPaymentRecord(
-        id: id,
-        amount: amount,
-        currency: currency,
-        status: status,
-        merchantName: merchantName,
-        createdAt: createdAt,
-        kidId: kidId,
-        kidName: kidName,
-        fundingSource: fundingSource,
-        cardAlias: cardAlias,
-        cardLastFour: cardLastFour,
-        city: city,
-      );
+    id: id,
+    amount: amount,
+    currency: currency,
+    status: status,
+    merchantName: merchantName,
+    createdAt: createdAt,
+    kidId: kidId,
+    kidName: kidName,
+    fundingSource: fundingSource,
+    cardAlias: cardAlias,
+    cardLastFour: cardLastFour,
+    city: city,
+  );
 
   FamilyPaymentDetail toDetailDomain() => FamilyPaymentDetail(
-        id: id,
-        amount: amount,
-        currency: currency,
-        status: status,
-        merchantName: merchantName,
-        createdAt: createdAt,
-        kidId: kidId,
-        kidName: kidName,
-        fundingSource: fundingSource,
-        cardAlias: cardAlias,
-        cardLastFour: cardLastFour,
-        city: city,
-        usedParentCard: usedParentCard,
-        requiresParentApproval: requiresParentApproval,
-        publicReceiptUrl: publicReceiptUrl,
-      );
+    id: id,
+    amount: amount,
+    currency: currency,
+    status: status,
+    merchantName: merchantName,
+    createdAt: createdAt,
+    kidId: kidId,
+    kidName: kidName,
+    fundingSource: fundingSource,
+    cardAlias: cardAlias,
+    cardLastFour: cardLastFour,
+    city: city,
+    usedParentCard: usedParentCard,
+    requiresParentApproval: requiresParentApproval,
+    publicReceiptUrl: publicReceiptUrl,
+  );
 
   static List<FamilyPaymentRecordDto> listFrom(dynamic value) {
     if (value is List) {
       return value
           .whereType<Map>()
-          .map((item) => FamilyPaymentRecordDto.fromJson(
-                Map<String, dynamic>.from(item),
-              ))
+          .map(
+            (item) => FamilyPaymentRecordDto.fromJson(
+              Map<String, dynamic>.from(item),
+            ),
+          )
           .toList();
     }
     if (value is Map) {
@@ -307,17 +333,17 @@ class PendingParentPaymentDto {
   }
 
   PendingParentPayment toDomain() => PendingParentPayment(
-        paymentId: paymentId,
-        kidId: kidId,
-        kidName: kidName,
-        kidPhotoUrl: kidPhotoUrl,
-        merchantName: merchantName,
-        city: city,
-        amount: amount,
-        currency: currency,
-        requestedAt: requestedAt,
-        fundingSource: fundingSource,
-      );
+    paymentId: paymentId,
+    kidId: kidId,
+    kidName: kidName,
+    kidPhotoUrl: kidPhotoUrl,
+    merchantName: merchantName,
+    city: city,
+    amount: amount,
+    currency: currency,
+    requestedAt: requestedAt,
+    fundingSource: fundingSource,
+  );
 
   final String paymentId;
   final String kidId;
@@ -340,7 +366,8 @@ class KidPaymentSourceDto {
       mode: KidPaymentApprovalMode.fromApi(
         _nullableString(json['mode'] ?? json['approvalMode']),
       ),
-      usePrimaryCard: json['usePrimaryCard'] == true ||
+      usePrimaryCard:
+          json['usePrimaryCard'] == true ||
           json['usePrimary'] == true ||
           json['cardId'] == null,
     );
@@ -357,23 +384,25 @@ class KidPaymentSourceDto {
   final bool usePrimaryCard;
 
   KidPaymentSource toDomain() => KidPaymentSource(
-        cardId: cardId,
-        mode: mode,
-        usePrimaryCard: usePrimaryCard,
-      );
+    cardId: cardId,
+    mode: mode,
+    usePrimaryCard: usePrimaryCard,
+  );
 
   Map<String, dynamic> toJson() => {
-        if (cardId != null) 'cardId': cardId,
-        'mode': mode.apiValue,
-        'usePrimaryCard': usePrimaryCard,
-      };
+    if (cardId != null) 'cardId': cardId,
+    'mode': mode.apiValue,
+    'usePrimaryCard': usePrimaryCard,
+  };
 }
 
 class KidSpendingLimitsDto {
   factory KidSpendingLimitsDto.fromJson(Map<String, dynamic> json) {
     return KidSpendingLimitsDto(
       perPurchaseLimit: _nullableNum(
-        json['perPurchaseLimit'] ?? json['purchaseLimit'] ?? json['transactionLimit'],
+        json['perPurchaseLimit'] ??
+            json['purchaseLimit'] ??
+            json['transactionLimit'],
       ),
       dailyLimit: _nullableNum(json['dailyLimit'] ?? json['daily']),
       monthlyLimit: _nullableNum(json['monthlyLimit'] ?? json['monthly']),
@@ -391,16 +420,16 @@ class KidSpendingLimitsDto {
   final double? monthlyLimit;
 
   KidSpendingLimits toDomain() => KidSpendingLimits(
-        perPurchaseLimit: perPurchaseLimit,
-        dailyLimit: dailyLimit,
-        monthlyLimit: monthlyLimit,
-      );
+    perPurchaseLimit: perPurchaseLimit,
+    dailyLimit: dailyLimit,
+    monthlyLimit: monthlyLimit,
+  );
 
   Map<String, dynamic> toJson() => {
-        if (perPurchaseLimit != null) 'perPurchaseLimit': perPurchaseLimit,
-        if (dailyLimit != null) 'dailyLimit': dailyLimit,
-        if (monthlyLimit != null) 'monthlyLimit': monthlyLimit,
-      };
+    if (perPurchaseLimit != null) 'perPurchaseLimit': perPurchaseLimit,
+    if (dailyLimit != null) 'dailyLimit': dailyLimit,
+    if (monthlyLimit != null) 'monthlyLimit': monthlyLimit,
+  };
 }
 
 class KidMerchantRulesDto {
@@ -434,18 +463,18 @@ class KidMerchantRulesDto {
   final List<String> blockedBusinessIds;
 
   KidMerchantRules toDomain() => KidMerchantRules(
-        allowedCategoryIds: allowedCategoryIds,
-        blockedCategoryIds: blockedCategoryIds,
-        allowedBusinessIds: allowedBusinessIds,
-        blockedBusinessIds: blockedBusinessIds,
-      );
+    allowedCategoryIds: allowedCategoryIds,
+    blockedCategoryIds: blockedCategoryIds,
+    allowedBusinessIds: allowedBusinessIds,
+    blockedBusinessIds: blockedBusinessIds,
+  );
 
   Map<String, dynamic> toJson() => {
-        'allowedCategoryIds': allowedCategoryIds,
-        'blockedCategoryIds': blockedCategoryIds,
-        'allowedBusinessIds': allowedBusinessIds,
-        'blockedBusinessIds': blockedBusinessIds,
-      };
+    'allowedCategoryIds': allowedCategoryIds,
+    'blockedCategoryIds': blockedCategoryIds,
+    'allowedBusinessIds': allowedBusinessIds,
+    'blockedBusinessIds': blockedBusinessIds,
+  };
 }
 
 class KidScheduleRulesDto {
@@ -468,16 +497,16 @@ class KidScheduleRulesDto {
   final List<int> allowedDays;
 
   KidScheduleRules toDomain() => KidScheduleRules(
-        startTime: startTime,
-        endTime: endTime,
-        allowedDays: allowedDays,
-      );
+    startTime: startTime,
+    endTime: endTime,
+    allowedDays: allowedDays,
+  );
 
   Map<String, dynamic> toJson() => {
-        if (startTime != null) 'startTime': startTime,
-        if (endTime != null) 'endTime': endTime,
-        'allowedDays': allowedDays,
-      };
+    if (startTime != null) 'startTime': startTime,
+    if (endTime != null) 'endTime': endTime,
+    'allowedDays': allowedDays,
+  };
 }
 
 class KidAutoPaymentRulesDto {
@@ -499,23 +528,21 @@ class KidAutoPaymentRulesDto {
   final double? maxAutomaticAmount;
 
   KidAutoPaymentRules toDomain() => KidAutoPaymentRules(
-        enabled: enabled,
-        maxAutomaticAmount: maxAutomaticAmount,
-      );
+    enabled: enabled,
+    maxAutomaticAmount: maxAutomaticAmount,
+  );
 
   Map<String, dynamic> toJson() => {
-        'enabled': enabled,
-        if (maxAutomaticAmount != null)
-          'maxAutomaticAmount': maxAutomaticAmount,
-      };
+    'enabled': enabled,
+    if (maxAutomaticAmount != null) 'maxAutomaticAmount': maxAutomaticAmount,
+  };
 }
 
 class KidApprovalRulesDto {
   factory KidApprovalRulesDto.fromJson(Map<String, dynamic> json) {
     return KidApprovalRulesDto(
       requireApprovalFromAmount: _nullableNum(
-        json['requireApprovalFromAmount'] ??
-            json['approvalThresholdAmount'],
+        json['requireApprovalFromAmount'] ?? json['approvalThresholdAmount'],
       ),
       alwaysApprovedCategoryIds: _intList(
         json['alwaysApprovedCategoryIds'] ?? json['autoApprovedCategories'],
@@ -537,17 +564,17 @@ class KidApprovalRulesDto {
   final List<int> alwaysManualCategoryIds;
 
   KidApprovalRules toDomain() => KidApprovalRules(
-        requireApprovalFromAmount: requireApprovalFromAmount,
-        alwaysApprovedCategoryIds: alwaysApprovedCategoryIds,
-        alwaysManualCategoryIds: alwaysManualCategoryIds,
-      );
+    requireApprovalFromAmount: requireApprovalFromAmount,
+    alwaysApprovedCategoryIds: alwaysApprovedCategoryIds,
+    alwaysManualCategoryIds: alwaysManualCategoryIds,
+  );
 
   Map<String, dynamic> toJson() => {
-        if (requireApprovalFromAmount != null)
-          'requireApprovalFromAmount': requireApprovalFromAmount,
-        'alwaysApprovedCategoryIds': alwaysApprovedCategoryIds,
-        'alwaysManualCategoryIds': alwaysManualCategoryIds,
-      };
+    if (requireApprovalFromAmount != null)
+      'requireApprovalFromAmount': requireApprovalFromAmount,
+    'alwaysApprovedCategoryIds': alwaysApprovedCategoryIds,
+    'alwaysManualCategoryIds': alwaysManualCategoryIds,
+  };
 }
 
 class KidGeofenceRulesDto {
@@ -580,18 +607,18 @@ class KidGeofenceRulesDto {
   final double? radiusMeters;
 
   KidGeofenceRules toDomain() => KidGeofenceRules(
-        enabled: enabled,
-        latitude: latitude,
-        longitude: longitude,
-        radiusMeters: radiusMeters,
-      );
+    enabled: enabled,
+    latitude: latitude,
+    longitude: longitude,
+    radiusMeters: radiusMeters,
+  );
 
   Map<String, dynamic> toJson() => {
-        'enabled': enabled,
-        if (latitude != null) 'latitude': latitude,
-        if (longitude != null) 'longitude': longitude,
-        if (radiusMeters != null) 'radiusMeters': radiusMeters,
-      };
+    'enabled': enabled,
+    if (latitude != null) 'latitude': latitude,
+    if (longitude != null) 'longitude': longitude,
+    if (radiusMeters != null) 'radiusMeters': radiusMeters,
+  };
 }
 
 String _string(dynamic value) => value?.toString() ?? '';
@@ -620,10 +647,7 @@ DateTime? _date(dynamic value) {
 
 List<int> _intList(dynamic value) {
   if (value is! List) return const [];
-  return value
-      .map((item) => int.tryParse('$item'))
-      .whereType<int>()
-      .toList();
+  return value.map((item) => int.tryParse('$item')).whereType<int>().toList();
 }
 
 List<String> _stringList(dynamic value) {

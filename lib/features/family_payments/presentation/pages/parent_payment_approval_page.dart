@@ -62,14 +62,14 @@ class _ParentPaymentApprovalPageState extends State<ParentPaymentApprovalPage> {
     setState(() => _acting = false);
     result.when(
       success: (_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pago aprobado.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Pago aprobado.')));
         Navigator.of(context).pop(true);
       },
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 
@@ -82,9 +82,7 @@ class _ParentPaymentApprovalPageState extends State<ParentPaymentApprovalPage> {
           title: const Text('Rechazar pago'),
           content: TextField(
             controller: controller,
-            decoration: const InputDecoration(
-              labelText: 'Motivo (opcional)',
-            ),
+            decoration: const InputDecoration(labelText: 'Motivo (opcional)'),
           ),
           actions: [
             TextButton(
@@ -109,14 +107,14 @@ class _ParentPaymentApprovalPageState extends State<ParentPaymentApprovalPage> {
     setState(() => _acting = false);
     result.when(
       success: (_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pago rechazado.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Pago rechazado.')));
         Navigator.of(context).pop(true);
       },
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 
@@ -131,81 +129,79 @@ class _ParentPaymentApprovalPageState extends State<ParentPaymentApprovalPage> {
               child: CiervoLoadingState(itemCount: 4),
             )
           : _error != null
-              ? Padding(
-                  padding: pagePaddingOf(context),
-                  child: CiervoErrorState(
-                    title: 'No pudimos cargar la solicitud',
-                    description: _error!,
-                    onRetry: _load,
-                  ),
-                )
-              : payment == null
-                  ? const SizedBox.shrink()
-                  : Padding(
-                      padding: pagePaddingOf(context),
+          ? Padding(
+              padding: pagePaddingOf(context),
+              child: CiervoErrorState(
+                title: 'No pudimos cargar la solicitud',
+                description: _error!,
+                onRetry: _load,
+              ),
+            )
+          : payment == null
+          ? const SizedBox.shrink()
+          : Padding(
+              padding: pagePaddingOf(context),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: CiervoCard(
                       child: Column(
                         children: [
-                          Expanded(
-                            child: CiervoCard(
-                              child: Column(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 42,
-                                    backgroundImage: payment.kidPhotoUrl != null
-                                        ? CachedNetworkImageProvider(
-                                            payment.kidPhotoUrl!,
-                                          )
-                                        : null,
-                                    child: payment.kidPhotoUrl == null
-                                        ? const Icon(Icons.child_care, size: 36)
-                                        : null,
-                                  ),
-                                  const SizedBox(height: AppSpacing.md),
-                                  Text(
-                                    payment.kidName,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineSmall,
-                                  ),
-                                  const SizedBox(height: AppSpacing.lg),
-                                  _infoRow('Comercio', payment.merchantName),
-                                  if (payment.city != null)
-                                    _infoRow('Ciudad', payment.city!),
-                                  _infoRow(
-                                    'Monto',
-                                    '${payment.currency} ${payment.amount.toStringAsFixed(0)}',
-                                  ),
-                                  if (payment.requestedAt != null)
-                                    _infoRow('Hora', payment.requestedAt.toString()),
-                                  _infoRow(
-                                    'Fuente',
-                                    DisplayLabels.familyFundingSource(
-                                      payment.fundingSource,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                          CircleAvatar(
+                            radius: 42,
+                            backgroundImage: payment.kidPhotoUrl != null
+                                ? CachedNetworkImageProvider(
+                                    payment.kidPhotoUrl!,
+                                  )
+                                : null,
+                            child: payment.kidPhotoUrl == null
+                                ? const Icon(Icons.child_care, size: 36)
+                                : null,
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          Text(
+                            payment.kidName,
+                            style: Theme.of(context).textTheme.headlineSmall,
                           ),
                           const SizedBox(height: AppSpacing.lg),
-                          CiervoButton(
-                            label: _acting ? 'Procesando...' : 'Aprobar',
-                            icon: Icons.check_circle_outline,
-                            state: _acting
-                                ? CiervoButtonState.loading
-                                : CiervoButtonState.normal,
-                            onPressed: _acting ? null : _approve,
+                          _infoRow('Comercio', payment.merchantName),
+                          if (payment.city != null)
+                            _infoRow('Ciudad', payment.city!),
+                          _infoRow(
+                            'Monto',
+                            '${payment.currency} ${payment.amount.toStringAsFixed(0)}',
                           ),
-                          const SizedBox(height: AppSpacing.sm),
-                          CiervoButton(
-                            label: 'Rechazar',
-                            icon: Icons.cancel_outlined,
-                            variant: CiervoButtonVariant.danger,
-                            onPressed: _acting ? null : _reject,
+                          if (payment.requestedAt != null)
+                            _infoRow('Hora', payment.requestedAt.toString()),
+                          _infoRow(
+                            'Fuente',
+                            DisplayLabels.familyFundingSource(
+                              payment.fundingSource,
+                            ),
                           ),
                         ],
                       ),
                     ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  CiervoButton(
+                    label: _acting ? 'Procesando...' : 'Aprobar',
+                    icon: Icons.check_circle_outline,
+                    state: _acting
+                        ? CiervoButtonState.loading
+                        : CiervoButtonState.normal,
+                    onPressed: _acting ? null : _approve,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  CiervoButton(
+                    label: 'Rechazar',
+                    icon: Icons.cancel_outlined,
+                    variant: CiervoButtonVariant.danger,
+                    onPressed: _acting ? null : _reject,
+                  ),
+                ],
+              ),
+            ),
     );
   }
 

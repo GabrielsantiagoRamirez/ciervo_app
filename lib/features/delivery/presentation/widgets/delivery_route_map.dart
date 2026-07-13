@@ -53,7 +53,9 @@ class _DeliveryRouteMapState extends State<DeliveryRouteMap> {
         Marker(
           markerId: const MarkerId('pickup'),
           position: pickup,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueAzure,
+          ),
           infoWindow: const InfoWindow(title: 'Comercio'),
         ),
       );
@@ -63,7 +65,9 @@ class _DeliveryRouteMapState extends State<DeliveryRouteMap> {
         Marker(
           markerId: const MarkerId('delivery'),
           position: delivery,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueGreen,
+          ),
           infoWindow: const InfoWindow(title: 'Entrega'),
         ),
       );
@@ -73,7 +77,9 @@ class _DeliveryRouteMapState extends State<DeliveryRouteMap> {
         Marker(
           markerId: const MarkerId('courier'),
           position: courier,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueOrange,
+          ),
           infoWindow: const InfoWindow(title: 'Domiciliario'),
         ),
       );
@@ -122,7 +128,8 @@ class _DeliveryRouteMapState extends State<DeliveryRouteMap> {
 
   @override
   Widget build(BuildContext context) {
-    final initial = widget.delivery ??
+    final initial =
+        widget.delivery ??
         widget.pickup ??
         widget.courier ??
         const LatLng(4.6097, -74.0817);

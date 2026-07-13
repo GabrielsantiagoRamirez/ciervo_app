@@ -43,8 +43,5 @@ Widget responsivePage({
   if (!scrollable) {
     return Padding(padding: padding, child: content);
   }
-  return SingleChildScrollView(
-    padding: padding,
-    child: content,
-  );
+  return SingleChildScrollView(padding: padding, child: content);
 }

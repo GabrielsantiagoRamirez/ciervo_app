@@ -107,7 +107,7 @@ class _EmailVerificationInfoDialogState
       _feedbackMessage = result.success
           ? 'Te reenviamos el correo de verificación.'
           : result.errorMessage ??
-              'No pudimos reenviar el correo. Intenta en unos segundos.';
+                'No pudimos reenviar el correo. Intenta en unos segundos.';
     });
 
     if (result.success) {
@@ -135,7 +135,9 @@ class _EmailVerificationInfoDialogState
             if (widget.email.isNotEmpty) ...[
               Text(
                 widget.email,
-                style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                style: textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.sm),
@@ -176,8 +178,8 @@ class _EmailVerificationInfoDialogState
           label: _resending
               ? 'Reenviando…'
               : _resendCooldown > 0
-                  ? 'Reenviar en ${_resendCooldown}s'
-                  : 'Reenviar correo',
+              ? 'Reenviar en ${_resendCooldown}s'
+              : 'Reenviar correo',
           icon: Icons.refresh,
           state: _resending || _resendCooldown > 0
               ? CiervoButtonState.loading

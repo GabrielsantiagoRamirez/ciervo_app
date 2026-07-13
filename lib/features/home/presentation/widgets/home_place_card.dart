@@ -70,11 +70,20 @@ class HomePlaceCard extends StatelessWidget {
                     spacing: AppSpacing.xs,
                     children: [
                       if (isFavorite ?? place.isFavorite)
-                        const _IconBadge(icon: Icons.favorite, label: 'Favorito'),
+                        const _IconBadge(
+                          icon: Icons.favorite,
+                          label: 'Favorito',
+                        ),
                       if (place.isPartner)
-                        const _IconBadge(icon: Icons.handshake_outlined, label: 'Aliado'),
+                        const _IconBadge(
+                          icon: Icons.handshake_outlined,
+                          label: 'Aliado',
+                        ),
                       if (place.hasCashback)
-                        const _IconBadge(icon: Icons.savings_outlined, label: 'Cashback'),
+                        const _IconBadge(
+                          icon: Icons.savings_outlined,
+                          label: 'Cashback',
+                        ),
                       if ((place.benefitTier ?? '').isNotEmpty)
                         _Badge(
                           label: place.benefitTier!,
@@ -161,16 +170,16 @@ class _IconBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Tooltip(
-        message: label,
-        child: Container(
-          padding: const EdgeInsets.all(AppSpacing.xxs),
-          decoration: const BoxDecoration(
-            color: AppColors.glass,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, size: 16, color: AppColors.primary),
-        ),
-      );
+    message: label,
+    child: Container(
+      padding: const EdgeInsets.all(AppSpacing.xxs),
+      decoration: const BoxDecoration(
+        color: AppColors.glass,
+        shape: BoxShape.circle,
+      ),
+      child: Icon(icon, size: 16, color: AppColors.primary),
+    ),
+  );
 }
 
 class _PremiumPlaceholder extends StatelessWidget {
@@ -184,7 +193,9 @@ class _PremiumPlaceholder extends StatelessWidget {
         colors: [AppColors.surfaceTop, AppColors.backgroundAlt],
       ),
     ),
-    child: Center(child: Icon(Icons.image_outlined, color: AppColors.primary, size: 42)),
+    child: Center(
+      child: Icon(Icons.image_outlined, color: AppColors.primary, size: 42),
+    ),
   );
 }
 

@@ -9,9 +9,13 @@ enum FirebaseAuthStatus {
   failure,
 }
 
+/// Canal activo del flujo de registro/login para no mezclar errores SMS vs correo.
+enum AuthSignupChannel { none, phone, email }
+
 class FirebaseAuthState {
   const FirebaseAuthState({
     this.status = FirebaseAuthStatus.initial,
+    this.channel = AuthSignupChannel.none,
     this.errorMessage,
     this.verificationId,
     this.resendToken,
@@ -33,6 +37,7 @@ class FirebaseAuthState {
   });
 
   final FirebaseAuthStatus status;
+  final AuthSignupChannel channel;
   final String? errorMessage;
   final String? verificationId;
   final int? resendToken;
@@ -63,6 +68,7 @@ class FirebaseAuthState {
 
   FirebaseAuthState copyWith({
     FirebaseAuthStatus? status,
+    AuthSignupChannel? channel,
     String? errorMessage,
     bool clearError = false,
     String? verificationId,
@@ -88,6 +94,7 @@ class FirebaseAuthState {
   }) {
     return FirebaseAuthState(
       status: status ?? this.status,
+      channel: channel ?? this.channel,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       verificationId: verificationId ?? this.verificationId,
       resendToken: resendToken ?? this.resendToken,
@@ -102,15 +109,18 @@ class FirebaseAuthState {
       authAction: clearAuthMeta ? null : (authAction ?? this.authAction),
       linkedLegacy: clearAuthMeta ? false : (linkedLegacy ?? this.linkedLegacy),
       lookupExists: clearLookup ? false : (lookupExists ?? this.lookupExists),
-      lookupRequiresLink:
-          clearLookup ? false : (lookupRequiresLink ?? this.lookupRequiresLink),
+      lookupRequiresLink: clearLookup
+          ? false
+          : (lookupRequiresLink ?? this.lookupRequiresLink),
       checkUserFirebaseUid: clearCheckUser
           ? null
           : (checkUserFirebaseUid ?? this.checkUserFirebaseUid),
-      checkUserPhone:
-          clearCheckUser ? null : (checkUserPhone ?? this.checkUserPhone),
-      checkUserEmail:
-          clearCheckUser ? null : (checkUserEmail ?? this.checkUserEmail),
+      checkUserPhone: clearCheckUser
+          ? null
+          : (checkUserPhone ?? this.checkUserPhone),
+      checkUserEmail: clearCheckUser
+          ? null
+          : (checkUserEmail ?? this.checkUserEmail),
     );
   }
 }

@@ -37,9 +37,8 @@ class _ExchangeRateBannerState extends State<ExchangeRateBanner> {
       failure: (_) {},
     );
     copToUsd.when(
-      success: (c) => parts.add(
-        '≈ ${c.convertedAmount.toStringAsFixed(2)} USD',
-      ),
+      success: (c) =>
+          parts.add('≈ ${c.convertedAmount.toStringAsFixed(2)} USD'),
       failure: (_) {},
     );
     setState(() {

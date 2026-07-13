@@ -66,16 +66,16 @@ class KidSelfRegisterRequest {
   final String pin;
 
   Map<String, dynamic> toJson() => {
-        'guardianUserId': guardianUserId,
-        'guardianEmail': guardianEmail.trim(),
-        'firstName': firstName.trim(),
-        'lastName': lastName.trim(),
-        'birthDate': birthDate,
-        'documentType': documentType,
-        'documentNumber': documentNumber.trim(),
-        'username': username.trim(),
-        'pin': pin.trim(),
-      };
+    'guardianUserId': guardianUserId,
+    'guardianEmail': guardianEmail.trim(),
+    'firstName': firstName.trim(),
+    'lastName': lastName.trim(),
+    'birthDate': birthDate,
+    'documentType': documentType,
+    'documentNumber': documentNumber.trim(),
+    'username': username.trim(),
+    'pin': pin.trim(),
+  };
 }
 
 class KidVerifyGuardianRequest {
@@ -90,9 +90,9 @@ class KidVerifyGuardianRequest {
   final int? guardianUserId;
 
   Map<String, dynamic> toJson() => {
-        'guardianEmail': guardianEmail.trim(),
-        if (guardianCiervoCode != null && guardianCiervoCode!.isNotEmpty)
-          'guardianCiervoCode': guardianCiervoCode!.trim(),
-        if (guardianUserId != null) 'guardianUserId': guardianUserId,
-      };
+    'guardianEmail': guardianEmail.trim(),
+    if (guardianCiervoCode != null && guardianCiervoCode!.isNotEmpty)
+      'guardianCiervoCode': guardianCiervoCode!.trim(),
+    if (guardianUserId != null) 'guardianUserId': guardianUserId,
+  };
 }

@@ -26,6 +26,7 @@ abstract final class FirebaseAuthErrors {
       'invalid-credential' =>
         'Correo o contraseña incorrectos. Si tu cuenta es antigua, usa la contraseña de Ciervo Club.',
       'user-not-found' => 'No encontramos una cuenta con esos datos.',
+      'missing-email' => 'Ingresa un correo electrónico.',
       'no-user' => 'No pudimos verificar tu sesión. Intenta nuevamente.',
       'no-token' => 'No pudimos verificar tu sesión. Intenta nuevamente.',
       'network-request-failed' =>
@@ -43,6 +44,14 @@ abstract final class FirebaseAuthErrors {
     if (text.toLowerCase().contains('blocked all requests')) {
       return 'Firebase bloqueó temporalmente los SMS por muchos intentos. '
           'Usa el tab Correo o espera unos minutos.';
+    }
+    if (text.toLowerCase().contains('play integrity') ||
+        text.toLowerCase().contains('valid app identifier') ||
+        text.toLowerCase().contains('recaptcha checks were unsuccessful')) {
+      return 'No pudimos verificar la app en este dispositivo (Play Integrity). '
+          'Revisa en Firebase/Google Cloud: SHA-1 y SHA-256 del keystore con el que '
+          'instalaste la app, Play Integrity API habilitada, y teléfono de prueba en '
+          'Firebase Auth si estás en desarrollo.';
     }
     return text;
   }

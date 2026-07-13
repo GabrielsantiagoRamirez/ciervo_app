@@ -27,5 +27,6 @@ class WalletCard {
       status.toLowerCase().contains('inactive') ||
       status.toLowerCase().contains('delete');
 
-  bool canSpend(double amount) => !isBlocked && !isInactive && availableBalance >= amount;
+  bool canSpend(double amount) =>
+      !isBlocked && !isInactive && availableBalance >= amount;
 }

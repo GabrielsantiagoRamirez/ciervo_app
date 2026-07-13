@@ -141,7 +141,8 @@ class DioUniversalNfcRemoteDataSource implements UniversalNfcRemoteDataSource {
     final response = await _client.dio.post<Map<String, dynamic>>(
       '/api/nfc/payments/intent',
       data: {
-        'idempotencyKey': idempotencyKey ?? IdempotencyKey.generate('nfc-universal'),
+        'idempotencyKey':
+            idempotencyKey ?? IdempotencyKey.generate('nfc-universal'),
         'amount': amount,
         'currency': currency,
         'context': 'UniversalNfc',
@@ -172,9 +173,7 @@ class DioUniversalNfcRemoteDataSource implements UniversalNfcRemoteDataSource {
 
   @override
   Future<void> cancel(String paymentIntentId) async {
-    await _client.dio.post<void>(
-      '/api/nfc/payments/$paymentIntentId/cancel',
-    );
+    await _client.dio.post<void>('/api/nfc/payments/$paymentIntentId/cancel');
   }
 
   @override

@@ -50,7 +50,8 @@ class UserReportModel {
   final String status;
   final DateTime createdAt;
 
-  factory UserReportModel.fromJson(Map<String, dynamic> json) => UserReportModel(
+  factory UserReportModel.fromJson(Map<String, dynamic> json) =>
+      UserReportModel(
         id: json['id'] as int? ?? int.tryParse('${json['id']}') ?? 0,
         targetType: json['targetType']?.toString() ?? '',
         targetId: json['targetId']?.toString(),
@@ -58,7 +59,8 @@ class UserReportModel {
         reason: json['reason']?.toString() ?? '',
         description: json['description']?.toString(),
         status: json['status']?.toString() ?? '',
-        createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
+        createdAt:
+            DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
             DateTime.now().toUtc(),
       );
 }
@@ -78,12 +80,15 @@ class BlockedUserModel {
   final String? photoUrl;
   final DateTime blockedAt;
 
-  factory BlockedUserModel.fromJson(Map<String, dynamic> json) => BlockedUserModel(
-        userId: json['userId'] as int? ?? int.tryParse('${json['userId']}') ?? 0,
+  factory BlockedUserModel.fromJson(Map<String, dynamic> json) =>
+      BlockedUserModel(
+        userId:
+            json['userId'] as int? ?? int.tryParse('${json['userId']}') ?? 0,
         displayName: json['displayName']?.toString(),
         ciervoUserCode: json['ciervoUserCode']?.toString(),
         photoUrl: json['photoUrl']?.toString(),
-        blockedAt: DateTime.tryParse(json['blockedAt']?.toString() ?? '') ??
+        blockedAt:
+            DateTime.tryParse(json['blockedAt']?.toString() ?? '') ??
             DateTime.now().toUtc(),
       );
 }
@@ -106,7 +111,8 @@ class ContentBlockModel {
         id: json['id'] as int? ?? int.tryParse('${json['id']}') ?? 0,
         targetType: json['targetType']?.toString() ?? '',
         targetId: json['targetId']?.toString() ?? '',
-        createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
+        createdAt:
+            DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
             DateTime.now().toUtc(),
       );
 

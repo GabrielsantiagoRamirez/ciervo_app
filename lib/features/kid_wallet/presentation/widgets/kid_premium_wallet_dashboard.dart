@@ -127,7 +127,9 @@ class _KidPremiumWalletDashboardState extends State<KidPremiumWalletDashboard> {
                 style: TextStyle(color: palette.textMuted, fontSize: 12),
               ),
               const SizedBox(height: AppSpacing.sm),
-              ...widget.movements.skip(5).map(
+              ...widget.movements
+                  .skip(5)
+                  .map(
                     (item) => _KidMovementTile(item: item, palette: palette),
                   ),
             ],
@@ -151,9 +153,9 @@ class _KidHeader extends StatelessWidget {
       children: [
         RichText(
           text: TextSpan(
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: palette.textPrimary,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(color: palette.textPrimary),
             children: [
               const TextSpan(text: 'Hola, '),
               TextSpan(
@@ -191,7 +193,10 @@ class _ParentAuthBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.verified_user_outlined, color: CiervoBrandColors.gold),
+          const Icon(
+            Icons.verified_user_outlined,
+            color: CiervoBrandColors.gold,
+          ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
@@ -302,10 +307,7 @@ class _KidBalanceBar extends StatelessWidget {
 }
 
 class _KidQuickActionsRow extends StatelessWidget {
-  const _KidQuickActionsRow({
-    required this.palette,
-    this.onMovementsTap,
-  });
+  const _KidQuickActionsRow({required this.palette, this.onMovementsTap});
 
   final CiervoWalletPalette palette;
   final VoidCallback? onMovementsTap;
@@ -420,13 +422,15 @@ class _KidMovementTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final amount = _num(item['amount']);
     final isCredit = amount >= 0;
-    final color = isCredit ? CiervoBrandColors.income : CiervoBrandColors.expense;
+    final color = isCredit
+        ? CiervoBrandColors.income
+        : CiervoBrandColors.expense;
     final prefix = isCredit ? '+' : '-';
-    final title =
-        '${item['description'] ?? item['type'] ?? 'Movimiento'}';
+    final title = '${item['description'] ?? item['type'] ?? 'Movimiento'}';
     final subtitle = '${item['createdAt'] ?? ''}';
     final status = '${item['status'] ?? ''}';
-    final needsApproval = status.toLowerCase().contains('pending') ||
+    final needsApproval =
+        status.toLowerCase().contains('pending') ||
         status.toLowerCase().contains('approval');
 
     return Container(
@@ -496,8 +500,5 @@ class _KidMovementTile extends StatelessWidget {
 
 String _formatMoney(double amount, String currency) {
   final symbol = currency == 'COP' ? '\$' : '$currency ';
-  return '$symbol${amount.toStringAsFixed(0).replaceAllMapped(
-        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-        (m) => '${m[1]}.',
-      )}';
+  return '$symbol${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
 }

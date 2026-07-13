@@ -58,14 +58,18 @@ class PaymentQuoteSummaryCard extends StatelessWidget {
                 const SizedBox(height: AppSpacing.sm),
                 PaymentSummaryRow(
                   label: 'Descuento',
-                  value: '- ${NfcPaymentUi.formatMoney(quote.discount, quote.currency)}',
+                  value:
+                      '- ${NfcPaymentUi.formatMoney(quote.discount, quote.currency)}',
                 ),
               ],
               if (quote.cashback > 0) ...[
                 const SizedBox(height: AppSpacing.sm),
                 PaymentSummaryRow(
                   label: 'Cashback estimado',
-                  value: NfcPaymentUi.formatMoney(quote.cashback, quote.currency),
+                  value: NfcPaymentUi.formatMoney(
+                    quote.cashback,
+                    quote.currency,
+                  ),
                 ),
               ],
               const Padding(

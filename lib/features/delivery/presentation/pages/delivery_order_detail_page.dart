@@ -66,7 +66,8 @@ class _DeliveryOrderDetailPageState extends State<DeliveryOrderDetailPage> {
     final order = _order;
     if (order == null) return;
     final status = order.status.toLowerCase();
-    final active = status.contains('accepted') ||
+    final active =
+        status.contains('accepted') ||
         status.contains('picked') ||
         status.contains('way') ||
         status.contains('arrived');

@@ -69,75 +69,72 @@ class _HomeBonusesSectionState extends State<HomeBonusesSection> {
         pageSize: 8,
       ),
     );
-    return result.when(
-      success: (value) => value,
-      failure: (_) => const [],
-    );
+    return result.when(success: (value) => value, failure: (_) => const []);
   }
 
   @override
   Widget build(BuildContext context) => FutureBuilder<List<Bonus>>(
-        future: _items,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const SizedBox(
-              height: 120,
-              child: CiervoBrandLoader(message: 'Cargando bonos', compact: true),
-            );
-          }
-          final items = snapshot.data ?? const [];
-          if (items.isEmpty) return const SizedBox.shrink();
+    future: _items,
+    builder: (context, snapshot) {
+      if (snapshot.connectionState != ConnectionState.done) {
+        return const SizedBox(
+          height: 120,
+          child: CiervoBrandLoader(message: 'Cargando bonos', compact: true),
+        );
+      }
+      final items = snapshot.data ?? const [];
+      if (items.isEmpty) return const SizedBox.shrink();
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      widget.title,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => BonusesCatalogPage(
-                          onlyFavorites: widget.onlyFavorites,
-                          country: widget.country,
-                          city: widget.city,
-                        ),
-                      ),
-                    ),
-                    child: const Text('Ver todos'),
-                  ),
-                ],
+              Expanded(
+                child: Text(
+                  widget.title,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
               ),
-              const SizedBox(height: AppSpacing.sm),
-              SizedBox(
-                height: 132,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: items.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
-                  itemBuilder: (context, index) => SizedBox(
-                    width: 280,
-                    child: BonusCard(
-                      bonus: items[index],
-                      compact: true,
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => BonusDetailPage(bonusId: items[index].id),
-                        ),
-                      ),
+              TextButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => BonusesCatalogPage(
+                      onlyFavorites: widget.onlyFavorites,
+                      country: widget.country,
+                      city: widget.city,
+                    ),
+                  ),
+                ),
+                child: const Text('Ver todos'),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          SizedBox(
+            height: 132,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: items.length,
+              separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+              itemBuilder: (context, index) => SizedBox(
+                width: 280,
+                child: BonusCard(
+                  bonus: items[index],
+                  compact: true,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => BonusDetailPage(bonusId: items[index].id),
                     ),
                   ),
                 ),
               ),
-            ],
-          );
-        },
+            ),
+          ),
+        ],
       );
+    },
+  );
 }
 
 class BonusesCatalogPage extends StatefulWidget {
@@ -200,27 +197,26 @@ class _BonusesCatalogPageState extends State<BonusesCatalogPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: Text(widget.onlyFavorites ? 'Bonos de favoritos' : 'Bonos'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.card_giftcard_outlined),
-              tooltip: 'Mis bonos',
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(builder: (_) => const MyBonusesPage()),
-              ),
-            ),
-          ],
+    appBar: AppBar(
+      title: Text(widget.onlyFavorites ? 'Bonos de favoritos' : 'Bonos'),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.card_giftcard_outlined),
+          tooltip: 'Mis bonos',
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const MyBonusesPage()),
+          ),
         ),
-        body: RefreshIndicator(
-          onRefresh: _load,
-          child: _body(),
-        ),
-      );
+      ],
+    ),
+    body: RefreshIndicator(onRefresh: _load, child: _body()),
+  );
 
   Widget _body() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
     }
     if (_error != null) {
       return ListView(
@@ -235,7 +231,10 @@ class _BonusesCatalogPageState extends State<BonusesCatalogPage> {
       return ListView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         children: const [
-          Text('No hay bonos disponibles por ahora.', textAlign: TextAlign.center),
+          Text(
+            'No hay bonos disponibles por ahora.',
+            textAlign: TextAlign.center,
+          ),
         ],
       );
     }
@@ -296,29 +295,26 @@ class _MyBonusesPageState extends State<MyBonusesPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: const Text('Mis bonos'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.history),
-              tooltip: 'Historial',
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => const BonusHistoryPage(),
-                ),
-              ),
-            ),
-          ],
+    appBar: AppBar(
+      title: const Text('Mis bonos'),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.history),
+          tooltip: 'Historial',
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const BonusHistoryPage()),
+          ),
         ),
-        body: RefreshIndicator(
-          onRefresh: _load,
-          child: _body(),
-        ),
-      );
+      ],
+    ),
+    body: RefreshIndicator(onRefresh: _load, child: _body()),
+  );
 
   Widget _body() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
     }
     if (_error != null) {
       return ListView(
@@ -394,16 +390,15 @@ class _BonusHistoryPageState extends State<BonusHistoryPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Historial de bonos')),
-        body: RefreshIndicator(
-          onRefresh: _load,
-          child: _body(),
-        ),
-      );
+    appBar: AppBar(title: const Text('Historial de bonos')),
+    body: RefreshIndicator(onRefresh: _load, child: _body()),
+  );
 
   Widget _body() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
     }
     if (_error != null) {
       return ListView(

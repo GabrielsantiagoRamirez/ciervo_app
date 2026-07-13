@@ -17,17 +17,38 @@ abstract final class DisplayLabels {
     };
   }
 
-  static String settlementFieldLabel(String field) {
+  static String settlementFieldLabel(String field, {String? countryCode}) {
     final key = field.toLowerCase().replaceAll('_', '');
     return switch (key) {
       'bankid' => 'Banco',
       'accounttype' => 'Tipo de cuenta',
       'accountnumber' => 'Número de cuenta',
       'holdername' => 'Titular',
-      'documentnumber' => 'Documento del titular',
+      'documentnumber' =>
+        countryCode?.toUpperCase() == 'CL'
+            ? 'RUT del titular'
+            : 'Documento del titular',
       'phonenumber' => 'Teléfono',
       'walletidentifier' => 'Identificador de billetera',
       _ => _humanize(field),
+    };
+  }
+
+  static String settlementAccountType(String? type, {String? countryCode}) {
+    if (type == null || type.isEmpty) return '';
+    if (countryCode?.toUpperCase() == 'CL') {
+      return switch (type) {
+        'Checking' => 'Cuenta corriente',
+        'Savings' => 'Cuenta de ahorro',
+        'Vista' => 'Cuenta vista',
+        'Rut' || 'RUT' => 'Cuenta RUT',
+        _ => _humanize(type),
+      };
+    }
+    return switch (type) {
+      'Savings' => 'Ahorros',
+      'Checking' => 'Corriente',
+      _ => _humanize(type),
     };
   }
 
@@ -36,7 +57,9 @@ abstract final class DisplayLabels {
     final key = status.toLowerCase().replaceAll('_', '');
     return switch (key) {
       'notregistered' || 'sinregistrar' => 'Sin registrar',
-      'pending' || 'pendingapproval' || 'pendingreview' => 'Pendiente de revisión',
+      'pending' ||
+      'pendingapproval' ||
+      'pendingreview' => 'Pendiente de revisión',
       'approved' || 'verified' => 'Aprobada',
       'rejected' => 'Rechazada',
       _ => _humanize(status),
@@ -82,37 +105,21 @@ abstract final class DisplayLabels {
       'pendiente' ||
       'open' ||
       'requested' ||
-      'awaitingapproval' =>
-        'Pendiente',
-      '2' ||
-      'approved' ||
-      'aprobada' ||
-      'aprobado' ||
-      'accepted' =>
-        'Aprobada',
+      'awaitingapproval' => 'Pendiente',
+      '2' || 'approved' || 'aprobada' || 'aprobado' || 'accepted' => 'Aprobada',
       '3' ||
       'rejected' ||
       'rechazada' ||
       'rechazado' ||
-      'declined' =>
-        'Rechazada',
-      '4' ||
-      'expired' ||
-      'expirada' ||
-      'vencida' =>
-        'Expirada',
-      '5' ||
-      'cancelled' ||
-      'canceled' ||
-      'cancelada' =>
-        'Cancelada',
+      'declined' => 'Rechazada',
+      '4' || 'expired' || 'expirada' || 'vencida' => 'Expirada',
+      '5' || 'cancelled' || 'canceled' || 'cancelada' => 'Cancelada',
       '6' ||
       'paid' ||
       'pagada' ||
       'pagado' ||
       'completed' ||
-      'completada' =>
-        'Pagada',
+      'completada' => 'Pagada',
       _ => _looksTechnical(status) ? 'Pendiente' : _humanize(status),
     };
   }
@@ -211,8 +218,10 @@ abstract final class DisplayLabels {
     final key = code.toLowerCase().replaceAll('-', '_');
     return switch (key) {
       'free' => 'Acceso básico a Ciervo Club sin costo mensual.',
-      'basic' || 'plan_basic' => 'Ideal para empezar con beneficios esenciales.',
-      'plus' || 'silver' => 'Más cashback y acceso a promociones seleccionadas.',
+      'basic' ||
+      'plan_basic' => 'Ideal para empezar con beneficios esenciales.',
+      'plus' ||
+      'silver' => 'Más cashback y acceso a promociones seleccionadas.',
       'gold' || 'premium' || 'premium_monthly' =>
         'Beneficios premium, mayor cashback y prioridad en reservas.',
       'family' || 'family_gold' =>
@@ -309,9 +318,10 @@ abstract final class DisplayLabels {
   static String membershipLimitValue(dynamic value) {
     if (value == null) return 'Sin límite';
     if (value is bool) return value ? 'Incluido' : 'No incluido';
-    if (value is num) return value == value.roundToDouble()
-        ? value.toInt().toString()
-        : value.toString();
+    if (value is num)
+      return value == value.roundToDouble()
+          ? value.toInt().toString()
+          : value.toString();
     final text = '$value'.toLowerCase();
     if (text == 'true') return 'Incluido';
     if (text == 'false') return 'No incluido';
@@ -381,8 +391,11 @@ abstract final class DisplayLabels {
     if (status == null || status.isEmpty) return 'Completado';
     final key = status.toLowerCase().replaceAll('_', '');
     return switch (key) {
-      'completed' || 'complete' || 'approved' || 'paid' || 'succeeded' =>
-        'Completado',
+      'completed' ||
+      'complete' ||
+      'approved' ||
+      'paid' ||
+      'succeeded' => 'Completado',
       'pending' => 'Pendiente',
       'failed' || 'rejected' => 'Rechazado',
       'cancelled' || 'canceled' => 'Cancelado',
@@ -485,6 +498,8 @@ abstract final class DisplayLabels {
       'phonenumber' || 'phone' => 'Ingresa tu teléfono.',
       'user' || 'email' => 'Ingresa tu correo electrónico.',
       'birthdate' => 'Selecciona tu fecha de nacimiento.',
+      'businessid' =>
+          'Elige un comercio primero. Abre Paga por mí desde Comercios.',
       _ => 'Completa todos los campos obligatorios.',
     };
   }

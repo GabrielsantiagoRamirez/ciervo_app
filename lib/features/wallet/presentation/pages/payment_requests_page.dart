@@ -126,20 +126,15 @@ class _RequestList extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.lg),
         itemCount: requests.length,
         separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
-        itemBuilder: (context, index) => _RequestTile(
-          request: requests[index],
-          actions: actions,
-        ),
+        itemBuilder: (context, index) =>
+            _RequestTile(request: requests[index], actions: actions),
       ),
     );
   }
 }
 
 class _RequestTile extends StatelessWidget {
-  const _RequestTile({
-    required this.request,
-    required this.actions,
-  });
+  const _RequestTile({required this.request, required this.actions});
 
   final PaymentRequest request;
   final _RequestActions actions;
@@ -160,9 +155,9 @@ class _RequestTile extends StatelessWidget {
   }
 
   String get _concept => DisplayFormatters.safeText(
-        request.description,
-        fallback: 'Solicitud de pago',
-      );
+    request.description,
+    fallback: 'Solicitud de pago',
+  );
 
   Future<void> _approve(BuildContext context) async {
     final cubit = context.read<WalletCubit>();
@@ -220,9 +215,9 @@ class _RequestTile extends StatelessWidget {
                   request.amount,
                   currency: request.currency,
                 ),
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
             ],
           ),
@@ -314,9 +309,9 @@ class _StatusChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
       ),
     );
   }

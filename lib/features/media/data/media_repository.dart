@@ -13,9 +13,8 @@ class MediaAsset {
   const MediaAsset({required this.id});
   final String id;
 
-  factory MediaAsset.fromJson(Map<String, dynamic> json) => MediaAsset(
-    id: '${json['id'] ?? json['mediaId'] ?? ''}',
-  );
+  factory MediaAsset.fromJson(Map<String, dynamic> json) =>
+      MediaAsset(id: '${json['id'] ?? json['mediaId'] ?? ''}');
 }
 
 class MediaRepository {
@@ -52,7 +51,9 @@ class MediaRepository {
       success: (profile) => profile.id,
       failure: (error) => throw error is AppException
           ? error
-          : AppException(message: 'No pudimos obtener tu perfil para subir el archivo.'),
+          : AppException(
+              message: 'No pudimos obtener tu perfil para subir el archivo.',
+            ),
     );
   }
 

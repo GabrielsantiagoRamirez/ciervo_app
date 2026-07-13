@@ -35,11 +35,7 @@ class _WalletAvailableBonusesSectionState
     result.when(
       success: (items) => setState(() {
         _items = items
-            .where(
-              (bonus) =>
-                  bonus.status.isUsable &&
-                  bonus.redeemedAt == null,
-            )
+            .where((bonus) => bonus.status.isUsable && bonus.redeemedAt == null)
             .toList();
         _loading = false;
       }),

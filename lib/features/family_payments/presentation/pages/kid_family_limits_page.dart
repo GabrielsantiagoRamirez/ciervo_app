@@ -76,12 +76,12 @@ class _KidFamilyLimitsPageState extends State<KidFamilyLimitsPage> {
     if (!mounted) return;
     setState(() => _saving = false);
     result.when(
-      success: (_) => ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Límites actualizados.')),
-      ),
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      success: (_) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Límites actualizados.'))),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 
@@ -100,50 +100,50 @@ class _KidFamilyLimitsPageState extends State<KidFamilyLimitsPage> {
               child: CiervoLoadingState(itemCount: 3),
             )
           : _error != null
-              ? Padding(
-                  padding: pagePaddingOf(context),
-                  child: CiervoErrorState(
-                    title: 'No pudimos cargar los límites',
-                    description: _error!,
-                    onRetry: _load,
-                  ),
-                )
-              : SingleChildScrollView(
-                  padding: pagePaddingOf(context),
-                  child: CiervoCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _limitField(
-                          controller: _purchaseController,
-                          label: 'Límite por compra (COP)',
-                          icon: Icons.shopping_bag_outlined,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        _limitField(
-                          controller: _dailyController,
-                          label: 'Límite diario (COP)',
-                          icon: Icons.today_outlined,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        _limitField(
-                          controller: _monthlyController,
-                          label: 'Límite mensual (COP)',
-                          icon: Icons.calendar_month_outlined,
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-                        CiervoButton(
-                          label: _saving ? 'Guardando...' : 'Guardar límites',
-                          icon: Icons.save_outlined,
-                          state: _saving
-                              ? CiervoButtonState.loading
-                              : CiervoButtonState.normal,
-                          onPressed: _saving ? null : _save,
-                        ),
-                      ],
+          ? Padding(
+              padding: pagePaddingOf(context),
+              child: CiervoErrorState(
+                title: 'No pudimos cargar los límites',
+                description: _error!,
+                onRetry: _load,
+              ),
+            )
+          : SingleChildScrollView(
+              padding: pagePaddingOf(context),
+              child: CiervoCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _limitField(
+                      controller: _purchaseController,
+                      label: 'Límite por compra (COP)',
+                      icon: Icons.shopping_bag_outlined,
                     ),
-                  ),
+                    const SizedBox(height: AppSpacing.md),
+                    _limitField(
+                      controller: _dailyController,
+                      label: 'Límite diario (COP)',
+                      icon: Icons.today_outlined,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _limitField(
+                      controller: _monthlyController,
+                      label: 'Límite mensual (COP)',
+                      icon: Icons.calendar_month_outlined,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    CiervoButton(
+                      label: _saving ? 'Guardando...' : 'Guardar límites',
+                      icon: Icons.save_outlined,
+                      state: _saving
+                          ? CiervoButtonState.loading
+                          : CiervoButtonState.normal,
+                      onPressed: _saving ? null : _save,
+                    ),
+                  ],
                 ),
+              ),
+            ),
     );
   }
 

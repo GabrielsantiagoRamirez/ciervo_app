@@ -1,5 +1,6 @@
 // ignore_for_file: use_null_aware_elements
 
+import '../../../../core/country/country_registration.dart';
 import '../../../../core/network/api_response_unwrapper.dart';
 import '../../../../core/network/network_client.dart';
 import '../dtos/nfc_dto.dart';
@@ -18,7 +19,11 @@ abstract interface class WalletRemoteDataSource {
   Future<void> delete(String cardId);
   Future<Map<String, dynamic>> mercadoPagoConfig();
   Future<Map<String, dynamic>> myCiervoId();
-  Future<RechargeIntentDto> createRechargeIntent(String cardId, double amount);
+  Future<RechargeIntentDto> createRechargeIntent(
+    String cardId,
+    double amount, {
+    String? currency,
+  });
   Future<RechargeIntentDto> rechargeIntent(String intentId);
   Future<ResolvedWalletUserDto> resolveUser(String ciervoUserCode);
   Future<TransferResultDto> transfer({
@@ -143,13 +148,19 @@ class DioWalletRemoteDataSource implements WalletRemoteDataSource {
   @override
   Future<RechargeIntentDto> createRechargeIntent(
     String cardId,
-    double amount,
-  ) async {
+    double amount, {
+    String? currency,
+  }) async {
     final response = await _client.dio.post<Map<String, dynamic>>(
       '/api/wallet/cards/$cardId/recharge-intents',
       data: {
         'amount': amount,
-        'currency': 'COP',
+        'currency':
+            (currency ??
+                    CountryRegistration.currencyForCountry(
+                      CountryRegistration.defaultCountryCode(),
+                    ))
+                .toUpperCase(),
         'idempotencyKey': _idempotencyKey('recharge', cardId),
       },
     );
@@ -188,7 +199,8 @@ class DioWalletRemoteDataSource implements WalletRemoteDataSource {
         'currency': currency,
         'idempotencyKey': _idempotencyKey('transfer', targetCiervoUserCode),
         'description': description,
-        if (walletCardId != null) 'walletCardId': int.tryParse(walletCardId) ?? walletCardId,
+        if (walletCardId != null)
+          'walletCardId': int.tryParse(walletCardId) ?? walletCardId,
       },
     );
     return TransferResultDto.fromJson(unwrapApiMap(response.data));
@@ -346,9 +358,7 @@ class DioWalletRemoteDataSource implements WalletRemoteDataSource {
 
   @override
   Future<void> cancelNfcSession(int sessionId) async {
-    await _client.dio.post<void>(
-      '/api/wallet/nfc/sessions/$sessionId/cancel',
-    );
+    await _client.dio.post<void>('/api/wallet/nfc/sessions/$sessionId/cancel');
   }
 
   @override

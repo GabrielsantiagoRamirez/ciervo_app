@@ -1,3 +1,4 @@
+import '../../../../core/country/country_registration.dart';
 import '../../../../core/network/api_response_unwrapper.dart';
 import '../../../../core/network/network_client.dart';
 import '../dtos/payment_dtos.dart';
@@ -22,6 +23,7 @@ abstract interface class PaymentsRemoteDataSource {
     required String walletCardId,
     required double amount,
     required String idempotencyKey,
+    String? currency,
   });
 }
 
@@ -46,7 +48,11 @@ class DioPaymentsRemoteDataSource implements PaymentsRemoteDataSource {
         'provider': 'MercadoPago',
         'enabled': map['enabled'] ?? true,
         'publicKey': map['publicKey'] ?? map['public_key'] ?? '',
-        'currency': map['currency'] ?? 'COP',
+        'currency':
+            map['currency'] ??
+            CountryRegistration.currencyForCountry(
+              CountryRegistration.defaultCountryCode(),
+            ),
         'isSandbox': map['isSandbox'] ?? map['sandbox'] ?? false,
       });
     }
@@ -124,12 +130,16 @@ class DioPaymentsRemoteDataSource implements PaymentsRemoteDataSource {
     required String walletCardId,
     required double amount,
     required String idempotencyKey,
+    String? currency,
   }) async {
     final response = await _client.dio.post<Map<String, dynamic>>(
       '/api/wallet/cards/$walletCardId/recharge-intents',
       data: {
         'amount': amount,
-        'currency': 'COP',
+        'currency':
+            (currency ?? CountryRegistration.currencyForCountry(
+              CountryRegistration.defaultCountryCode(),
+            )).toUpperCase(),
         'idempotencyKey': idempotencyKey,
       },
     );

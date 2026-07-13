@@ -49,9 +49,14 @@ abstract interface class AuthRemoteDataSource {
 
   Future<void> sendEmailVerificationCode(String email);
 
-  Future<void> verifyEmailCode({
+  Future<void> verifyEmailCode({required String email, required String code});
+
+  Future<void> requestPasswordRecovery(String email);
+
+  Future<void> recoverPassword({
     required String email,
     required String code,
+    required String newPassword,
   });
 }
 
@@ -97,9 +102,7 @@ class DioAuthRemoteDataSource implements AuthRemoteDataSource {
       data: request.toJson(),
       options: Options(extra: const {'skipAuth': true}),
     );
-    return AuthSessionDto.fromJson(
-      unwrapApiMap(response.data),
-    );
+    return AuthSessionDto.fromJson(unwrapApiMap(response.data));
   }
 
   @override
@@ -237,10 +240,36 @@ class DioAuthRemoteDataSource implements AuthRemoteDataSource {
     final trimmedEmail = email.trim();
     final response = await _client.dio.post<Map<String, dynamic>>(
       '/api/auth/verify-code',
+      data: {'user': trimmedEmail, 'email': trimmedEmail, 'code': code.trim()},
+      options: Options(extra: const {'skipAuth': true}),
+    );
+    unwrapApiResponse(response.data);
+  }
+
+  @override
+  Future<void> requestPasswordRecovery(String email) async {
+    final trimmed = email.trim();
+    final response = await _client.dio.post<Map<String, dynamic>>(
+      '/api/auth/request-password-recovery',
+      data: {'email': trimmed},
+      options: Options(extra: const {'skipAuth': true}),
+    );
+    unwrapApiResponse(response.data);
+  }
+
+  @override
+  Future<void> recoverPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    final trimmedEmail = email.trim();
+    final response = await _client.dio.post<Map<String, dynamic>>(
+      '/api/auth/recover-password',
       data: {
         'user': trimmedEmail,
-        'email': trimmedEmail,
         'code': code.trim(),
+        'newPassword': newPassword,
       },
       options: Options(extra: const {'skipAuth': true}),
     );

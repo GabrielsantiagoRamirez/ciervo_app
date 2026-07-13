@@ -28,14 +28,15 @@ void main() {
     }
   });
 
-  testWidgets('AddFamilyCardPage provee FamilyPaymentMethodsCubit', (tester) async {
-    await tester.pumpWidget(
-      const MaterialApp(
-        home: AddFamilyCardPage(),
-      ),
-    );
+  testWidgets('AddFamilyCardPage provee FamilyPaymentMethodsCubit', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MaterialApp(home: AddFamilyCardPage()));
 
-    expect(find.byType(BlocProvider<FamilyPaymentMethodsCubit>), findsOneWidget);
+    expect(
+      find.byType(BlocProvider<FamilyPaymentMethodsCubit>),
+      findsOneWidget,
+    );
     expect(find.byType(AppBar), findsOneWidget);
   });
 }

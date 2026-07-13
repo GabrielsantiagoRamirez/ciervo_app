@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/experience/experience_mode_cubit.dart';
+import '../../../../core/geo/geo_repository.dart';
 import '../../../../core/location/location_service.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
@@ -29,6 +30,7 @@ class SearchPage extends StatelessWidget {
         discoveryRepository: getIt<DiscoveryRepository>(),
         clientLocationRepository: getIt<ClientLocationRepository>(),
         businessCategoriesRepository: getIt<BusinessCategoriesRepository>(),
+        geoRepository: getIt<GeoRepository>(),
         initialExperienceMode: context.read<ExperienceModeCubit>().state.mode,
       )..initialize(),
       child: const _SearchView(),
@@ -142,63 +144,65 @@ class _SearchViewState extends State<_SearchView> {
               builder: (context, state) {
                 return switch (state.status) {
                   HomeDiscoveryStatus.initial => const SliverToBoxAdapter(
-                      child: CiervoEmptyState(
-                        title: 'Busca en Ciervo',
-                        description:
-                            'Encuentra experiencias por nombre, categoria o ciudad.',
-                        icon: Icons.search_rounded,
-                      ),
+                    child: CiervoEmptyState(
+                      title: 'Busca en Ciervo',
+                      description:
+                          'Encuentra experiencias por nombre, categoria o ciudad.',
+                      icon: Icons.search_rounded,
                     ),
+                  ),
                   HomeDiscoveryStatus.loading => const SliverToBoxAdapter(
-                      child: CiervoLoadingState(itemCount: 4),
-                    ),
+                    child: CiervoLoadingState(itemCount: 4),
+                  ),
                   HomeDiscoveryStatus.empty => SliverToBoxAdapter(
-                      child: CiervoEmptyState(
-                        title: _category == 'turismo'
-                            ? 'Turismo en fase piloto'
-                            : 'Sin resultados',
-                        description: _category == 'turismo'
-                            ? 'Turismo está en fase piloto. Pronto encontrarás más experiencias.'
-                            : 'No encontramos coincidencias para tu búsqueda.',
-                        icon: _category == 'turismo'
-                            ? Icons.travel_explore_outlined
-                            : Icons.search_off_rounded,
-                      ),
+                    child: CiervoEmptyState(
+                      title: _category == 'turismo'
+                          ? 'Turismo en fase piloto'
+                          : 'Sin resultados',
+                      description: _category == 'turismo'
+                          ? 'Turismo está en fase piloto. Pronto encontrarás más experiencias.'
+                          : 'No encontramos coincidencias para tu búsqueda.',
+                      icon: _category == 'turismo'
+                          ? Icons.travel_explore_outlined
+                          : Icons.search_off_rounded,
                     ),
+                  ),
                   HomeDiscoveryStatus.failure => SliverToBoxAdapter(
-                      child: CiervoErrorState(
-                        title: 'No pudimos buscar',
-                        description:
-                            state.errorMessage ?? 'Intenta nuevamente.',
-                      ),
+                    child: CiervoErrorState(
+                      title: 'No pudimos buscar',
+                      description: state.errorMessage ?? 'Intenta nuevamente.',
                     ),
+                  ),
                   HomeDiscoveryStatus.loaded => SliverList.separated(
-                      itemCount: state.businesses.length,
-                      separatorBuilder: (_, _) =>
-                          const SizedBox(height: AppSpacing.md),
-                      itemBuilder: (context, index) {
-                        final place = _mapBusinessToPlace(
-                          state.businesses[index],
-                          city: state.city,
-                          countryCode: state.countryCode,
-                        );
-                        return BlocBuilder<ExperienceModeCubit, ExperienceModeState>(
-                          builder: (context, modeState) {
-                            return HomePlaceCard(
-                              place: place,
-                              mode: modeState.mode,
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute<void>(
-                                    builder: (_) => PlaceDetailPage(place: place),
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        );
-                      },
-                    ),
+                    itemCount: state.businesses.length,
+                    separatorBuilder: (_, _) =>
+                        const SizedBox(height: AppSpacing.md),
+                    itemBuilder: (context, index) {
+                      final place = _mapBusinessToPlace(
+                        state.businesses[index],
+                        city: state.city,
+                        countryCode: state.countryCode,
+                      );
+                      return BlocBuilder<
+                        ExperienceModeCubit,
+                        ExperienceModeState
+                      >(
+                        builder: (context, modeState) {
+                          return HomePlaceCard(
+                            place: place,
+                            mode: modeState.mode,
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => PlaceDetailPage(place: place),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      );
+                    },
+                  ),
                 };
               },
             ),
@@ -237,16 +241,16 @@ class _SearchViewState extends State<_SearchView> {
   }
 
   String _label(String category) => switch (category) {
-        'Top' => 'Todos',
-        'bar' => 'Bar',
-        'hoteles' => 'Hoteles',
-        'restaurantes' => 'Restaurantes',
-        'bares' => 'Bares',
-        'discotecas' => 'Discotecas',
-        'licorerias' => 'Licorerias',
-        'farmacias' => 'Farmacias',
-        'turismo' => 'Turismo',
-        'transporte' => 'Transporte',
-        _ => category,
-      };
+    'Top' => 'Todos',
+    'bar' => 'Bar',
+    'hoteles' => 'Hoteles',
+    'restaurantes' => 'Restaurantes',
+    'bares' => 'Bares',
+    'discotecas' => 'Discotecas',
+    'licorerias' => 'Licorerias',
+    'farmacias' => 'Farmacias',
+    'turismo' => 'Turismo',
+    'transporte' => 'Transporte',
+    _ => category,
+  };
 }

@@ -135,7 +135,8 @@ class AppNotificationDto {
     return '';
   }
 
-  static int? _i(dynamic value) => value is int ? value : int.tryParse('$value');
+  static int? _i(dynamic value) =>
+      value is int ? value : int.tryParse('$value');
 
   static bool _b(Map<String, dynamic> json, List<String> keys) {
     for (final key in keys) {

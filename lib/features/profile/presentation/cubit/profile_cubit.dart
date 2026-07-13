@@ -13,7 +13,7 @@ import 'profile_state.dart';
 
 class ProfileCubit extends Cubit<ProfileState> {
   ProfileCubit(this._profileRepository, this._walletRepository)
-      : super(const ProfileState());
+    : super(const ProfileState());
 
   final ProfileRepository _profileRepository;
   final WalletRepository _walletRepository;
@@ -29,17 +29,15 @@ class ProfileCubit extends Cubit<ProfileState> {
 
     profileResult.when(
       success: (profile) {
-        final code = _resolveCiervoCode(
-          profile.ciervoUserCode,
-          ciervoIdResult,
-        );
+        final code = _resolveCiervoCode(profile.ciervoUserCode, ciervoIdResult);
         final previousPhoto = state.profile?.photoUrl?.trim();
         final incomingPhoto = profile.photoUrl?.trim();
-        final mergedProfile = (incomingPhoto != null && incomingPhoto.isNotEmpty)
+        final mergedProfile =
+            (incomingPhoto != null && incomingPhoto.isNotEmpty)
             ? profile
             : (previousPhoto != null && previousPhoto.isNotEmpty)
-                ? profile.copyWith(photoUrl: previousPhoto)
-                : profile;
+            ? profile.copyWith(photoUrl: previousPhoto)
+            : profile;
         emit(
           ProfileState(
             status: ProfileStatus.loaded,
@@ -54,8 +52,7 @@ class ProfileCubit extends Cubit<ProfileState> {
           state.copyWith(
             status: code == null ? ProfileStatus.failure : ProfileStatus.loaded,
             ciervoUserCode: code,
-            errorMessage:
-                code == null ? UserErrorMessage.from(error) : null,
+            errorMessage: code == null ? UserErrorMessage.from(error) : null,
           ),
         );
       },
@@ -65,12 +62,10 @@ class ProfileCubit extends Cubit<ProfileState> {
   Future<void> refreshCiervoId() async {
     final result = await _walletRepository.myCiervoId();
     result.when(
-      success: (identity) => emit(
-        state.copyWith(ciervoUserCode: identity.ciervoUserCode),
-      ),
-      failure: (error) => emit(
-        state.copyWith(errorMessage: UserErrorMessage.from(error)),
-      ),
+      success: (identity) =>
+          emit(state.copyWith(ciervoUserCode: identity.ciervoUserCode)),
+      failure: (error) =>
+          emit(state.copyWith(errorMessage: UserErrorMessage.from(error))),
     );
   }
 
@@ -97,7 +92,7 @@ class ProfileCubit extends Cubit<ProfileState> {
     required String firstName,
     required String lastName,
     required String email,
-    required String phone,
+    String? phone,
     String? username,
   }) async {
     emit(state.copyWith(status: ProfileStatus.saving, clearError: true));
@@ -105,7 +100,7 @@ class ProfileCubit extends Cubit<ProfileState> {
       firstName: firstName,
       lastName: lastName,
       email: email,
-      phone: phone,
+      phone: phone ?? state.profile?.phone ?? '',
       username: username,
     );
 
@@ -132,31 +127,35 @@ class ProfileCubit extends Cubit<ProfileState> {
   }) async {
     final current = state.profile;
     if (current == null) return;
-    emit(state.copyWith(status: ProfileStatus.uploadingPhoto, clearError: true));
+    emit(
+      state.copyWith(status: ProfileStatus.uploadingPhoto, clearError: true),
+    );
     final result = await _profileRepository.uploadPhoto(
       path: path,
       fileName: fileName,
     );
     result.when(
       success: (upload) {
-        final photoRef = upload.imageUrl ??
-            upload.photoUrl ??
-            upload.mediaId;
-        emit(state.copyWith(
-          status: ProfileStatus.loaded,
-          profile: current.copyWith(
-            photoUrl: photoRef,
-            imageUrl: upload.imageUrl ?? upload.photoUrl,
-            storagePath: upload.storagePath,
-            photoUpdatedAt: upload.photoUpdatedAt ?? DateTime.now(),
+        final photoRef = upload.imageUrl ?? upload.photoUrl ?? upload.mediaId;
+        emit(
+          state.copyWith(
+            status: ProfileStatus.loaded,
+            profile: current.copyWith(
+              photoUrl: photoRef,
+              imageUrl: upload.imageUrl ?? upload.photoUrl,
+              storagePath: upload.storagePath,
+              photoUpdatedAt: upload.photoUpdatedAt ?? DateTime.now(),
+            ),
           ),
-        ));
+        );
       },
-      failure: (error) => emit(state.copyWith(
-        status: ProfileStatus.loaded,
-        profile: current,
-        errorMessage: UserErrorMessage.from(error),
-      )),
+      failure: (error) => emit(
+        state.copyWith(
+          status: ProfileStatus.loaded,
+          profile: current,
+          errorMessage: UserErrorMessage.from(error),
+        ),
+      ),
     );
   }
 
@@ -164,9 +163,7 @@ class ProfileCubit extends Cubit<ProfileState> {
     final email = state.profile?.email.trim();
     if (email == null || email.isEmpty) {
       emit(
-        state.copyWith(
-          errorMessage: 'No encontramos un correo en tu perfil.',
-        ),
+        state.copyWith(errorMessage: 'No encontramos un correo en tu perfil.'),
       );
       return;
     }
@@ -216,7 +213,9 @@ class ProfileCubit extends Cubit<ProfileState> {
       }
       await firebase.reloadUser();
       final token = await firebase.freshIdToken();
-      final result = await auth.firebaseSyncVerification(firebaseIdToken: token);
+      final result = await auth.firebaseSyncVerification(
+        firebaseIdToken: token,
+      );
       await result.when(
         success: (sync) async {
           final current = state.profile;

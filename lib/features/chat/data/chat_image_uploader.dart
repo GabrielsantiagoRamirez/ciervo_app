@@ -4,11 +4,8 @@ import '../../../../core/firebase/firebase_storage_service.dart';
 class ChatImageUploader {
   const ChatImageUploader();
 
-  Future<({
-    String mediaUrl,
-    String storagePath,
-    String? mediaType,
-  })?> uploadForConversation({
+  Future<({String mediaUrl, String storagePath, String? mediaType})?>
+  uploadForConversation({
     required String conversationId,
     required String localPath,
     String? userId,

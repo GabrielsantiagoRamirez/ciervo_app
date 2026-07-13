@@ -18,26 +18,27 @@ class SafetyRepositoryImpl implements SafetyRepository {
     int? reportedUserId,
     required ReportReason reason,
     String? description,
-  }) =>
-      _guard(() => _remote.createReport(
-            targetType: targetType,
-            targetId: targetId,
-            reportedUserId: reportedUserId,
-            reason: reason,
-            description: description,
-          ));
+  }) => _guard(
+    () => _remote.createReport(
+      targetType: targetType,
+      targetId: targetId,
+      reportedUserId: reportedUserId,
+      reason: reason,
+      description: description,
+    ),
+  );
 
   @override
   Future<Result<void>> blockUser(int userId) => _guard(() async {
-        await _remote.blockUser(userId);
-        _cache.addBlockedUser(userId);
-      });
+    await _remote.blockUser(userId);
+    _cache.addBlockedUser(userId);
+  });
 
   @override
   Future<Result<void>> unblockUser(int userId) => _guard(() async {
-        await _remote.unblockUser(userId);
-        _cache.removeBlockedUser(userId);
-      });
+    await _remote.unblockUser(userId);
+    _cache.removeBlockedUser(userId);
+  });
 
   @override
   Future<Result<List<BlockedUserModel>>> blockedUsers() =>
@@ -47,38 +48,33 @@ class SafetyRepositoryImpl implements SafetyRepository {
   Future<Result<ContentBlockModel>> blockContent({
     required ReportTargetType targetType,
     required String targetId,
-  }) =>
-      _guard(() async {
-        final block = await _remote.blockContent(
-          targetType: targetType,
-          targetId: targetId,
-        );
-        _cache.addContentBlock(block);
-        return block;
-      });
+  }) => _guard(() async {
+    final block = await _remote.blockContent(
+      targetType: targetType,
+      targetId: targetId,
+    );
+    _cache.addContentBlock(block);
+    return block;
+  });
 
   @override
   Future<Result<void>> unblockContent({
     required ReportTargetType targetType,
     required String targetId,
-  }) =>
-      _guard(() async {
-        await _remote.unblockContent(
-          targetType: targetType,
-          targetId: targetId,
-        );
-        _cache.removeContentBlock(targetType, targetId);
-      });
+  }) => _guard(() async {
+    await _remote.unblockContent(targetType: targetType, targetId: targetId);
+    _cache.removeContentBlock(targetType, targetId);
+  });
 
   @override
   Future<Result<void>> refreshLocalFilters() => _guard(() async {
-        final users = await _remote.blockedUsers();
-        final content = await _remote.myContentBlocks();
-        _cache.replaceAll(
-          blockedUserIds: users.map((e) => e.userId).toSet(),
-          contentBlocks: content,
-        );
-      });
+    final users = await _remote.blockedUsers();
+    final content = await _remote.myContentBlocks();
+    _cache.replaceAll(
+      blockedUserIds: users.map((e) => e.userId).toSet(),
+      contentBlocks: content,
+    );
+  });
 
   Future<Result<T>> _guard<T>(Future<T> Function() action) async {
     try {

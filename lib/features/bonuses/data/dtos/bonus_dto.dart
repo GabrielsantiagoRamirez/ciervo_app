@@ -59,9 +59,8 @@ class BonusDto {
     final business = json['business'] is Map
         ? Map<String, dynamic>.from(json['business'] as Map)
         : null;
-    final type = BonusType.fromApi(
-          '${json['type'] ?? json['bonusType'] ?? ''}',
-        ) ??
+    final type =
+        BonusType.fromApi('${json['type'] ?? json['bonusType'] ?? ''}') ??
         BonusType.coupon;
     final status = _resolveStatus(json);
     return BonusDto(
@@ -70,33 +69,41 @@ class BonusDto {
       description: _string(json, const ['description', 'summary', 'details']),
       type: type,
       status: status,
-      businessId: _string(
-        json,
-        const ['businessId'],
-        fallback: _string(business ?? {}, const ['id', 'businessId']),
-      ),
-      businessName: _string(
-        json,
-        const ['businessName', 'businessTitle'],
-        fallback: _string(business ?? {}, const ['name', 'title']),
-      ),
-      currency: _string(json, const ['currency', 'currencyCode'], fallback: 'COP'),
+      businessId: _string(json, const [
+        'businessId',
+      ], fallback: _string(business ?? {}, const ['id', 'businessId'])),
+      businessName: _string(json, const [
+        'businessName',
+        'businessTitle',
+      ], fallback: _string(business ?? {}, const ['name', 'title'])),
+      currency: _string(json, const [
+        'currency',
+        'currencyCode',
+      ], fallback: 'COP'),
       discountPercent: _doubleOrNull(
         json['discountPercent'] ?? json['percentOff'] ?? json['discount'],
       ),
-      discountAmount: _doubleOrNull(json['discountAmount'] ?? json['amountOff']),
+      discountAmount: _doubleOrNull(
+        json['discountAmount'] ?? json['amountOff'],
+      ),
       cashbackAmount: _doubleOrNull(json['cashbackAmount'] ?? json['cashback']),
       savingsAmount: _doubleOrNull(json['savingsAmount'] ?? json['savings']),
       imageUrl: _media(json),
-      validFrom: _date(json['validFrom'] ?? json['startsAt'] ?? json['startDate']),
-      validUntil: _date(json['validUntil'] ?? json['expiresAt'] ?? json['endDate']),
+      validFrom: _date(
+        json['validFrom'] ?? json['startsAt'] ?? json['startDate'],
+      ),
+      validUntil: _date(
+        json['validUntil'] ?? json['expiresAt'] ?? json['endDate'],
+      ),
       claimedAt: _date(json['claimedAt']),
       redeemedAt: _date(json['redeemedAt'] ?? json['usedAt']),
       promoCode: _nullable(json['promoCode'] ?? json['code']),
       paymentMethod: _nullable(json['paymentMethod']),
       city: _nullable(json['city'] ?? business?['city']),
       zone: _nullable(json['zone'] ?? business?['zone']),
-      country: _nullable(json['country'] ?? json['countryCode'] ?? business?['country']),
+      country: _nullable(
+        json['country'] ?? json['countryCode'] ?? business?['country'],
+      ),
       distanceKm: _doubleOrNull(json['distanceKm'] ?? json['distance']),
       canRedeem: json['canRedeem'] == true || json['redeemable'] == true,
       userClaimId: _nullable(json['userClaimId'] ?? json['claimId']),
@@ -104,32 +111,32 @@ class BonusDto {
   }
 
   Bonus toEntity() => Bonus(
-        id: id,
-        title: title,
-        description: description,
-        type: type,
-        status: status,
-        businessId: businessId,
-        businessName: businessName,
-        currency: currency,
-        discountPercent: discountPercent,
-        discountAmount: discountAmount,
-        cashbackAmount: cashbackAmount,
-        savingsAmount: savingsAmount,
-        imageUrl: imageUrl,
-        validFrom: validFrom,
-        validUntil: validUntil,
-        claimedAt: claimedAt,
-        redeemedAt: redeemedAt,
-        promoCode: promoCode,
-        paymentMethod: paymentMethod,
-        city: city,
-        zone: zone,
-        country: country,
-        distanceKm: distanceKm,
-        canRedeem: canRedeem,
-        userClaimId: userClaimId,
-      );
+    id: id,
+    title: title,
+    description: description,
+    type: type,
+    status: status,
+    businessId: businessId,
+    businessName: businessName,
+    currency: currency,
+    discountPercent: discountPercent,
+    discountAmount: discountAmount,
+    cashbackAmount: cashbackAmount,
+    savingsAmount: savingsAmount,
+    imageUrl: imageUrl,
+    validFrom: validFrom,
+    validUntil: validUntil,
+    claimedAt: claimedAt,
+    redeemedAt: redeemedAt,
+    promoCode: promoCode,
+    paymentMethod: paymentMethod,
+    city: city,
+    zone: zone,
+    country: country,
+    distanceKm: distanceKm,
+    canRedeem: canRedeem,
+    userClaimId: userClaimId,
+  );
 
   static List<BonusDto> listFromResponse(dynamic response) {
     final items = _unwrapList(response);
@@ -144,7 +151,9 @@ BonusStatus _resolveStatus(Map<String, dynamic> json) {
     return BonusStatus.redeemed;
   }
   if (json['claimedAt'] != null) return BonusStatus.claimed;
-  return BonusStatus.fromApi('${json['status'] ?? json['bonusStatus'] ?? ''}') ??
+  return BonusStatus.fromApi(
+        '${json['status'] ?? json['bonusStatus'] ?? ''}',
+      ) ??
       BonusStatus.active;
 }
 
@@ -156,8 +165,8 @@ List<Map<String, dynamic>> _unwrapList(dynamic response) {
   final items = source is List
       ? source
       : source is Map<String, dynamic> && source['items'] is List
-          ? source['items'] as List
-          : const [];
+      ? source['items'] as List
+      : const [];
   return items
       .whereType<Map>()
       .map((item) => Map<String, dynamic>.from(item))

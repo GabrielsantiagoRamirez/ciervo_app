@@ -9,11 +9,11 @@ import '../../../../shared/widgets/ciervo_brand_loader.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../core/utils/display_labels.dart';
 import '../../data/booking_repository.dart';
-import '../../../search/presentation/pages/search_page.dart';
 import '../../../wallet/presentation/pages/request_money_page.dart';
 import '../../domain/entities/booking.dart';
 import '../../../qr_wallet/domain/entities/ciervo_qr_item.dart';
 import '../../../qr_wallet/presentation/widgets/ciervo_qr_card.dart';
+import 'new_reservation_page.dart';
 
 class ReservationsPage extends StatefulWidget {
   const ReservationsPage({super.key});
@@ -39,6 +39,15 @@ class _ReservationsPageState extends State<ReservationsPage> {
     );
   }
 
+  Future<void> _openNewReservation() async {
+    final created = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(builder: (_) => const NewReservationPage()),
+    );
+    if (created == true && mounted) {
+      setState(_reload);
+    }
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
@@ -52,9 +61,7 @@ class _ReservationsPageState extends State<ReservationsPage> {
       ],
     ),
     floatingActionButton: FloatingActionButton.extended(
-      onPressed: () => Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const SearchPage()),
-      ),
+      onPressed: _openNewReservation,
       icon: const Icon(Icons.add),
       label: const Text('Nueva reserva'),
     ),
@@ -97,27 +104,29 @@ class _ReservationsPageState extends State<ReservationsPage> {
           child: ListView(
             padding: const EdgeInsets.all(AppSpacing.md),
             children: _groupedBookings(bookings)
-                .expand((group) => [
-                      Padding(
-                        padding: const EdgeInsets.only(
-                          top: AppSpacing.sm,
-                          bottom: AppSpacing.xs,
-                        ),
-                        child: Text(
-                          group.key,
-                          style: Theme.of(context).textTheme.titleMedium,
+                .expand(
+                  (group) => [
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        top: AppSpacing.sm,
+                        bottom: AppSpacing.xs,
+                      ),
+                      child: Text(
+                        group.key,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                    ...group.value.map(
+                      (booking) => Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                        child: _BookingCard(
+                          booking: booking,
+                          onRefresh: () => setState(_reload),
                         ),
                       ),
-                      ...group.value.map(
-                        (booking) => Padding(
-                          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                          child: _BookingCard(
-                            booking: booking,
-                            onRefresh: () => setState(_reload),
-                          ),
-                        ),
-                      ),
-                    ])
+                    ),
+                  ],
+                )
                 .toList(),
           ),
         );
@@ -167,9 +176,9 @@ class _ReservationsPageState extends State<ReservationsPage> {
           ],
         ),
       ),
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 }
@@ -201,8 +210,7 @@ class _BookingDetails extends StatelessWidget {
       _line('Estado', DisplayLabels.bookingStatus(booking.status)),
       _line('Fecha', _date(booking.bookingDate)),
       _line('Negocio', booking.businessName ?? 'Sin información'),
-      if ((booking.city ?? '').isNotEmpty)
-        _line('Ciudad', booking.city!),
+      if ((booking.city ?? '').isNotEmpty) _line('Ciudad', booking.city!),
       if ((booking.categoryName ?? '').isNotEmpty)
         _line('Categoría', booking.categoryName!),
       if ((booking.time ?? '').isNotEmpty) _line('Hora', booking.time!),
@@ -254,10 +262,9 @@ class _BookingDetails extends StatelessWidget {
     padding: const EdgeInsets.only(top: 3),
     child: Text('$label: $value'),
   );
-  String _date(DateTime? value) =>
-      value == null
-          ? 'Sin información'
-          : value.toLocal().toString().substring(0, 16);
+  String _date(DateTime? value) => value == null
+      ? 'Sin información'
+      : value.toLocal().toString().substring(0, 16);
 }
 
 List<MapEntry<String, List<Booking>>> _groupedBookings(List<Booking> bookings) {

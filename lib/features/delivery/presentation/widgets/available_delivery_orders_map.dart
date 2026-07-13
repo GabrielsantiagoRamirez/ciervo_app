@@ -29,24 +29,31 @@ class AvailableDeliveryOrdersMap extends StatelessWidget {
           Marker(
             markerId: MarkerId('pickup-${order.id}'),
             position: pickup,
-            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+              BitmapDescriptor.hueAzure,
+            ),
             infoWindow: InfoWindow(
               title: order.businessName,
-              snippet: 'Recogida · ${order.distanceKm?.toStringAsFixed(1) ?? '?'} km',
+              snippet:
+                  'Recogida · ${order.distanceKm?.toStringAsFixed(1) ?? '?'} km',
               onTap: () => onSelect(order),
             ),
           ),
         );
       }
       if (order.deliveryLatitude != null && order.deliveryLongitude != null) {
-        final delivery =
-            LatLng(order.deliveryLatitude!, order.deliveryLongitude!);
+        final delivery = LatLng(
+          order.deliveryLatitude!,
+          order.deliveryLongitude!,
+        );
         firstPoint ??= delivery;
         markers.add(
           Marker(
             markerId: MarkerId('delivery-${order.id}'),
             position: delivery,
-            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+              BitmapDescriptor.hueGreen,
+            ),
             infoWindow: InfoWindow(
               title: 'Entrega',
               snippet: order.deliveryAddress,

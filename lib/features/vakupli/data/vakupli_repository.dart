@@ -11,7 +11,10 @@ class VakupliRepository {
 
   final NetworkClient _client;
 
-  Future<Result<List<VakupliPlan>>> plans({int page = 1, int pageSize = 20}) async {
+  Future<Result<List<VakupliPlan>>> plans({
+    int page = 1,
+    int pageSize = 20,
+  }) async {
     final result = await listGroups(page: page, pageSize: pageSize);
     return result.when(
       success: (pageResult) => Success(pageResult.items),
@@ -22,89 +25,81 @@ class VakupliRepository {
   Future<Result<VakupliGroupsPage>> listGroups({
     int page = 1,
     int pageSize = 20,
-  }) =>
-      _guard(() async {
-        final response = await _client.dio.get<dynamic>(
-          '/api/vakupli/groups',
-          queryParameters: {'page': page, 'pageSize': pageSize},
-        );
-        final value = unwrapApiResponse(response.data);
-        final map = value is Map<String, dynamic>
-            ? value
-            : value is Map
-            ? Map<String, dynamic>.from(value)
-            : <String, dynamic>{};
-        final itemsRaw = map['items'] ?? map['Items'] ?? const [];
-        final items = (itemsRaw is List ? itemsRaw : const [])
-            .whereType<Map>()
-            .map((item) => _planFromJson(Map<String, dynamic>.from(item)))
-            .toList();
-        return VakupliGroupsPage(
-          items: items,
-          page: _intOr(map['page'] ?? map['Page'], page),
-          pageSize: _intOr(map['pageSize'] ?? map['PageSize'], pageSize),
-          total: _intOr(map['total'] ?? map['Total'], items.length),
-          totalPages: _intOr(map['totalPages'] ?? map['TotalPages'], 1),
-        );
-      });
+  }) => _guard(() async {
+    final response = await _client.dio.get<dynamic>(
+      '/api/vakupli/groups',
+      queryParameters: {'page': page, 'pageSize': pageSize},
+    );
+    final value = unwrapApiResponse(response.data);
+    final map = value is Map<String, dynamic>
+        ? value
+        : value is Map
+        ? Map<String, dynamic>.from(value)
+        : <String, dynamic>{};
+    final itemsRaw = map['items'] ?? map['Items'] ?? const [];
+    final items = (itemsRaw is List ? itemsRaw : const [])
+        .whereType<Map>()
+        .map((item) => _planFromJson(Map<String, dynamic>.from(item)))
+        .toList();
+    return VakupliGroupsPage(
+      items: items,
+      page: _intOr(map['page'] ?? map['Page'], page),
+      pageSize: _intOr(map['pageSize'] ?? map['PageSize'], pageSize),
+      total: _intOr(map['total'] ?? map['Total'], items.length),
+      totalPages: _intOr(map['totalPages'] ?? map['TotalPages'], 1),
+    );
+  });
 
   Future<Result<VakupliPlan>> createPlan({
     required String title,
     required double totalAmount,
     required VakupliSplitOption splitOption,
     String? description,
-  }) =>
-      _guard(() async {
-        final response = await _client.dio.post<dynamic>(
-          '/api/vakupli/groups',
-          data: {
-            'name': title.trim(),
-            if (description != null && description.trim().isNotEmpty)
-              'description': description.trim(),
-            'initialContributionAmount': totalAmount,
-            'currency': 'COP',
-            'isPrivate': true,
-            'joinType': 1,
-          },
-        );
-        return _planFromJson(unwrapApiMap(response.data));
-      });
+  }) => _guard(() async {
+    final response = await _client.dio.post<dynamic>(
+      '/api/vakupli/groups',
+      data: {
+        'name': title.trim(),
+        if (description != null && description.trim().isNotEmpty)
+          'description': description.trim(),
+        'initialContributionAmount': totalAmount,
+        'currency': 'COP',
+        'isPrivate': true,
+        'joinType': 1,
+      },
+    );
+    return _planFromJson(unwrapApiMap(response.data));
+  });
 
   Future<Result<void>> inviteToPlan({
     required int planId,
     required String userId,
     required double amount,
-  }) =>
-      _guard(() async {
-        await _client.dio.post<void>(
-          '/api/vakupli/groups/$planId/invite',
-          data: {
-            'userId': int.tryParse(userId) ?? userId,
-            'amount': amount,
-            'currency': 'COP',
-          },
-        );
-      });
+  }) => _guard(() async {
+    await _client.dio.post<void>(
+      '/api/vakupli/groups/$planId/invite',
+      data: {
+        'userId': int.tryParse(userId) ?? userId,
+        'amount': amount,
+        'currency': 'COP',
+      },
+    );
+  });
 
-  Future<Result<List<VakupliFriend>>> participants(int groupId) =>
-      _guard(() async {
-        final response = await _client.dio.get<dynamic>(
-          '/api/vakupli/groups/$groupId/participants',
-        );
-        final items = unwrapApiList(response.data);
-        return items
-            .whereType<Map>()
-            .map((item) {
-              final map = Map<String, dynamic>.from(item);
-              final name =
-                  '${map['displayName'] ?? map['name'] ?? map['userName'] ?? 'Participante'}';
-              return VakupliFriend(
-                name: name,
-                initials: _initials(name),
-              );
-            })
-            .toList();
-      });
+  Future<Result<List<VakupliFriend>>> participants(
+    int groupId,
+  ) => _guard(() async {
+    final response = await _client.dio.get<dynamic>(
+      '/api/vakupli/groups/$groupId/participants',
+    );
+    final items = unwrapApiList(response.data);
+    return items.whereType<Map>().map((item) {
+      final map = Map<String, dynamic>.from(item);
+      final name =
+          '${map['displayName'] ?? map['name'] ?? map['userName'] ?? 'Participante'}';
+      return VakupliFriend(name: name, initials: _initials(name));
+    }).toList();
+  });
 
   Future<Result<List<VakupliMessage>>> messages(int groupId) =>
       _guard(() async {
@@ -122,49 +117,43 @@ class VakupliRepository {
   Future<Result<VakupliMessage>> sendMessage({
     required int planId,
     required String text,
-  }) =>
-      _guard(() async {
-        final response = await _client.dio.post<dynamic>(
-          '/api/vakupli/chat/$planId/send',
-          data: {'content': text.trim()},
-        );
-        return _messageFromJson(unwrapApiMap(response.data));
-      });
+  }) => _guard(() async {
+    final response = await _client.dio.post<dynamic>(
+      '/api/vakupli/chat/$planId/send',
+      data: {'content': text.trim()},
+    );
+    return _messageFromJson(unwrapApiMap(response.data));
+  });
 
   Future<Result<Map<String, dynamic>>> paySplit({
     required int planId,
     required double amount,
-  }) =>
-      _guard(() async {
-        final contributionsResponse = await _client.dio.get<dynamic>(
-          '/api/vakupli/groups/$planId/contributions',
-        );
-        final contributions = unwrapApiList(contributionsResponse.data)
-            .whereType<Map>()
-            .map((item) => Map<String, dynamic>.from(item))
-            .toList();
-        final pending = contributions.firstWhere(
-          (item) {
-            final status =
-                '${item['status'] ?? item['contributionStatus'] ?? ''}'.toLowerCase();
-            return status.contains('pending') || status == '1' || status == '0';
-          },
-          orElse: () => contributions.isNotEmpty ? contributions.first : {},
-        );
-        final contributionId = pending['id'] ?? pending['contributionId'];
-        if (contributionId == null) {
-          throw Exception('No hay cuota pendiente para pagar.');
-        }
-        final response = await _client.dio.post<dynamic>(
-          '/api/vakupli/contributions/$contributionId/pay',
-          data: {
-            'paymentMethod': 'wallet',
-            'idempotencyKey':
-                'vakupli-$contributionId-${DateTime.now().microsecondsSinceEpoch}',
-          },
-        );
-        return unwrapApiMap(response.data);
-      });
+  }) => _guard(() async {
+    final contributionsResponse = await _client.dio.get<dynamic>(
+      '/api/vakupli/groups/$planId/contributions',
+    );
+    final contributions = unwrapApiList(
+      contributionsResponse.data,
+    ).whereType<Map>().map((item) => Map<String, dynamic>.from(item)).toList();
+    final pending = contributions.firstWhere((item) {
+      final status = '${item['status'] ?? item['contributionStatus'] ?? ''}'
+          .toLowerCase();
+      return status.contains('pending') || status == '1' || status == '0';
+    }, orElse: () => contributions.isNotEmpty ? contributions.first : {});
+    final contributionId = pending['id'] ?? pending['contributionId'];
+    if (contributionId == null) {
+      throw Exception('No hay cuota pendiente para pagar.');
+    }
+    final response = await _client.dio.post<dynamic>(
+      '/api/vakupli/contributions/$contributionId/pay',
+      data: {
+        'paymentMethod': 'wallet',
+        'idempotencyKey':
+            'vakupli-$contributionId-${DateTime.now().microsecondsSinceEpoch}',
+      },
+    );
+    return unwrapApiMap(response.data);
+  });
 
   VakupliPlan _planFromJson(Map<String, dynamic> json) {
     final paymentStatus = json['paymentStatus'] ?? json['PaymentStatus'];
@@ -213,19 +202,24 @@ class VakupliRepository {
   }
 
   VakupliMessage _messageFromJson(Map<String, dynamic> json) => VakupliMessage(
-        id: _intOrNull(json['id'] ?? json['messageId']),
-        senderName: '${json['senderName'] ?? json['sender'] ?? 'Usuario'}',
-        text: '${json['content'] ?? json['text'] ?? json['body'] ?? ''}',
-        timeLabel: _formatTime(
-          DateTime.tryParse('${json['createdAt'] ?? json['sentAt'] ?? ''}'),
-        ),
-        isCurrentUser: json['isOwnMessage'] == true || json['isCurrentUser'] == true,
-      );
+    id: _intOrNull(json['id'] ?? json['messageId']),
+    senderName: '${json['senderName'] ?? json['sender'] ?? 'Usuario'}',
+    text: '${json['content'] ?? json['text'] ?? json['body'] ?? ''}',
+    timeLabel: _formatTime(
+      DateTime.tryParse('${json['createdAt'] ?? json['sentAt'] ?? ''}'),
+    ),
+    isCurrentUser:
+        json['isOwnMessage'] == true || json['isCurrentUser'] == true,
+  );
 
-  String _statusLabel(Map<String, dynamic> json, Map<String, dynamic> paymentMap) {
+  String _statusLabel(
+    Map<String, dynamic> json,
+    Map<String, dynamic> paymentMap,
+  ) {
     if (paymentMap['isCompleted'] == true) return 'Completado';
     final groupStatus =
-        '${paymentMap['groupStatus'] ?? json['status'] ?? 'active'}'.toLowerCase();
+        '${paymentMap['groupStatus'] ?? json['status'] ?? 'active'}'
+            .toLowerCase();
     return switch (groupStatus) {
       'active' => 'Activo',
       'confirmed' => 'Confirmado',
@@ -236,7 +230,10 @@ class VakupliRepository {
     };
   }
 
-  String _timeLeftLabel(Map<String, dynamic> json, Map<String, dynamic> paymentMap) {
+  String _timeLeftLabel(
+    Map<String, dynamic> json,
+    Map<String, dynamic> paymentMap,
+  ) {
     if (paymentMap['isCompleted'] == true) return 'Finalizado';
     return '${json['code'] ?? 'Plan activo'}';
   }

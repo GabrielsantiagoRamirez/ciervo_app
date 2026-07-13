@@ -96,13 +96,13 @@ class _ExperiencePanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDay = selectedMode == ExperienceMode.day;
-    final panelColor =
-        isDay ? AppColors.daySurface.withValues(alpha: 0.96) : const Color(0xF20D0D0E);
+    final panelColor = isDay
+        ? AppColors.daySurface.withValues(alpha: 0.96)
+        : const Color(0xF20D0D0E);
     final titleColor = isDay ? AppColors.dayText : AppColors.textPrimary;
     final subtitleColor = isDay ? AppColors.dayTextMuted : AppColors.textMuted;
     final brandColor = isDay ? AppColors.goldDark : AppColors.primaryHigh;
-    final shadowColor =
-        isDay ? AppColors.shadowWarmSoft : Colors.black87;
+    final shadowColor = isDay ? AppColors.shadowWarmSoft : Colors.black87;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(
@@ -170,11 +170,7 @@ class _ExperiencePanel extends StatelessWidget {
           Text(
             'Selecciona el modo en el que quieres disfrutar la app.',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: subtitleColor,
-              fontSize: 15,
-              height: 1.45,
-            ),
+            style: TextStyle(color: subtitleColor, fontSize: 15, height: 1.45),
           ),
           const SizedBox(height: AppSpacing.xl),
           _ModeSelector(
@@ -290,8 +286,8 @@ class _ModeSegment extends StatelessWidget {
                   color: selected
                       ? AppColors.dayText
                       : (Theme.of(context).brightness == Brightness.dark
-                          ? AppColors.textPrimary
-                          : AppColors.dayText),
+                            ? AppColors.textPrimary
+                            : AppColors.dayText),
                   fontWeight: FontWeight.w700,
                   fontSize: 16,
                 ),

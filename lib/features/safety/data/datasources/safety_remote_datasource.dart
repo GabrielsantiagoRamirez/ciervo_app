@@ -87,8 +87,9 @@ class DioSafetyRemoteDataSource implements SafetyRemoteDataSource {
   @override
   Future<List<BlockedUserModel>> blockedUsers() async {
     try {
-      final response =
-          await _client.dio.get<dynamic>('/api/users/me/blocked-users');
+      final response = await _client.dio.get<dynamic>(
+        '/api/users/me/blocked-users',
+      );
       final value = unwrapApiResponse(response.data);
       if (value is! List) return const [];
       return value
@@ -108,10 +109,7 @@ class DioSafetyRemoteDataSource implements SafetyRemoteDataSource {
   }) async {
     final response = await _client.dio.post<dynamic>(
       '/api/content-blocks',
-      data: {
-        'targetType': targetType.apiValue,
-        'targetId': targetId,
-      },
+      data: {'targetType': targetType.apiValue, 'targetId': targetId},
     );
     return ContentBlockModel.fromJson(
       unwrapApiResponse(response.data) as Map<String, dynamic>,

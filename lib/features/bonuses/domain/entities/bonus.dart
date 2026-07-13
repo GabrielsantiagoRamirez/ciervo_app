@@ -24,17 +24,17 @@ enum BonusStatus {
   }
 
   String get label => switch (this) {
-        BonusStatus.draft => 'Borrador',
-        BonusStatus.pendingPayment => 'Pago pendiente',
-        BonusStatus.paid => 'Pagado',
-        BonusStatus.active => 'Activo',
-        BonusStatus.paused => 'Pausado',
-        BonusStatus.expired => 'Vencido',
-        BonusStatus.soldOut => 'Agotado',
-        BonusStatus.deleted => 'Eliminado',
-        BonusStatus.claimed => 'Reclamado',
-        BonusStatus.redeemed => 'Usado',
-      };
+    BonusStatus.draft => 'Borrador',
+    BonusStatus.pendingPayment => 'Pago pendiente',
+    BonusStatus.paid => 'Pagado',
+    BonusStatus.active => 'Activo',
+    BonusStatus.paused => 'Pausado',
+    BonusStatus.expired => 'Vencido',
+    BonusStatus.soldOut => 'Agotado',
+    BonusStatus.deleted => 'Eliminado',
+    BonusStatus.claimed => 'Reclamado',
+    BonusStatus.redeemed => 'Usado',
+  };
 
   bool get isUsable =>
       this == BonusStatus.active || this == BonusStatus.claimed;
@@ -63,14 +63,14 @@ enum BonusType {
   }
 
   String get label => switch (this) {
-        BonusType.discount => 'Descuento',
-        BonusType.cashback => 'Cashback',
-        BonusType.twoForOne => '2x1',
-        BonusType.freeEntry => 'Entrada gratis',
-        BonusType.gift => 'Regalo',
-        BonusType.coupon => 'Cupon',
-        BonusType.promoCode => 'Codigo promo',
-      };
+    BonusType.discount => 'Descuento',
+    BonusType.cashback => 'Cashback',
+    BonusType.twoForOne => '2x1',
+    BonusType.freeEntry => 'Entrada gratis',
+    BonusType.gift => 'Regalo',
+    BonusType.coupon => 'Cupon',
+    BonusType.promoCode => 'Codigo promo',
+  };
 }
 
 class Bonus {
@@ -177,21 +177,21 @@ class BonusFilters {
   final int pageSize;
 
   Map<String, dynamic> toQueryParameters() => {
-        if (country != null && country!.isNotEmpty) 'country': country,
-        if (city != null && city!.isNotEmpty) 'city': city,
-        if (zone != null && zone!.isNotEmpty) 'zone': zone,
-        if (categoryId != null) 'categoryId': categoryId,
-        if (businessId != null && businessId!.isNotEmpty) 'businessId': businessId,
-        if (paymentMethod != null && paymentMethod!.isNotEmpty)
-          'paymentMethod': paymentMethod,
-        if (nearLat != null) 'nearLat': nearLat,
-        if (nearLng != null) 'nearLng': nearLng,
-        if (radiusKm != null) 'radiusKm': radiusKm,
-        if (onlyFavorites) 'onlyFavorites': true,
-        if (activeOnly) 'activeOnly': true,
-        'page': page,
-        'pageSize': pageSize,
-      };
+    if (country != null && country!.isNotEmpty) 'country': country,
+    if (city != null && city!.isNotEmpty) 'city': city,
+    if (zone != null && zone!.isNotEmpty) 'zone': zone,
+    if (categoryId != null) 'categoryId': categoryId,
+    if (businessId != null && businessId!.isNotEmpty) 'businessId': businessId,
+    if (paymentMethod != null && paymentMethod!.isNotEmpty)
+      'paymentMethod': paymentMethod,
+    if (nearLat != null) 'nearLat': nearLat,
+    if (nearLng != null) 'nearLng': nearLng,
+    if (radiusKm != null) 'radiusKm': radiusKm,
+    if (onlyFavorites) 'onlyFavorites': true,
+    if (activeOnly) 'activeOnly': true,
+    'page': page,
+    'pageSize': pageSize,
+  };
 
   BonusFilters copyWith({
     String? country,
@@ -207,20 +207,19 @@ class BonusFilters {
     bool? activeOnly,
     int? page,
     int? pageSize,
-  }) =>
-      BonusFilters(
-        country: country ?? this.country,
-        city: city ?? this.city,
-        zone: zone ?? this.zone,
-        categoryId: categoryId ?? this.categoryId,
-        businessId: businessId ?? this.businessId,
-        paymentMethod: paymentMethod ?? this.paymentMethod,
-        nearLat: nearLat ?? this.nearLat,
-        nearLng: nearLng ?? this.nearLng,
-        radiusKm: radiusKm ?? this.radiusKm,
-        onlyFavorites: onlyFavorites ?? this.onlyFavorites,
-        activeOnly: activeOnly ?? this.activeOnly,
-        page: page ?? this.page,
-        pageSize: pageSize ?? this.pageSize,
-      );
+  }) => BonusFilters(
+    country: country ?? this.country,
+    city: city ?? this.city,
+    zone: zone ?? this.zone,
+    categoryId: categoryId ?? this.categoryId,
+    businessId: businessId ?? this.businessId,
+    paymentMethod: paymentMethod ?? this.paymentMethod,
+    nearLat: nearLat ?? this.nearLat,
+    nearLng: nearLng ?? this.nearLng,
+    radiusKm: radiusKm ?? this.radiusKm,
+    onlyFavorites: onlyFavorites ?? this.onlyFavorites,
+    activeOnly: activeOnly ?? this.activeOnly,
+    page: page ?? this.page,
+    pageSize: pageSize ?? this.pageSize,
+  );
 }

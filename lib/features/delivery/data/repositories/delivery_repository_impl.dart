@@ -51,10 +51,7 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
   ) => _guard(() async {
     await _client.dio.put<dynamic>(
       '/api/delivery/location',
-      data: {
-        'latitude': latitude,
-        'longitude': longitude,
-      },
+      data: {'latitude': latitude, 'longitude': longitude},
     );
   });
 
@@ -166,7 +163,8 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
     bool legacyDeliveryContract = false,
   }) => _guard(() async {
     final isDelivery =
-        legacyDeliveryContract || fulfillmentType == OrderFulfillmentType.delivery;
+        legacyDeliveryContract ||
+        fulfillmentType == OrderFulfillmentType.delivery;
     final response = await _client.dio.post<dynamic>(
       '/api/businesses/$businessId/delivery-orders',
       data: {
@@ -209,17 +207,14 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
   });
 
   @override
-  Future<Result<NfcSession>> createOrderNfcSession({
-    required String orderId,
-  }) => _guard(() async {
-    final response = await _client.dio.post<dynamic>(
-      '/api/delivery/orders/$orderId/nfc/session',
-      data: {
-        'idempotencyKey': _idempotencyKey('delivery-nfc', orderId),
-      },
-    );
-    return NfcSessionDto.fromJson(unwrapApiMap(response.data)).toDomain();
-  });
+  Future<Result<NfcSession>> createOrderNfcSession({required String orderId}) =>
+      _guard(() async {
+        final response = await _client.dio.post<dynamic>(
+          '/api/delivery/orders/$orderId/nfc/session',
+          data: {'idempotencyKey': _idempotencyKey('delivery-nfc', orderId)},
+        );
+        return NfcSessionDto.fromJson(unwrapApiMap(response.data)).toDomain();
+      });
 
   @override
   Future<Result<void>> addTip({
@@ -281,9 +276,11 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
         if (value is List) {
           return value
               .whereType<Map>()
-              .map((e) => DeliveryTrackingPoint.fromJson(
-                    Map<String, dynamic>.from(e),
-                  ))
+              .map(
+                (e) => DeliveryTrackingPoint.fromJson(
+                  Map<String, dynamic>.from(e),
+                ),
+              )
               .toList();
         }
         return const <DeliveryTrackingPoint>[];
@@ -295,17 +292,16 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
     required double latitude,
     required double longitude,
     String? status,
-  }) =>
-      _guard(() async {
-        await _client.dio.post<void>(
-          '/api/delivery/orders/$orderId/tracking',
-          data: {
-            'latitude': latitude,
-            'longitude': longitude,
-            if (status != null && status.isNotEmpty) 'status': status,
-          },
-        );
-      });
+  }) => _guard(() async {
+    await _client.dio.post<void>(
+      '/api/delivery/orders/$orderId/tracking',
+      data: {
+        'latitude': latitude,
+        'longitude': longitude,
+        if (status != null && status.isNotEmpty) 'status': status,
+      },
+    );
+  });
   @override
   Future<Result<DeliveryOrder>> action(
     String id,
@@ -371,8 +367,9 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
   @override
   Future<Result<DeliverySettlementAccountDetails?>> settlementAccount() async {
     try {
-      final response =
-          await _client.dio.get<dynamic>('/api/delivery/settlement-account');
+      final response = await _client.dio.get<dynamic>(
+        '/api/delivery/settlement-account',
+      );
       final data = unwrapApiMap(response.data);
       if (data.isEmpty) return const Success(null);
       return Success(_settlementAccountDetails(data));
@@ -428,7 +425,8 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
     return DeliveryProfile(
       status: '${json['status'] ?? json['approvalStatus'] ?? 'Pending'}',
       isOnline: json['isOnline'] == true,
-      hasSettlementAccount: account.isNotEmpty ||
+      hasSettlementAccount:
+          account.isNotEmpty ||
           json['hasSettlementAccount'] == true ||
           verificationStatus != null,
       isSettlementAccountVerified: isVerified,
@@ -465,7 +463,9 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
         json['vehiclePhotoMediaId'] ?? json['vehiclePhotoId'],
       ),
       kycApproved: json['kycApproved'] == true || json['isKycApproved'] == true,
-      canGoOnline: json['canGoOnline'] is bool ? json['canGoOnline'] as bool : null,
+      canGoOnline: json['canGoOnline'] is bool
+          ? json['canGoOnline'] as bool
+          : null,
       onlineBlockReason: _stringOrNull(
         json['onlineBlockReason'] ?? json['availabilityBlockReason'],
       ),
@@ -474,6 +474,7 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
       vehicleType: json['vehicleType']?.toString(),
     );
   }
+
   static DeliveryOrder _order(Map<String, dynamic> json) {
     final delivery = json['delivery'] is Map
         ? Map<String, dynamic>.from(json['delivery'] as Map)
@@ -504,8 +505,8 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
                   json['ciervoUserCode'])
               ?.toString(),
       customerName: (json['customerName'] ?? json['clientName'])?.toString(),
-      conversationId:
-          (delivery['conversationId'] ?? json['conversationId'])?.toString(),
+      conversationId: (delivery['conversationId'] ?? json['conversationId'])
+          ?.toString(),
       deliveryPin: (delivery['deliveryPin'] ?? json['deliveryPin'])?.toString(),
       pickupPin: (delivery['pickupPin'] ?? json['pickupPin'])?.toString(),
       pickupCode: json['pickupCode']?.toString(),
@@ -525,14 +526,15 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
             json['subtotalProducts'] ??
             json['subtotal'],
       ),
-      deliveryFee: pricing.deliveryFee ??
+      deliveryFee:
+          pricing.deliveryFee ??
           _num(json['deliveryFee'] ?? json['deliveryAmount']),
-      courierEarning: pricing.courierEarning ??
+      courierEarning:
+          pricing.courierEarning ??
           _num(json['courierEarning'] ?? json['estimatedCourierEarning']),
-      platformFee:
-          pricing.platformFee ?? _num(json['platformFee']),
-      distanceKm: pricing.distanceKm ??
-          _double(json['distanceKm'] ?? json['distance']),
+      platformFee: pricing.platformFee ?? _num(json['platformFee']),
+      distanceKm:
+          pricing.distanceKm ?? _double(json['distanceKm'] ?? json['distance']),
       currency: (json['currency'] ?? json['currencyCode'])?.toString(),
       countryCode: json['countryCode']?.toString(),
       publicUrl: (json['publicUrl'] ?? json['publicReceiptUrl'])?.toString(),
@@ -547,7 +549,9 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
       childProfileId: _stringOrNull(json['childProfileId']),
       businessId: _stringOrNull(json['businessId'] ?? json['business']?['id']),
       deliveryLatitude: _double(json['latitude'] ?? json['deliveryLatitude']),
-      deliveryLongitude: _double(json['longitude'] ?? json['deliveryLongitude']),
+      deliveryLongitude: _double(
+        json['longitude'] ?? json['deliveryLongitude'],
+      ),
       pickupLatitude: _double(json['pickupLatitude']),
       pickupLongitude: _double(json['pickupLongitude']),
       courierLatitude: _double(json['courierLatitude']),
@@ -586,9 +590,10 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
           '${json['businessAddress'] ?? json['pickupAddress'] ?? ''}',
       deliveryAddress:
           '${delivery['deliveryAddress'] ?? json['deliveryAddress'] ?? json['customerAddress'] ?? ''}',
-      distanceKm: pricing.distanceKm ??
-          _double(json['distanceKm'] ?? json['distance']),
-      courierEarning: pricing.courierEarning ??
+      distanceKm:
+          pricing.distanceKm ?? _double(json['distanceKm'] ?? json['distance']),
+      courierEarning:
+          pricing.courierEarning ??
           _num(json['courierEarning'] ?? json['estimatedCourierEarning']),
       currency: (json['currency'] ?? json['currencyCode'])?.toString(),
       pricing: pricing,
@@ -616,7 +621,8 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
   static DeliverySettlementAccountDetails _settlementAccountDetails(
     Map<String, dynamic> json,
   ) => DeliverySettlementAccountDetails(
-    status: '${json['status'] ?? json['verificationStatus'] ?? 'Sin registrar'}',
+    status:
+        '${json['status'] ?? json['verificationStatus'] ?? 'Sin registrar'}',
     settlementMethod: _stringOrNull(json['settlementMethod']),
     maskedAccountNumber: _stringOrNull(
       json['maskedAccountNumber'] ?? json['accountNumberMasked'],
@@ -671,7 +677,9 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
   static OrderQuoteOption? _quoteOption(dynamic raw) {
     if (raw is! Map) return null;
     final json = Map<String, dynamic>.from(raw);
-    final type = OrderFulfillmentType.tryParse(json['fulfillmentType']?.toString());
+    final type = OrderFulfillmentType.tryParse(
+      json['fulfillmentType']?.toString(),
+    );
     if (type == null) return null;
     final pricingJson = json['pricing'];
     final pricing = pricingJson is Map

@@ -15,10 +15,7 @@ void main() {
 
     test('throws AppException when status is false', () {
       expect(
-        () => unwrapApiResponse({
-          'status': false,
-          'msg': 'Saldo insuficiente',
-        }),
+        () => unwrapApiResponse({'status': false, 'msg': 'Saldo insuficiente'}),
         throwsA(
           isA<AppException>().having(
             (e) => e.message,
@@ -32,7 +29,9 @@ void main() {
     test('unwrapApiList reads items envelope', () {
       final list = unwrapApiList({
         'status': true,
-        'value': {'items': [1, 2, 3]},
+        'value': {
+          'items': [1, 2, 3],
+        },
       });
       expect(list, [1, 2, 3]);
     });

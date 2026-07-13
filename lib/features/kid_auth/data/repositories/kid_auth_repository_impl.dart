@@ -31,8 +31,10 @@ class KidAuthRepositoryImpl implements KidAuthRepository {
   }) async {
     try {
       return Success(
-        (await _remoteDataSource.kidLogin(username: username, pin: pin))
-            .toDomain(),
+        (await _remoteDataSource.kidLogin(
+          username: username,
+          pin: pin,
+        )).toDomain(),
       );
     } catch (error) {
       return Failure(ErrorMapper.fromObject(error));
@@ -65,9 +67,7 @@ class KidAuthRepositoryImpl implements KidAuthRepository {
     KidSelfRegisterRequest request,
   ) async {
     try {
-      return Success(
-        (await _remoteDataSource.registerKid(request)).toDomain(),
-      );
+      return Success((await _remoteDataSource.registerKid(request)).toDomain());
     } catch (error) {
       return Failure(ErrorMapper.fromObject(error));
     }

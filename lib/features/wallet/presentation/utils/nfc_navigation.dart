@@ -52,16 +52,16 @@ Future<void> handleNfcError(
       ),
     );
     if (upgrade == true && context.mounted) {
-      await Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const MembershipPage()),
-      );
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const MembershipPage()));
     }
     return;
   }
 
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(UserErrorMessage.from(error))),
-  );
+  ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
 }
 
 Future<void> openNfcPaySetup(

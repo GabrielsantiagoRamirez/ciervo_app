@@ -79,10 +79,15 @@ class _ChildFormViewState extends State<_ChildFormView> {
       _medicalNotes.text = child.medicalNotes ?? '';
       _birthDate = child.birthDate;
       _relationshipType = int.tryParse(child.relationshipType) ?? 1;
+      final savedCountry = (child.countryCode ?? '').trim().toUpperCase();
+      if (savedCountry == 'CL' || savedCountry == 'CO') {
+        _countryCode = savedCountry;
+      }
       final existingDocument = child.documentType;
-      if (existingDocument == 'RUN' ||
-          existingDocument == 'TI' ||
-          existingDocument == 'CERT_NAC') {
+      if (_countryCode != 'CL' &&
+          (existingDocument == 'RUN' ||
+              existingDocument == 'TI' ||
+              existingDocument == 'CERT_NAC')) {
         _countryCode = 'CL';
       }
       _documentType =
@@ -91,6 +96,11 @@ class _ChildFormViewState extends State<_ChildFormView> {
           )
           ? existingDocument
           : null;
+    } else {
+      _countryCode = CountryRegistration.defaultCountryCode();
+      if (_countryCode != 'CL' && _countryCode != 'CO') {
+        _countryCode = 'CO';
+      }
     }
   }
 
@@ -294,7 +304,9 @@ class _ChildFormViewState extends State<_ChildFormView> {
               initialDate:
                   _birthDate ??
                   DateTime.now().subtract(const Duration(days: 365 * 12)),
-              firstDate: DateTime.now().subtract(const Duration(days: 365 * 26)),
+              firstDate: DateTime.now().subtract(
+                const Duration(days: 365 * 26),
+              ),
               lastDate: DateTime.now().subtract(const Duration(days: 365 * 10)),
               helpText: 'Fecha de nacimiento',
             );
@@ -332,13 +344,14 @@ class _ChildFormViewState extends State<_ChildFormView> {
         'documentNumber': _documentNumber.text.trim(),
         'medicalNotes': _medicalNotes.text.trim(),
         'isPrimaryGuardian': _isPrimaryGuardian,
+        'countryCode': _countryCode,
       },
     );
     if (error != null && mounted) {
       if (!await handlePlanLimitError(context, error)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       }
     }
   }

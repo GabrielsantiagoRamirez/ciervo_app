@@ -37,8 +37,7 @@ class _QrMerchantPayPageState extends State<QrMerchantPayPage> {
   }
 
   Future<QrPaymentDetails> _loadDetails() async {
-    final result =
-        await getIt<QrScanRepository>().paymentDetails(widget.token);
+    final result = await getIt<QrScanRepository>().paymentDetails(widget.token);
     return result.when(
       success: (value) => value,
       failure: (error) => throw error,
@@ -71,7 +70,8 @@ class _QrMerchantPayPageState extends State<QrMerchantPayPage> {
     }
 
     setState(() => _paying = true);
-    final key = 'qr-pay-${widget.token}-${DateTime.now().microsecondsSinceEpoch}';
+    final key =
+        'qr-pay-${widget.token}-${DateTime.now().microsecondsSinceEpoch}';
     final result = await getIt<QrScanRepository>().payWithWallet(
       token: widget.token,
       walletCardId: card.id,
@@ -108,9 +108,9 @@ class _QrMerchantPayPageState extends State<QrMerchantPayPage> {
         if (message.toLowerCase().contains('saldo')) {
           await showInsufficientBalanceDialog(context);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(message)));
         }
       },
     );
@@ -119,7 +119,8 @@ class _QrMerchantPayPageState extends State<QrMerchantPayPage> {
 
   Future<void> _payWithMercadoPago(QrPaymentDetails details) async {
     setState(() => _paying = true);
-    final key = 'qr-mp-${widget.token}-${DateTime.now().microsecondsSinceEpoch}';
+    final key =
+        'qr-mp-${widget.token}-${DateTime.now().microsecondsSinceEpoch}';
     final result = await getIt<QrScanRepository>().payWithMercadoPago(
       token: widget.token,
       idempotencyKey: key,
@@ -134,9 +135,9 @@ class _QrMerchantPayPageState extends State<QrMerchantPayPage> {
         if (mounted) Navigator.of(context).pop(true);
       },
       failure: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       },
     );
     if (mounted) setState(() => _paying = false);
@@ -237,7 +238,9 @@ class _QrMerchantPayPageState extends State<QrMerchantPayPage> {
                       label: 'Pagar con Mercado Pago',
                       icon: Icons.account_balance_wallet_outlined,
                       variant: CiervoButtonVariant.secondary,
-                      onPressed: _paying ? null : () => _payWithMercadoPago(details),
+                      onPressed: _paying
+                          ? null
+                          : () => _payWithMercadoPago(details),
                     ),
                   ],
                 ),

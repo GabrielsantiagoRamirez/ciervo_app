@@ -24,9 +24,8 @@ class VersionedNetworkImage extends StatelessWidget {
   final Widget? errorWidget;
 
   String get _cacheKey {
-    final version = updatedAt?.millisecondsSinceEpoch ??
-        _versionFromUrl(imageUrl) ??
-        0;
+    final version =
+        updatedAt?.millisecondsSinceEpoch ?? _versionFromUrl(imageUrl) ?? 0;
     return '${storagePath ?? imageUrl}_$version';
   }
 
@@ -48,9 +47,7 @@ class VersionedNetworkImage extends StatelessWidget {
       placeholder: (_, __) => SizedBox(
         width: width,
         height: height,
-        child: const Center(
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
+        child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
       ),
       errorWidget: (_, __, ___) =>
           errorWidget ??

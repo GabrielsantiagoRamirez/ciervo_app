@@ -60,7 +60,10 @@ class _CardNumberFieldState extends State<CardNumberField> {
               padding: const EdgeInsets.only(right: 12),
               child: CardBrandLogo(brand: _brand),
             ),
-            suffixIconConstraints: const BoxConstraints(minWidth: 56, minHeight: 32),
+            suffixIconConstraints: const BoxConstraints(
+              minWidth: 56,
+              minHeight: 32,
+            ),
           ),
         ),
         if (_brand != CardBrand.unknown) ...[

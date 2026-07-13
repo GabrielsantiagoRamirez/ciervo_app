@@ -30,7 +30,11 @@ abstract interface class ChatRepository {
     String? comment,
   });
   Future<Result<ChatMessage>> sendText(String id, String body);
-  Future<Result<ChatMessage>> sendMedia(String id, String path, String fileName);
+  Future<Result<ChatMessage>> sendMedia(
+    String id,
+    String path,
+    String fileName,
+  );
   Future<Result<ChatMessage>> sendTypedMessage(
     String id, {
     required String messageType,

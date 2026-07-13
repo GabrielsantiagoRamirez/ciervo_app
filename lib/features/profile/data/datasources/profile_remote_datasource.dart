@@ -134,7 +134,8 @@ class DioProfileRemoteDataSource implements ProfileRemoteDataSource {
     );
     final data = unwrapApiMap(response.data);
     final value = data['value'] is Map ? data['value'] as Map : data;
-    final mediaId = value['mediaId'] ??
+    final mediaId =
+        value['mediaId'] ??
         value['MediaId'] ??
         value['id'] ??
         value['photoMediaId'] ??
@@ -162,7 +163,8 @@ class DioProfileRemoteDataSource implements ProfileRemoteDataSource {
       }),
     );
     final data = unwrapApiMap(response.data);
-    final mediaId = data['mediaId'] ??
+    final mediaId =
+        data['mediaId'] ??
         data['MediaId'] ??
         data['id'] ??
         data['photoMediaId'];

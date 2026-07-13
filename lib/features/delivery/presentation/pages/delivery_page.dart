@@ -433,7 +433,9 @@ class _AvailabilityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final canToggle =
-        profile.canGoOnline != false && profile.isSettlementAccountVerified && !acting;
+        profile.canGoOnline != false &&
+        profile.isSettlementAccountVerified &&
+        !acting;
     final blockReason = profile.onlineBlockReason;
     return CiervoCard(
       child: SwitchListTile(
@@ -450,7 +452,7 @@ class _AvailabilityCard extends StatelessWidget {
           canToggle
               ? 'Activa para recibir pedidos cercanos.'
               : blockReason ??
-                  'Necesitas una cuenta de liquidación aprobada para conectarte.',
+                    'Necesitas una cuenta de liquidación aprobada para conectarte.',
         ),
         value: profile.isOnline,
         onChanged: canToggle ? onToggle : null,
@@ -474,18 +476,12 @@ class _RequirementsCard extends StatelessWidget {
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: AppSpacing.sm),
-        _item(
-          'KYC aprobado',
-          profile.kycApproved == true,
-        ),
+        _item('KYC aprobado', profile.kycApproved == true),
         _item(
           'Cuenta de liquidación aprobada',
           profile.isSettlementAccountVerified,
         ),
-        _item(
-          'Perfil domiciliario aprobado',
-          profile.isApproved,
-        ),
+        _item('Perfil domiciliario aprobado', profile.isApproved),
       ],
     ),
   );
@@ -521,7 +517,12 @@ class _ActionGrid extends StatelessWidget {
     spacing: AppSpacing.sm,
     runSpacing: AppSpacing.sm,
     children: [
-      _chip(context, 'Disponibles', Icons.delivery_dining_outlined, onAvailable),
+      _chip(
+        context,
+        'Disponibles',
+        Icons.delivery_dining_outlined,
+        onAvailable,
+      ),
       _chip(context, 'Mis pedidos', Icons.local_shipping_outlined, onOrders),
       _chip(context, 'Chat', Icons.forum_outlined, onChat),
       _chip(context, 'Cuenta', Icons.account_balance_outlined, onSettlement),

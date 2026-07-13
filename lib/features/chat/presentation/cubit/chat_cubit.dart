@@ -169,7 +169,8 @@ class ChatCubit extends Cubit<ChatState> {
     final conversation = state.conversation;
     if (conversation == null || state.isSending) return false;
     emit(state.copyWith(isSending: true, clearError: true));
-    final metadata = '{"latitude":$latitude,"longitude":$longitude'
+    final metadata =
+        '{"latitude":$latitude,"longitude":$longitude'
         '${label != null ? ',"label":"${label.replaceAll('"', r'\"')}"' : ''}'
         '}';
     final result = await _repository.sendTypedMessage(

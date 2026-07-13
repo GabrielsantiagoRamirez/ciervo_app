@@ -25,23 +25,30 @@ abstract final class AppTheme {
       scaffoldBackgroundColor: AppColors.dayBackground,
       canvasColor: AppColors.daySurface,
       colorScheme: colorScheme,
-      textTheme: const TextTheme(
-        displaySmall: AppTextStyles.display,
-        headlineMedium: AppTextStyles.headline,
-        titleLarge: AppTextStyles.title,
-        bodyLarge: AppTextStyles.body,
-        bodyMedium: AppTextStyles.body,
-        bodySmall: AppTextStyles.bodyMuted,
-        labelLarge: AppTextStyles.label,
-      ).copyWith(
-        displaySmall: AppTextStyles.display.copyWith(color: AppColors.dayText),
-        headlineMedium: AppTextStyles.headline.copyWith(color: AppColors.dayText),
-        titleLarge: AppTextStyles.title.copyWith(color: AppColors.dayText),
-        bodyLarge: AppTextStyles.body.copyWith(color: AppColors.dayText),
-        bodyMedium: AppTextStyles.body.copyWith(color: AppColors.dayText),
-        bodySmall: AppTextStyles.bodyMuted.copyWith(color: AppColors.dayTextMuted),
-        labelLarge: AppTextStyles.label.copyWith(color: AppColors.dayText),
-      ),
+      textTheme:
+          const TextTheme(
+            displaySmall: AppTextStyles.display,
+            headlineMedium: AppTextStyles.headline,
+            titleLarge: AppTextStyles.title,
+            bodyLarge: AppTextStyles.body,
+            bodyMedium: AppTextStyles.body,
+            bodySmall: AppTextStyles.bodyMuted,
+            labelLarge: AppTextStyles.label,
+          ).copyWith(
+            displaySmall: AppTextStyles.display.copyWith(
+              color: AppColors.dayText,
+            ),
+            headlineMedium: AppTextStyles.headline.copyWith(
+              color: AppColors.dayText,
+            ),
+            titleLarge: AppTextStyles.title.copyWith(color: AppColors.dayText),
+            bodyLarge: AppTextStyles.body.copyWith(color: AppColors.dayText),
+            bodyMedium: AppTextStyles.body.copyWith(color: AppColors.dayText),
+            bodySmall: AppTextStyles.bodyMuted.copyWith(
+              color: AppColors.dayTextMuted,
+            ),
+            labelLarge: AppTextStyles.label.copyWith(color: AppColors.dayText),
+          ),
       appBarTheme: AppComponentStyles.appBarTheme(
         AppColors.dayBackground,
         AppColors.dayText,
@@ -52,7 +59,10 @@ abstract final class AppTheme {
         shape: const RoundedRectangleBorder(borderRadius: AppRadii.card),
       ),
       chipTheme: AppComponentStyles.chipTheme(colorScheme, false),
-      inputDecorationTheme: AppComponentStyles.inputDecorationTheme(colorScheme, false),
+      inputDecorationTheme: AppComponentStyles.inputDecorationTheme(
+        colorScheme,
+        false,
+      ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: AppComponentStyles.primaryButton(colorScheme),
       ),
@@ -99,31 +109,52 @@ abstract final class AppTheme {
       scaffoldBackgroundColor: AppColors.background,
       canvasColor: AppColors.backgroundAlt,
       colorScheme: colorScheme,
-      textTheme: const TextTheme(
-        displaySmall: AppTextStyles.display,
-        headlineMedium: AppTextStyles.headline,
-        titleLarge: AppTextStyles.title,
-        bodyLarge: AppTextStyles.body,
-        bodyMedium: AppTextStyles.body,
-        bodySmall: AppTextStyles.bodyMuted,
-        labelLarge: AppTextStyles.label,
-      ).copyWith(
-        displaySmall: AppTextStyles.display.copyWith(color: AppColors.textPrimary),
-        headlineMedium: AppTextStyles.headline.copyWith(color: AppColors.textPrimary),
-        titleLarge: AppTextStyles.title.copyWith(color: AppColors.textPrimary),
-        bodyLarge: AppTextStyles.body.copyWith(color: AppColors.textPrimary),
-        bodyMedium: AppTextStyles.body.copyWith(color: AppColors.textPrimary),
-        bodySmall: AppTextStyles.bodyMuted.copyWith(color: AppColors.textMuted),
-        labelLarge: AppTextStyles.label.copyWith(color: AppColors.textPrimary),
+      textTheme:
+          const TextTheme(
+            displaySmall: AppTextStyles.display,
+            headlineMedium: AppTextStyles.headline,
+            titleLarge: AppTextStyles.title,
+            bodyLarge: AppTextStyles.body,
+            bodyMedium: AppTextStyles.body,
+            bodySmall: AppTextStyles.bodyMuted,
+            labelLarge: AppTextStyles.label,
+          ).copyWith(
+            displaySmall: AppTextStyles.display.copyWith(
+              color: AppColors.textPrimary,
+            ),
+            headlineMedium: AppTextStyles.headline.copyWith(
+              color: AppColors.textPrimary,
+            ),
+            titleLarge: AppTextStyles.title.copyWith(
+              color: AppColors.textPrimary,
+            ),
+            bodyLarge: AppTextStyles.body.copyWith(
+              color: AppColors.textPrimary,
+            ),
+            bodyMedium: AppTextStyles.body.copyWith(
+              color: AppColors.textPrimary,
+            ),
+            bodySmall: AppTextStyles.bodyMuted.copyWith(
+              color: AppColors.textMuted,
+            ),
+            labelLarge: AppTextStyles.label.copyWith(
+              color: AppColors.textPrimary,
+            ),
+          ),
+      appBarTheme: AppComponentStyles.appBarTheme(
+        AppColors.background,
+        AppColors.textPrimary,
       ),
-      appBarTheme: AppComponentStyles.appBarTheme(AppColors.background, AppColors.textPrimary),
       cardTheme: CardThemeData(
         color: AppColors.surfaceHigh,
         elevation: 0,
         shape: const RoundedRectangleBorder(borderRadius: AppRadii.card),
       ),
       chipTheme: AppComponentStyles.chipTheme(colorScheme, true),
-      inputDecorationTheme: AppComponentStyles.inputDecorationTheme(colorScheme, true),
+      inputDecorationTheme: AppComponentStyles.inputDecorationTheme(
+        colorScheme,
+        true,
+      ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: AppComponentStyles.primaryButton(colorScheme),
       ),

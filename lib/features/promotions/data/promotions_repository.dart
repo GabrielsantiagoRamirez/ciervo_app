@@ -105,7 +105,9 @@ class PromotionsRepository {
 
   Future<Result<CurrentPromotion?>> current() async {
     try {
-      final response = await _client.dio.get<dynamic>('/api/promotions/current');
+      final response = await _client.dio.get<dynamic>(
+        '/api/promotions/current',
+      );
       final raw = unwrapApiResponse(response.data);
       if (raw == null) return const Success(null);
       if (raw is Map) {
@@ -136,9 +138,7 @@ class PromotionsRepository {
           'idempotencyKey': idempotencyKey,
         },
       );
-      final result = GoldTrialClaimResult.fromJson(
-        unwrapApiMap(response.data),
-      );
+      final result = GoldTrialClaimResult.fromJson(unwrapApiMap(response.data));
       await _clearClaimIdempotencyKey();
       return Success(result);
     } catch (error) {

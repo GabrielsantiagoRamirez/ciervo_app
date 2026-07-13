@@ -90,7 +90,9 @@ class CiervoPushService {
     final initial = await messaging.getInitialMessage();
     if (initial != null) _handleOpenedPayload(initial.data);
 
-    final token = await messaging.getToken().timeout(const Duration(seconds: 8));
+    final token = await messaging.getToken().timeout(
+      const Duration(seconds: 8),
+    );
     if (token != null) await _registerToken(token);
   }
 

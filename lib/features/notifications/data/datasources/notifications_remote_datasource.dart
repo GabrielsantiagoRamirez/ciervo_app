@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, TargetPlatform;
 
 import '../../../../core/network/api_response_unwrapper.dart';
 import '../../../../core/network/network_client.dart';
@@ -24,7 +25,8 @@ abstract interface class NotificationsRemoteDataSource {
   Future<void> unregisterAllFcmTokens();
 }
 
-class DioNotificationsRemoteDataSource implements NotificationsRemoteDataSource {
+class DioNotificationsRemoteDataSource
+    implements NotificationsRemoteDataSource {
   const DioNotificationsRemoteDataSource(this._client);
   final NetworkClient _client;
 
@@ -47,8 +49,9 @@ class DioNotificationsRemoteDataSource implements NotificationsRemoteDataSource 
 
   @override
   Future<NotificationBadges> badges() async {
-    final response =
-        await _client.dio.get<Map<String, dynamic>>('/api/notifications/badges');
+    final response = await _client.dio.get<Map<String, dynamic>>(
+      '/api/notifications/badges',
+    );
     return NotificationBadges.fromJson(unwrapApiMap(response.data));
   }
 
@@ -74,8 +77,9 @@ class DioNotificationsRemoteDataSource implements NotificationsRemoteDataSource 
 
   @override
   Future<Map<String, dynamic>> preferences() async {
-    final response =
-        await _client.dio.get<dynamic>('/api/notifications/preferences');
+    final response = await _client.dio.get<dynamic>(
+      '/api/notifications/preferences',
+    );
     return unwrapApiMap(response.data);
   }
 

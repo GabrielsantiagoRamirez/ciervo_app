@@ -65,66 +65,64 @@ class _StaffOrderDetailPageState extends State<StaffOrderDetailPage> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Text(_error!))
-              : order == null
-                  ? const Center(child: Text('Pedido no encontrado.'))
-                  : RefreshIndicator(
-                      onRefresh: _load,
-                      child: ListView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.all(AppSpacing.lg),
-                        children: [
-                          Text(
-                            order.reference.isEmpty
-                                ? 'Pedido #${order.id}'
-                                : order.reference,
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                          const SizedBox(height: AppSpacing.xs),
-                          _line('Estado', staffOrderStatusLabel(order.status)),
-                          _line('Cliente', order.customerName),
-                          _line('Telefono', order.customerPhone),
-                          _line('Direccion', order.deliveryAddress),
-                          _line('Total', '\$${order.total}'),
-                          if (order.notes != null) _line('Notas', order.notes!),
-                          if (order.deliveryPersonName != null)
-                            _line('Domiciliario', order.deliveryPersonName!),
-                          const SizedBox(height: AppSpacing.lg),
-                          Text('Items', style: Theme.of(context).textTheme.titleLarge),
-                          const SizedBox(height: AppSpacing.sm),
-                          ...order.items.map(
-                            (item) => ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              title: Text(item.productName),
-                              subtitle: Text(
-                                '${item.quantity} x \$${item.unitPrice}',
-                              ),
-                              trailing: Text('\$${item.totalPrice}'),
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          if (widget.canManage)
-                            ..._actionsFor(order.status).map(
-                              (action) => Padding(
-                                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                                child: CiervoButton(
-                                  label: action.label,
-                                  icon: action.icon,
-                                  state: _acting
-                                      ? CiervoButtonState.loading
-                                      : CiervoButtonState.normal,
-                                  variant: action.status == 'rejected'
-                                      ? CiervoButtonVariant.secondary
-                                      : CiervoButtonVariant.primary,
-                                  onPressed: _acting
-                                      ? null
-                                      : () => _updateStatus(action.status),
-                                ),
-                              ),
-                            ),
-                        ],
+          ? Center(child: Text(_error!))
+          : order == null
+          ? const Center(child: Text('Pedido no encontrado.'))
+          : RefreshIndicator(
+              onRefresh: _load,
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                children: [
+                  Text(
+                    order.reference.isEmpty
+                        ? 'Pedido #${order.id}'
+                        : order.reference,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  _line('Estado', staffOrderStatusLabel(order.status)),
+                  _line('Cliente', order.customerName),
+                  _line('Telefono', order.customerPhone),
+                  _line('Direccion', order.deliveryAddress),
+                  _line('Total', '\$${order.total}'),
+                  if (order.notes != null) _line('Notas', order.notes!),
+                  if (order.deliveryPersonName != null)
+                    _line('Domiciliario', order.deliveryPersonName!),
+                  const SizedBox(height: AppSpacing.lg),
+                  Text('Items', style: Theme.of(context).textTheme.titleLarge),
+                  const SizedBox(height: AppSpacing.sm),
+                  ...order.items.map(
+                    (item) => ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(item.productName),
+                      subtitle: Text('${item.quantity} x \$${item.unitPrice}'),
+                      trailing: Text('\$${item.totalPrice}'),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  if (widget.canManage)
+                    ..._actionsFor(order.status).map(
+                      (action) => Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                        child: CiervoButton(
+                          label: action.label,
+                          icon: action.icon,
+                          state: _acting
+                              ? CiervoButtonState.loading
+                              : CiervoButtonState.normal,
+                          variant: action.status == 'rejected'
+                              ? CiervoButtonVariant.secondary
+                              : CiervoButtonVariant.primary,
+                          onPressed: _acting
+                              ? null
+                              : () => _updateStatus(action.status),
+                        ),
                       ),
                     ),
+                ],
+              ),
+            ),
     );
   }
 
@@ -138,21 +136,29 @@ class _StaffOrderDetailPageState extends State<StaffOrderDetailPage> {
 
   List<_StatusAction> _actionsFor(String status) => switch (status) {
     'pending' => const [
-        _StatusAction('accepted', 'Aceptar', Icons.check_circle_outline),
-        _StatusAction('rejected', 'Rechazar', Icons.cancel_outlined),
-      ],
+      _StatusAction('accepted', 'Aceptar', Icons.check_circle_outline),
+      _StatusAction('rejected', 'Rechazar', Icons.cancel_outlined),
+    ],
     'accepted' => const [
-        _StatusAction('preparing', 'Marcar en preparacion', Icons.soup_kitchen_outlined),
-      ],
+      _StatusAction(
+        'preparing',
+        'Marcar en preparacion',
+        Icons.soup_kitchen_outlined,
+      ),
+    ],
     'preparing' => const [
-        _StatusAction('ready_for_pickup', 'Marcar listo', Icons.inventory_2_outlined),
-      ],
+      _StatusAction(
+        'ready_for_pickup',
+        'Marcar listo',
+        Icons.inventory_2_outlined,
+      ),
+    ],
     'ready_for_pickup' => const [
-        _StatusAction('picked_up', 'Confirmar recogida', Icons.delivery_dining),
-      ],
+      _StatusAction('picked_up', 'Confirmar recogida', Icons.delivery_dining),
+    ],
     'picked_up' => const [
-        _StatusAction('delivered', 'Marcar entregado', Icons.done_all),
-      ],
+      _StatusAction('delivered', 'Marcar entregado', Icons.done_all),
+    ],
     _ => const [],
   };
 
@@ -168,9 +174,9 @@ class _StaffOrderDetailPageState extends State<StaffOrderDetailPage> {
     setState(() => _acting = false);
     result.when(
       success: (order) => setState(() => _order = order),
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 }

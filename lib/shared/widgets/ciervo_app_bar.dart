@@ -14,11 +14,7 @@ class CiervoAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-      title: Text(title),
-      actions: actions,
-      leading: leading,
-    );
+    return AppBar(title: Text(title), actions: actions, leading: leading);
   }
 
   @override

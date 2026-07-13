@@ -189,9 +189,9 @@ class _QrWalletPageState extends State<QrWalletPage>
     if (!mounted) return;
     result.when(
       success: (qr) => _showQrDetail(qr),
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 
@@ -200,14 +200,14 @@ class _QrWalletPageState extends State<QrWalletPage>
     if (!mounted) return;
     result.when(
       success: (_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Beneficio redimido.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Beneficio redimido.')));
         setState(_load);
       },
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 
@@ -396,14 +396,13 @@ List<CiervoQrItem> _items(
   Result<List<CiervoQrItem>> result,
   List<String> errors,
   String label,
-) =>
-    result.when(
-      success: (value) => value,
-      failure: (error) {
-        errors.add('$label: ${UserErrorMessage.from(error)}');
-        return const [];
-      },
-    );
+) => result.when(
+  success: (value) => value,
+  failure: (error) {
+    errors.add('$label: ${UserErrorMessage.from(error)}');
+    return const [];
+  },
+);
 
 int? _points(Result<int?> result, List<String> errors) => result.when(
   success: (value) => value is int ? value : null,

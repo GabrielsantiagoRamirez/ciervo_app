@@ -8,13 +8,11 @@ import 'parent_payment_history_page.dart';
 
 /// Navegación centralizada para deep links y push de Family Payments.
 abstract final class FamilyPaymentNavigation {
-  static bool openFromPayload(
-    BuildContext context,
-    Map<String, dynamic> data,
-  ) {
+  static bool openFromPayload(BuildContext context, Map<String, dynamic> data) {
     final type = _combinedType(data);
     final paymentId = _paymentId(data);
-    final kidId = data['kidId']?.toString() ?? data['childProfileId']?.toString();
+    final kidId =
+        data['kidId']?.toString() ?? data['childProfileId']?.toString();
 
     if (_matches(type, 'payment.pending_parent') && paymentId != null) {
       _push(context, ParentPaymentApprovalPage(paymentId: paymentId));
@@ -44,8 +42,7 @@ abstract final class FamilyPaymentNavigation {
       _push(context, const FamilyPaymentMethodsPage());
       return true;
     }
-    if (_matches(type, 'limits.updated') ||
-        _matches(type, 'rules.updated')) {
+    if (_matches(type, 'limits.updated') || _matches(type, 'rules.updated')) {
       if (kidId != null && kidId.isNotEmpty) {
         // El hub se abre desde Kids; aquí llevamos al historial familiar.
         _push(context, const ParentPaymentHistoryPage());
@@ -119,18 +116,23 @@ Future<void> showFamilyPaymentResultDialog(
   BuildContext context, {
   required FamilyPaymentDetail payment,
 }) {
-  final usedParentCard = payment.usedParentCard ||
+  final usedParentCard =
+      payment.usedParentCard ||
       (payment.fundingSource ?? '').toLowerCase().contains('parent');
   return showDialog<void>(
     context: context,
     barrierDismissible: false,
     builder: (context) => AlertDialog(
       icon: Icon(
-        usedParentCard ? Icons.verified_user_outlined : Icons.check_circle_outline,
+        usedParentCard
+            ? Icons.verified_user_outlined
+            : Icons.check_circle_outline,
         size: 48,
         color: Theme.of(context).colorScheme.primary,
       ),
-      title: Text(usedParentCard ? 'Pago autorizado por tu tutor' : 'Pago realizado'),
+      title: Text(
+        usedParentCard ? 'Pago autorizado por tu tutor' : 'Pago realizado',
+      ),
       content: Text(
         usedParentCard
             ? 'Tu compra en ${payment.merchantName} fue autorizada. No mostramos información bancaria.'

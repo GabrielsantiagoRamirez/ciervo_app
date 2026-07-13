@@ -151,89 +151,118 @@ class _SecureShipmentCreatePageState extends State<SecureShipmentCreatePage> {
             AppSpacing.xxl,
           ),
           children: [
-          CiervoCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Protege tu venta',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                const Text(
-                  'El comprador retiene el pago en su wallet hasta confirmar la entrega con PIN dual.',
-                ),
-              ],
+            CiervoCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Protege tu venta',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  const Text(
+                    'El comprador retiene el pago en su wallet hasta confirmar la entrega con PIN dual.',
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Comprador / receptor'),
-            subtitle: Text(
-              _receiverName ?? 'Busca un contacto en CIERVO',
+            const SizedBox(height: AppSpacing.lg),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Comprador / receptor'),
+              subtitle: Text(_receiverName ?? 'Busca un contacto en CIERVO'),
+              trailing: const Icon(Icons.person_search_outlined),
+              onTap: _pickReceiver,
             ),
-            trailing: const Icon(Icons.person_search_outlined),
-            onTap: _pickReceiver,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          TextField(
-            controller: _origin,
-            decoration: const InputDecoration(labelText: 'Dirección de origen'),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          TextField(
-            controller: _destination,
-            decoration: const InputDecoration(labelText: 'Dirección de destino'),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Text('Desglose del monto', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: AppSpacing.sm),
-          _MoneyField(controller: _product, label: 'Valor producto', onChanged: _recalculateTotal),
-          _MoneyField(controller: _shipping, label: 'Envío', onChanged: _recalculateTotal),
-          _MoneyField(controller: _insurance, label: 'Seguro', onChanged: _recalculateTotal),
-          _MoneyField(controller: _tax, label: 'Impuestos', onChanged: _recalculateTotal),
-          _MoneyField(controller: _commission, label: 'Comisión', onChanged: _recalculateTotal),
-          const SizedBox(height: AppSpacing.md),
-          TextField(
-            controller: _total,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: InputDecoration(
-              labelText: 'Total ($_currency)',
-              prefixText: '\$ ',
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: _origin,
+              decoration: const InputDecoration(
+                labelText: 'Dirección de origen',
+              ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          TextField(
-            controller: _carrier,
-            decoration: const InputDecoration(labelText: 'Transportadora (opcional)'),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          TextField(
-            controller: _tracking,
-            decoration: const InputDecoration(labelText: 'Guía / tracking (opcional)'),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          TextField(
-            controller: _notes,
-            maxLines: 2,
-            decoration: const InputDecoration(labelText: 'Notas (opcional)'),
-          ),
-          if (_error != null) ...[
-            const SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: _destination,
+              decoration: const InputDecoration(
+                labelText: 'Dirección de destino',
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
             Text(
-              _error!,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
+              'Desglose del monto',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            _MoneyField(
+              controller: _product,
+              label: 'Valor producto',
+              onChanged: _recalculateTotal,
+            ),
+            _MoneyField(
+              controller: _shipping,
+              label: 'Envío',
+              onChanged: _recalculateTotal,
+            ),
+            _MoneyField(
+              controller: _insurance,
+              label: 'Seguro',
+              onChanged: _recalculateTotal,
+            ),
+            _MoneyField(
+              controller: _tax,
+              label: 'Impuestos',
+              onChanged: _recalculateTotal,
+            ),
+            _MoneyField(
+              controller: _commission,
+              label: 'Comisión',
+              onChanged: _recalculateTotal,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: _total,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: InputDecoration(
+                labelText: 'Total ($_currency)',
+                prefixText: '\$ ',
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            TextField(
+              controller: _carrier,
+              decoration: const InputDecoration(
+                labelText: 'Transportadora (opcional)',
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: _tracking,
+              decoration: const InputDecoration(
+                labelText: 'Guía / tracking (opcional)',
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: _notes,
+              maxLines: 2,
+              decoration: const InputDecoration(labelText: 'Notas (opcional)'),
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                _error!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.xl),
+            CiervoButton(
+              label: _submitting ? 'Creando envío...' : 'Crear envío seguro',
+              icon: Icons.verified_user_outlined,
+              onPressed: _submitting ? null : _submit,
             ),
           ],
-          const SizedBox(height: AppSpacing.xl),
-          CiervoButton(
-            label: _submitting ? 'Creando envío...' : 'Crear envío seguro',
-            icon: Icons.verified_user_outlined,
-            onPressed: _submitting ? null : _submit,
-          ),
-        ],
         ),
       ),
     );

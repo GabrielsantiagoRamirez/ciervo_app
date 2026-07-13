@@ -1,6 +1,15 @@
 import '../../domain/entities/user_profile.dart';
 
-enum ProfileStatus { initial, loading, loaded, saving, uploadingPhoto, saved, empty, failure }
+enum ProfileStatus {
+  initial,
+  loading,
+  loaded,
+  saving,
+  uploadingPhoto,
+  saved,
+  empty,
+  failure,
+}
 
 class ProfileState {
   const ProfileState({
@@ -31,8 +40,9 @@ class ProfileState {
     return ProfileState(
       status: status ?? this.status,
       profile: profile ?? this.profile,
-      ciervoUserCode:
-          clearCiervoUserCode ? null : ciervoUserCode ?? this.ciervoUserCode,
+      ciervoUserCode: clearCiervoUserCode
+          ? null
+          : ciervoUserCode ?? this.ciervoUserCode,
       errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
     );
   }

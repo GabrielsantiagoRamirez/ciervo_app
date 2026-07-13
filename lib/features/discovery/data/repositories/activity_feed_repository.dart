@@ -10,12 +10,12 @@ class ActivityFeedRepository {
   final NetworkClient _client;
 
   Future<Result<List<ActivityFeedItem>>> feed() => _guard(() async {
-    final response =
-        await _client.dio.get<dynamic>('/api/discovery/activity-feed');
-    return unwrapApiList(response.data)
-        .whereType<Map<String, dynamic>>()
-        .map(_fromJson)
-        .toList();
+    final response = await _client.dio.get<dynamic>(
+      '/api/discovery/activity-feed',
+    );
+    return unwrapApiList(
+      response.data,
+    ).whereType<Map<String, dynamic>>().map(_fromJson).toList();
   });
 
   Future<Result<T>> _guard<T>(Future<T> Function() action) async {

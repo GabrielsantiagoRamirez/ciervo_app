@@ -29,11 +29,7 @@ void main() {
   group('AddFamilyCardResponseDto', () {
     test('detecta flujo 3DS', () {
       final dto = AddFamilyCardResponseDto.fromJson({
-        'card': {
-          'id': '9',
-          'brand': 'master',
-          'lastFour': '1234',
-        },
+        'card': {'id': '9', 'brand': 'master', 'lastFour': '1234'},
         'requires3DS': true,
         'verificationUrl': 'https://mp.test/3ds',
       });

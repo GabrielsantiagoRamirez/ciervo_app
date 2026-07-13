@@ -25,7 +25,9 @@ Future<bool> showChatForwardSheet(
 
   if (targets.isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('No hay otros chats disponibles para reenviar.')),
+      const SnackBar(
+        content: Text('No hay otros chats disponibles para reenviar.'),
+      ),
     );
     return false;
   }
@@ -62,9 +64,7 @@ Future<bool> showChatForwardSheet(
       title: const Text('Reenviar mensaje'),
       content: TextField(
         controller: commentController,
-        decoration: const InputDecoration(
-          hintText: 'Comentario opcional',
-        ),
+        decoration: const InputDecoration(hintText: 'Comentario opcional'),
       ),
       actions: [
         TextButton(
@@ -95,15 +95,15 @@ Future<bool> showChatForwardSheet(
 
   return result.when(
     success: (_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Mensaje reenviado.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Mensaje reenviado.')));
       return true;
     },
     failure: (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       return false;
     },
   );

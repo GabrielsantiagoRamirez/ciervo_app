@@ -1,9 +1,5 @@
 class PlanLimit {
-  const PlanLimit({
-    required this.isEnabled,
-    this.limitValue,
-    this.multiplier,
-  });
+  const PlanLimit({required this.isEnabled, this.limitValue, this.multiplier});
 
   final bool isEnabled;
   final int? limitValue;
@@ -29,7 +25,8 @@ class PlanLimit {
       multiplier = double.tryParse('${rawMultiplier ?? ''}');
     }
     return PlanLimit(
-      isEnabled: map['isEnabled'] == true ||
+      isEnabled:
+          map['isEnabled'] == true ||
           map['isEnabled']?.toString().toLowerCase() == 'true',
       limitValue: limitValue,
       multiplier: multiplier,

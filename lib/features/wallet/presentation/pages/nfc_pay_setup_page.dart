@@ -163,15 +163,17 @@ class _NfcPaySetupPageState extends State<NfcPaySetupPage> {
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   String _paymentMethodLabel(WalletCard card) {
     final kind = card.name.toLowerCase().contains('okbus')
         ? 'Tarjeta OKBuses'
         : card.isPrimary
-            ? 'Wallet Ciervo'
-            : card.name;
+        ? 'Wallet Ciervo'
+        : card.name;
     return '$kind · ${DisplayFormatters.formatMoney(card.availableBalance, currency: card.currency)}';
   }
 
@@ -260,14 +262,16 @@ class _NfcPaySetupPageState extends State<NfcPaySetupPage> {
                         onChanged: _submitting
                             ? null
                             : (value) => setState(
-                                  () => _selectedCard = _cards
-                                      .where((c) => c.id == value)
-                                      .firstOrNull,
-                                ),
+                                () => _selectedCard = _cards
+                                    .where((c) => c.id == value)
+                                    .firstOrNull,
+                              ),
                       ),
                     const SizedBox(height: AppSpacing.lg),
                     CiervoButton(
-                      label: _submitting ? 'Preparando NFC...' : 'Activar pago NFC',
+                      label: _submitting
+                          ? 'Preparando NFC...'
+                          : 'Activar pago NFC',
                       icon: Icons.nfc,
                       state: _submitting
                           ? CiervoButtonState.loading

@@ -53,9 +53,9 @@ Future<void> showSecureShipmentPinModal(
           SelectableText(
             pin,
             style: Theme.of(ctx).textTheme.displaySmall?.copyWith(
-                  letterSpacing: 8,
-                  fontWeight: FontWeight.w800,
-                ),
+              letterSpacing: 8,
+              fontWeight: FontWeight.w800,
+            ),
             textAlign: TextAlign.center,
           ),
           if (expiresAt != null) ...[

@@ -130,8 +130,14 @@ class GeolocatorLocationService implements LocationService {
   }
 
   Future<void> _saveLastKnownLocation(AppLocation location) async {
-    await _storage.write(_lastLatitudeKey, location.latitude.toStringAsFixed(4));
-    await _storage.write(_lastLongitudeKey, location.longitude.toStringAsFixed(4));
+    await _storage.write(
+      _lastLatitudeKey,
+      location.latitude.toStringAsFixed(4),
+    );
+    await _storage.write(
+      _lastLongitudeKey,
+      location.longitude.toStringAsFixed(4),
+    );
     if (location.accuracy != null) {
       await _storage.write(_lastAccuracyKey, location.accuracy.toString());
     }
@@ -140,8 +146,7 @@ class GeolocatorLocationService implements LocationService {
   AppLocationPermissionStatus _mapPermission(LocationPermission permission) {
     return switch (permission) {
       LocationPermission.always ||
-      LocationPermission.whileInUse =>
-        AppLocationPermissionStatus.granted,
+      LocationPermission.whileInUse => AppLocationPermissionStatus.granted,
       LocationPermission.denied => AppLocationPermissionStatus.denied,
       LocationPermission.deniedForever =>
         AppLocationPermissionStatus.deniedForever,

@@ -100,9 +100,7 @@ class _BonusDetailPageState extends State<BonusDetailPage> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(
-        body: CiervoBrandLoader(message: 'Cargando bono'),
-      );
+      return const Scaffold(body: CiervoBrandLoader(message: 'Cargando bono'));
     }
     if (_error != null || _bonus == null) {
       return Scaffold(
@@ -112,7 +110,8 @@ class _BonusDetailPageState extends State<BonusDetailPage> {
     }
     final bonus = _bonus!;
     final canClaim = bonus.status == BonusStatus.active;
-    final canRedeem = bonus.canRedeem ||
+    final canRedeem =
+        bonus.canRedeem ||
         bonus.status == BonusStatus.claimed ||
         bonus.status == BonusStatus.paid;
 
@@ -241,46 +240,53 @@ class _PlaceDetailBonusesSectionState extends State<PlaceDetailBonusesSection> {
 
   Future<List<Bonus>> _load() async {
     final result = await getIt<BonusesRepository>().catalog(
-      BonusFilters(businessId: widget.businessId, activeOnly: true, pageSize: 6),
+      BonusFilters(
+        businessId: widget.businessId,
+        activeOnly: true,
+        pageSize: 6,
+      ),
     );
     return result.when(success: (value) => value, failure: (_) => const []);
   }
 
   @override
   Widget build(BuildContext context) => FutureBuilder<List<Bonus>>(
-        future: _items,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const SizedBox(
-              height: 48,
-              child: Center(
-                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
-              ),
-            );
-          }
-          final items = snapshot.data ?? const [];
-          if (items.isEmpty) return const SizedBox.shrink();
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Bonos activos', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: AppSpacing.sm),
-              ...items.map(
-                (bonus) => Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                  child: BonusCard(
-                    bonus: bonus,
-                    compact: true,
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => BonusDetailPage(bonusId: bonus.id),
-                      ),
-                    ),
+    future: _items,
+    builder: (context, snapshot) {
+      if (snapshot.connectionState != ConnectionState.done) {
+        return const SizedBox(
+          height: 48,
+          child: Center(
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: AppColors.primary,
+            ),
+          ),
+        );
+      }
+      final items = snapshot.data ?? const [];
+      if (items.isEmpty) return const SizedBox.shrink();
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Bonos activos', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: AppSpacing.sm),
+          ...items.map(
+            (bonus) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: BonusCard(
+                bonus: bonus,
+                compact: true,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => BonusDetailPage(bonusId: bonus.id),
                   ),
                 ),
               ),
-            ],
-          );
-        },
+            ),
+          ),
+        ],
       );
+    },
+  );
 }

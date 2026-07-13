@@ -18,14 +18,14 @@ class KidMeRepository {
   final NetworkClient _client;
 
   Future<Result<Map<String, dynamic>>> home() => _guard(() async {
-        final response = await _client.dio.get<dynamic>('/api/kids/me/home');
-        return unwrapApiMap(response.data);
-      });
+    final response = await _client.dio.get<dynamic>('/api/kids/me/home');
+    return unwrapApiMap(response.data);
+  });
 
   Future<Result<Map<String, dynamic>>> wallet() => _guard(() async {
-        final response = await _client.dio.get<dynamic>('/api/kids/me/wallet');
-        return unwrapApiMap(response.data);
-      });
+    final response = await _client.dio.get<dynamic>('/api/kids/me/wallet');
+    return unwrapApiMap(response.data);
+  });
 
   Future<Result<List<Map<String, dynamic>>>> allowedBusinesses({
     String? query,
@@ -33,38 +33,36 @@ class KidMeRepository {
     int? categoryId,
     int page = 1,
     int pageSize = 30,
-  }) =>
-      _guard(() async {
-        final response = await _client.dio.get<dynamic>(
-          '/api/kids/me/allowed-businesses',
-          queryParameters: {
-            if (query != null && query.trim().isNotEmpty) 'query': query.trim(),
-            if (city != null && city.trim().isNotEmpty) 'city': city.trim(),
-            if (categoryId != null) 'categoryId': categoryId,
-            'page': page,
-            'pageSize': pageSize,
-          },
-        );
-        final value = unwrapApiResponse(response.data);
-        if (value is List) {
-          return value
-              .whereType<Map>()
-              .map((e) => Map<String, dynamic>.from(e))
-              .toList();
-        }
-        if (value is Map && value['items'] is List) {
-          return (value['items'] as List)
-              .whereType<Map>()
-              .map((e) => Map<String, dynamic>.from(e))
-              .toList();
-        }
-        return const [];
-      });
+  }) => _guard(() async {
+    final response = await _client.dio.get<dynamic>(
+      '/api/kids/me/allowed-businesses',
+      queryParameters: {
+        if (query != null && query.trim().isNotEmpty) 'query': query.trim(),
+        if (city != null && city.trim().isNotEmpty) 'city': city.trim(),
+        if (categoryId != null) 'categoryId': categoryId,
+        'page': page,
+        'pageSize': pageSize,
+      },
+    );
+    final value = unwrapApiResponse(response.data);
+    if (value is List) {
+      return value
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
+    }
+    if (value is Map && value['items'] is List) {
+      return (value['items'] as List)
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
+    }
+    return const [];
+  });
 
   Future<Result<KidMeProfile>> profile() async {
     final direct = await _guard(() async {
-      final response =
-          await _client.dio.get<dynamic>('/api/kids/me/profile');
+      final response = await _client.dio.get<dynamic>('/api/kids/me/profile');
       return KidMeProfileDto.fromJson(unwrapApiMap(response.data)).toDomain();
     });
     if (direct case Success(:final value) when _hasProfileContent(value)) {
@@ -72,9 +70,7 @@ class KidMeRepository {
     }
     final homeResult = await home();
     return homeResult.when(
-      success: (data) => Success(
-        KidMeProfileDto.fromHomeMap(data).toDomain(),
-      ),
+      success: (data) => Success(KidMeProfileDto.fromHomeMap(data).toDomain()),
       failure: (_) => direct,
     );
   }
@@ -85,10 +81,9 @@ class KidMeRepository {
       profile.ciervoUserCode.isNotEmpty;
 
   Future<Result<ChatConversation>> familyChat() => _guard(() async {
-        final response =
-            await _client.dio.get<dynamic>('/api/kids/me/family-chat');
-        return conversationFromJson(unwrapApiMap(response.data));
-      });
+    final response = await _client.dio.get<dynamic>('/api/kids/me/family-chat');
+    return conversationFromJson(unwrapApiMap(response.data));
+  });
 
   Future<Result<List<ChatMessage>>> messages(String conversationId) =>
       _guard(() async {
@@ -104,13 +99,12 @@ class KidMeRepository {
   Future<Result<void>> shareLocation({
     required double latitude,
     required double longitude,
-  }) =>
-      _guard(() async {
-        await _client.dio.post<void>(
-          '/api/kids/me/location/share',
-          data: {'latitude': latitude, 'longitude': longitude},
-        );
-      });
+  }) => _guard(() async {
+    await _client.dio.post<void>(
+      '/api/kids/me/location/share',
+      data: {'latitude': latitude, 'longitude': longitude},
+    );
+  });
 
   Future<Result<List<Map<String, dynamic>>>> tutors() async {
     final result = await profile();
@@ -122,17 +116,16 @@ class KidMeRepository {
 
   List<Map<String, dynamic>> _guardiansAsMaps(
     List<KidGuardianSummary> guardians,
-  ) =>
-      guardians
-          .map(
-            (guardian) => {
-              'displayName': guardian.displayName,
-              'username': guardian.username,
-              'ciervoUserCode': guardian.ciervoUserCode,
-              'isPrimaryGuardian': guardian.isPrimary,
-            },
-          )
-          .toList();
+  ) => guardians
+      .map(
+        (guardian) => {
+          'displayName': guardian.displayName,
+          'username': guardian.username,
+          'ciervoUserCode': guardian.ciervoUserCode,
+          'isPrimaryGuardian': guardian.isPrimary,
+        },
+      )
+      .toList();
 
   Future<Result<Map<String, dynamic>>> updateDisplayName(String displayName) =>
       _guard(() async {
@@ -146,16 +139,15 @@ class KidMeRepository {
   Future<Result<Map<String, dynamic>>> uploadPhoto({
     required String path,
     required String fileName,
-  }) =>
-      _guard(() async {
-        final response = await _client.dio.post<dynamic>(
-          '/api/kids/me/photo',
-          data: FormData.fromMap({
-            'file': await MultipartFile.fromFile(path, filename: fileName),
-          }),
-        );
-        return unwrapApiMap(response.data);
-      });
+  }) => _guard(() async {
+    final response = await _client.dio.post<dynamic>(
+      '/api/kids/me/photo',
+      data: FormData.fromMap({
+        'file': await MultipartFile.fromFile(path, filename: fileName),
+      }),
+    );
+    return unwrapApiMap(response.data);
+  });
 
   Future<Result<Map<String, dynamic>>> requestPayForMe({
     required double amount,
@@ -170,39 +162,38 @@ class KidMeRepository {
     double? longitude,
     String? address,
     bool shareInFamilyChat = false,
-  }) =>
-      _guard(() async {
-        final resolvedCurrency =
-            currency ?? CountryRegistration.currencyForCountry(country ?? 'CO');
-        final response = await _client.dio.post<dynamic>(
-          '/api/kids/me/pay-for-me/request',
-          data: {
-            if (businessId != null && businessId.isNotEmpty)
-              'businessId': int.tryParse(businessId) ?? businessId,
-            'amount': amount,
-            'currency': resolvedCurrency,
-            if (country != null && country.isNotEmpty) 'country': country,
-            if (description != null && description.trim().isNotEmpty)
-              'description': description.trim(),
-            if (requestedToTutorId != null && requestedToTutorId.isNotEmpty)
-              'requestedToTutorId':
-                  int.tryParse(requestedToTutorId) ?? requestedToTutorId,
-            if (commerceCiervoId != null && commerceCiervoId.isNotEmpty)
-              'commerceCiervoId': commerceCiervoId,
-            if (method != null && method.isNotEmpty) 'method': method,
-            if (shareInFamilyChat) 'shareInFamilyChat': true,
-            'idempotencyKey': IdempotencyKey.generate('kid-pay-for-me'),
-            if (latitude != null && longitude != null)
-              'location': {
-                'latitude': latitude,
-                'longitude': longitude,
-                if (address != null && address.trim().isNotEmpty)
-                  'address': address.trim(),
-              },
+  }) => _guard(() async {
+    final resolvedCurrency =
+        currency ?? CountryRegistration.currencyForCountry(country ?? 'CO');
+    final response = await _client.dio.post<dynamic>(
+      '/api/kids/me/pay-for-me/request',
+      data: {
+        if (businessId != null && businessId.isNotEmpty)
+          'businessId': int.tryParse(businessId) ?? businessId,
+        'amount': amount,
+        'currency': resolvedCurrency,
+        if (country != null && country.isNotEmpty) 'country': country,
+        if (description != null && description.trim().isNotEmpty)
+          'description': description.trim(),
+        if (requestedToTutorId != null && requestedToTutorId.isNotEmpty)
+          'requestedToTutorId':
+              int.tryParse(requestedToTutorId) ?? requestedToTutorId,
+        if (commerceCiervoId != null && commerceCiervoId.isNotEmpty)
+          'commerceCiervoId': commerceCiervoId,
+        if (method != null && method.isNotEmpty) 'method': method,
+        if (shareInFamilyChat) 'shareInFamilyChat': true,
+        'idempotencyKey': IdempotencyKey.generate('kid-pay-for-me'),
+        if (latitude != null && longitude != null)
+          'location': {
+            'latitude': latitude,
+            'longitude': longitude,
+            if (address != null && address.trim().isNotEmpty)
+              'address': address.trim(),
           },
-        );
-        return unwrapApiMap(response.data);
-      });
+      },
+    );
+    return unwrapApiMap(response.data);
+  });
 
   Future<Result<List<Map<String, dynamic>>>> payForMeRequests() =>
       _guard(() async {
@@ -230,21 +221,20 @@ class KidMeRepository {
     required double amount,
     String? currency,
     String? description,
-  }) =>
-      _guard(() async {
-        final response = await _client.dio.post<dynamic>(
-          '/api/kids/me/nfc/sessions',
-          data: {
-            'businessId': int.tryParse(businessId) ?? businessId,
-            'amount': amount,
-            if (currency != null) 'currency': currency,
-            if (description != null && description.trim().isNotEmpty)
-              'description': description.trim(),
-            'idempotencyKey': IdempotencyKey.generate('kid-nfc-session'),
-          },
-        );
-        return unwrapApiMap(response.data);
-      });
+  }) => _guard(() async {
+    final response = await _client.dio.post<dynamic>(
+      '/api/kids/me/nfc/sessions',
+      data: {
+        'businessId': int.tryParse(businessId) ?? businessId,
+        'amount': amount,
+        if (currency != null) 'currency': currency,
+        if (description != null && description.trim().isNotEmpty)
+          'description': description.trim(),
+        'idempotencyKey': IdempotencyKey.generate('kid-nfc-session'),
+      },
+    );
+    return unwrapApiMap(response.data);
+  });
 
   Future<Result<Map<String, dynamic>>> nfcSession(int sessionId) =>
       _guard(() async {

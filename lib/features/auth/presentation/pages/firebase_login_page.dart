@@ -32,6 +32,7 @@ class _FirebaseLoginPageState extends State<FirebaseLoginPage>
   final _passwordController = TextEditingController();
   String _countryCode = CountryRegistration.defaultCountryCode();
   bool _smsSent = false;
+  bool _obscurePassword = true;
 
   @override
   void initState() {
@@ -60,15 +61,18 @@ class _FirebaseLoginPageState extends State<FirebaseLoginPage>
       child: BlocConsumer<FirebaseAuthCubit, FirebaseAuthState>(
         listener: (context, state) {
           if (state.errorMessage != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.errorMessage!)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.errorMessage!)));
           }
           if (state.status == FirebaseAuthStatus.codeSent) {
             setState(() => _smsSent = true);
           }
-          if (state.status == FirebaseAuthStatus.phoneVerified && state.shouldFirebaseLogin) {
-            context.read<FirebaseAuthCubit>().firebaseLoginExisting().then((ok) {
+          if (state.status == FirebaseAuthStatus.phoneVerified &&
+              state.shouldFirebaseLogin) {
+            context.read<FirebaseAuthCubit>().firebaseLoginExisting().then((
+              ok,
+            ) {
               if (ok && context.mounted) context.go(AppRoutes.root);
             });
           }
@@ -90,10 +94,7 @@ class _FirebaseLoginPageState extends State<FirebaseLoginPage>
             ),
             body: TabBarView(
               controller: _tabs,
-              children: [
-                _phoneTab(context, state),
-                _emailTab(context, state),
-              ],
+              children: [_phoneTab(context, state), _emailTab(context, state)],
             ),
           );
         },
@@ -116,7 +117,9 @@ class _FirebaseLoginPageState extends State<FirebaseLoginPage>
                     .map(
                       (item) => DropdownMenuItem(
                         value: item.countryCode,
-                        child: Text('${item.flag} ${item.label} (${item.dialCode})'),
+                        child: Text(
+                          '${item.flag} ${item.label} (${item.dialCode})',
+                        ),
                       ),
                     )
                     .toList(),
@@ -132,7 +135,8 @@ class _FirebaseLoginPageState extends State<FirebaseLoginPage>
                 keyboardType: TextInputType.phone,
                 decoration: InputDecoration(
                   labelText: 'Teléfono',
-                  prefixText: '${PhoneCountry.byCountryCode(_countryCode).dialCode} ',
+                  prefixText:
+                      '${PhoneCountry.byCountryCode(_countryCode).dialCode} ',
                 ),
               ),
               if (_smsSent) ...[
@@ -192,13 +196,40 @@ class _FirebaseLoginPageState extends State<FirebaseLoginPage>
               const SizedBox(height: AppSpacing.md),
               TextField(
                 controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
+                obscureText: _obscurePassword,
+                decoration: InputDecoration(
                   labelText: 'Contraseña',
-                  prefixIcon: Icon(Icons.lock_outline),
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    tooltip: _obscurePassword
+                        ? 'Mostrar contraseña'
+                        : 'Ocultar contraseña',
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(height: AppSpacing.lg),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: state.isLoading
+                      ? null
+                      : () {
+                          final email = _emailController.text.trim();
+                          final query = email.isEmpty
+                              ? AppRoutes.passwordRecovery
+                              : '${AppRoutes.passwordRecovery}?email=${Uri.encodeComponent(email)}';
+                          context.push(query);
+                        },
+                  child: const Text('¿Olvidaste tu contraseña?'),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
               CiervoButton(
                 label: state.isLoading ? 'Ingresando' : 'Iniciar sesión',
                 icon: Icons.login,
@@ -208,16 +239,17 @@ class _FirebaseLoginPageState extends State<FirebaseLoginPage>
                 onPressed: state.isLoading
                     ? null
                     : () {
-                        if (InputValidators.email(_emailController.text) != null) {
+                        if (InputValidators.email(_emailController.text) !=
+                            null) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Correo inválido.')),
                           );
                           return;
                         }
                         context.read<FirebaseAuthCubit>().loginWithEmail(
-                              email: _emailController.text,
-                              password: _passwordController.text,
-                            );
+                          email: _emailController.text,
+                          password: _passwordController.text,
+                        );
                       },
               ),
             ],

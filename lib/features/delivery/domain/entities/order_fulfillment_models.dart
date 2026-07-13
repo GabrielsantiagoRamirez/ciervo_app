@@ -74,7 +74,7 @@ class OrderQuote {
   final OrderQuoteOption? delivery;
 
   OrderQuoteOption? optionFor(OrderFulfillmentType type) => switch (type) {
-        OrderFulfillmentType.pickup => pickup,
-        OrderFulfillmentType.delivery => delivery,
-      };
+    OrderFulfillmentType.pickup => pickup,
+    OrderFulfillmentType.delivery => delivery,
+  };
 }

@@ -38,11 +38,7 @@ class FavoriteCountsBadge extends StatelessWidget {
 }
 
 class _Chip extends StatelessWidget {
-  const _Chip({
-    required this.icon,
-    required this.label,
-    required this.tooltip,
-  });
+  const _Chip({required this.icon, required this.label, required this.tooltip});
 
   final IconData icon;
   final String label;
@@ -50,31 +46,31 @@ class _Chip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Tooltip(
-        message: tooltip,
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.xs,
-            vertical: 2,
+    message: tooltip,
+    child: Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: 2,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.glass,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: AppColors.primary),
+          const SizedBox(width: 2),
+          Text(
+            label,
+            style: AppTextStyles.label.copyWith(
+              color: AppColors.primary,
+              fontSize: 10,
+            ),
           ),
-          decoration: BoxDecoration(
-            color: AppColors.glass,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.primary.withValues(alpha: 0.5)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 12, color: AppColors.primary),
-              const SizedBox(width: 2),
-              Text(
-                label,
-                style: AppTextStyles.label.copyWith(
-                  color: AppColors.primary,
-                  fontSize: 10,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+        ],
+      ),
+    ),
+  );
 }

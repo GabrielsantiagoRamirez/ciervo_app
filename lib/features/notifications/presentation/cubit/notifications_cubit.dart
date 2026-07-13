@@ -9,10 +9,12 @@ class NotificationsCubit extends Cubit<NotificationsState> {
   final NotificationsRepository _repository;
 
   Future<void> load({String? category}) async {
-    emit(NotificationsState(
-      status: NotificationsStatus.loading,
-      selectedCategory: category,
-    ));
+    emit(
+      NotificationsState(
+        status: NotificationsStatus.loading,
+        selectedCategory: category,
+      ),
+    );
     final result = await _repository.notifications(category: category);
     result.when(
       success: (items) => emit(
@@ -35,11 +37,13 @@ class NotificationsCubit extends Cubit<NotificationsState> {
   }
 
   Future<void> markAsRead(String id) async {
-    emit(NotificationsState(
-      status: NotificationsStatus.actionLoading,
-      items: state.items,
-      selectedCategory: state.selectedCategory,
-    ));
+    emit(
+      NotificationsState(
+        status: NotificationsStatus.actionLoading,
+        items: state.items,
+        selectedCategory: state.selectedCategory,
+      ),
+    );
     final result = await _repository.markAsRead(id);
     result.when(
       success: (_) => load(category: state.selectedCategory),
@@ -55,11 +59,13 @@ class NotificationsCubit extends Cubit<NotificationsState> {
   }
 
   Future<void> markAllAsRead() async {
-    emit(NotificationsState(
-      status: NotificationsStatus.actionLoading,
-      items: state.items,
-      selectedCategory: state.selectedCategory,
-    ));
+    emit(
+      NotificationsState(
+        status: NotificationsStatus.actionLoading,
+        items: state.items,
+        selectedCategory: state.selectedCategory,
+      ),
+    );
     final result = await _repository.markAllAsRead();
     result.when(
       success: (_) => load(category: state.selectedCategory),

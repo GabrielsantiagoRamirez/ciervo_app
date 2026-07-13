@@ -170,76 +170,74 @@ class _ParentPaymentHistoryPageState extends State<ParentPaymentHistoryPage> {
                       child: CiervoLoadingState(itemCount: 4),
                     )
                   : _error != null
-                      ? ListView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          children: [
-                            Padding(
-                              padding: pagePaddingOf(context),
-                              child: CiervoErrorState(
-                                title: 'No pudimos cargar el historial',
-                                description: _error!,
-                                onRetry: _load,
-                              ),
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        Padding(
+                          padding: pagePaddingOf(context),
+                          child: CiervoErrorState(
+                            title: 'No pudimos cargar el historial',
+                            description: _error!,
+                            onRetry: _load,
+                          ),
+                        ),
+                      ],
+                    )
+                  : _payments.isEmpty
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: pagePaddingOf(context),
+                      children: const [
+                        CiervoEmptyState(
+                          title: 'Sin pagos registrados',
+                          description: 'Los pagos familiares aparecerán aquí.',
+                          icon: Icons.receipt_long_outlined,
+                        ),
+                      ],
+                    )
+                  : ListView.separated(
+                      padding: pagePaddingOf(context),
+                      itemCount: _payments.length,
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(height: CiervoPageLayout.cardGap),
+                      itemBuilder: (context, index) {
+                        final payment = _payments[index];
+                        return CiervoCard(
+                          padding: CiervoPageLayout.compactCardPadding,
+                          child: ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(payment.merchantName),
+                            subtitle: Text(
+                              '${payment.kidName ?? 'Menor'} · ${DisplayLabels.familyFundingSource(payment.fundingSource)}',
                             ),
-                          ],
-                        )
-                      : _payments.isEmpty
-                          ? ListView(
-                              physics: const AlwaysScrollableScrollPhysics(),
-                              padding: pagePaddingOf(context),
-                              children: const [
-                                CiervoEmptyState(
-                                  title: 'Sin pagos registrados',
-                                  description:
-                                      'Los pagos familiares aparecerán aquí.',
-                                  icon: Icons.receipt_long_outlined,
+                            trailing: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  '${payment.currency} ${payment.amount.toStringAsFixed(0)}',
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
+                                ),
+                                Text(
+                                  DisplayLabels.familyPaymentStatus(
+                                    payment.status,
+                                  ),
                                 ),
                               ],
-                            )
-                          : ListView.separated(
-                              padding: pagePaddingOf(context),
-                              itemCount: _payments.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(height: CiervoPageLayout.cardGap),
-                              itemBuilder: (context, index) {
-                                final payment = _payments[index];
-                                return CiervoCard(
-                                  padding: CiervoPageLayout.compactCardPadding,
-                                  child: ListTile(
-                                    contentPadding: EdgeInsets.zero,
-                                    title: Text(payment.merchantName),
-                                    subtitle: Text(
-                                      '${payment.kidName ?? 'Menor'} · ${DisplayLabels.familyFundingSource(payment.fundingSource)}',
-                                    ),
-                                    trailing: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      children: [
-                                        Text(
-                                          '${payment.currency} ${payment.amount.toStringAsFixed(0)}',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleMedium,
-                                        ),
-                                        Text(
-                                          DisplayLabels.familyPaymentStatus(
-                                            payment.status,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    onTap: () => Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) => FamilyPaymentDetailPage(
-                                          paymentId: payment.id,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
                             ),
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => FamilyPaymentDetailPage(
+                                  paymentId: payment.id,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
             ),
           ),
         ],
@@ -299,58 +297,55 @@ class _KidPaymentHistoryPageState extends State<KidPaymentHistoryPage> {
                 child: CiervoLoadingState(itemCount: 4),
               )
             : _error != null
-                ? ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    children: [
-                      Padding(
-                        padding: pagePaddingOf(context),
-                        child: CiervoErrorState(
-                          title: 'No pudimos cargar el historial',
-                          description: _error!,
-                          onRetry: _load,
+            ? ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  Padding(
+                    padding: pagePaddingOf(context),
+                    child: CiervoErrorState(
+                      title: 'No pudimos cargar el historial',
+                      description: _error!,
+                      onRetry: _load,
+                    ),
+                  ),
+                ],
+              )
+            : _payments.isEmpty
+            ? ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: const [
+                  CiervoEmptyState(
+                    title: 'Sin pagos',
+                    description: 'Tus pagos aparecerán aquí.',
+                  ),
+                ],
+              )
+            : ListView.separated(
+                padding: pagePaddingOf(context),
+                itemCount: _payments.length,
+                separatorBuilder: (_, __) =>
+                    const SizedBox(height: AppSpacing.sm),
+                itemBuilder: (context, index) {
+                  final payment = _payments[index];
+                  return CiervoCard(
+                    child: ListTile(
+                      title: Text(payment.merchantName),
+                      subtitle: Text(
+                        DisplayLabels.familyPaymentStatus(payment.status),
+                      ),
+                      trailing: Text(
+                        '${payment.currency} ${payment.amount.toStringAsFixed(0)}',
+                      ),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              FamilyPaymentDetailPage(paymentId: payment.id),
                         ),
                       ),
-                    ],
-                  )
-                : _payments.isEmpty
-                    ? ListView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        children: const [
-                          CiervoEmptyState(
-                            title: 'Sin pagos',
-                            description: 'Tus pagos aparecerán aquí.',
-                          ),
-                        ],
-                      )
-                    : ListView.separated(
-                        padding: pagePaddingOf(context),
-                        itemCount: _payments.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: AppSpacing.sm),
-                        itemBuilder: (context, index) {
-                          final payment = _payments[index];
-                          return CiervoCard(
-                            child: ListTile(
-                              title: Text(payment.merchantName),
-                              subtitle: Text(
-                                DisplayLabels.familyPaymentStatus(
-                                  payment.status,
-                                ),
-                              ),
-                              trailing: Text(
-                                '${payment.currency} ${payment.amount.toStringAsFixed(0)}',
-                              ),
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => FamilyPaymentDetailPage(
-                                    paymentId: payment.id,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+                    ),
+                  );
+                },
+              ),
       ),
     );
   }

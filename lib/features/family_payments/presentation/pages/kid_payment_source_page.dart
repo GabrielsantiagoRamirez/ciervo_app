@@ -78,9 +78,9 @@ class _KidPaymentSourcePageState extends State<KidPaymentSourcePage> {
       success: (_) => ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Fuente de pago actualizada.')),
       ),
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 
@@ -94,101 +94,102 @@ class _KidPaymentSourcePageState extends State<KidPaymentSourcePage> {
               child: CiervoLoadingState(itemCount: 3),
             )
           : _error != null
-              ? Padding(
-                  padding: pagePaddingOf(context),
-                  child: CiervoErrorState(
-                    title: 'No pudimos cargar la fuente de pago',
-                    description: _error!,
-                    onRetry: _load,
+          ? Padding(
+              padding: pagePaddingOf(context),
+              child: CiervoErrorState(
+                title: 'No pudimos cargar la fuente de pago',
+                description: _error!,
+                onRetry: _load,
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: _load,
+              child: ListView(
+                padding: pagePaddingOf(context),
+                children: [
+                  Text(
+                    'Si ${widget.kidName} no tiene saldo, CIERVO puede usar tu tarjeta registrada.',
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _load,
-                  child: ListView(
-                    padding: pagePaddingOf(context),
-                    children: [
-                      Text(
-                        'Si ${widget.kidName} no tiene saldo, CIERVO puede usar tu tarjeta registrada.',
-                        style: Theme.of(context).textTheme.bodyMedium,
+                  const SizedBox(height: AppSpacing.lg),
+                  SwitchListTile(
+                    title: const Text('Usar tarjeta principal'),
+                    subtitle: const Text(
+                      'Prioriza la tarjeta marcada como principal.',
+                    ),
+                    value: _source?.usePrimaryCard ?? true,
+                    onChanged: (value) => setState(
+                      () => _source = KidPaymentSource(
+                        cardId: value ? null : _source?.cardId,
+                        mode:
+                            _source?.mode ??
+                            KidPaymentApprovalMode.autoApproval,
+                        usePrimaryCard: value,
                       ),
-                      const SizedBox(height: AppSpacing.lg),
-                      SwitchListTile(
-                        title: const Text('Usar tarjeta principal'),
-                        subtitle: const Text(
-                          'Prioriza la tarjeta marcada como principal.',
-                        ),
-                        value: _source?.usePrimaryCard ?? true,
+                    ),
+                  ),
+                  if (_source?.usePrimaryCard != true) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    ..._cards.map(
+                      (card) => RadioListTile<String>(
+                        value: card.id,
+                        groupValue: _source?.cardId,
                         onChanged: (value) => setState(
                           () => _source = KidPaymentSource(
-                            cardId: value ? null : _source?.cardId,
-                            mode: _source?.mode ??
+                            cardId: value,
+                            mode:
+                                _source?.mode ??
                                 KidPaymentApprovalMode.autoApproval,
-                            usePrimaryCard: value,
+                            usePrimaryCard: false,
                           ),
                         ),
-                      ),
-                      if (_source?.usePrimaryCard != true) ...[
-                        const SizedBox(height: AppSpacing.sm),
-                        ..._cards.map(
-                          (card) => RadioListTile<String>(
-                            value: card.id,
-                            groupValue: _source?.cardId,
-                            onChanged: (value) => setState(
-                              () => _source = KidPaymentSource(
-                                cardId: value,
-                                mode: _source?.mode ??
-                                    KidPaymentApprovalMode.autoApproval,
-                                usePrimaryCard: false,
-                              ),
-                            ),
-                            title: Text(
-                              card.alias.isNotEmpty
-                                  ? card.alias
-                                  : card.maskedNumber,
-                            ),
-                            subtitle:
-                                Text('${card.brand} · ${card.maskedNumber}'),
-                          ),
+                        title: Text(
+                          card.alias.isNotEmpty
+                              ? card.alias
+                              : card.maskedNumber,
                         ),
-                      ],
-                      const Divider(height: 32),
-                      Text('Modo', style: Theme.of(context).textTheme.titleMedium),
-                      RadioListTile<KidPaymentApprovalMode>(
-                        value: KidPaymentApprovalMode.autoApproval,
-                        groupValue: _source?.mode,
-                        onChanged: (value) => setState(
-                          () => _source = KidPaymentSource(
-                            cardId: _source?.cardId,
-                            mode: value!,
-                            usePrimaryCard: _source?.usePrimaryCard ?? true,
-                          ),
-                        ),
-                        title: const Text('Aprobación automática'),
+                        subtitle: Text('${card.brand} · ${card.maskedNumber}'),
                       ),
-                      RadioListTile<KidPaymentApprovalMode>(
-                        value: KidPaymentApprovalMode.manualApproval,
-                        groupValue: _source?.mode,
-                        onChanged: (value) => setState(
-                          () => _source = KidPaymentSource(
-                            cardId: _source?.cardId,
-                            mode: value!,
-                            usePrimaryCard: _source?.usePrimaryCard ?? true,
-                          ),
-                        ),
-                        title: const Text('Requiere aprobación del tutor'),
+                    ),
+                  ],
+                  const Divider(height: 32),
+                  Text('Modo', style: Theme.of(context).textTheme.titleMedium),
+                  RadioListTile<KidPaymentApprovalMode>(
+                    value: KidPaymentApprovalMode.autoApproval,
+                    groupValue: _source?.mode,
+                    onChanged: (value) => setState(
+                      () => _source = KidPaymentSource(
+                        cardId: _source?.cardId,
+                        mode: value!,
+                        usePrimaryCard: _source?.usePrimaryCard ?? true,
                       ),
-                      const SizedBox(height: AppSpacing.lg),
-                      CiervoButton(
-                        label: _saving ? 'Guardando...' : 'Guardar',
-                        icon: Icons.save_outlined,
-                        state: _saving
-                            ? CiervoButtonState.loading
-                            : CiervoButtonState.normal,
-                        onPressed: _saving ? null : _save,
-                      ),
-                    ],
+                    ),
+                    title: const Text('Aprobación automática'),
                   ),
-                ),
+                  RadioListTile<KidPaymentApprovalMode>(
+                    value: KidPaymentApprovalMode.manualApproval,
+                    groupValue: _source?.mode,
+                    onChanged: (value) => setState(
+                      () => _source = KidPaymentSource(
+                        cardId: _source?.cardId,
+                        mode: value!,
+                        usePrimaryCard: _source?.usePrimaryCard ?? true,
+                      ),
+                    ),
+                    title: const Text('Requiere aprobación del tutor'),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  CiervoButton(
+                    label: _saving ? 'Guardando...' : 'Guardar',
+                    icon: Icons.save_outlined,
+                    state: _saving
+                        ? CiervoButtonState.loading
+                        : CiervoButtonState.normal,
+                    onPressed: _saving ? null : _save,
+                  ),
+                ],
+              ),
+            ),
     );
   }
 }

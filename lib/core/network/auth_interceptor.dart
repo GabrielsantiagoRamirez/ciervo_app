@@ -8,9 +8,9 @@ class AuthInterceptor extends Interceptor {
     required SessionManager sessionManager,
     required AuthTokenRefresher tokenRefresher,
     required Dio dio,
-  })  : _sessionManager = sessionManager,
-        _tokenRefresher = tokenRefresher,
-        _dio = dio;
+  }) : _sessionManager = sessionManager,
+       _tokenRefresher = tokenRefresher,
+       _dio = dio;
 
   final SessionManager _sessionManager;
   final AuthTokenRefresher _tokenRefresher;

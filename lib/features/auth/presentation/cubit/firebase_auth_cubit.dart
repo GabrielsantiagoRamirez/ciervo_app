@@ -12,6 +12,7 @@ import '../../../../core/firebase/firebase_auth_service.dart';
 import '../../../../core/firebase/phone_country.dart';
 import '../../../../core/location/app_location.dart';
 import '../../../../core/location/location_service.dart';
+import '../../../../core/utils/input_validators.dart';
 import '../../data/dtos/account_lookup_dto.dart';
 import '../../domain/entities/auth_flow.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -23,7 +24,11 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
     this._authRepository,
     this._firebaseAuth,
     this._locationService,
-  ) : super(const FirebaseAuthState());
+  ) : super(
+        FirebaseAuthState(
+          countryCode: CountryRegistration.defaultCountryCode(),
+        ),
+      );
 
   final AuthRepository _authRepository;
   final FirebaseAuthService _firebaseAuth;
@@ -41,10 +46,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
       }
       if (location == null) {
         emit(
-          state.copyWith(
-            status: FirebaseAuthStatus.initial,
-            clearError: true,
-          ),
+          state.copyWith(status: FirebaseAuthStatus.initial, clearError: true),
         );
         return;
       }
@@ -53,6 +55,9 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
           status: FirebaseAuthStatus.initial,
           latitude: location.latitude,
           longitude: location.longitude,
+          countryCode: state.countryCode.isEmpty
+              ? CountryRegistration.defaultCountryCode()
+              : state.countryCode,
           clearError: true,
         ),
       );
@@ -64,6 +69,10 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
         ),
       );
     }
+  }
+
+  void clearTransientErrors() {
+    emit(state.copyWith(clearError: true));
   }
 
   Future<void> sendPhoneCode({
@@ -86,6 +95,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
         status: isLegacyMigration && !resend
             ? FirebaseAuthStatus.migrating
             : FirebaseAuthStatus.loading,
+        channel: AuthSignupChannel.phone,
         countryCode: countryCode,
         phoneE164: e164,
         phoneNational: national,
@@ -163,8 +173,9 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
   Future<void> _completePhoneCredential(PhoneAuthCredential credential) async {
     emit(state.copyWith(status: FirebaseAuthStatus.loading, clearError: true));
     try {
-      final userCredential =
-          await _firebaseAuth.signInWithCredentialRecovering(credential);
+      final userCredential = await _firebaseAuth.signInWithCredentialRecovering(
+        credential,
+      );
       await _afterPhoneSignIn(userCredential);
     } catch (error) {
       emit(
@@ -184,9 +195,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
     final phoneForBackend = _preferredPhoneForBackend();
     final check = await _authRepository.firebaseCheckUser(
       firebaseIdToken: token,
-      phone: phoneForBackend.isNotEmpty
-          ? phoneForBackend
-          : state.phoneNational,
+      phone: phoneForBackend.isNotEmpty ? phoneForBackend : state.phoneNational,
       countryCode: phoneForBackend.startsWith('+') ? null : countryCode,
     );
     check.when(
@@ -238,7 +247,8 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
     try {
       final token = await _firebaseAuth.freshIdToken();
       final currentUid = _firebaseAuth.currentUser?.uid;
-      final uidAlreadyLinked = state.checkUserFirebaseUid != null &&
+      final uidAlreadyLinked =
+          state.checkUserFirebaseUid != null &&
           currentUid != null &&
           state.checkUserFirebaseUid == currentUid;
 
@@ -253,8 +263,8 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
           final hint = attempt.email != null
               ? 'email=${attempt.email!.contains('@') ? attempt.email!.split('@').first.substring(0, attempt.email!.split('@').first.length.clamp(0, 6)) : attempt.email}…'
               : attempt.phone == null
-                  ? 'sin contacto'
-                  : 'phone=${attempt.phone!.length > 6 ? '${attempt.phone!.substring(0, 6)}…' : attempt.phone}';
+              ? 'sin contacto'
+              : 'phone=${attempt.phone!.length > 6 ? '${attempt.phone!.substring(0, 6)}…' : attempt.phone}';
           debugPrint('[AUTH] firebase/login intento ($hint)');
         }
 
@@ -334,7 +344,8 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
     }
   }
 
-  List<({String? phone, String? email, String? countryCode})> _firebaseLoginAttempts({
+  List<({String? phone, String? email, String? countryCode})>
+  _firebaseLoginAttempts({
     required bool userKnownToExist,
     String? explicitEmail,
   }) {
@@ -356,12 +367,27 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
     required String identityDocument,
     required String documentType,
     String? city,
+    String? department,
+    String? region,
+    String? province,
+    String? cityCode,
     String? password,
+    String? contactPhoneNational,
+    String? contactCountryCode,
+    bool skipEmailLink = false,
   }) async {
-    emit(state.copyWith(status: FirebaseAuthStatus.loading, clearError: true));
+    emit(
+      state.copyWith(
+        status: FirebaseAuthStatus.loading,
+        clearError: true,
+        channel: skipEmailLink
+            ? AuthSignupChannel.email
+            : AuthSignupChannel.phone,
+      ),
+    );
     try {
       final trimmedEmail = email.trim();
-      if (trimmedEmail.isNotEmpty) {
+      if (!skipEmailLink && trimmedEmail.isNotEmpty) {
         if (!trimmedEmail.contains('@') || !trimmedEmail.contains('.')) {
           emit(
             state.copyWith(
@@ -376,11 +402,15 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
         markEmailVerificationSent();
       }
       final token = await _firebaseAuth.freshIdToken();
-      final countryCode = state.countryCode.isNotEmpty
-          ? state.countryCode
+      final countryCode = (contactCountryCode ?? state.countryCode).isNotEmpty
+          ? (contactCountryCode ?? state.countryCode)
           : CountryRegistration.inferFromPhone(state.phoneE164 ?? '');
+      final phoneForProfile = skipEmailLink
+          ? _digitsOnly(contactPhoneNational ?? '')
+          : (state.phoneNational ?? state.phoneE164);
       final profile = <String, dynamic>{
-        'phone': state.phoneNational ?? state.phoneE164,
+        if (phoneForProfile != null && phoneForProfile.trim().isNotEmpty)
+          'phone': phoneForProfile,
         'countryCode': countryCode,
         'name': firstName.trim(),
         'lastname': lastName.trim(),
@@ -390,12 +420,19 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
         if (state.latitude != null) 'latitude': state.latitude,
         if (state.longitude != null) 'longitude': state.longitude,
         if (city != null && city.trim().isNotEmpty) 'city': city.trim(),
+        if (department != null && department.trim().isNotEmpty)
+          'department': department.trim(),
+        if (region != null && region.trim().isNotEmpty) 'region': region.trim(),
+        if (province != null && province.trim().isNotEmpty)
+          'province': province.trim(),
+        if (cityCode != null && cityCode.trim().isNotEmpty)
+          'cityCode': cityCode.trim(),
       };
       final result = await _authRepository.firebaseRegister(
         firebaseIdToken: token,
         profile: profile,
       );
-      return result.when(
+      return await result.when(
         success: (session) {
           emit(
             state.copyWith(
@@ -406,15 +443,23 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
           );
           return true;
         },
-        failure: (error) {
+        failure: (error) async {
           final message = _mapError(error).toLowerCase();
           if (message.contains('firebase/login') ||
               message.contains('usa firebase/login')) {
-            return firebaseLoginExisting(email: trimmedEmail.isEmpty ? null : trimmedEmail);
+            return firebaseLoginExisting(
+              email: trimmedEmail.isEmpty ? null : trimmedEmail,
+            );
+          }
+          if (skipEmailLink) {
+            await _firebaseAuth.rollbackRecentRegistration();
           }
           emit(
             state.copyWith(
               status: FirebaseAuthStatus.failure,
+              channel: skipEmailLink
+                  ? AuthSignupChannel.email
+                  : AuthSignupChannel.phone,
               errorMessage: FirebaseAuthErrors.userMessage(error),
             ),
           );
@@ -422,9 +467,13 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
         },
       );
     } catch (error) {
+      if (skipEmailLink) {
+        await _firebaseAuth.rollbackRecentRegistration();
+      }
       emit(
         state.copyWith(
           status: FirebaseAuthStatus.failure,
+          channel: skipEmailLink ? AuthSignupChannel.email : state.channel,
           errorMessage: _mapError(error),
         ),
       );
@@ -438,25 +487,23 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
     required String firstName,
     required String lastName,
     required String countryCode,
-    required String phoneNational,
     required String identityDocument,
     required String documentType,
     String? city,
+    String? department,
+    String? region,
+    String? province,
+    String? cityCode,
   }) async {
-    emit(state.copyWith(status: FirebaseAuthStatus.loading, clearError: true));
+    emit(
+      state.copyWith(
+        status: FirebaseAuthStatus.loading,
+        channel: AuthSignupChannel.email,
+        clearError: true,
+        clearAuthMeta: true,
+      ),
+    );
     try {
-      final national = _digitsOnly(phoneNational);
-      final e164 = PhoneCountry.toE164(
-        countryCode: countryCode,
-        nationalNumber: national,
-      );
-      emit(
-        state.copyWith(
-          countryCode: countryCode,
-          phoneE164: e164,
-          phoneNational: national,
-        ),
-      );
       await _firebaseAuth.createUserWithEmail(email: email, password: password);
       await _firebaseAuth.sendEmailVerification();
       markEmailVerificationSent();
@@ -467,11 +514,19 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
         identityDocument: identityDocument,
         documentType: documentType,
         city: city,
+        department: department,
+        region: region,
+        province: province,
+        cityCode: cityCode,
+        contactCountryCode: countryCode,
+        skipEmailLink: true,
       );
     } catch (error) {
+      await _firebaseAuth.rollbackRecentRegistration();
       emit(
         state.copyWith(
           status: FirebaseAuthStatus.failure,
+          channel: AuthSignupChannel.email,
           errorMessage: _mapError(error),
         ),
       );
@@ -487,6 +542,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
     emit(
       state.copyWith(
         status: FirebaseAuthStatus.migrating,
+        channel: AuthSignupChannel.email,
         clearError: true,
       ),
     );
@@ -516,7 +572,10 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
     try {
       await _firebaseAuth.signOut();
       try {
-        await _firebaseAuth.createUserWithEmail(email: email, password: password);
+        await _firebaseAuth.createUserWithEmail(
+          email: email,
+          password: password,
+        );
       } on FirebaseAuthException catch (error) {
         if (error.code == 'email-already-in-use') {
           await _firebaseAuth.signInWithEmail(email: email, password: password);
@@ -633,7 +692,13 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
     required String password,
     bool emitFailure = true,
   }) async {
-    emit(state.copyWith(status: FirebaseAuthStatus.loading, clearError: true));
+    emit(
+      state.copyWith(
+        status: FirebaseAuthStatus.loading,
+        channel: AuthSignupChannel.email,
+        clearError: true,
+      ),
+    );
     try {
       await _firebaseAuth.signInWithEmail(email: email, password: password);
       final token = await _firebaseAuth.freshIdToken(forceRefresh: true);
@@ -657,11 +722,17 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
             emit(
               state.copyWith(
                 status: FirebaseAuthStatus.failure,
+                channel: AuthSignupChannel.email,
                 errorMessage: FirebaseAuthErrors.userMessage(error),
               ),
             );
           } else {
-            emit(state.copyWith(status: FirebaseAuthStatus.initial, clearError: true));
+            emit(
+              state.copyWith(
+                status: FirebaseAuthStatus.initial,
+                clearError: true,
+              ),
+            );
           }
           return false;
         },
@@ -671,11 +742,14 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
         emit(
           state.copyWith(
             status: FirebaseAuthStatus.failure,
+            channel: AuthSignupChannel.email,
             errorMessage: _mapError(error),
           ),
         );
       } else {
-        emit(state.copyWith(status: FirebaseAuthStatus.initial, clearError: true));
+        emit(
+          state.copyWith(status: FirebaseAuthStatus.initial, clearError: true),
+        );
       }
       return false;
     }
@@ -773,12 +847,13 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
       emailVerificationResendCooldownSeconds == 0;
 
   void markEmailVerificationSent() {
-    _emailVerificationResendAvailableAt =
-        DateTime.now().add(const Duration(seconds: 60));
+    _emailVerificationResendAvailableAt = DateTime.now().add(
+      const Duration(seconds: 60),
+    );
   }
 
   Future<({bool success, String? errorMessage})>
-      resendEmailVerificationWithFeedback() async {
+  resendEmailVerificationWithFeedback() async {
     if (_firebaseAuth.isEmailVerified) {
       return (success: true, errorMessage: null);
     }
@@ -798,7 +873,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
     } on FirebaseAuthException catch (error) {
       final message = error.code == 'too-many-requests'
           ? 'Has solicitado varios correos en poco tiempo. '
-              'Intenta nuevamente más tarde.'
+                'Intenta nuevamente más tarde.'
           : FirebaseAuthErrors.userMessage(error);
       emit(state.copyWith(errorMessage: message));
       return (success: false, errorMessage: message);
@@ -809,10 +884,118 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
     }
   }
 
+  Future<({bool success, String message})> requestPasswordRecovery(
+    String email,
+  ) async {
+    final trimmed = email.trim();
+    if (trimmed.isEmpty || InputValidators.email(trimmed) != null) {
+      return (
+        success: false,
+        message: 'Ingresa un correo electrónico válido.',
+      );
+    }
+    emit(
+      state.copyWith(
+        status: FirebaseAuthStatus.loading,
+        channel: AuthSignupChannel.email,
+        clearError: true,
+      ),
+    );
+    final result = await _authRepository.requestPasswordRecovery(trimmed);
+    return result.when(
+      success: (_) {
+        emit(
+          state.copyWith(
+            status: FirebaseAuthStatus.initial,
+            channel: AuthSignupChannel.email,
+            clearError: true,
+          ),
+        );
+        return (
+          success: true,
+          message:
+              'Si el correo está registrado, te enviamos un código de 6 dígitos. '
+              'Revisa tu bandeja y spam.',
+        );
+      },
+      failure: (error) {
+        final message = UserErrorMessage.from(error);
+        emit(
+          state.copyWith(
+            status: FirebaseAuthStatus.failure,
+            channel: AuthSignupChannel.email,
+            errorMessage: message,
+          ),
+        );
+        return (success: false, message: message);
+      },
+    );
+  }
+
+  Future<({bool success, String message})> recoverPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    final trimmed = email.trim();
+    final otp = code.replaceAll(RegExp(r'\D'), '');
+    if (trimmed.isEmpty || InputValidators.email(trimmed) != null) {
+      return (
+        success: false,
+        message: 'Ingresa un correo electrónico válido.',
+      );
+    }
+    if (otp.length != 6) {
+      return (success: false, message: 'Ingresa el código de 6 dígitos.');
+    }
+    final passwordError = InputValidators.password(newPassword);
+    if (passwordError != null) {
+      return (success: false, message: passwordError);
+    }
+
+    emit(
+      state.copyWith(
+        status: FirebaseAuthStatus.loading,
+        channel: AuthSignupChannel.email,
+        clearError: true,
+      ),
+    );
+    final result = await _authRepository.recoverPassword(
+      email: trimmed,
+      code: otp,
+      newPassword: newPassword,
+    );
+    return result.when(
+      success: (_) {
+        emit(
+          state.copyWith(
+            status: FirebaseAuthStatus.initial,
+            channel: AuthSignupChannel.email,
+            clearError: true,
+          ),
+        );
+        return (
+          success: true,
+          message: 'Contraseña actualizada correctamente.',
+        );
+      },
+      failure: (error) {
+        final message = UserErrorMessage.from(error);
+        emit(
+          state.copyWith(
+            status: FirebaseAuthStatus.failure,
+            channel: AuthSignupChannel.email,
+            errorMessage: message,
+          ),
+        );
+        return (success: false, message: message);
+      },
+    );
+  }
+
   DateTime? _emailVerificationResendAvailableAt;
 
-  String _digitsOnly(String value) =>
-      value.replaceAll(RegExp(r'\D'), '');
+  String _digitsOnly(String value) => value.replaceAll(RegExp(r'\D'), '');
 
   String _mapError(Object error) {
     if (error is FirebaseAuthException) {
@@ -821,10 +1004,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
     return UserErrorMessage.from(ErrorMapper.fromObject(error));
   }
 
-  String _mapBackendAuthError(
-    Object error, {
-    bool uidAlreadyLinked = false,
-  }) {
+  String _mapBackendAuthError(Object error, {bool uidAlreadyLinked = false}) {
     final message = UserErrorMessage.from(ErrorMapper.fromObject(error));
     final lower = message.toLowerCase();
     if (lower.contains('inactiv') || lower.contains('bloquead')) {

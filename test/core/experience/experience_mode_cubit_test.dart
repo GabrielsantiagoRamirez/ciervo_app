@@ -29,8 +29,7 @@ void main() {
 }
 
 class _MemorySecureStorage implements SecureStorage {
-  _MemorySecureStorage([Map<String, String>? values])
-    : _values = {...?values};
+  _MemorySecureStorage([Map<String, String>? values]) : _values = {...?values};
 
   final Map<String, String> _values;
 

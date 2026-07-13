@@ -62,11 +62,12 @@ class _AuthSmsCodeFieldState extends State<AuthSmsCodeField> {
     setState(() {});
   }
 
-  String _digitsOnly(String value) =>
-      value.replaceAll(RegExp(r'\D'), '').substring(
-            0,
-            value.replaceAll(RegExp(r'\D'), '').length.clamp(0, _length),
-          );
+  String _digitsOnly(String value) => value
+      .replaceAll(RegExp(r'\D'), '')
+      .substring(
+        0,
+        value.replaceAll(RegExp(r'\D'), '').length.clamp(0, _length),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -92,7 +93,8 @@ class _AuthSmsCodeFieldState extends State<AuthSmsCodeField> {
             Row(
               children: List.generate(_length, (index) {
                 final digit = index < code.length ? code[index] : '';
-                final isActive = widget.enabled &&
+                final isActive =
+                    widget.enabled &&
                     _focusNode.hasFocus &&
                     index == code.length;
 

@@ -30,12 +30,12 @@ class ProductCategoriesRepository {
 }
 
 ProductCategory _fromJson(Map<String, dynamic> json) => ProductCategory(
-      id: _int(json['id'] ?? json['productCategoryId']),
-      code: _string(json['code']),
-      name: _string(json['name'] ?? json['displayName']),
-      businessCategoryId: _int(json['businessCategoryId']),
-      active: json['active'] != false && json['isActive'] != false,
-    );
+  id: _int(json['id'] ?? json['productCategoryId']),
+  code: _string(json['code']),
+  name: _string(json['name'] ?? json['displayName']),
+  businessCategoryId: _int(json['businessCategoryId']),
+  active: json['active'] != false && json['isActive'] != false,
+);
 
 int _int(dynamic value) => value is int ? value : int.tryParse('$value') ?? 0;
 

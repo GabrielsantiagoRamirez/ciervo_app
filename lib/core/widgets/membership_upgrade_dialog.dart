@@ -62,9 +62,7 @@ Future<bool?> showMembershipUpgradeDialog(
     context: context,
     builder: (dialogContext) => AlertDialog(
       title: const Text('Mejora tu plan CIERVO'),
-      content: Text(
-        'Tu plan actual no incluye $featureLabel.$planHint',
-      ),
+      content: Text('Tu plan actual no incluye $featureLabel.$planHint'),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(dialogContext, false),
@@ -78,18 +76,15 @@ Future<bool?> showMembershipUpgradeDialog(
     ),
   ).then((upgrade) async {
     if (upgrade == true && context.mounted) {
-      await Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const MembershipPage()),
-      );
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const MembershipPage()));
     }
     return upgrade;
   });
 }
 
-Future<bool> handlePlanLimitError(
-  BuildContext context,
-  Object error,
-) async {
+Future<bool> handlePlanLimitError(BuildContext context, Object error) async {
   final details = parsePlanLimitError(error);
   if (details == null) return false;
   await showMembershipUpgradeDialog(
@@ -107,8 +102,8 @@ Future<bool> showApiErrorOrUpgrade(
 }) async {
   if (await handlePlanLimitError(context, error)) return true;
   if (!context.mounted) return false;
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(fallbackMessage)),
-  );
+  ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(SnackBar(content: Text(fallbackMessage)));
   return false;
 }

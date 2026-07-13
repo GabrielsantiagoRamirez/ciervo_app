@@ -32,9 +32,8 @@ Future<PaymentRequestApproveOptions?> showPaymentRequestApproveSheet(
   if (!context.mounted) return null;
 
   var useBackup = needsBackup && familyCards.isNotEmpty;
-  FamilyPaymentCard? selectedFamilyCard = familyCards
-      .where((card) => card.isBackup && card.isActive)
-      .firstOrNull ??
+  FamilyPaymentCard? selectedFamilyCard =
+      familyCards.where((card) => card.isBackup && card.isActive).firstOrNull ??
       familyCards.where((card) => card.isActive).firstOrNull;
 
   return showModalBottomSheet<PaymentRequestApproveOptions>(
@@ -114,7 +113,9 @@ Future<PaymentRequestApproveOptions?> showPaymentRequestApproveSheet(
                 ],
                 FilledButton(
                   onPressed: () {
-                    if (needsBackup && useBackup && selectedFamilyCard == null) {
+                    if (needsBackup &&
+                        useBackup &&
+                        selectedFamilyCard == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Selecciona una tarjeta de respaldo.'),

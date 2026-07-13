@@ -110,9 +110,9 @@ class _RequestMoneyPageState extends State<RequestMoneyPage> {
                         label: 'Resolver usuario',
                         icon: Icons.person_search_outlined,
                         variant: CiervoButtonVariant.secondary,
-                        onPressed: () => context.read<WalletCubit>().resolveUser(
-                          _codeController.text.trim(),
-                        ),
+                        onPressed: () => context
+                            .read<WalletCubit>()
+                            .resolveUser(_codeController.text.trim()),
                       ),
                       if (state.resolvedUser != null) ...[
                         const SizedBox(height: AppSpacing.md),
@@ -151,7 +151,9 @@ class _RequestMoneyPageState extends State<RequestMoneyPage> {
                       state: state.isLoading
                           ? CiervoButtonState.loading
                           : CiervoButtonState.normal,
-                      onPressed: canSubmit ? () => _submit(context, state) : null,
+                      onPressed: canSubmit
+                          ? () => _submit(context, state)
+                          : null,
                     ),
                   ],
                 ),
@@ -178,7 +180,8 @@ class _RequestMoneyPageState extends State<RequestMoneyPage> {
         double.tryParse(_amountController.text.replaceAll(',', '.')) ?? 0;
     final code = _codeController.text.trim();
     final payer = state.resolvedUser;
-    if (amount <= 0 || (!widget.payerOptional && code.isEmpty && payer == null)) {
+    if (amount <= 0 ||
+        (!widget.payerOptional && code.isEmpty && payer == null)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -192,8 +195,7 @@ class _RequestMoneyPageState extends State<RequestMoneyPage> {
     }
     context.read<WalletCubit>().requestMoney(
       payerUserId: payer?.userId,
-      payerCiervoUserCode:
-          code.isNotEmpty ? code : payer?.ciervoUserCode,
+      payerCiervoUserCode: code.isNotEmpty ? code : payer?.ciervoUserCode,
       amount: amount,
       description: _descriptionController.text.trim().isEmpty
           ? 'Solicitud de pago'

@@ -84,7 +84,9 @@ class _EmailVerificationSheetState extends State<_EmailVerificationSheet> {
       _sending = true;
       _message = null;
     });
-    final result = await getIt<AuthRepository>().sendEmailVerificationCode(email);
+    final result = await getIt<AuthRepository>().sendEmailVerificationCode(
+      email,
+    );
     if (!mounted) return;
     setState(() {
       _sending = false;
@@ -238,10 +240,11 @@ class _EmailVerificationSheetState extends State<_EmailVerificationSheet> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
-                    color: (_isSuccessMessage
-                            ? colorScheme.primaryContainer
-                            : colorScheme.errorContainer)
-                        .withValues(alpha: 0.65),
+                    color:
+                        (_isSuccessMessage
+                                ? colorScheme.primaryContainer
+                                : colorScheme.errorContainer)
+                            .withValues(alpha: 0.65),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(

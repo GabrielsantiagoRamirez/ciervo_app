@@ -30,10 +30,9 @@ class TransportRepository {
 
   Future<Result<List<TransportCard>>> cards() => _guard(() async {
     final response = await _client.dio.get<dynamic>('/api/transport/cards/me');
-    return unwrapApiList(response.data)
-        .whereType<Map<String, dynamic>>()
-        .map(_cardFromJson)
-        .toList();
+    return unwrapApiList(
+      response.data,
+    ).whereType<Map<String, dynamic>>().map(_cardFromJson).toList();
   });
 
   Future<Result<void>> createCard() => _guard(() async {
@@ -51,10 +50,9 @@ class TransportRepository {
 
   Future<Result<List<Map<String, dynamic>>>> discounts() => _guard(() async {
     final response = await _client.dio.get<dynamic>('/api/transport/discounts');
-    return unwrapApiList(response.data)
-        .whereType<Map>()
-        .map((item) => Map<String, dynamic>.from(item))
-        .toList();
+    return unwrapApiList(
+      response.data,
+    ).whereType<Map>().map((item) => Map<String, dynamic>.from(item)).toList();
   });
 
   Future<Result<T>> _guard<T>(Future<T> Function() action) async {

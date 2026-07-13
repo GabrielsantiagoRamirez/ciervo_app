@@ -37,8 +37,10 @@ abstract final class NotificationPresenter {
       },
     );
 
-    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final androidPlugin = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (androidPlugin != null) {
       for (final channel in CiervoNotificationChannels.androidChannels()) {
         await androidPlugin.createNotificationChannel(channel);
@@ -69,8 +71,10 @@ abstract final class NotificationPresenter {
 
   static Future<bool> ensureDisplayPermission() async {
     await ensureInitialized();
-    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final androidPlugin = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (androidPlugin == null) return true;
     return _ensureAndroidNotificationPermission(androidPlugin);
   }
@@ -127,9 +131,8 @@ abstract final class NotificationPresenter {
           android: AndroidNotificationDetails(
             channelId,
             channelName,
-            channelDescription: CiervoNotificationChannels.descriptionForChannel(
-              channelId,
-            ),
+            channelDescription:
+                CiervoNotificationChannels.descriptionForChannel(channelId),
             icon: '@mipmap/ic_launcher',
             color: const Color(CiervoNotificationChannels.brandColor),
             importance: Importance.high,

@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/notifications/notifications_sync.dart';
 import '../../../../core/utils/display_formatters.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -29,18 +32,31 @@ class _ChatInboxPageState extends State<ChatInboxPage> {
   List<ChatInboxItem> _items = const [];
   bool _loading = true;
   String? _error;
+  StreamSubscription<void>? _syncSubscription;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _syncSubscription = getIt<NotificationsSync>().onRefresh.listen((_) {
+      if (!mounted) return;
+      _load(silent: true);
+    });
   }
 
-  Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+  @override
+  void dispose() {
+    _syncSubscription?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _load({bool silent = false}) async {
+    if (!silent) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    }
     final result = await _repository.loadInbox();
     if (!mounted) return;
     result.when(
@@ -48,10 +64,13 @@ class _ChatInboxPageState extends State<ChatInboxPage> {
         _items = items;
         _loading = false;
       }),
-      failure: (error) => setState(() {
-        _error = UserErrorMessage.from(error);
-        _loading = false;
-      }),
+      failure: (error) {
+        if (silent) return;
+        setState(() {
+          _error = UserErrorMessage.from(error);
+          _loading = false;
+        });
+      },
     );
   }
 
@@ -87,15 +106,18 @@ class _ChatInboxPageState extends State<ChatInboxPage> {
       );
       return;
     }
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const UserSearchPage()),
-    );
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const UserSearchPage()));
     if (mounted) _load();
   }
 
   @override
   Widget build(BuildContext context) {
-    final canPrivateChat = context.watch<MembershipCubit>().state.canUsePrivateChat();
+    final canPrivateChat = context
+        .watch<MembershipCubit>()
+        .state
+        .canUsePrivateChat();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Chats'),
@@ -118,7 +140,9 @@ class _ChatInboxPageState extends State<ChatInboxPage> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _openUserSearch,
-        icon: Icon(canPrivateChat ? Icons.add_comment_outlined : Icons.lock_outline),
+        icon: Icon(
+          canPrivateChat ? Icons.add_comment_outlined : Icons.lock_outline,
+        ),
         label: Text(canPrivateChat ? 'Nuevo' : 'Mejorar plan'),
       ),
       body: _buildBody(canPrivateChat),
@@ -168,6 +192,7 @@ class _ChatInboxPageState extends State<ChatInboxPage> {
           final subtitle = conversation.lastMessage?.trim();
           final updated = conversation.updatedAt;
           final timeLabel = updated == null ? null : _formatTime(updated);
+          final hasUnread = conversation.unreadCount > 0;
           final title = DisplayFormatters.chatTitle(
             rawTitle: conversation.title,
             username: conversation.peerUsername,
@@ -175,8 +200,24 @@ class _ChatInboxPageState extends State<ChatInboxPage> {
             conversationType: conversation.type,
             participantCount: conversation.participantCount,
           );
+          final unreadStyle = hasUnread
+              ? Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)
+              : Theme.of(context).textTheme.bodyMedium;
+          final unreadSubtitleStyle = hasUnread
+              ? Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.onSurface,
+                )
+              : Theme.of(context).textTheme.bodySmall;
 
           return ListTile(
+            tileColor: hasUnread
+                ? Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer.withValues(alpha: 0.12)
+                : null,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.md,
               vertical: AppSpacing.xs,
@@ -188,14 +229,24 @@ class _ChatInboxPageState extends State<ChatInboxPage> {
                     : _iconForKind(conversation.type),
               ),
             ),
-            title: Text(title),
+            title: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: hasUnread
+                  ? Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    )
+                  : null,
+            ),
             subtitle: subtitle != null && subtitle.isNotEmpty
                 ? Text(
                     subtitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
+                    style: unreadSubtitleStyle,
                   )
-                : Text(item.kindLabel),
+                : Text(item.kindLabel, style: unreadStyle),
             trailing: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -203,9 +254,16 @@ class _ChatInboxPageState extends State<ChatInboxPage> {
                 if (timeLabel != null)
                   Text(
                     timeLabel,
-                    style: Theme.of(context).textTheme.bodySmall,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontWeight: hasUnread
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                      color: hasUnread
+                          ? Theme.of(context).colorScheme.primary
+                          : null,
+                    ),
                   ),
-                if (conversation.unreadCount > 0) ...[
+                if (hasUnread) ...[
                   const SizedBox(height: 4),
                   Badge(label: Text('${conversation.unreadCount}')),
                 ],

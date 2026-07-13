@@ -28,7 +28,10 @@ class CiervoCard extends StatelessWidget {
     return Container(
       width: width,
       height: height,
-      decoration: AppComponentStyles.cardDecoration(theme.colorScheme.surface, isDark),
+      decoration: AppComponentStyles.cardDecoration(
+        theme.colorScheme.surface,
+        isDark,
+      ),
       child: Stack(
         fit: StackFit.loose,
         children: [

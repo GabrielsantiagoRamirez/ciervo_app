@@ -90,7 +90,8 @@ class SecureShipment {
 
     return SecureShipment(
       publicId: '${json['publicId'] ?? json['id'] ?? ''}',
-      statusName: '${json['statusName'] ?? json['status'] ?? 'PendingAcceptance'}',
+      statusName:
+          '${json['statusName'] ?? json['status'] ?? 'PendingAcceptance'}',
       senderUserId: intOrNull(json['senderUserId']),
       receiverUserId: intOrNull(json['receiverUserId']),
       senderName: _str(json['senderName']),
@@ -100,14 +101,19 @@ class SecureShipment {
       destinationAddress: '${json['destinationAddress'] ?? ''}',
       totalAmount: asDouble(json['totalAmount']),
       currency: '${json['currency'] ?? 'COP'}',
-      productValue: json['productValue'] != null ? asDouble(json['productValue']) : null,
-      shippingValue:
-          json['shippingValue'] != null ? asDouble(json['shippingValue']) : null,
-      insuranceValue:
-          json['insuranceValue'] != null ? asDouble(json['insuranceValue']) : null,
+      productValue: json['productValue'] != null
+          ? asDouble(json['productValue'])
+          : null,
+      shippingValue: json['shippingValue'] != null
+          ? asDouble(json['shippingValue'])
+          : null,
+      insuranceValue: json['insuranceValue'] != null
+          ? asDouble(json['insuranceValue'])
+          : null,
       taxValue: json['taxValue'] != null ? asDouble(json['taxValue']) : null,
-      commissionValue:
-          json['commissionValue'] != null ? asDouble(json['commissionValue']) : null,
+      commissionValue: json['commissionValue'] != null
+          ? asDouble(json['commissionValue'])
+          : null,
       trackingNumber: _str(json['trackingNumber']),
       logisticsCompany: _str(json['logisticsCompany']),
       observations: _str(json['observations']),

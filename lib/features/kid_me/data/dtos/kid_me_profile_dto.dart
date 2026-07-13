@@ -43,11 +43,7 @@ class KidMeProfileDto {
         const ['countryCode', 'country'],
         fallback: _string(walletMap, const ['countryCode', 'currencyCountry']),
       ),
-      childProfileId: _string(json, const [
-        'childProfileId',
-        'kidId',
-        'id',
-      ]),
+      childProfileId: _string(json, const ['childProfileId', 'kidId', 'id']),
       guardians: _guardians(json),
     );
   }
@@ -69,12 +65,11 @@ class KidMeProfileDto {
       roleLabel: _string(json, const ['roleLabel'], fallback: 'Menor'),
       photoUrl: _string(json, const ['photoUrl', 'avatarUrl', 'imageUrl']),
       familyName: _string(json, const ['familyName']),
-      countryCode: _string(json, const ['countryCode', 'country'], fallback: 'CO'),
-      childProfileId: _string(json, const [
-        'childProfileId',
-        'kidId',
-        'id',
-      ]),
+      countryCode: _string(json, const [
+        'countryCode',
+        'country',
+      ], fallback: 'CO'),
+      childProfileId: _string(json, const ['childProfileId', 'kidId', 'id']),
       guardians: _guardians(json),
     );
   }
@@ -94,20 +89,20 @@ class KidMeProfileDto {
   final List<KidGuardianSummary> guardians;
 
   KidMeProfile toDomain() => KidMeProfile(
-        firstName: firstName,
-        lastName: lastName,
-        displayName: displayName,
-        nickname: nickname,
-        username: username,
-        ciervoUserCode: ciervoUserCode,
-        role: role,
-        roleLabel: roleLabel,
-        photoUrl: photoUrl,
-        familyName: familyName,
-        countryCode: countryCode,
-        childProfileId: childProfileId,
-        guardians: guardians,
-      );
+    firstName: firstName,
+    lastName: lastName,
+    displayName: displayName,
+    nickname: nickname,
+    username: username,
+    ciervoUserCode: ciervoUserCode,
+    role: role,
+    roleLabel: roleLabel,
+    photoUrl: photoUrl,
+    familyName: familyName,
+    countryCode: countryCode,
+    childProfileId: childProfileId,
+    guardians: guardians,
+  );
 
   static (String, String) _resolveNames(Map<String, dynamic> json) {
     var firstName = _string(json, const ['firstName']);
@@ -132,19 +127,15 @@ class KidMeProfileDto {
       return raw.whereType<Map>().map((item) {
         final map = Map<String, dynamic>.from(item);
         return KidGuardianSummary(
-          displayName: _string(map, const [
-            'displayName',
-            'fullName',
-            'name',
-          ]),
+          displayName: _string(map, const ['displayName', 'fullName', 'name']),
           username: _string(map, const ['username', 'userName']),
           ciervoUserCode: _string(map, const [
             'ciervoUserCode',
             'publicCode',
             'userId',
           ]),
-          isPrimary: map['isPrimaryGuardian'] == true ||
-              map['isPrimary'] == true,
+          isPrimary:
+              map['isPrimaryGuardian'] == true || map['isPrimary'] == true,
         );
       }).toList();
     }

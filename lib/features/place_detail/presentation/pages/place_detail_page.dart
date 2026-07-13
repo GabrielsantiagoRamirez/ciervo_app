@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/services.dart';
 
@@ -9,11 +9,8 @@ import '../../../../core/theme/app_component_styles.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/utils/ciervo_date_picker.dart';
 import '../../../../core/utils/ciervo_share.dart';
-import '../../../../shared/widgets/insufficient_balance_dialog.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
-import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_chip_tag.dart';
 import '../../../../shared/widgets/ciervo_brand_loader.dart';
 import '../../../home/domain/entities/home_place.dart';
@@ -41,11 +38,9 @@ import '../widgets/place_detail_promotion_card.dart';
 import '../widgets/place_detail_review_tile.dart';
 import '../../../media/presentation/authenticated_media_image.dart';
 import '../../../product_categories/presentation/widgets/product_subcategory_filters.dart';
-import '../../../reservations/data/booking_repository.dart';
+import '../../../reservations/presentation/widgets/business_reservation_sheet.dart';
 import '../../../delivery/presentation/pages/order_checkout_page.dart';
 import '../../../delivery/domain/entities/delivery_models.dart';
-import '../../../receipts/domain/entities/action_confirmation.dart';
-import '../../../receipts/presentation/pages/action_confirmation_page.dart';
 import '../../../../shared/widgets/ciervo_image_viewer_page.dart';
 
 class PlaceDetailPage extends StatefulWidget {
@@ -145,10 +140,8 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
           children: [
             if (previewImage.isNotEmpty) ...[
               GestureDetector(
-                onTap: () => openCiervoImageViewer(
-                  context,
-                  images: [previewImage],
-                ),
+                onTap: () =>
+                    openCiervoImageViewer(context, images: [previewImage]),
                 child: ClipRRect(
                   borderRadius: AppRadii.card,
                   child: AspectRatio(
@@ -182,7 +175,8 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
             ],
             CiervoErrorState(
               title: 'No pudimos cargar el comercio',
-              description: _loadErrorMessage ??
+              description:
+                  _loadErrorMessage ??
                   'Verifica tu conexion e intenta nuevamente.',
               onRetry: () {
                 setState(() {
@@ -228,7 +222,10 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: Chip(
-                      avatar: const Icon(Icons.verified_user_outlined, size: 18),
+                      avatar: const Icon(
+                        Icons.verified_user_outlined,
+                        size: 18,
+                      ),
                       label: Text('Ciervo ID: $_userCiervoCode'),
                     ),
                   ),
@@ -263,7 +260,10 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
                 const _SectionTitle('Productos'),
                 const SizedBox(height: AppSpacing.sm),
                 if (_products.isEmpty)
-                  Text('No hay productos disponibles.', style: AppTextStyles.bodyMuted)
+                  Text(
+                    'No hay productos disponibles.',
+                    style: AppTextStyles.bodyMuted,
+                  )
                 else
                   ..._products.map(
                     (product) => Padding(
@@ -298,7 +298,8 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
                   const SizedBox(height: AppSpacing.sm),
                   _CapabilityLine(
                     icon: Icons.delivery_dining_outlined,
-                    text: _deliveryAvailability?.message ??
+                    text:
+                        _deliveryAvailability?.message ??
                         'Domicilio no disponible para tu ubicacion.',
                   ),
                 ],
@@ -423,7 +424,9 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
     ].whereType<String>().where((item) => item.trim().isNotEmpty).toList();
     if (parts.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Este negocio aun no tiene enlace para compartir.')),
+        const SnackBar(
+          content: Text('Este negocio aun no tiene enlace para compartir.'),
+        ),
       );
       return;
     }
@@ -461,24 +464,11 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
   }
 
   void _showReservationSheet(BuildContext context) {
-    if (_reservableOptions.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Este negocio aun no tiene opciones de reserva.'),
-        ),
-      );
-      return;
-    }
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (context) => SafeArea(
-        child: _ReservationSheet(
-          businessId: widget.place.id,
-          options: _reservableOptions,
-        ),
-      ),
+    showBusinessReservationSheet(
+      context,
+      businessId: widget.place.id,
+      businessName: widget.place.name,
+      options: _reservableOptions,
     );
   }
 
@@ -495,13 +485,16 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
     OrderFulfillmentType? initialFulfillment,
     List<BusinessProduct>? products,
   }) {
-    final checkoutProducts = products ??
+    final checkoutProducts =
+        products ??
         _products
             .where((item) => item.allowsDelivery || item.allowsPickup)
             .toList();
     if (checkoutProducts.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No hay productos disponibles para compra.')),
+        const SnackBar(
+          content: Text('No hay productos disponibles para compra.'),
+        ),
       );
       return;
     }
@@ -607,10 +600,12 @@ class _ProductTile extends StatelessWidget {
               ),
             ),
       title: Text(product.name),
-      subtitle: Text([
-        if (product.description.isNotEmpty) product.description,
-        if (flags.isNotEmpty) flags.join(' - '),
-      ].join('\n')),
+      subtitle: Text(
+        [
+          if (product.description.isNotEmpty) product.description,
+          if (flags.isNotEmpty) flags.join(' - '),
+        ].join('\n'),
+      ),
       trailing: Text('\$${product.price}'),
     );
   }
@@ -624,212 +619,12 @@ class _CapabilityLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(
-        children: [
-          Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(width: AppSpacing.xs),
-          Expanded(child: Text(text, style: AppTextStyles.bodyMuted)),
-        ],
-      );
-}
-
-class _ReservationSheet extends StatefulWidget {
-  const _ReservationSheet({required this.businessId, required this.options});
-
-  final String businessId;
-  final List<ReservableOption> options;
-
-  @override
-  State<_ReservationSheet> createState() => _ReservationSheetState();
-}
-
-class _ReservationSheetState extends State<_ReservationSheet> {
-  final _notesController = TextEditingController();
-  ReservableOption? _option;
-  DateTime _date = DateTime.now().add(const Duration(days: 1));
-  TimeOfDay _time = const TimeOfDay(hour: 20, minute: 0);
-  int _peopleCount = 2;
-  bool _submitting = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _option = widget.options.firstOrNull;
-  }
-
-  @override
-  void dispose() {
-    _notesController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: EdgeInsets.only(
-          left: AppSpacing.lg,
-          right: AppSpacing.lg,
-          bottom: MediaQuery.viewInsetsOf(context).bottom + AppSpacing.lg,
-          top: AppSpacing.sm,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text('Reservar', style: AppTextStyles.title),
-            const SizedBox(height: AppSpacing.md),
-            DropdownButtonFormField<ReservableOption>(
-              initialValue: _option,
-              items: widget.options
-                  .map((item) => DropdownMenuItem(
-                        value: item,
-                        child: Text(item.name.isEmpty ? 'Opcion ${item.id}' : item.name),
-                      ))
-                  .toList(),
-              onChanged: (value) => setState(() => _option = value),
-              decoration: const InputDecoration(labelText: 'Opcion'),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.calendar_today_outlined),
-                    label: Text(_date.toIso8601String().substring(0, 10)),
-                    onPressed: _pickDate,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.schedule),
-                    label: Text(_time.format(context)),
-                    onPressed: _pickTime,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Stepper(
-              currentStep: 0,
-              controlsBuilder: (_, _) => const SizedBox.shrink(),
-              steps: [
-                Step(
-                  title: Text('Personas: $_peopleCount'),
-                  content: Slider(
-                    min: 1,
-                    max: 12,
-                    divisions: 11,
-                    value: _peopleCount.toDouble(),
-                    label: '$_peopleCount',
-                    onChanged: (value) =>
-                        setState(() => _peopleCount = value.round()),
-                  ),
-                ),
-              ],
-            ),
-            TextField(
-              controller: _notesController,
-              minLines: 1,
-              maxLines: 3,
-              decoration: const InputDecoration(labelText: 'Notas opcionales'),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            CiervoButton(
-              label: _submitting ? 'Confirmando' : 'Confirmar reserva',
-              icon: Icons.event_available,
-              state: _submitting ? CiervoButtonState.loading : CiervoButtonState.normal,
-              onPressed: _submitting ? null : _submit,
-            ),
-          ],
-        ),
-      );
-
-  Future<void> _pickDate() async {
-    final value = await showCiervoDatePicker(
-      context,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 90)),
-      initialDate: _date ?? DateTime.now(),
-      helpText: 'Selecciona la fecha',
-    );
-    if (value != null) setState(() => _date = value);
-  }
-
-  Future<void> _pickTime() async {
-    final value = await showTimePicker(context: context, initialTime: _time);
-    if (value != null) setState(() => _time = value);
-  }
-
-  Future<void> _submit() async {
-    final option = _option;
-    if (option == null) return;
-    setState(() => _submitting = true);
-    final result = await getIt<BookingRepository>().createBusinessReservation(
-      businessId: widget.businessId,
-      reservableOptionId: option.id,
-      date: _date,
-      time:
-          '${_time.hour.toString().padLeft(2, '0')}:${_time.minute.toString().padLeft(2, '0')}:00',
-      peopleCount: _peopleCount,
-      notes: _notesController.text,
-    );
-    if (!mounted) return;
-    setState(() => _submitting = false);
-    result.when(
-      success: (booking) async {
-        Navigator.of(context).pop();
-        final base = booking.confirmation!;
-        final userCode =
-            base.userCiervoCode ?? await resolveCurrentCiervoUserCode();
-        if (!mounted) return;
-        await showCiervoPaymentReceipt(
-          context,
-          confirmation: ActionConfirmation(
-            title: base.title,
-            confirmationCode: base.confirmationCode,
-            userCiervoCode: userCode,
-            businessName: base.businessName ?? booking.businessName,
-            amount: base.amount ?? booking.totalAmount,
-            currency: base.currency ?? booking.currency,
-            status: base.status ?? 'Reserva confirmada',
-            date: base.date ??
-                booking.bookingDate?.toIso8601String().substring(0, 10),
-            time: base.time ?? booking.time,
-            publicReceiptUrl: base.publicReceiptUrl,
-            shareDescription: base.shareDescription ??
-                '¡Gracias por confiar en CIERVO! Tu entretenimiento, nuestra misión.',
-          ),
-          referenceLabel: 'Reserva',
-          referenceValue: booking.publicCode.isNotEmpty
-              ? booking.publicCode
-              : base.confirmationCode,
-        );
-        final chatId = booking.conversationId?.trim();
-        if (chatId != null && chatId.isNotEmpty && mounted) {
-          await Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => ChatConversationPage(
-                conversationId: chatId,
-                title: booking.businessName ?? 'Chat comercial',
-              ),
-            ),
-          );
-        }
-      },
-      failure: (error) async {
-        final message = UserErrorMessage.from(error);
-        if (message.toLowerCase().contains('saldo')) {
-          await showInsufficientBalanceDialog(
-            context,
-            description: message,
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message)),
-          );
-        }
-      },
-    );
-  }
+    children: [
+      Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
+      const SizedBox(width: AppSpacing.xs),
+      Expanded(child: Text(text, style: AppTextStyles.bodyMuted)),
+    ],
+  );
 }
 
 class _ReviewSheet extends StatefulWidget {
@@ -947,9 +742,9 @@ class _ReviewSheetState extends State<_ReviewSheet> {
         Navigator.of(context).pop();
         widget.onSaved();
       },
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 }
@@ -1030,9 +825,9 @@ class _FavoriteButtonState extends State<_FavoriteButton> {
       },
       failure: (error) async {
         if (!await handlePlanLimitError(context, error)) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(UserErrorMessage.from(error))),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
         }
       },
     );
@@ -1040,15 +835,15 @@ class _FavoriteButtonState extends State<_FavoriteButton> {
 
   @override
   Widget build(BuildContext context) => IconButton.filledTonal(
-        tooltip: _favorite ? 'Quitar favorito' : 'Agregar favorito',
-        onPressed: _busy ? null : _toggle,
-        icon: _busy
-            ? const SizedBox.square(
-                dimension: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : Icon(_favorite ? Icons.favorite : Icons.favorite_border),
-      );
+    tooltip: _favorite ? 'Quitar favorito' : 'Agregar favorito',
+    onPressed: _busy ? null : _toggle,
+    icon: _busy
+        ? const SizedBox.square(
+            dimension: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        : Icon(_favorite ? Icons.favorite : Icons.favorite_border),
+  );
 }
 
 int? _businessCategoryIdFrom(String value) {
@@ -1102,16 +897,18 @@ class _HeroSection extends StatelessWidget {
                       itemBuilder: (context, index) => AuthenticatedMediaImage(
                         mediaId: images[index],
                         fit: BoxFit.cover,
-                        errorWidget:
-                            const ColoredBox(color: AppColors.surfaceTop),
+                        errorWidget: const ColoredBox(
+                          color: AppColors.surfaceTop,
+                        ),
                       ),
                     )
                   else if (images.isNotEmpty)
                     AuthenticatedMediaImage(
                       mediaId: images.first,
                       fit: BoxFit.cover,
-                      errorWidget:
-                          const ColoredBox(color: AppColors.surfaceTop),
+                      errorWidget: const ColoredBox(
+                        color: AppColors.surfaceTop,
+                      ),
                     )
                   else
                     const ColoredBox(color: AppColors.surfaceTop),
@@ -1158,7 +955,11 @@ class _HeroSection extends StatelessWidget {
                             horizontal: AppSpacing.sm,
                             vertical: AppSpacing.xxs,
                           ),
-                          child: Icon(Icons.swipe, color: Colors.white, size: 18),
+                          child: Icon(
+                            Icons.swipe,
+                            color: Colors.white,
+                            size: 18,
+                          ),
                         ),
                       ),
                     ),
@@ -1188,6 +989,7 @@ class _HeroSection extends StatelessWidget {
     );
   }
 }
+
 class _TagsRow extends StatelessWidget {
   const _TagsRow({required this.tags});
 
@@ -1212,11 +1014,7 @@ class _TagsRow extends StatelessWidget {
 }
 
 class _MetaRow extends StatelessWidget {
-  const _MetaRow({
-    required this.detail,
-    this.ratingAverage,
-    this.reviewsCount,
-  });
+  const _MetaRow({required this.detail, this.ratingAverage, this.reviewsCount});
 
   final PlaceDetail detail;
   final double? ratingAverage;

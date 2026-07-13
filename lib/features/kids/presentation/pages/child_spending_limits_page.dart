@@ -53,7 +53,9 @@ class _ChildSpendingLimitsPageState extends State<ChildSpendingLimitsPage> {
       success: (data) {
         _dailyController.text = _text(data['dailyLimit'] ?? data['daily']);
         _weeklyController.text = _text(data['weeklyLimit'] ?? data['weekly']);
-        _monthlyController.text = _text(data['monthlyLimit'] ?? data['monthly']);
+        _monthlyController.text = _text(
+          data['monthlyLimit'] ?? data['monthly'],
+        );
         setState(() => _loading = false);
       },
       failure: (error) => setState(() {
@@ -67,20 +69,24 @@ class _ChildSpendingLimitsPageState extends State<ChildSpendingLimitsPage> {
     setState(() => _saving = true);
     final result = await _repository.updateSpendingLimits(widget.childId, {
       'dailyLimit': double.tryParse(_dailyController.text.replaceAll(',', '.')),
-      'weeklyLimit': double.tryParse(_weeklyController.text.replaceAll(',', '.')),
-      'monthlyLimit': double.tryParse(_monthlyController.text.replaceAll(',', '.')),
+      'weeklyLimit': double.tryParse(
+        _weeklyController.text.replaceAll(',', '.'),
+      ),
+      'monthlyLimit': double.tryParse(
+        _monthlyController.text.replaceAll(',', '.'),
+      ),
     });
     if (!mounted) return;
     setState(() => _saving = false);
     result.when(
       success: (_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Límites actualizados.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Límites actualizados.')));
       },
-      failure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserErrorMessage.from(error))),
-      ),
+      failure: (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error)))),
     );
   }
 
@@ -111,7 +117,9 @@ class _ChildSpendingLimitsPageState extends State<ChildSpendingLimitsPage> {
               padding: pagePaddingOf(context),
               child: Center(
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: maxContentWidthOf(context)),
+                  constraints: BoxConstraints(
+                    maxWidth: maxContentWidthOf(context),
+                  ),
                   child: CiervoCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,

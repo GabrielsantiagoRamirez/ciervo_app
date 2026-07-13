@@ -6,10 +6,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../domain/entities/vakupli_plan.dart';
 
 class VakupliFriendsGroup extends StatelessWidget {
-  const VakupliFriendsGroup({
-    required this.friends,
-    super.key,
-  });
+  const VakupliFriendsGroup({required this.friends, super.key});
 
   final List<VakupliFriend> friends;
 
@@ -45,7 +42,9 @@ class VakupliFriendsGroup extends StatelessWidget {
                       width: 52,
                       height: 52,
                       decoration: BoxDecoration(
-                        color: i == 0 ? colorScheme.primary : colorScheme.surface,
+                        color: i == 0
+                            ? colorScheme.primary
+                            : colorScheme.surface,
                         borderRadius: AppRadii.chip,
                         border: Border.all(
                           width: 1.2,
@@ -58,7 +57,9 @@ class VakupliFriendsGroup extends StatelessWidget {
                       child: Text(
                         friends[i].initials,
                         style: AppTextStyles.label.copyWith(
-                          color: i == 0 ? colorScheme.onPrimary : colorScheme.onSurface,
+                          color: i == 0
+                              ? colorScheme.onPrimary
+                              : colorScheme.onSurface,
                         ),
                       ),
                     ),

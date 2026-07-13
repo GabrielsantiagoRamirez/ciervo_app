@@ -3,11 +3,15 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 class AppRouterRefreshStream extends ChangeNotifier {
-  AppRouterRefreshStream(Stream<dynamic> stream, {Stream<dynamic>? extraListenable}) {
+  AppRouterRefreshStream(
+    Stream<dynamic> stream, {
+    Stream<dynamic>? extraListenable,
+  }) {
     notifyListeners();
     _subscription = stream.asBroadcastStream().listen((_) => notifyListeners());
-    _extraSubscription =
-        extraListenable?.asBroadcastStream().listen((_) => notifyListeners());
+    _extraSubscription = extraListenable?.asBroadcastStream().listen(
+      (_) => notifyListeners(),
+    );
   }
 
   late final StreamSubscription<dynamic> _subscription;

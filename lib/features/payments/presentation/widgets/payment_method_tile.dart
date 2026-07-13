@@ -31,7 +31,9 @@ class PaymentMethodTile extends StatelessWidget {
       child: Ink(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: selected ? colorScheme.primary.withValues(alpha: 0.14) : colorScheme.surface,
+          color: selected
+              ? colorScheme.primary.withValues(alpha: 0.14)
+              : colorScheme.surface,
           borderRadius: AppRadii.card,
         ),
         child: Row(
@@ -63,7 +65,9 @@ class PaymentMethodTile extends StatelessWidget {
             ),
             Icon(
               selected ? Icons.radio_button_checked : Icons.radio_button_off,
-              color: selected ? colorScheme.primary : colorScheme.onSurfaceVariant,
+              color: selected
+                  ? colorScheme.primary
+                  : colorScheme.onSurfaceVariant,
             ),
           ],
         ),

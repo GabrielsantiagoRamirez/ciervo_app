@@ -69,7 +69,8 @@ class _ChatPayPageState extends State<ChatPayPage> {
       child: BlocBuilder<WalletCubit, WalletState>(
         builder: (context, state) {
           final resolved = state.resolvedUser;
-          final canPay = !_paying &&
+          final canPay =
+              !_paying &&
               (double.tryParse(_amountController.text.replaceAll(',', '.')) ??
                       0) >
                   0 &&
@@ -146,7 +147,9 @@ class _ChatPayPageState extends State<ChatPayPage> {
                         state: _paying
                             ? CiervoButtonState.loading
                             : CiervoButtonState.normal,
-                        onPressed: canPay ? () => _submit(context, state) : null,
+                        onPressed: canPay
+                            ? () => _submit(context, state)
+                            : null,
                       ),
                     ],
                   ),
@@ -229,9 +232,9 @@ class _ChatPayPageState extends State<ChatPayPage> {
       if (message.toLowerCase().contains('saldo')) {
         await _showInsufficientBalanceDialog(context);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
       }
     } finally {
       if (mounted) setState(() => _paying = false);

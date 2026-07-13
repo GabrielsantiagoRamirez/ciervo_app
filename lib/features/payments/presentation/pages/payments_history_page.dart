@@ -85,7 +85,8 @@ class _PaymentsHistoryPageState extends State<PaymentsHistoryPage> {
             : ListView.separated(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 itemCount: _items.length,
-                separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+                separatorBuilder: (_, _) =>
+                    const SizedBox(height: AppSpacing.sm),
                 itemBuilder: (context, index) {
                   final item = _items[index];
                   return CiervoCard(

@@ -7,10 +7,7 @@ import '../../../../shared/widgets/ciervo_card.dart';
 import '../../domain/entities/vakupli_plan.dart';
 
 class VakupliPlanCard extends StatelessWidget {
-  const VakupliPlanCard({
-    required this.plan,
-    super.key,
-  });
+  const VakupliPlanCard({required this.plan, super.key});
 
   final VakupliPlan plan;
 
@@ -27,7 +24,9 @@ class VakupliPlanCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   plan.title,
-                  style: AppTextStyles.title.copyWith(color: colorScheme.onSurface),
+                  style: AppTextStyles.title.copyWith(
+                    color: colorScheme.onSurface,
+                  ),
                 ),
               ),
               Container(
@@ -46,7 +45,9 @@ class VakupliPlanCard extends StatelessWidget {
                     const SizedBox(width: AppSpacing.xxs),
                     Text(
                       plan.statusLabel,
-                      style: AppTextStyles.label.copyWith(color: AppColors.primary),
+                      style: AppTextStyles.label.copyWith(
+                        color: AppColors.primary,
+                      ),
                     ),
                   ],
                 ),
@@ -56,9 +57,16 @@ class VakupliPlanCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
-              const Icon(Icons.timer_outlined, size: 16, color: AppColors.textMuted),
+              const Icon(
+                Icons.timer_outlined,
+                size: 16,
+                color: AppColors.textMuted,
+              ),
               const SizedBox(width: AppSpacing.xxs),
-              Text('Tiempo restante: ${plan.timeLeftLabel}', style: AppTextStyles.bodyMuted),
+              Text(
+                'Tiempo restante: ${plan.timeLeftLabel}',
+                style: AppTextStyles.bodyMuted,
+              ),
             ],
           ),
           const SizedBox(height: AppSpacing.md),

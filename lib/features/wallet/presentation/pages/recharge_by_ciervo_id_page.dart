@@ -53,9 +53,9 @@ class _RechargeByCiervoIdPageState extends State<RechargeByCiervoIdPage> {
         listener: (context, state) async {
           final message = state.errorMessage ?? state.successMessage;
           if (message != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(message)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(message)));
           }
           final url = state.rechargeIntent?.checkoutUrl;
           final intentId = state.rechargeIntent?.id;
@@ -101,7 +101,9 @@ class _RechargeByCiervoIdPageState extends State<RechargeByCiervoIdPage> {
                                 Expanded(
                                   child: Text(
                                     'Esta recarga solo funciona para personas que ya tienen la app de Ciervo y un ID activo.',
-                                    style: Theme.of(context).textTheme.bodySmall,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
                                   ),
                                 ),
                               ],
@@ -118,7 +120,8 @@ class _RechargeByCiervoIdPageState extends State<RechargeByCiervoIdPage> {
                           const SizedBox(height: AppSpacing.md),
                           CurrencySelector(
                             value: _currency,
-                            onChanged: (value) => setState(() => _currency = value),
+                            onChanged: (value) =>
+                                setState(() => _currency = value),
                           ),
                           const SizedBox(height: AppSpacing.md),
                           TextField(
@@ -147,7 +150,9 @@ class _RechargeByCiervoIdPageState extends State<RechargeByCiervoIdPage> {
                             state: state.isLoading
                                 ? CiervoButtonState.loading
                                 : CiervoButtonState.normal,
-                            onPressed: state.isLoading ? null : () => _submit(context),
+                            onPressed: state.isLoading
+                                ? null
+                                : () => _submit(context),
                           ),
                           if (intentId != null) ...[
                             const SizedBox(height: AppSpacing.sm),
@@ -158,8 +163,8 @@ class _RechargeByCiervoIdPageState extends State<RechargeByCiervoIdPage> {
                               onPressed: state.isLoading
                                   ? null
                                   : () => context
-                                      .read<WalletCubit>()
-                                      .pollRechargeIntent(intentId),
+                                        .read<WalletCubit>()
+                                        .pollRechargeIntent(intentId),
                             ),
                           ],
                         ],

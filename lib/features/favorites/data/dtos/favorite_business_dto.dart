@@ -72,23 +72,23 @@ class FavoriteBusinessDto {
   }
 
   FavoriteBusiness toEntity() => FavoriteBusiness(
-        businessId: businessId,
-        name: name,
-        category: category,
-        country: country,
-        city: city,
-        zone: zone,
-        logoUrl: logoUrl,
-        coverUrl: coverUrl,
-        rating: rating,
-        distanceKm: distanceKm,
-        favoriteAt: favoriteAt,
-        activeBonusesCount: activeBonusesCount,
-        activeCampaignsCount: activeCampaignsCount,
-        isFavorite: isFavorite,
-        businessCategoryId: businessCategoryId,
-        priceLevel: priceLevel ?? '',
-      );
+    businessId: businessId,
+    name: name,
+    category: category,
+    country: country,
+    city: city,
+    zone: zone,
+    logoUrl: logoUrl,
+    coverUrl: coverUrl,
+    rating: rating,
+    distanceKm: distanceKm,
+    favoriteAt: favoriteAt,
+    activeBonusesCount: activeBonusesCount,
+    activeCampaignsCount: activeCampaignsCount,
+    isFavorite: isFavorite,
+    businessCategoryId: businessCategoryId,
+    priceLevel: priceLevel ?? '',
+  );
 
   static List<FavoriteBusinessDto> listFromResponse(dynamic response) {
     final items = _unwrapList(response);
@@ -104,8 +104,8 @@ List<Map<String, dynamic>> _unwrapList(dynamic response) {
   final items = source is List
       ? source
       : source is Map<String, dynamic> && source['items'] is List
-          ? source['items'] as List
-          : const [];
+      ? source['items'] as List
+      : const [];
   return items
       .whereType<Map>()
       .map((item) => Map<String, dynamic>.from(item))
@@ -141,7 +141,11 @@ String _media(Map<String, dynamic> json, List<String> keys) {
   for (final key in keys) {
     final value = json[key];
     if (value is Map) {
-      final id = _string(Map<String, dynamic>.from(value), const ['id', 'mediaId', 'url']);
+      final id = _string(Map<String, dynamic>.from(value), const [
+        'id',
+        'mediaId',
+        'url',
+      ]);
       if (id.isNotEmpty) return id;
     } else if (value != null && value.toString().isNotEmpty) {
       return value.toString();

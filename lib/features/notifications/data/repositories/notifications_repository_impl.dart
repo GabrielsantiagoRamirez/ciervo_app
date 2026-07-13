@@ -37,24 +37,20 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
   }
 
   @override
-  Future<Result<void>> markAsRead(String id) => _void(
-        () => _remoteDataSource.markAsRead(id),
-      );
+  Future<Result<void>> markAsRead(String id) =>
+      _void(() => _remoteDataSource.markAsRead(id));
 
   @override
-  Future<Result<void>> markAllAsRead() => _void(
-        () => _remoteDataSource.markAllAsRead(),
-      );
+  Future<Result<void>> markAllAsRead() =>
+      _void(() => _remoteDataSource.markAllAsRead());
 
   @override
-  Future<Result<void>> deleteNotification(String id) => _void(
-        () => _remoteDataSource.deleteNotification(id),
-      );
+  Future<Result<void>> deleteNotification(String id) =>
+      _void(() => _remoteDataSource.deleteNotification(id));
 
   @override
-  Future<Result<void>> deleteAllNotifications() => _void(
-        () => _remoteDataSource.deleteAllNotifications(),
-      );
+  Future<Result<void>> deleteAllNotifications() =>
+      _void(() => _remoteDataSource.deleteAllNotifications());
 
   @override
   Future<Result<Map<String, dynamic>>> preferences() async {

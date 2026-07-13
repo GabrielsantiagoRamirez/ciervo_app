@@ -22,7 +22,8 @@ class RechargePage extends StatefulWidget {
   State<RechargePage> createState() => _RechargePageState();
 }
 
-class _RechargePageState extends State<RechargePage> with WidgetsBindingObserver {
+class _RechargePageState extends State<RechargePage>
+    with WidgetsBindingObserver {
   final _amountController = TextEditingController();
   late final WalletCubit _walletCubit;
   String? _lastIntentId;
@@ -92,9 +93,9 @@ class _RechargePageState extends State<RechargePage> with WidgetsBindingObserver
       child: BlocConsumer<WalletCubit, WalletState>(
         listener: (context, state) async {
           if (state.errorMessage != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.errorMessage!)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.errorMessage!)));
           }
           if (state.rechargeIntent?.isSucceeded == true &&
               state.successMessage != null &&
@@ -105,9 +106,9 @@ class _RechargePageState extends State<RechargePage> with WidgetsBindingObserver
           if (state.successMessage != null &&
               state.successMessage!.contains('Recarga') &&
               state.rechargeIntent?.isSucceeded != true) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.successMessage!)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.successMessage!)));
           }
           final url = state.rechargeIntent?.checkoutUrl;
           final intentId = state.rechargeIntent?.id;
@@ -184,6 +185,7 @@ class _RechargePageState extends State<RechargePage> with WidgetsBindingObserver
                               context.read<WalletCubit>().createRechargeIntent(
                                 widget.card.id,
                                 amount,
+                                currency: widget.card.currency,
                               );
                             },
                           ),
@@ -195,8 +197,8 @@ class _RechargePageState extends State<RechargePage> with WidgetsBindingObserver
                             onPressed: intentId == null
                                 ? null
                                 : () => context
-                                    .read<WalletCubit>()
-                                    .pollRechargeIntent(intentId),
+                                      .read<WalletCubit>()
+                                      .pollRechargeIntent(intentId),
                           ),
                         ],
                       ),

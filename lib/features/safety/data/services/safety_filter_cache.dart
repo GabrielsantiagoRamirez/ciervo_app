@@ -8,7 +8,8 @@ class SafetyFilterCache {
   Set<String> get blockedContentKeys => Set.unmodifiable(_blockedContentKeys);
 
   bool isUserBlocked(String userId) =>
-      int.tryParse(userId) != null && _blockedUserIds.contains(int.parse(userId));
+      int.tryParse(userId) != null &&
+      _blockedUserIds.contains(int.parse(userId));
 
   bool isUserBlockedInt(int userId) => _blockedUserIds.contains(userId);
 

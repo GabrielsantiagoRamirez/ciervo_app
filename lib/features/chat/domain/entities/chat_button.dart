@@ -7,7 +7,9 @@ enum ChatButtonVisibility {
   unknown;
 
   static ChatButtonVisibility parse(String? raw) {
-    final normalized = (raw ?? '').replaceAll(RegExp(r'[\s_-]'), '').toLowerCase();
+    final normalized = (raw ?? '')
+        .replaceAll(RegExp(r'[\s_-]'), '')
+        .toLowerCase();
     return switch (normalized) {
       'productionready' => ChatButtonVisibility.productionReady,
       'hiddenformvp' => ChatButtonVisibility.hiddenForMvp,
@@ -56,6 +58,7 @@ class ChatButton {
 }
 
 extension ChatButtonListX on List<ChatButton> {
-  List<ChatButton> visibleOnMobile() => where((b) => b.isVisibleOnMobile).toList()
-    ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+  List<ChatButton> visibleOnMobile() =>
+      where((b) => b.isVisibleOnMobile).toList()
+        ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 }

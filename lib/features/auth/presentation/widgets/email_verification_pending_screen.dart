@@ -52,7 +52,8 @@ class _EmailVerificationPendingScreenState
   @override
   void didUpdateWidget(covariant EmailVerificationPendingScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.serverError != oldWidget.serverError && widget.serverError != null) {
+    if (widget.serverError != oldWidget.serverError &&
+        widget.serverError != null) {
       _localMessage = null;
       _isSuccess = false;
     }
@@ -138,7 +139,7 @@ class _EmailVerificationPendingScreenState
       _localMessage = result.success
           ? 'Te reenviamos el correo de verificación.'
           : result.errorMessage ??
-              'No pudimos reenviar el correo. Intenta en unos segundos.';
+                'No pudimos reenviar el correo. Intenta en unos segundos.';
     });
     if (result.success) _startResendCooldown();
   }
@@ -157,10 +158,7 @@ class _EmailVerificationPendingScreenState
           Row(
             children: [
               Expanded(
-                child: Text(
-                  'Confirma tu correo',
-                  style: textTheme.titleLarge,
-                ),
+                child: Text('Confirma tu correo', style: textTheme.titleLarge),
               ),
               IconButton(
                 tooltip: 'Cambiar correo',
@@ -225,8 +223,8 @@ class _EmailVerificationPendingScreenState
               _resending
                   ? 'Reenviando…'
                   : _resendCooldown > 0
-                      ? 'Reenviar en ${_resendCooldown}s'
-                      : 'Reenviar correo',
+                  ? 'Reenviar en ${_resendCooldown}s'
+                  : 'Reenviar correo',
             ),
           ),
           if (message != null) ...[
@@ -235,10 +233,11 @@ class _EmailVerificationPendingScreenState
               width: double.infinity,
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
-                color: (isError
-                        ? colorScheme.errorContainer
-                        : colorScheme.primaryContainer)
-                    .withValues(alpha: 0.65),
+                color:
+                    (isError
+                            ? colorScheme.errorContainer
+                            : colorScheme.primaryContainer)
+                        .withValues(alpha: 0.65),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(

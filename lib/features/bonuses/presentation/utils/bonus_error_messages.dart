@@ -2,8 +2,7 @@ import '../../../../core/errors/app_exception.dart';
 import '../../../../core/errors/error_mapper.dart';
 
 abstract final class BonusErrorMessages {
-  static String fromObject(Object error) =>
-      from(ErrorMapper.fromObject(error));
+  static String fromObject(Object error) => from(ErrorMapper.fromObject(error));
 
   static String from(AppException error) {
     final code = (error.code ?? '').toLowerCase();

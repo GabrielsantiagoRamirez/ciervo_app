@@ -30,10 +30,7 @@ class _StaffModeGateState extends State<StaffModeGate> {
 
   Future<StaffPermissions?> _load() async {
     final result = await getIt<StaffScannerRepository>().permissions();
-    return result.when(
-      success: (value) => value,
-      failure: (_) => null,
-    );
+    return result.when(success: (value) => value, failure: (_) => null);
   }
 
   @override
