@@ -23,7 +23,11 @@ class _ExperienceModePageState extends State<ExperienceModePage> {
   @override
   void initState() {
     super.initState();
-    _selectedMode = context.read<ExperienceModeCubit>().state.mode;
+    final state = context.read<ExperienceModeCubit>().state;
+    // Cada sesión sugiere por hora local; el usuario puede override.
+    _selectedMode = state.hasSelection
+        ? state.mode
+        : ExperienceModeX.fromLocalTime();
   }
 
   Future<void> _continue() async {
@@ -40,6 +44,7 @@ class _ExperienceModePageState extends State<ExperienceModePage> {
     final gradientColors = isDay
         ? const [Color(0xFFFFF8E8), AppColors.dayBackground]
         : const [Color(0xFF1B1810), AppColors.background];
+    // allDay usa el look nocturno como base visual.
 
     return Scaffold(
       backgroundColor: background,
@@ -168,7 +173,7 @@ class _ExperiencePanel extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            'Selecciona el modo en el que quieres disfrutar la app.',
+            'Sugerido por tu hora local: ${ExperienceModeX.fromLocalTime().label}. Puedes cambiarlo cuando quieras.',
             textAlign: TextAlign.center,
             style: TextStyle(color: subtitleColor, fontSize: 15, height: 1.45),
           ),
@@ -209,22 +214,17 @@ class _ModeSelector extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(
-            child: _ModeSegment(
-              label: 'Día',
-              icon: Icons.wb_sunny_outlined,
-              selected: selectedMode == ExperienceMode.day,
-              onTap: () => onChanged(ExperienceMode.day),
+          for (final option in ExperienceMode.values)
+            Expanded(
+              child: _ModeSegment(
+                label: option.label,
+                icon: option == ExperienceMode.night
+                    ? Icons.nightlight_round
+                    : option.icon,
+                selected: selectedMode == option,
+                onTap: () => onChanged(option),
+              ),
             ),
-          ),
-          Expanded(
-            child: _ModeSegment(
-              label: 'Noche',
-              icon: Icons.nightlight_round,
-              selected: selectedMode == ExperienceMode.night,
-              onTap: () => onChanged(ExperienceMode.night),
-            ),
-          ),
         ],
       ),
     );
@@ -277,19 +277,23 @@ class _ModeSegment extends StatelessWidget {
             children: [
               Icon(
                 icon,
+                size: 18,
                 color: selected ? AppColors.dayText : AppColors.primaryHigh,
               ),
-              const SizedBox(width: AppSpacing.sm),
-              Text(
-                label,
-                style: TextStyle(
-                  color: selected
-                      ? AppColors.dayText
-                      : (Theme.of(context).brightness == Brightness.dark
-                            ? AppColors.textPrimary
-                            : AppColors.dayText),
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16,
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: selected
+                        ? AppColors.dayText
+                        : (Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.textPrimary
+                              : AppColors.dayText),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
                 ),
               ),
             ],

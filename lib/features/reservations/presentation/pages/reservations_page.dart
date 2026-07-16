@@ -239,14 +239,24 @@ class _BookingDetails extends StatelessWidget {
         ),
       ],
       const SizedBox(height: AppSpacing.md),
+      if (booking.requiresPrepayment &&
+          !_isBookingConfirmed(booking.status)) ...[
+        Text(
+          'Anticipo pendiente',
+          style: TextStyle(color: Theme.of(context).colorScheme.error),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+      ],
       CiervoQrCard(
         onRefresh: onRefresh,
         item: CiervoQrItem(
           id: '${booking.id}',
           type: CiervoQrType.booking,
-          status: CiervoQrStatus.active,
+          status: _qrStatusForBooking(booking),
           reference: booking.publicCode,
-          title: 'Presenta este codigo/QR en el negocio',
+          title: _isBookingConfirmed(booking.status)
+              ? 'Presenta este codigo/QR en el negocio'
+              : 'QR disponible cuando la reserva esté confirmada',
           subtitle: booking.businessName,
           qrId: booking.qrId,
           qrPayload: booking.qrPayload,
@@ -265,6 +275,34 @@ class _BookingDetails extends StatelessWidget {
   String _date(DateTime? value) => value == null
       ? 'Sin información'
       : value.toLocal().toString().substring(0, 16);
+}
+
+bool _isBookingConfirmed(String status) {
+  final text = status.trim().toLowerCase();
+  return text.contains('confirm') ||
+      text.contains('approved') ||
+      text.contains('paid') ||
+      text.contains('acept');
+}
+
+CiervoQrStatus _qrStatusForBooking(Booking booking) {
+  final text = booking.status.trim().toLowerCase();
+  if (text.contains('cancel') || text.contains('reject') || text.contains('denied')) {
+    return CiervoQrStatus.cancelled;
+  }
+  if (text.contains('expir')) {
+    return CiervoQrStatus.expired;
+  }
+  if (booking.requiresPrepayment && !_isBookingConfirmed(text)) {
+    return CiervoQrStatus.unknown;
+  }
+  if (_isBookingConfirmed(text)) {
+    return CiervoQrStatus.active;
+  }
+  if (text.contains('pending') || text.contains('pendiente')) {
+    return CiervoQrStatus.unknown;
+  }
+  return CiervoQrStatus.unknown;
 }
 
 List<MapEntry<String, List<Booking>>> _groupedBookings(List<Booking> bookings) {

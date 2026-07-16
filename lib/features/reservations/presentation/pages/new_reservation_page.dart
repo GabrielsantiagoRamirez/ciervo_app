@@ -1,20 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/country/country_registration.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
-import '../../../../core/experience/experience_mode.dart';
-import '../../../../core/experience/experience_mode_cubit.dart';
 import '../../../../core/location/location_service.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_brand_loader.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
-import '../../../discovery/domain/entities/business_summary.dart';
-import '../../../discovery/domain/repositories/discovery_repository.dart';
-import '../../../place_detail/data/business_detail_repository.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
+import '../../data/booking_repository.dart';
 import '../widgets/business_reservation_sheet.dart';
 
 class NewReservationPage extends StatefulWidget {
@@ -24,28 +19,14 @@ class NewReservationPage extends StatefulWidget {
   State<NewReservationPage> createState() => _NewReservationPageState();
 }
 
-class _ReservableBusiness {
-  const _ReservableBusiness({
-    required this.business,
-    required this.options,
-  });
-
-  final BusinessSummary business;
-  final List<ReservableOption> options;
-
-  bool get requiresPrepayment =>
-      options.any((option) => option.requiresPrepayment);
-}
-
 class _NewReservationPageState extends State<NewReservationPage> {
-  final _discovery = getIt<DiscoveryRepository>();
-  final _businessDetail = getIt<BusinessDetailRepository>();
+  final _bookingRepository = getIt<BookingRepository>();
   final _locationService = getIt<LocationService>();
   final _profileRepository = getIt<ProfileRepository>();
 
   bool _loading = true;
   String? _error;
-  List<_ReservableBusiness> _items = const [];
+  List<ReservableBusinessCatalogItem> _items = const [];
   String _countryCode = CountryRegistration.defaultCountryCode();
   String _city = CountryRegistration.defaultContext().city;
 
@@ -61,12 +42,27 @@ class _NewReservationPageState extends State<NewReservationPage> {
       _error = null;
     });
 
-    final mode = context.read<ExperienceModeCubit>().state.mode;
-
     try {
       await _resolveCountryContext();
-      final businesses = await _loadCandidateBusinesses(mode);
-      final reservable = await _filterReservable(businesses);
+      double? latitude;
+      double? longitude;
+      try {
+        final location = await _locationService.currentLocation();
+        latitude = location.latitude;
+        longitude = location.longitude;
+      } catch (_) {
+        // El listado también funciona por país/ciudad sin permiso GPS.
+      }
+      final result = await _bookingRepository.getReservableBusinesses(
+        countryCode: _countryCode,
+        city: _city,
+        latitude: latitude,
+        longitude: longitude,
+      );
+      final reservable = result.when(
+        success: (items) => items,
+        failure: (error) => throw error,
+      );
       if (!mounted) return;
       setState(() {
         _items = reservable;
@@ -86,89 +82,25 @@ class _NewReservationPageState extends State<NewReservationPage> {
     profileResult.when(
       success: (profile) {
         final code = (profile.countryCode ?? '').trim().toUpperCase();
+        final city = (profile.city ?? '').trim();
         if (code.isNotEmpty) {
           _countryCode = code;
-          _city = CountryRegistration.contextForCode(code).city;
         }
+        _city = city.isNotEmpty
+            ? city
+            : CountryRegistration.contextForCode(
+                code.isNotEmpty ? code : _countryCode,
+              ).city;
       },
       failure: (_) {},
     );
   }
 
-  Future<List<BusinessSummary>> _loadCandidateBusinesses(
-    ExperienceMode mode,
-  ) async {
-    try {
-      final location = await _locationService.currentLocation();
-      final nearby = await _discovery.nearbyBusinesses(
-        location: location,
-        experienceMode: mode,
-        countryCode: _countryCode,
-        city: _city,
-      );
-      return nearby.when(
-        success: (items) => items,
-        failure: (_) => const <BusinessSummary>[],
-      );
-    } catch (_) {
-      final byCity = await _discovery.businessesByCity(
-        _city,
-        experienceMode: mode,
-        countryCode: _countryCode,
-      );
-      return byCity.when(
-        success: (items) => items,
-        failure: (error) => throw error,
-      );
-    }
-  }
-
-  Future<List<_ReservableBusiness>> _filterReservable(
-    List<BusinessSummary> businesses,
-  ) async {
-    if (businesses.isEmpty) return const [];
-
-    final unique = <String, BusinessSummary>{};
-    for (final business in businesses) {
-      if (business.id.trim().isEmpty) continue;
-      unique.putIfAbsent(business.id, () => business);
-    }
-
-    final results = <_ReservableBusiness>[];
-    final entries = unique.values.toList();
-    const chunkSize = 6;
-    for (var i = 0; i < entries.length; i += chunkSize) {
-      final chunk = entries.skip(i).take(chunkSize);
-      final futures = chunk.map((business) async {
-        final optionsResult = await _businessDetail.reservableOptions(
-          business.id,
-        );
-        return optionsResult.when(
-          success: (options) {
-            final active = options.where((item) => item.isActive).toList();
-            if (active.isEmpty) return null;
-            return _ReservableBusiness(business: business, options: active);
-          },
-          failure: (_) => null,
-        );
-      });
-      final chunkResults = await Future.wait(futures);
-      results.addAll(chunkResults.whereType<_ReservableBusiness>());
-    }
-
-    results.sort((a, b) {
-      final byDistance = a.business.distanceKm.compareTo(b.business.distanceKm);
-      if (byDistance != 0) return byDistance;
-      return a.business.name.compareTo(b.business.name);
-    });
-    return results;
-  }
-
-  Future<void> _openReservation(_ReservableBusiness item) async {
+  Future<void> _openReservation(ReservableBusinessCatalogItem item) async {
     final booking = await showBusinessReservationSheet(
       context,
-      businessId: item.business.id,
-      businessName: item.business.name,
+      businessId: item.id,
+      businessName: item.name,
       options: item.options,
     );
     if (booking != null && mounted) {
@@ -187,9 +119,7 @@ class _NewReservationPageState extends State<NewReservationPage> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 children: const [
                   SizedBox(height: 120),
-                  CiervoBrandLoader(
-                    message: 'Buscando comercios con reservas',
-                  ),
+                  CiervoBrandLoader(message: 'Buscando comercios con reservas'),
                 ],
               )
             : _error != null
@@ -198,10 +128,7 @@ class _NewReservationPageState extends State<NewReservationPage> {
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 children: [
                   Text(_error!, textAlign: TextAlign.center),
-                  TextButton(
-                    onPressed: _load,
-                    child: const Text('Reintentar'),
-                  ),
+                  TextButton(onPressed: _load, child: const Text('Reintentar')),
                 ],
               )
             : _items.isEmpty
@@ -247,12 +174,11 @@ class _NewReservationPageState extends State<NewReservationPage> {
 class _ReservableBusinessCard extends StatelessWidget {
   const _ReservableBusinessCard({required this.item, required this.onTap});
 
-  final _ReservableBusiness item;
+  final ReservableBusinessCatalogItem item;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final business = item.business;
     final prepaidCount = item.options
         .where((option) => option.requiresPrepayment)
         .length;
@@ -267,16 +193,13 @@ class _ReservableBusinessCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                business.name,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+              Text(item.name, style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: AppSpacing.xs),
               Text(
                 [
-                  if (business.category.isNotEmpty) business.category,
-                  if (business.distanceKm > 0)
-                    '${business.distanceKm.toStringAsFixed(1)} km',
+                  if (item.category.isNotEmpty) item.category,
+                  if (item.distanceKm > 0)
+                    '${item.distanceKm.toStringAsFixed(1)} km',
                 ].join(' · '),
                 style: Theme.of(context).textTheme.bodySmall,
               ),

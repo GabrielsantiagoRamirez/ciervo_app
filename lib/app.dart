@@ -134,8 +134,15 @@ class _CiervoAppState extends State<CiervoApp> with WidgetsBindingObserver {
           return MaterialApp.router(
             title: 'CIERVO CLUB',
             debugShowCheckedModeBanner: false,
-            locale: const Locale('es', 'CO'),
-            supportedLocales: const [Locale('es', 'CO'), Locale('es')],
+            locale: const Locale('es'),
+            supportedLocales: const [
+              Locale('es'),
+              Locale('es', 'CL'),
+              Locale('es', 'CO'),
+              Locale('es', 'MX'),
+              Locale('es', 'PE'),
+              Locale('es', 'AR'),
+            ],
             localizationsDelegates: const [
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,

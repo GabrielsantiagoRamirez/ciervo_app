@@ -6,6 +6,7 @@ abstract interface class PinsRepository {
     required String walletCardId,
     required String businessId,
     required double amount,
+    String currency = 'COP',
     bool kidsMode = false,
     bool requireParentApproval = false,
     String? childProfileId,

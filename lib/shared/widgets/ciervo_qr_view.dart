@@ -41,7 +41,7 @@ class CiervoQrView extends StatelessWidget {
         backgroundColor: Colors.white,
         eyeStyle: eyeStyle,
         dataModuleStyle: dataModuleStyle,
-        gapless: false,
+        gapless: true,
       ),
     );
   }
@@ -51,8 +51,8 @@ class CiervoQrView extends StatelessWidget {
     data: payload,
     version: QrVersions.auto,
     errorCorrectionLevel: QrErrorCorrectLevel.M,
-    color: Colors.black,
-    emptyColor: Colors.white,
-    gapless: false,
+    eyeStyle: eyeStyle,
+    dataModuleStyle: dataModuleStyle,
+    gapless: true,
   );
 }

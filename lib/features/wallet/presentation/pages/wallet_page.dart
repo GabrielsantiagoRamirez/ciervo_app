@@ -14,6 +14,7 @@ import '../../../../shared/widgets/insufficient_balance_dialog.dart';
 import '../../../financial_history/presentation/pages/financial_history_page.dart';
 import '../../../notifications/presentation/pages/notifications_page.dart';
 import '../../../payments/presentation/pages/payments_history_page.dart';
+import '../../../pins/presentation/pages/pin_p2p_pay_page.dart';
 import '../../../pins/presentation/pages/pins_page.dart';
 import '../../domain/entities/payment_request.dart';
 import '../../domain/entities/wallet_card.dart';
@@ -324,6 +325,17 @@ class _QuickActions extends StatelessWidget {
               ? null
               : () => Navigator.of(context).push(
                   MaterialPageRoute<void>(builder: (_) => PinsPage(card: card)),
+                ),
+        ),
+        _ActionChipButton(
+          label: 'Cobrar PIN',
+          icon: Icons.pin_invoke_outlined,
+          onTap: card == null
+              ? null
+              : () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => PinP2PPayPage(card: card),
+                  ),
                 ),
         ),
         _ActionChipButton(

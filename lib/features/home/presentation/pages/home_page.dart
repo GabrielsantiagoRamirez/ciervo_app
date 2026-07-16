@@ -4,9 +4,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../../app/app_router.dart';
 import '../../../../core/kids/selected_kid_context.dart';
 import '../../../../shared/widgets/kids_mode_banner.dart';
 import '../../../../core/di/service_locator.dart';
@@ -19,6 +17,7 @@ import '../../../../core/sync/home_feed_refresh.dart';
 import '../../../../core/location/location_permission_status.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
@@ -32,6 +31,7 @@ import '../../../discovery/domain/entities/business_summary.dart';
 import '../../../discovery/domain/repositories/discovery_repository.dart';
 import '../../../location/data/client_location_repository.dart';
 import '../../../place_detail/presentation/pages/place_detail_page.dart';
+import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../domain/entities/home_place.dart';
 import '../cubit/home_discovery_cubit.dart';
 import '../cubit/home_discovery_state.dart';
@@ -40,6 +40,7 @@ import '../widgets/home_place_card.dart';
 import '../widgets/home_search_bar.dart';
 import '../widgets/home_top_bar.dart';
 import '../widgets/location_permission_card.dart';
+import '../widgets/smart_filters_sheet.dart';
 import '../../../promotions/presentation/widgets/gold_trial_promotion_sheet.dart';
 
 class HomePage extends StatelessWidget {
@@ -54,6 +55,7 @@ class HomePage extends StatelessWidget {
         clientLocationRepository: getIt<ClientLocationRepository>(),
         businessCategoriesRepository: getIt<BusinessCategoriesRepository>(),
         geoRepository: getIt<GeoRepository>(),
+        profileRepository: getIt<ProfileRepository>(),
         initialExperienceMode: context.read<ExperienceModeCubit>().state.mode,
       )..initialize(),
       child: const _HomeView(),
@@ -172,9 +174,23 @@ class _HomeViewState extends State<_HomeView> {
                               children: [
                                 HomeTopBar(
                                   mode: modeState.mode,
-                                  onChangeMode: () => context.push(
-                                    AppRoutePaths.experienceMode,
-                                  ),
+                                  activeFilterCount:
+                                      state.filters.activeCount,
+                                  onModeChanged: (mode) {
+                                    context
+                                        .read<ExperienceModeCubit>()
+                                        .setMode(mode);
+                                  },
+                                  onOpenFilters: () async {
+                                    final applied =
+                                        await showSmartFiltersSheet(
+                                          context: context,
+                                          initial: state.filters,
+                                        );
+                                    if (applied != null && context.mounted) {
+                                      await cubit.applyFilters(applied);
+                                    }
+                                  },
                                 ),
                                 const SizedBox(height: AppSpacing.xl),
                                 Text(
@@ -185,7 +201,7 @@ class _HomeViewState extends State<_HomeView> {
                                 ),
                                 const SizedBox(height: AppSpacing.xs),
                                 Text(
-                                  '${modeState.mode.label} - ${state.usingLocation ? 'cerca de ti' : '${state.city}, ${state.countryCode}'}',
+                                  '${modeState.mode.label} · ${state.usingLocation ? 'cerca de ti' : '${state.city}, ${state.countryCode}'}',
                                   style: AppTextStyles.bodyMuted,
                                 ),
                                 const SizedBox(height: AppSpacing.lg),
@@ -302,13 +318,8 @@ class _DiscoveryResults extends StatelessWidget {
     return switch (state.status) {
       HomeDiscoveryStatus.initial || HomeDiscoveryStatus.loading =>
         const SliverToBoxAdapter(child: CiervoLoadingState(itemCount: 4)),
-      HomeDiscoveryStatus.empty => const SliverToBoxAdapter(
-        child: CiervoEmptyState(
-          title: 'Sin resultados',
-          description:
-              'No encontramos experiencias para estos filtros. Prueba otra busqueda o categoria.',
-          icon: Icons.explore_off_outlined,
-        ),
+      HomeDiscoveryStatus.empty => SliverToBoxAdapter(
+        child: _DiscoveryEmptyState(state: state),
       ),
       HomeDiscoveryStatus.failure => SliverToBoxAdapter(
         child: CiervoErrorState(
@@ -363,6 +374,59 @@ class _DiscoveryResults extends StatelessWidget {
       benefitTier: business.benefitTier,
       city: city,
       countryCode: countryCode,
+      experienceBucket: business.experienceBucket,
+      open24Hours: business.open24Hours,
+      acceptsCiervoPayments: business.acceptsCiervoPayments,
+      hasDelivery: business.hasDelivery,
+      requiresReservation: business.requiresReservation,
+      isFamilyFriendly: business.isFamilyFriendly,
+      isPetFriendly: business.isPetFriendly,
+      isAccessible: business.isAccessible,
+      hasParking: business.hasParking,
+      hasActivePromotions: business.hasActivePromotions,
+      isOpen: business.isOpen,
+    );
+  }
+}
+
+class _DiscoveryEmptyState extends StatelessWidget {
+  const _DiscoveryEmptyState({required this.state});
+
+  final HomeDiscoveryState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final cubit = context.read<HomeDiscoveryCubit>();
+    final show24h = state.experienceMode != ExperienceMode.allDay;
+
+    return Column(
+      children: [
+        CiervoEmptyState(
+          title: 'Sin resultados',
+          description: show24h
+              ? 'No hay experiencias en esta franja. Prueba ver comercios 24h o ampliar el radio.'
+              : 'No encontramos experiencias con estos filtros. Prueba ampliar el radio de búsqueda.',
+          icon: Icons.explore_off_outlined,
+          actionLabel: show24h ? 'Ver 24h' : 'Ampliar radio',
+          onAction: () async {
+            if (show24h) {
+              await context.read<ExperienceModeCubit>().setMode(
+                ExperienceMode.allDay,
+              );
+              return;
+            }
+            await cubit.expandRadius();
+          },
+        ),
+        if (show24h) ...[
+          const SizedBox(height: AppSpacing.sm),
+          CiervoButton(
+            label: 'Ampliar radio',
+            icon: Icons.radar_outlined,
+            onPressed: cubit.expandRadius,
+          ),
+        ],
+      ],
     );
   }
 }

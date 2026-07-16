@@ -18,6 +18,12 @@ abstract interface class PaymentsRepository {
     required String idempotencyKey,
   });
 
+  Future<Result<PaymentIntent>> createBookingPayment({
+    required String bookingId,
+    required String businessId,
+    required String idempotencyKey,
+  });
+
   Future<Result<PaymentIntent>> createMembershipSubscribeIntent({
     required String membershipPlanId,
     required String idempotencyKey,

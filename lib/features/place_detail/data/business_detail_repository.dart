@@ -111,6 +111,16 @@ class BusinessPublicDetail {
     this.reviewSourceId,
     this.reviewEligibilityReason,
     this.isFavorite = false,
+    this.open24Hours = false,
+    this.acceptsCiervoPayments = false,
+    this.hasDelivery = false,
+    this.requiresReservation = false,
+    this.isFamilyFriendly = false,
+    this.isPetFriendly = false,
+    this.isAccessible = false,
+    this.hasParking = false,
+    this.hasActivePromotions = false,
+    this.isOpen,
   });
 
   factory BusinessPublicDetail.fromJson(Map<String, dynamic> json) =>
@@ -161,6 +171,29 @@ class BusinessPublicDetail {
           'reviewEligibilityReason',
         ]),
         isFavorite: _bool(json['isFavorite']),
+        open24Hours: _bool(json['open24Hours'] ?? json['isOpen24Hours']),
+        acceptsCiervoPayments: _bool(
+          json['acceptsCiervoPayments'] ?? json['acceptsCiervo'],
+        ),
+        hasDelivery: _bool(json['hasDelivery'] ?? json['delivery']),
+        requiresReservation: _bool(
+          json['requiresReservation'] ?? json['reservationRequired'],
+        ),
+        isFamilyFriendly: _bool(
+          json['isFamilyFriendly'] ?? json['familyFriendly'],
+        ),
+        isPetFriendly: _bool(json['isPetFriendly'] ?? json['petFriendly']),
+        isAccessible: _bool(json['isAccessible'] ?? json['accessible']),
+        hasParking: _bool(json['hasParking'] ?? json['parking']),
+        hasActivePromotions:
+            _bool(
+              json['hasActivePromotions'] ??
+                  json['hasPromotions'] ??
+                  json['tienePromociones'],
+            ) ||
+            (_list(json['promotions']).isNotEmpty) ||
+            (_list(json['promocionesActivas']).isNotEmpty),
+        isOpen: _openState(json),
       );
 
   final List<BusinessProduct> products;
@@ -193,6 +226,30 @@ class BusinessPublicDetail {
   final int? reviewSourceId;
   final String? reviewEligibilityReason;
   final bool isFavorite;
+  final bool open24Hours;
+  final bool acceptsCiervoPayments;
+  final bool hasDelivery;
+  final bool requiresReservation;
+  final bool isFamilyFriendly;
+  final bool isPetFriendly;
+  final bool isAccessible;
+  final bool hasParking;
+  final bool hasActivePromotions;
+  final bool? isOpen;
+
+  List<String> get amenityTags => [
+    if (acceptsCiervoPayments) 'Pagos CIERVO',
+    if (hasDelivery) 'Delivery',
+    if (requiresReservation) 'Reserva',
+    if (isFamilyFriendly) 'Familias',
+    if (isPetFriendly) 'Pet friendly',
+    if (isAccessible) 'Accesible',
+    if (hasParking) 'Parking',
+    if (open24Hours) '24h',
+    if (hasActivePromotions) 'Promo',
+    if (isOpen == true) 'Abierto',
+    if (isOpen == false) 'Cerrado',
+  ];
 }
 
 class BusinessProduct {
@@ -258,13 +315,14 @@ class ReservableOption {
           json['depositAmount'] ??
           json['advancePaymentAmount'],
     );
-    final requiresPrepayment = _bool(
+    // `requiresPayment` (precio de la opción) NO es lo mismo que anticipo.
+    final requiresPrepayment =
+        _bool(
           json['requiresPrepayment'] ??
               json['requiresPrepaid'] ??
               json['prepaidRequired'] ??
               json['requiresDeposit'] ??
-              json['requiresAdvancePayment'] ??
-              json['requiresPayment'],
+              json['requiresAdvancePayment'],
         ) ||
         (prepaidAmount != null && prepaidAmount > 0);
     return ReservableOption(
@@ -366,6 +424,22 @@ bool _bool(dynamic value, {bool fallback = false}) {
   if (value is bool) return value;
   if (value == null) return fallback;
   return value.toString().toLowerCase() == 'true';
+}
+
+bool? _openState(Map<String, dynamic> json) {
+  if (json.containsKey('isOpen') || json.containsKey('openNow')) {
+    final value = json['isOpen'] ?? json['openNow'];
+    if (value is bool) return value;
+    if (value != null) return value.toString().toLowerCase() == 'true';
+  }
+  final estado = (json['estado'] ?? json['status'] ?? '')
+      .toString()
+      .trim()
+      .toLowerCase();
+  if (estado.isEmpty) return null;
+  if (estado.contains('abierto') || estado == 'open') return true;
+  if (estado.contains('cerrado') || estado == 'closed') return false;
+  return null;
 }
 
 List<Map<String, dynamic>> _list(dynamic value) {

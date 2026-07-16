@@ -6,8 +6,8 @@ import 'experience_mode.dart';
 class ExperienceModeState {
   const ExperienceModeState({required this.mode, required this.hasSelection});
 
-  const ExperienceModeState.unselected()
-    : mode = ExperienceMode.night,
+  ExperienceModeState.unselected()
+    : mode = ExperienceModeX.fromLocalTime(),
       hasSelection = false;
 
   final ExperienceMode mode;
@@ -16,7 +16,7 @@ class ExperienceModeState {
 
 class ExperienceModeCubit extends Cubit<ExperienceModeState> {
   ExperienceModeCubit(this._storage)
-    : super(const ExperienceModeState.unselected());
+    : super(ExperienceModeState.unselected());
 
   static const _storageKey = 'ciervo.experienceMode';
 
@@ -24,12 +24,9 @@ class ExperienceModeCubit extends Cubit<ExperienceModeState> {
 
   Future<void> restore() async {
     final stored = await _storage.read(_storageKey);
-    final mode = ExperienceModeX.fromValue(stored);
-    if (mode == null) {
-      emit(const ExperienceModeState.unselected());
-      return;
-    }
-    // Storage remembers the preference, but does not choose for this session.
+    final mode =
+        ExperienceModeX.fromValue(stored) ?? ExperienceModeX.fromLocalTime();
+    // Preferencia recordada o sugerencia por hora local; no elige la sesión.
     emit(ExperienceModeState(mode: mode, hasSelection: false));
   }
 
@@ -37,12 +34,18 @@ class ExperienceModeCubit extends Cubit<ExperienceModeState> {
     emit(ExperienceModeState(mode: state.mode, hasSelection: false));
   }
 
+  /// Aplica el modo sugerido por la hora local del dispositivo.
+  Future<void> applyLocalTimeSuggestion() {
+    return setMode(ExperienceModeX.fromLocalTime());
+  }
+
   Future<void> toggleMode() {
-    return setMode(
-      state.mode == ExperienceMode.night
-          ? ExperienceMode.day
-          : ExperienceMode.night,
-    );
+    final next = switch (state.mode) {
+      ExperienceMode.day => ExperienceMode.night,
+      ExperienceMode.night => ExperienceMode.allDay,
+      ExperienceMode.allDay => ExperienceMode.day,
+    };
+    return setMode(next);
   }
 
   Future<void> setMode(ExperienceMode mode) async {

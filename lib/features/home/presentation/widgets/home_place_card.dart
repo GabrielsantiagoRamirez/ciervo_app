@@ -29,6 +29,7 @@ class HomePlaceCard extends StatelessWidget {
       end: Alignment.bottomCenter,
       colors: [Color(0x15000000), AppColors.overlayGradientEnd],
     );
+    final amenities = _amenityIcons(place).take(4).toList();
 
     return GestureDetector(
       onTap: onTap,
@@ -53,42 +54,55 @@ class HomePlaceCard extends StatelessWidget {
                 DecoratedBox(
                   decoration: BoxDecoration(gradient: overlayGradient),
                 ),
-                if (place.matchPercent > 0)
-                  const Positioned(
-                    top: AppSpacing.sm,
-                    right: AppSpacing.sm,
-                    child: _Badge(
-                      label: 'Recomendado',
-                      backgroundColor: AppColors.primary,
-                      textColor: Color(0xFF111111),
-                    ),
-                  ),
                 Positioned(
                   top: AppSpacing.sm,
                   left: AppSpacing.sm,
-                  child: Wrap(
-                    spacing: AppSpacing.xs,
+                  right: AppSpacing.sm,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (isFavorite ?? place.isFavorite)
-                        const _IconBadge(
-                          icon: Icons.favorite,
-                          label: 'Favorito',
+                      Expanded(
+                        child: Wrap(
+                          spacing: AppSpacing.xs,
+                          runSpacing: AppSpacing.xs,
+                          children: [
+                            if (isFavorite ?? place.isFavorite)
+                              const _IconBadge(
+                                icon: Icons.favorite,
+                                label: 'Favorito',
+                              ),
+                            if (place.isPartner)
+                              const _IconBadge(
+                                icon: Icons.handshake_outlined,
+                                label: 'Aliado',
+                              ),
+                            if (place.hasCashback)
+                              const _IconBadge(
+                                icon: Icons.savings_outlined,
+                                label: 'Cashback',
+                              ),
+                            if (place.hasActivePromotions)
+                              const _Badge(
+                                label: 'Promo',
+                                backgroundColor: AppColors.primary,
+                                textColor: Color(0xFF111111),
+                              ),
+                            if ((place.benefitTier ?? '').isNotEmpty)
+                              _Badge(
+                                label: place.benefitTier!,
+                                backgroundColor: AppColors.primary,
+                                textColor: const Color(0xFF111111),
+                              ),
+                          ],
                         ),
-                      if (place.isPartner)
-                        const _IconBadge(
-                          icon: Icons.handshake_outlined,
-                          label: 'Aliado',
-                        ),
-                      if (place.hasCashback)
-                        const _IconBadge(
-                          icon: Icons.savings_outlined,
-                          label: 'Cashback',
-                        ),
-                      if ((place.benefitTier ?? '').isNotEmpty)
+                      ),
+                      if (place.isOpen != null)
                         _Badge(
-                          label: place.benefitTier!,
-                          backgroundColor: AppColors.primary,
-                          textColor: Color(0xFF111111),
+                          label: place.isOpen! ? 'Abierto' : 'Cerrado',
+                          backgroundColor: place.isOpen!
+                              ? const Color(0xFF1B5E20)
+                              : const Color(0xFF5D4037),
+                          textColor: Colors.white,
                         ),
                     ],
                   ),
@@ -96,12 +110,28 @@ class HomePlaceCard extends StatelessWidget {
                 Positioned(
                   left: AppSpacing.sm,
                   bottom: AppSpacing.sm,
-                  child: _Badge(
-                    label: place.distanceKm > 0
-                        ? '${place.distanceKm.toStringAsFixed(1)} km'
-                        : 'General',
-                    backgroundColor: AppColors.glass,
-                    textColor: AppColors.textPrimary,
+                  child: Row(
+                    children: [
+                      _Badge(
+                        label: place.distanceKm > 0
+                            ? '${place.distanceKm.toStringAsFixed(1)} km'
+                            : 'General',
+                        backgroundColor: AppColors.glass,
+                        textColor: AppColors.textPrimary,
+                      ),
+                      if (amenities.isNotEmpty) ...[
+                        const SizedBox(width: AppSpacing.xs),
+                        ...amenities.map(
+                          (item) => Padding(
+                            padding: const EdgeInsets.only(right: 4),
+                            child: _IconBadge(
+                              icon: item.icon,
+                              label: item.label,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 Positioned(
@@ -158,8 +188,35 @@ class HomePlaceCard extends StatelessWidget {
       if (place.rating > 0) place.rating.toStringAsFixed(1),
       if (place.priceLevel.isNotEmpty) place.priceLevel,
     ];
-    return parts.join(' - ');
+    return parts.join(' · ');
   }
+}
+
+class _AmenityIcon {
+  const _AmenityIcon(this.icon, this.label);
+  final IconData icon;
+  final String label;
+}
+
+List<_AmenityIcon> _amenityIcons(HomePlace place) {
+  return [
+    if (place.acceptsCiervoPayments)
+      const _AmenityIcon(Icons.payments_outlined, 'Pagos CIERVO'),
+    if (place.hasDelivery)
+      const _AmenityIcon(Icons.delivery_dining_outlined, 'Delivery'),
+    if (place.requiresReservation)
+      const _AmenityIcon(Icons.event_available_outlined, 'Reserva'),
+    if (place.isFamilyFriendly)
+      const _AmenityIcon(Icons.family_restroom_outlined, 'Familias'),
+    if (place.isPetFriendly)
+      const _AmenityIcon(Icons.pets_outlined, 'Pet friendly'),
+    if (place.isAccessible)
+      const _AmenityIcon(Icons.accessible_outlined, 'Accesible'),
+    if (place.hasParking)
+      const _AmenityIcon(Icons.local_parking_outlined, 'Parking'),
+    if (place.open24Hours)
+      const _AmenityIcon(Icons.schedule_outlined, '24h'),
+  ];
 }
 
 class _IconBadge extends StatelessWidget {

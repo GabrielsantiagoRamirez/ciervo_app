@@ -16,8 +16,10 @@ import '../../../home/domain/entities/home_place.dart';
 import '../../../home/presentation/cubit/home_discovery_cubit.dart';
 import '../../../home/presentation/cubit/home_discovery_state.dart';
 import '../../../home/presentation/widgets/home_place_card.dart';
+import '../../../home/presentation/widgets/smart_filters_sheet.dart';
 import '../../../location/data/client_location_repository.dart';
 import '../../../place_detail/presentation/pages/place_detail_page.dart';
+import '../../../profile/domain/repositories/profile_repository.dart';
 
 class SearchPage extends StatelessWidget {
   const SearchPage({super.key});
@@ -31,6 +33,7 @@ class SearchPage extends StatelessWidget {
         clientLocationRepository: getIt<ClientLocationRepository>(),
         businessCategoriesRepository: getIt<BusinessCategoriesRepository>(),
         geoRepository: getIt<GeoRepository>(),
+        profileRepository: getIt<ProfileRepository>(),
         initialExperienceMode: context.read<ExperienceModeCubit>().state.mode,
       )..initialize(),
       child: const _SearchView(),
@@ -108,10 +111,42 @@ class _SearchViewState extends State<_SearchView> {
                     }).toList(),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  FilledButton.icon(
-                    icon: const Icon(Icons.tune),
-                    label: const Text('Aplicar filtros'),
-                    onPressed: () => _apply(cubit),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          icon: Badge(
+                            isLabelVisible:
+                                discoveryState.filters.activeCount > 0,
+                            label: Text(
+                              '${discoveryState.filters.activeCount}',
+                            ),
+                            child: const Icon(Icons.tune),
+                          ),
+                          label: const Text('Filtros'),
+                          onPressed: () async {
+                            final applied = await showSmartFiltersSheet(
+                              context: context,
+                              initial: discoveryState.filters,
+                            );
+                            if (applied != null && context.mounted) {
+                              await cubit.applyFilters(applied);
+                              if (_controller.text.trim().isNotEmpty) {
+                                _apply(cubit);
+                              }
+                            }
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: FilledButton.icon(
+                          icon: const Icon(Icons.search),
+                          label: const Text('Buscar'),
+                          onPressed: () => _apply(cubit),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -233,6 +268,17 @@ class _SearchViewState extends State<_SearchView> {
       benefitTier: business.benefitTier,
       city: city,
       countryCode: countryCode,
+      experienceBucket: business.experienceBucket,
+      open24Hours: business.open24Hours,
+      acceptsCiervoPayments: business.acceptsCiervoPayments,
+      hasDelivery: business.hasDelivery,
+      requiresReservation: business.requiresReservation,
+      isFamilyFriendly: business.isFamilyFriendly,
+      isPetFriendly: business.isPetFriendly,
+      isAccessible: business.isAccessible,
+      hasParking: business.hasParking,
+      hasActivePromotions: business.hasActivePromotions,
+      isOpen: business.isOpen,
     );
   }
 

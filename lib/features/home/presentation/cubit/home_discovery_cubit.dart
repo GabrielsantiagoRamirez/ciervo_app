@@ -11,9 +11,11 @@ import '../../../../core/location/location_service.dart';
 import '../../../../core/kids/selected_kid_context.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../discovery/domain/entities/business_summary.dart';
+import '../../../discovery/domain/entities/discovery_smart_filters.dart';
 import '../../../discovery/domain/repositories/discovery_repository.dart';
 import '../../../discovery/data/repositories/business_categories_repository.dart';
 import '../../../location/data/client_location_repository.dart';
+import '../../../profile/domain/repositories/profile_repository.dart';
 import 'home_discovery_state.dart';
 
 class HomeDiscoveryCubit extends Cubit<HomeDiscoveryState> {
@@ -23,12 +25,14 @@ class HomeDiscoveryCubit extends Cubit<HomeDiscoveryState> {
     required ClientLocationRepository clientLocationRepository,
     required BusinessCategoriesRepository businessCategoriesRepository,
     required GeoRepository geoRepository,
+    required ProfileRepository profileRepository,
     required ExperienceMode initialExperienceMode,
   }) : _locationService = locationService,
        _discoveryRepository = discoveryRepository,
        _clientLocationRepository = clientLocationRepository,
        _businessCategoriesRepository = businessCategoriesRepository,
        _geoRepository = geoRepository,
+       _profileRepository = profileRepository,
        super(HomeDiscoveryState(experienceMode: initialExperienceMode));
 
   static const _fallbackCategories = [
@@ -52,9 +56,10 @@ class HomeDiscoveryCubit extends Cubit<HomeDiscoveryState> {
   final ClientLocationRepository _clientLocationRepository;
   final BusinessCategoriesRepository _businessCategoriesRepository;
   final GeoRepository _geoRepository;
+  final ProfileRepository _profileRepository;
 
   Future<void> initialize() async {
-    await loadCategories();
+    await Future.wait([loadCategories(), _seedFromProfile()]);
 
     final permission = await _locationService.permissionStatus();
     emit(state.copyWith(permissionStatus: permission));
@@ -68,8 +73,32 @@ class HomeDiscoveryCubit extends Cubit<HomeDiscoveryState> {
     await loadGeneral();
   }
 
+  Future<void> _seedFromProfile() async {
+    final result = await _profileRepository.getMe();
+    result.when(
+      success: (profile) {
+        final code = (profile.countryCode ?? '').trim().toUpperCase();
+        final city = (profile.city ?? '').trim();
+        if (code.isEmpty && city.isEmpty) return;
+        emit(
+          state.copyWith(
+            countryCode: code.isNotEmpty ? code : state.countryCode,
+            city: city.isNotEmpty
+                ? city
+                : CountryRegistration.contextForCode(
+                    code.isNotEmpty ? code : state.countryCode,
+                  ).city,
+          ),
+        );
+      },
+      failure: (_) {},
+    );
+  }
+
   Future<void> loadCategories() async {
-    final result = await _businessCategoriesRepository.all();
+    final result = await _businessCategoriesRepository.all(
+      experienceMode: state.experienceMode,
+    );
     result.when(
       success: (items) {
         final values = [
@@ -78,7 +107,10 @@ class HomeDiscoveryCubit extends Cubit<HomeDiscoveryState> {
             (item) => item.code.isNotEmpty ? item.code : item.id.toString(),
           ),
         ];
-        emit(state.copyWith(categories: values));
+        final selected = values.contains(state.selectedCategory)
+            ? state.selectedCategory
+            : 'Top';
+        emit(state.copyWith(categories: values, selectedCategory: selected));
       },
       failure: (_) {
         if (state.categories.isEmpty) {
@@ -105,26 +137,23 @@ class HomeDiscoveryCubit extends Cubit<HomeDiscoveryState> {
 
     try {
       final location = await _currentOrLastKnownLocation();
-      await _applyResolvedPlace(location);
+      final resolved = await _applyResolvedPlace(location);
 
-      final syncedLocation = await _clientLocationRepository
-          .syncForRecommendations(
-            city: state.city,
-            countryCode: state.countryCode,
-          );
-      final resolvedLocation =
-          syncedLocation.when(
-            success: (value) => value,
-            failure: (_) => null,
-          ) ??
-          location;
+      if (resolved) {
+        await _clientLocationRepository.syncForRecommendations(
+          city: state.city,
+          countryCode: state.countryCode,
+        );
+      }
+
       final result = await _discoveryRepository.nearbyBusinesses(
-        location: resolvedLocation,
+        location: location,
         experienceMode: state.experienceMode,
         countryCode: state.countryCode,
         city: state.city,
         category: state.selectedCategory,
         kidId: getIt<SelectedKidContext>().kidId,
+        filters: state.filters,
       );
       result.when(
         success: (businesses) => emit(
@@ -134,7 +163,7 @@ class HomeDiscoveryCubit extends Cubit<HomeDiscoveryState> {
                 : HomeDiscoveryStatus.loaded,
             businesses: _closestFirst(businesses),
             usingLocation: true,
-            location: resolvedLocation,
+            location: location,
           ),
         ),
         failure: (error) => emit(
@@ -180,6 +209,7 @@ class HomeDiscoveryCubit extends Cubit<HomeDiscoveryState> {
             experienceMode: state.experienceMode,
             countryCode: state.countryCode,
             kidId: getIt<SelectedKidContext>().kidId,
+            filters: state.filters,
           )
         : await _discoveryRepository.businessesByCategory(
             state.selectedCategory,
@@ -188,6 +218,7 @@ class HomeDiscoveryCubit extends Cubit<HomeDiscoveryState> {
             countryCode: state.countryCode,
             city: state.city,
             kidId: getIt<SelectedKidContext>().kidId,
+            filters: state.filters,
           );
 
     result.when(
@@ -244,6 +275,7 @@ class HomeDiscoveryCubit extends Cubit<HomeDiscoveryState> {
       city: state.city,
       category: selectedCategory == 'Top' ? null : selectedCategory,
       kidId: getIt<SelectedKidContext>().kidId,
+      filters: state.filters,
     );
     result.when(
       success: (businesses) => emit(
@@ -265,6 +297,15 @@ class HomeDiscoveryCubit extends Cubit<HomeDiscoveryState> {
     );
   }
 
+  Future<void> applyFilters(DiscoverySmartFilters filters) async {
+    emit(state.copyWith(filters: filters));
+    await _reloadResults();
+  }
+
+  Future<void> expandRadius() async {
+    await applyFilters(state.filters.withExpandedRadius());
+  }
+
   Future<void> openAppSettings() => _locationService.openAppSettings();
 
   Future<void> openLocationSettings() =>
@@ -274,22 +315,20 @@ class HomeDiscoveryCubit extends Cubit<HomeDiscoveryState> {
     ExperienceMode mode, {
     bool reload = true,
   }) async {
+    if (state.experienceMode == mode) {
+      return;
+    }
     emit(
       state.copyWith(
         experienceMode: mode,
-        selectedCategory: categories.contains(state.selectedCategory)
-            ? state.selectedCategory
-            : 'Top',
+        selectedCategory: 'Top',
       ),
     );
     if (!reload) {
       return;
     }
-    if (state.permissionStatus == AppLocationPermissionStatus.granted) {
-      await loadNearby();
-      return;
-    }
-    await loadGeneral();
+    await loadCategories();
+    await _reloadResults();
   }
 
   Future<void> setCountry({
@@ -297,6 +336,14 @@ class HomeDiscoveryCubit extends Cubit<HomeDiscoveryState> {
     required String city,
   }) async {
     emit(state.copyWith(countryCode: countryCode, city: city));
+    await loadGeneral();
+  }
+
+  Future<void> _reloadResults() async {
+    if (state.permissionStatus == AppLocationPermissionStatus.granted) {
+      await loadNearby();
+      return;
+    }
     await loadGeneral();
   }
 
@@ -309,35 +356,51 @@ class HomeDiscoveryCubit extends Cubit<HomeDiscoveryState> {
     } catch (_) {}
   }
 
-  Future<void> _applyResolvedPlace(AppLocation location) async {
+  /// Resuelve país/ciudad desde GPS. Devuelve true si pudo resolver país real.
+  Future<bool> _applyResolvedPlace(AppLocation location) async {
     final result = await _geoRepository.reverse(
       latitude: location.latitude,
       longitude: location.longitude,
     );
+
+    String? code;
+    String? city;
+
     result.when(
       success: (geo) {
-        final code =
-            CountryRegistration.resolveCountryCodeFromGeo(
-              country: geo.country,
-              city: geo.city,
-            ) ??
-            state.countryCode;
-        final fallbackCity = CountryRegistration.contextForCode(code).city;
-        final city = (geo.city?.trim().isNotEmpty ?? false)
-            ? geo.city!.trim()
-            : fallbackCity;
-        emit(
-          state.copyWith(
-            countryCode: code,
-            city: city,
-            location: location,
-          ),
+        code = CountryRegistration.resolveCountryCodeFromGeo(
+          country: geo.country,
+          city: geo.city,
         );
+        if ((geo.city?.trim().isNotEmpty ?? false)) {
+          city = geo.city!.trim();
+        }
       },
-      failure: (_) {
-        emit(state.copyWith(location: location));
-      },
+      failure: (_) {},
     );
+
+    code ??= CountryRegistration.inferCountryCodeFromCoordinates(
+      latitude: location.latitude,
+      longitude: location.longitude,
+    );
+
+    if (code == null) {
+      emit(state.copyWith(location: location));
+      return false;
+    }
+
+    final resolvedCity = (city != null && city!.isNotEmpty)
+        ? city!
+        : CountryRegistration.contextForCode(code!).city;
+
+    emit(
+      state.copyWith(
+        countryCode: code,
+        city: resolvedCity,
+        location: location,
+      ),
+    );
+    return true;
   }
 
   Future<AppLocation> _currentOrLastKnownLocation() async {

@@ -1,5 +1,6 @@
 import '../../../../core/network/api_response_unwrapper.dart';
 import '../../../../core/network/network_client.dart';
+import '../../../../core/utils/idempotency_key.dart';
 import '../dtos/ciervo_pin_dto.dart';
 
 abstract interface class PinsRemoteDataSource {
@@ -7,6 +8,7 @@ abstract interface class PinsRemoteDataSource {
     required String walletCardId,
     required String businessId,
     required double amount,
+    String currency = 'COP',
     bool kidsMode = false,
     bool requireParentApproval = false,
     String? childProfileId,
@@ -30,6 +32,7 @@ class DioPinsRemoteDataSource implements PinsRemoteDataSource {
     required String walletCardId,
     required String businessId,
     required double amount,
+    String currency = 'COP',
     bool kidsMode = false,
     bool requireParentApproval = false,
     String? childProfileId,
@@ -42,10 +45,10 @@ class DioPinsRemoteDataSource implements PinsRemoteDataSource {
           'walletCardId': int.tryParse(walletCardId) ?? walletCardId,
         'businessId': int.tryParse(businessId) ?? businessId,
         'amount': amount,
-        'currency': 'COP',
+        'currency': currency.trim().isEmpty ? 'COP' : currency.trim().toUpperCase(),
         'expirationMinutes': 30,
         'allowedUses': 1,
-        'idempotencyKey': _idempotencyKey('pin', walletCardId),
+        'idempotencyKey': IdempotencyKey.generate(),
         'kidsMode': kidsMode,
         'requireParentApproval': requireParentApproval,
         if (kidsMode && childProfileId != null)
@@ -81,9 +84,5 @@ class DioPinsRemoteDataSource implements PinsRemoteDataSource {
       '/api/pins/$id/cancel',
     );
     return CiervoPinDto.fromJson(unwrapApiMap(response.data));
-  }
-
-  String _idempotencyKey(String prefix, String seed) {
-    return '$prefix-$seed-${DateTime.now().microsecondsSinceEpoch}';
   }
 }

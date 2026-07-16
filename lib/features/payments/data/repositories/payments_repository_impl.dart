@@ -54,6 +54,20 @@ class PaymentsRepositoryImpl implements PaymentsRepository {
   );
 
   @override
+  Future<Result<PaymentIntent>> createBookingPayment({
+    required String bookingId,
+    required String businessId,
+    required String idempotencyKey,
+  }) => _guard(
+    () async => (await _remote.createIntent({
+      'type': 'booking',
+      'bookingId': int.tryParse(bookingId) ?? bookingId,
+      'businessId': int.tryParse(businessId) ?? businessId,
+      'idempotencyKey': idempotencyKey,
+    })).toDomain(),
+  );
+
+  @override
   Future<Result<PaymentIntent>> createMembershipSubscribeIntent({
     required String membershipPlanId,
     required String idempotencyKey,

@@ -92,6 +92,8 @@ import '../../features/staff_orders/data/staff_orders_repository.dart';
 import '../../features/staff_scanner/data/staff_scanner_repository.dart';
 import '../../features/transport/data/transport_repository.dart';
 import '../../features/pins/data/datasources/pins_remote_datasource.dart';
+import '../../features/pins/data/durable_pin_service.dart';
+import '../../features/pins/data/pin_p2p_service.dart';
 import '../../features/pins/data/repositories/pins_repository_impl.dart';
 import '../../features/pins/domain/repositories/pins_repository.dart';
 import '../../features/payments/data/datasources/payments_remote_datasource.dart';
@@ -327,6 +329,15 @@ Future<void> configureDependencies() async {
     )
     ..registerLazySingleton<PinsRepository>(
       () => PinsRepositoryImpl(getIt<PinsRemoteDataSource>()),
+    )
+    ..registerLazySingleton<DurablePinService>(
+      () => DurablePinService(
+        client: getIt<NetworkClient>(),
+        storage: getIt<SecureStorage>(),
+      ),
+    )
+    ..registerLazySingleton<PinP2PService>(
+      () => PinP2PService(getIt<NetworkClient>()),
     )
     ..registerLazySingleton<ReceiptsRemoteDataSource>(
       () => DioReceiptsRemoteDataSource(getIt<NetworkClient>()),

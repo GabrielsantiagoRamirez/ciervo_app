@@ -11,8 +11,51 @@ abstract final class CountryRegistration {
     final locale = ui.PlatformDispatcher.instance.locale;
     final code = locale.countryCode?.toUpperCase();
     if (code != null && paymentCountryCodes.contains(code)) return code;
-    if (code == 'CL' || code == 'CO') return code!;
     return 'CO';
+  }
+
+  /// Inferencia offline por coordenadas cuando el reverse-geocode falla.
+  /// Evita sincronizar GPS real con un país por defecto incorrecto.
+  static String? inferCountryCodeFromCoordinates({
+    required double latitude,
+    required double longitude,
+  }) {
+    // Chile continental aprox.
+    if (latitude >= -56.0 &&
+        latitude <= -17.0 &&
+        longitude >= -76.0 &&
+        longitude <= -66.0) {
+      return 'CL';
+    }
+    // Colombia aprox.
+    if (latitude >= -4.3 &&
+        latitude <= 13.5 &&
+        longitude >= -79.1 &&
+        longitude <= -66.8) {
+      return 'CO';
+    }
+    // México aprox.
+    if (latitude >= 14.5 &&
+        latitude <= 32.7 &&
+        longitude >= -118.5 &&
+        longitude <= -86.5) {
+      return 'MX';
+    }
+    // Perú aprox.
+    if (latitude >= -18.4 &&
+        latitude <= -0.0 &&
+        longitude >= -81.4 &&
+        longitude <= -68.6) {
+      return 'PE';
+    }
+    // Argentina aprox.
+    if (latitude >= -55.1 &&
+        latitude <= -21.7 &&
+        longitude >= -73.6 &&
+        longitude <= -53.6) {
+      return 'AR';
+    }
+    return null;
   }
 
   static CountryContext defaultContext() => contextForCode(defaultCountryCode());

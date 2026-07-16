@@ -45,9 +45,7 @@ class WalletCardDto {
       balance: balance,
       heldBalance: heldBalance,
       availableBalance: available ?? (balance - heldBalance),
-      currency: _string(json, const ['currency', 'currencyCode']).isEmpty
-          ? 'COP'
-          : _string(json, const ['currency', 'currencyCode']),
+      currency: _string(json, const ['currency', 'currencyCode']),
       status: _statusLabel(json),
       isPrimary: _bool(json, const ['isPrimary', 'primary']),
       mask: _optionalString(json, const ['mask', 'cardMask', 'lastFour']),

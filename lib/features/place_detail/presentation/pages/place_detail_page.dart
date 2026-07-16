@@ -22,6 +22,7 @@ import '../../../favorites/domain/entities/favorite_filters.dart';
 import '../../../favorites/domain/repositories/favorites_repository.dart';
 import '../../../memberships/presentation/cubit/membership_cubit.dart';
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/country/country_registration.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/sync/home_feed_refresh.dart';
 import '../../../../core/utils/display_labels.dart';
@@ -33,6 +34,7 @@ import '../../data/business_detail_repository.dart';
 import '../../data/review_repository.dart';
 import '../../domain/entities/place_detail.dart';
 import '../../../location/data/client_location_repository.dart';
+import '../../../profile/domain/repositories/profile_repository.dart';
 import '../widgets/place_detail_location_card.dart';
 import '../widgets/place_detail_promotion_card.dart';
 import '../widgets/place_detail_review_tile.dart';
@@ -76,11 +78,36 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
   String? _loadErrorMessage;
 
   Future<void> _loadCapabilities() async {
-    final locationResult = await getIt<ClientLocationRepository>()
-        .syncForRecommendations(
-          city: widget.place.city ?? 'Bogota',
-          countryCode: widget.place.countryCode ?? 'CO',
-        );
+    final profileResult = await getIt<ProfileRepository>().getMe();
+    final profileCountry = profileResult.when(
+      success: (p) => (p.countryCode ?? '').trim().toUpperCase(),
+      failure: (_) => '',
+    );
+    final profileCity = profileResult.when(
+      success: (p) => (p.city ?? '').trim(),
+      failure: (_) => '',
+    );
+
+    final placeCountry = (widget.place.countryCode ?? '').trim().toUpperCase();
+    final placeCity = (widget.place.city ?? '').trim();
+    final countryCode = placeCountry.isNotEmpty
+        ? placeCountry
+        : (profileCountry.isNotEmpty ? profileCountry : '');
+    final city = placeCity.isNotEmpty
+        ? placeCity
+        : (profileCity.isNotEmpty
+              ? profileCity
+              : (countryCode.isNotEmpty
+                    ? CountryRegistration.contextForCode(countryCode).city
+                    : ''));
+
+    Result<AppLocation?> locationResult;
+    if (city.isNotEmpty && countryCode.isNotEmpty) {
+      locationResult = await getIt<ClientLocationRepository>()
+          .syncForRecommendations(city: city, countryCode: countryCode);
+    } else {
+      locationResult = const Success(null);
+    }
     final location = locationResult.when(
       success: (value) => value,
       failure: (_) => null,
@@ -408,6 +435,7 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
       description: source.description,
       tags: [
         if (source.categoryName.isNotEmpty) source.categoryName.toUpperCase(),
+        ...source.amenityTags,
         if ((source.likes ?? 0) > 0) '${source.likes} likes',
       ],
       promotions: source.promotions,

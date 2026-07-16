@@ -271,8 +271,6 @@ HomePlace _placeFromActivity(ActivityFeedItem item) => HomePlace(
   distanceKm: 0,
   matchPercent: 0,
   imageUrl: item.imageMediaId ?? '',
-  city: 'Bogota',
-  countryCode: 'CO',
 );
 
 class _ActivityDetailPage extends StatelessWidget {

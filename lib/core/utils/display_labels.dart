@@ -456,9 +456,15 @@ abstract final class DisplayLabels {
         trimmed.contains('string.Format') ||
         trimmed.contains('OrderByDescending') ||
         trimmed.contains('ThenBy') ||
+        trimmed.toLowerCase().contains('invalid column name') ||
+        trimmed.toLowerCase().contains('sqlexception') ||
+        trimmed.contains('SqlException') ||
+        trimmed.toLowerCase().contains('business_responded_at') ||
+        trimmed.toLowerCase().contains('business_response') ||
         trimmed.contains('Entity Framework') ||
         trimmed.contains('fwlink/?linkid=')) {
-      return 'No pudimos cargar esta información. Intenta de nuevo en unos segundos.';
+      return 'No pudimos cargar esta información porque el servidor necesita '
+          'actualizar su base de datos. Intenta nuevamente más tarde.';
     }
 
     if (trimmed.toLowerCase().contains('no se pudo completar la solicitud')) {
@@ -499,7 +505,7 @@ abstract final class DisplayLabels {
       'user' || 'email' => 'Ingresa tu correo electrónico.',
       'birthdate' => 'Selecciona tu fecha de nacimiento.',
       'businessid' =>
-          'Elige un comercio primero. Abre Paga por mí desde Comercios.',
+        'Elige un comercio primero. Abre Paga por mí desde Comercios.',
       _ => 'Completa todos los campos obligatorios.',
     };
   }

@@ -7,12 +7,12 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/ciervo_date_picker.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/insufficient_balance_dialog.dart';
-import '../../../chat/presentation/pages/chat_conversation_page.dart';
 import '../../../place_detail/data/business_detail_repository.dart';
 import '../../../receipts/domain/entities/action_confirmation.dart';
 import '../../../receipts/presentation/pages/action_confirmation_page.dart';
 import '../../data/booking_repository.dart';
 import '../../domain/entities/booking.dart';
+import '../pages/reservation_prepayment_page.dart';
 
 Future<Booking?> showBusinessReservationSheet(
   BuildContext context, {
@@ -39,9 +39,85 @@ Future<Booking?> showBusinessReservationSheet(
         businessId: businessId,
         businessName: businessName,
         options: options,
-        showConfirmationReceipt: showConfirmationReceipt,
       ),
     ),
+  ).then((booking) async {
+    if (booking == null || !context.mounted) return booking;
+
+    var confirmed = booking;
+    var paymentApproved = !booking.requiresPrepayment;
+    if (booking.requiresPrepayment) {
+      paymentApproved =
+          await Navigator.of(context).push<bool>(
+            MaterialPageRoute<bool>(
+              builder: (_) => ReservationPrepaymentPage(
+                booking: booking,
+                businessId: businessId,
+              ),
+            ),
+          ) ==
+          true;
+    }
+
+    if (paymentApproved && context.mounted) {
+      confirmed = await _refreshBooking(booking) ?? booking;
+    }
+
+    if (showConfirmationReceipt && paymentApproved && context.mounted) {
+      await _showBookingReceipt(
+        context,
+        booking: confirmed,
+        fallbackBusinessName: businessName,
+      );
+    }
+    return confirmed;
+  });
+}
+
+Future<Booking?> _refreshBooking(Booking booking) async {
+  final code = booking.publicCode.trim();
+  if (code.isEmpty) return null;
+  final result = await getIt<BookingRepository>().getByCode(code);
+  return result.when(success: (value) => value, failure: (_) => null);
+}
+
+Future<void> _showBookingReceipt(
+  BuildContext context, {
+  required Booking booking,
+  String? fallbackBusinessName,
+}) async {
+  final base = booking.confirmation;
+  final userCode = base?.userCiervoCode ?? await resolveCurrentCiervoUserCode();
+  if (!context.mounted) return;
+  await showCiervoPaymentReceipt(
+    context,
+    confirmation: ActionConfirmation(
+      title: booking.requiresPrepayment
+          ? 'Reserva y anticipo confirmados'
+          : base?.title ?? 'Reserva confirmada',
+      confirmationCode: base?.confirmationCode ?? booking.publicCode,
+      userCiervoCode: userCode,
+      businessName:
+          base?.businessName ?? booking.businessName ?? fallbackBusinessName,
+      amount: booking.requiresPrepayment
+          ? booking.prepaymentAmount ?? booking.totalAmount
+          : base?.amount ?? booking.totalAmount,
+      currency: base?.currency ?? booking.currency,
+      status: booking.requiresPrepayment
+          ? 'Anticipo pagado'
+          : base?.status ?? 'Reserva confirmada',
+      date:
+          base?.date ?? booking.bookingDate?.toIso8601String().substring(0, 10),
+      time: base?.time ?? booking.time,
+      publicReceiptUrl: base?.publicReceiptUrl,
+      shareDescription:
+          base?.shareDescription ??
+          'Tu reserva en Ciervo Club fue confirmada correctamente.',
+    ),
+    referenceLabel: 'Reserva',
+    referenceValue: booking.publicCode.isNotEmpty
+        ? booking.publicCode
+        : base?.confirmationCode ?? '${booking.id}',
   );
 }
 
@@ -50,14 +126,12 @@ class BusinessReservationSheet extends StatefulWidget {
     required this.businessId,
     required this.options,
     this.businessName,
-    this.showConfirmationReceipt = true,
     super.key,
   });
 
   final String businessId;
   final String? businessName;
   final List<ReservableOption> options;
-  final bool showConfirmationReceipt;
 
   @override
   State<BusinessReservationSheet> createState() =>
@@ -230,53 +304,6 @@ class _BusinessReservationSheetState extends State<BusinessReservationSheet> {
     await result.when(
       success: (booking) async {
         Navigator.of(context).pop(booking);
-        if (!widget.showConfirmationReceipt) return;
-        final base = booking.confirmation;
-        if (base == null) return;
-        final userCode =
-            base.userCiervoCode ?? await resolveCurrentCiervoUserCode();
-        if (!context.mounted) return;
-        await showCiervoPaymentReceipt(
-          context,
-          confirmation: ActionConfirmation(
-            title: base.title,
-            confirmationCode: base.confirmationCode,
-            userCiervoCode: userCode,
-            businessName:
-                base.businessName ??
-                booking.businessName ??
-                widget.businessName,
-            amount: base.amount ?? booking.totalAmount,
-            currency: base.currency ?? booking.currency,
-            status: base.status ?? 'Reserva confirmada',
-            date:
-                base.date ??
-                booking.bookingDate?.toIso8601String().substring(0, 10),
-            time: base.time ?? booking.time,
-            publicReceiptUrl: base.publicReceiptUrl,
-            shareDescription:
-                base.shareDescription ??
-                '¡Gracias por confiar en CIERVO! Tu entretenimiento, nuestra misión.',
-          ),
-          referenceLabel: 'Reserva',
-          referenceValue: booking.publicCode.isNotEmpty
-              ? booking.publicCode
-              : base.confirmationCode,
-        );
-        final chatId = booking.conversationId?.trim();
-        if (chatId != null && chatId.isNotEmpty && context.mounted) {
-          await Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => ChatConversationPage(
-                conversationId: chatId,
-                title:
-                    booking.businessName ??
-                    widget.businessName ??
-                    'Chat comercial',
-              ),
-            ),
-          );
-        }
       },
       failure: (error) async {
         final message = UserErrorMessage.from(error);

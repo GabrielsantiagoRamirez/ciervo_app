@@ -3,6 +3,7 @@ import '../../../../core/experience/experience_mode.dart';
 import '../../../../core/location/app_location.dart';
 import '../../../../core/result/result.dart';
 import '../../domain/entities/business_summary.dart';
+import '../../domain/entities/discovery_smart_filters.dart';
 import '../../domain/repositories/discovery_repository.dart';
 import '../datasources/discovery_remote_datasource.dart';
 
@@ -20,6 +21,7 @@ class DiscoveryRepositoryImpl implements DiscoveryRepository {
     String? category,
     String? search,
     String? kidId,
+    DiscoverySmartFilters filters = const DiscoverySmartFilters(),
   }) async {
     try {
       final businesses = await _remoteDataSource.nearbyBusinesses(
@@ -30,6 +32,7 @@ class DiscoveryRepositoryImpl implements DiscoveryRepository {
         category: category,
         search: search,
         kidId: kidId,
+        filters: filters,
       );
       return Success(businesses.map((item) => item.toDomain()).toList());
     } catch (error) {
@@ -45,6 +48,7 @@ class DiscoveryRepositoryImpl implements DiscoveryRepository {
     required String countryCode,
     required String city,
     String? kidId,
+    DiscoverySmartFilters filters = const DiscoverySmartFilters(),
   }) async {
     try {
       final businesses = await _remoteDataSource.businessesByCategory(
@@ -54,6 +58,7 @@ class DiscoveryRepositoryImpl implements DiscoveryRepository {
         countryCode: countryCode,
         city: city,
         kidId: kidId,
+        filters: filters,
       );
       return Success(businesses.map((item) => item.toDomain()).toList());
     } catch (error) {
@@ -68,6 +73,7 @@ class DiscoveryRepositoryImpl implements DiscoveryRepository {
     required ExperienceMode experienceMode,
     required String countryCode,
     String? kidId,
+    DiscoverySmartFilters filters = const DiscoverySmartFilters(),
   }) async {
     try {
       final businesses = await _remoteDataSource.businessesByCity(
@@ -76,6 +82,7 @@ class DiscoveryRepositoryImpl implements DiscoveryRepository {
         experienceMode: experienceMode,
         countryCode: countryCode,
         kidId: kidId,
+        filters: filters,
       );
       return Success(businesses.map((item) => item.toDomain()).toList());
     } catch (error) {
@@ -92,6 +99,7 @@ class DiscoveryRepositoryImpl implements DiscoveryRepository {
     required String city,
     String? category,
     String? kidId,
+    DiscoverySmartFilters filters = const DiscoverySmartFilters(),
   }) async {
     try {
       final businesses = await _remoteDataSource.searchBusinesses(
@@ -102,6 +110,7 @@ class DiscoveryRepositoryImpl implements DiscoveryRepository {
         city: city,
         category: category,
         kidId: kidId,
+        filters: filters,
       );
       return Success(businesses.map((item) => item.toDomain()).toList());
     } catch (error) {

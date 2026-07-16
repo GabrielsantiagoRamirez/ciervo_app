@@ -15,6 +15,17 @@ class HomePlace {
     this.benefitTier,
     this.city,
     this.countryCode,
+    this.experienceBucket,
+    this.open24Hours = false,
+    this.acceptsCiervoPayments = false,
+    this.hasDelivery = false,
+    this.requiresReservation = false,
+    this.isFamilyFriendly = false,
+    this.isPetFriendly = false,
+    this.isAccessible = false,
+    this.hasParking = false,
+    this.hasActivePromotions = false,
+    this.isOpen,
   });
 
   final String id;
@@ -32,4 +43,15 @@ class HomePlace {
   final String? benefitTier;
   final String? city;
   final String? countryCode;
+  final String? experienceBucket;
+  final bool open24Hours;
+  final bool acceptsCiervoPayments;
+  final bool hasDelivery;
+  final bool requiresReservation;
+  final bool isFamilyFriendly;
+  final bool isPetFriendly;
+  final bool isAccessible;
+  final bool hasParking;
+  final bool hasActivePromotions;
+  final bool? isOpen;
 }

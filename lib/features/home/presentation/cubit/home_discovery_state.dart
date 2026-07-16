@@ -4,6 +4,7 @@ import '../../../../core/location/location_permission_status.dart';
 import '../../../../core/location/app_location.dart';
 import '../../../../core/experience/experience_mode.dart';
 import '../../../discovery/domain/entities/business_summary.dart';
+import '../../../discovery/domain/entities/discovery_smart_filters.dart';
 
 enum HomeDiscoveryStatus { initial, loading, loaded, empty, failure }
 
@@ -20,6 +21,7 @@ class HomeDiscoveryState {
     this.usingLocation = false,
     this.location,
     this.categories = const [],
+    this.filters = const DiscoverySmartFilters(),
   }) : countryCode =
            countryCode ?? CountryRegistration.defaultCountryCode(),
        city =
@@ -39,6 +41,7 @@ class HomeDiscoveryState {
   final bool usingLocation;
   final AppLocation? location;
   final List<String> categories;
+  final DiscoverySmartFilters filters;
 
   CountryContext get countryContext =>
       CountryRegistration.contextForCode(countryCode);
@@ -56,6 +59,7 @@ class HomeDiscoveryState {
     bool? usingLocation,
     AppLocation? location,
     List<String>? categories,
+    DiscoverySmartFilters? filters,
   }) {
     return HomeDiscoveryState(
       status: status ?? this.status,
@@ -69,6 +73,7 @@ class HomeDiscoveryState {
       usingLocation: usingLocation ?? this.usingLocation,
       location: location ?? this.location,
       categories: categories ?? this.categories,
+      filters: filters ?? this.filters,
     );
   }
 }

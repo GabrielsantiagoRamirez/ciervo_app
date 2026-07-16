@@ -16,6 +16,8 @@ class Booking {
     this.time,
     this.businessLogoUrl,
     this.totalAmount,
+    this.requiresPrepayment = false,
+    this.prepaymentAmount,
     this.qrId,
     this.qrPayload,
     this.qrExpiresAt,
@@ -37,6 +39,8 @@ class Booking {
   final String? time;
   final String? businessLogoUrl;
   final num? totalAmount;
+  final bool requiresPrepayment;
+  final num? prepaymentAmount;
   final String? qrId;
   final String? qrPayload;
   final DateTime? qrExpiresAt;

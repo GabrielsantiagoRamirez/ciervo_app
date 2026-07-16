@@ -1,4 +1,5 @@
 import '../../../../core/errors/error_mapper.dart';
+import '../../../../core/experience/experience_mode.dart';
 import '../../../../core/network/api_response_unwrapper.dart';
 import '../../../../core/network/network_client.dart';
 import '../../../../core/result/result.dart';
@@ -9,10 +10,16 @@ class BusinessCategoriesRepository {
 
   final NetworkClient _client;
 
-  Future<Result<List<BusinessCategory>>> all() async {
+  Future<Result<List<BusinessCategory>>> all({
+    ExperienceMode? experienceMode,
+  }) async {
     try {
       final response = await _client.dio.get<dynamic>(
         '/api/business-categories',
+        queryParameters: {
+          if (experienceMode != null)
+            'experienceMode': experienceMode.apiValue,
+        },
       );
       final categories =
           unwrapApiList(response.data)
@@ -33,7 +40,20 @@ BusinessCategory _fromJson(Map<String, dynamic> json) => BusinessCategory(
   code: _string(json['code']),
   name: _string(json['name'] ?? json['displayName']),
   active: json['active'] != false && json['isActive'] != false,
+  experienceBucket: _bucket(
+    json['experienceBucket'] ?? json['bucket'] ?? json['experienceMode'],
+  ),
 );
+
+String _bucket(dynamic value) {
+  final raw = value?.toString().trim().toLowerCase() ?? '';
+  return switch (raw) {
+    'day' || 'dia' || 'día' => 'day',
+    'night' || 'noche' => 'night',
+    '24h' || 'allday' || 'all_day' || 'todo' => 'allday',
+    _ => 'allday',
+  };
+}
 
 int _int(dynamic value) => value is int ? value : int.tryParse('$value') ?? 0;
 

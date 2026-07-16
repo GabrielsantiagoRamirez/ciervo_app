@@ -2,6 +2,7 @@ import '../../../../core/location/app_location.dart';
 import '../../../../core/network/api_response_unwrapper.dart';
 import '../../../../core/network/network_client.dart';
 import '../../../../core/experience/experience_mode.dart';
+import '../../domain/entities/discovery_smart_filters.dart';
 import '../dtos/business_summary_dto.dart';
 
 abstract interface class DiscoveryRemoteDataSource {
@@ -13,6 +14,7 @@ abstract interface class DiscoveryRemoteDataSource {
     String? category,
     String? search,
     String? kidId,
+    DiscoverySmartFilters filters = const DiscoverySmartFilters(),
   });
 
   Future<List<BusinessSummaryDto>> businessesByCategory(
@@ -22,6 +24,7 @@ abstract interface class DiscoveryRemoteDataSource {
     required String countryCode,
     required String city,
     String? kidId,
+    DiscoverySmartFilters filters = const DiscoverySmartFilters(),
   });
 
   Future<List<BusinessSummaryDto>> businessesByCity(
@@ -30,6 +33,7 @@ abstract interface class DiscoveryRemoteDataSource {
     required ExperienceMode experienceMode,
     required String countryCode,
     String? kidId,
+    DiscoverySmartFilters filters = const DiscoverySmartFilters(),
   });
 
   Future<List<BusinessSummaryDto>> searchBusinesses(
@@ -40,6 +44,7 @@ abstract interface class DiscoveryRemoteDataSource {
     required String city,
     String? category,
     String? kidId,
+    DiscoverySmartFilters filters = const DiscoverySmartFilters(),
   });
 }
 
@@ -57,6 +62,7 @@ class DioDiscoveryRemoteDataSource implements DiscoveryRemoteDataSource {
     String? category,
     String? search,
     String? kidId,
+    DiscoverySmartFilters filters = const DiscoverySmartFilters(),
   }) async {
     final categoryId = _categoryId(category);
     final response = await _client.dio.get<Map<String, dynamic>>(
@@ -64,7 +70,6 @@ class DioDiscoveryRemoteDataSource implements DiscoveryRemoteDataSource {
       queryParameters: {
         'latitude': location.latitude,
         'longitude': location.longitude,
-        'radiusKm': 25,
         'experienceMode': experienceMode.apiValue,
         'countryCode': countryCode,
         'page': 1,
@@ -72,6 +77,7 @@ class DioDiscoveryRemoteDataSource implements DiscoveryRemoteDataSource {
         'category': ?categoryId,
         'search': ?_nonEmpty(search),
         'kidId': ?kidId,
+        ...filters.toQueryParameters(),
       },
     );
     return BusinessSummaryDto.listFromResponse(
@@ -87,6 +93,7 @@ class DioDiscoveryRemoteDataSource implements DiscoveryRemoteDataSource {
     required String countryCode,
     required String city,
     String? kidId,
+    DiscoverySmartFilters filters = const DiscoverySmartFilters(),
   }) async {
     final categoryId = _categoryId(category);
     final response = await _client.dio.get<Map<String, dynamic>>(
@@ -99,9 +106,9 @@ class DioDiscoveryRemoteDataSource implements DiscoveryRemoteDataSource {
         if (location != null) ...{
           'latitude': location.latitude,
           'longitude': location.longitude,
-          'radiusKm': 25,
         },
         'kidId': ?kidId,
+        ...filters.toQueryParameters(includeRadius: location != null),
       },
     );
     return BusinessSummaryDto.listFromResponse(
@@ -116,6 +123,7 @@ class DioDiscoveryRemoteDataSource implements DiscoveryRemoteDataSource {
     required ExperienceMode experienceMode,
     required String countryCode,
     String? kidId,
+    DiscoverySmartFilters filters = const DiscoverySmartFilters(),
   }) async {
     final response = await _client.dio.get<Map<String, dynamic>>(
       '/api/businesses/by-city',
@@ -126,9 +134,9 @@ class DioDiscoveryRemoteDataSource implements DiscoveryRemoteDataSource {
         if (location != null) ...{
           'latitude': location.latitude,
           'longitude': location.longitude,
-          'radiusKm': 25,
         },
         'kidId': ?kidId,
+        ...filters.toQueryParameters(includeRadius: location != null),
       },
     );
     return BusinessSummaryDto.listFromResponse(
@@ -145,6 +153,7 @@ class DioDiscoveryRemoteDataSource implements DiscoveryRemoteDataSource {
     required String city,
     String? category,
     String? kidId,
+    DiscoverySmartFilters filters = const DiscoverySmartFilters(),
   }) async {
     final categoryId = _categoryId(category);
     final response = await _client.dio.get<Map<String, dynamic>>(
@@ -158,9 +167,9 @@ class DioDiscoveryRemoteDataSource implements DiscoveryRemoteDataSource {
         if (location != null) ...{
           'latitude': location.latitude,
           'longitude': location.longitude,
-          'radiusKm': 25,
         },
         'kidId': ?kidId,
+        ...filters.toQueryParameters(includeRadius: location != null),
       },
     );
     return BusinessSummaryDto.listFromResponse(

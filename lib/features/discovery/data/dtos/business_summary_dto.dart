@@ -14,6 +14,17 @@ class BusinessSummaryDto {
     required this.isPartner,
     required this.hasCashback,
     this.benefitTier,
+    this.experienceBucket,
+    required this.open24Hours,
+    required this.acceptsCiervoPayments,
+    required this.hasDelivery,
+    required this.requiresReservation,
+    required this.isFamilyFriendly,
+    required this.isPetFriendly,
+    required this.isAccessible,
+    required this.hasParking,
+    required this.hasActivePromotions,
+    this.isOpen,
   });
 
   factory BusinessSummaryDto.fromJson(Map<String, dynamic> json) {
@@ -52,6 +63,35 @@ class BusinessSummaryDto {
         'requiredPlan',
         'planCode',
       ]),
+      experienceBucket: _stringOrNull(json, const [
+        'experienceBucket',
+        'bucket',
+      ]),
+      open24Hours: _bool(json, const ['open24Hours', 'isOpen24Hours']),
+      acceptsCiervoPayments: _bool(json, const [
+        'acceptsCiervoPayments',
+        'acceptsCiervo',
+      ]),
+      hasDelivery: _bool(json, const ['hasDelivery', 'delivery']),
+      requiresReservation: _bool(json, const [
+        'requiresReservation',
+        'reservationRequired',
+      ]),
+      isFamilyFriendly: _bool(json, const [
+        'isFamilyFriendly',
+        'familyFriendly',
+      ]),
+      isPetFriendly: _bool(json, const ['isPetFriendly', 'petFriendly']),
+      isAccessible: _bool(json, const ['isAccessible', 'accessible']),
+      hasParking: _bool(json, const ['hasParking', 'parking']),
+      hasActivePromotions:
+          _bool(json, const [
+            'hasActivePromotions',
+            'hasPromotions',
+            'tienePromociones',
+          ]) ||
+          _hasPromoList(json),
+      isOpen: _openState(json),
     );
   }
 
@@ -67,6 +107,17 @@ class BusinessSummaryDto {
   final bool isPartner;
   final bool hasCashback;
   final String? benefitTier;
+  final String? experienceBucket;
+  final bool open24Hours;
+  final bool acceptsCiervoPayments;
+  final bool hasDelivery;
+  final bool requiresReservation;
+  final bool isFamilyFriendly;
+  final bool isPetFriendly;
+  final bool isAccessible;
+  final bool hasParking;
+  final bool hasActivePromotions;
+  final bool? isOpen;
 
   BusinessSummary toDomain() {
     return BusinessSummary(
@@ -82,6 +133,17 @@ class BusinessSummaryDto {
       isPartner: isPartner,
       hasCashback: hasCashback,
       benefitTier: benefitTier,
+      experienceBucket: experienceBucket,
+      open24Hours: open24Hours,
+      acceptsCiervoPayments: acceptsCiervoPayments,
+      hasDelivery: hasDelivery,
+      requiresReservation: requiresReservation,
+      isFamilyFriendly: isFamilyFriendly,
+      isPetFriendly: isPetFriendly,
+      isAccessible: isAccessible,
+      hasParking: hasParking,
+      hasActivePromotions: hasActivePromotions,
+      isOpen: isOpen,
     );
   }
 
@@ -142,6 +204,30 @@ class BusinessSummaryDto {
   static String? _stringOrNull(Map<String, dynamic> json, List<String> keys) {
     final value = _string(json, keys);
     return value.isEmpty ? null : value;
+  }
+
+  static bool _hasPromoList(Map<String, dynamic> json) {
+    final promos =
+        json['promocionesActivas'] ??
+        json['activePromotions'] ??
+        json['promotions'];
+    return promos is List && promos.isNotEmpty;
+  }
+
+  static bool? _openState(Map<String, dynamic> json) {
+    if (json.containsKey('isOpen') || json.containsKey('openNow')) {
+      final value = json['isOpen'] ?? json['openNow'];
+      if (value is bool) return value;
+      if (value != null) return value.toString().toLowerCase() == 'true';
+    }
+    final estado = (json['estado'] ?? json['status'] ?? '')
+        .toString()
+        .trim()
+        .toLowerCase();
+    if (estado.isEmpty) return null;
+    if (estado.contains('abierto') || estado == 'open') return true;
+    if (estado.contains('cerrado') || estado == 'closed') return false;
+    return null;
   }
 
   static String _mediaUrl(Map<String, dynamic> json) {

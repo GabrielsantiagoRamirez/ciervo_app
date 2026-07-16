@@ -4,6 +4,26 @@ import 'package:ciervo_clud/core/storage/secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('fromLocalTime maps day and night windows', () {
+    expect(
+      ExperienceModeX.fromLocalTime(DateTime(2026, 7, 16, 10)),
+      ExperienceMode.day,
+    );
+    expect(
+      ExperienceModeX.fromLocalTime(DateTime(2026, 7, 16, 20)),
+      ExperienceMode.night,
+    );
+    expect(
+      ExperienceModeX.fromLocalTime(DateTime(2026, 7, 16, 5)),
+      ExperienceMode.night,
+    );
+  });
+
+  test('fromValue parses 24h', () {
+    expect(ExperienceModeX.fromValue('24h'), ExperienceMode.allDay);
+    expect(ExperienceMode.allDay.apiValue, '24h');
+  });
+
   test('restore remembers mode without selecting it for the session', () async {
     final storage = _MemorySecureStorage({'ciervo.experienceMode': 'day'});
     final cubit = ExperienceModeCubit(storage);
@@ -11,6 +31,17 @@ void main() {
     await cubit.restore();
 
     expect(cubit.state.mode, ExperienceMode.day);
+    expect(cubit.state.hasSelection, isFalse);
+    await cubit.close();
+  });
+
+  test('restore falls back to local time when nothing stored', () async {
+    final storage = _MemorySecureStorage();
+    final cubit = ExperienceModeCubit(storage);
+
+    await cubit.restore();
+
+    expect(cubit.state.mode, ExperienceModeX.fromLocalTime());
     expect(cubit.state.hasSelection, isFalse);
     await cubit.close();
   });
@@ -24,6 +55,17 @@ void main() {
     expect(cubit.state.mode, ExperienceMode.night);
     expect(cubit.state.hasSelection, isTrue);
     expect(await storage.read('ciervo.experienceMode'), 'night');
+    await cubit.close();
+  });
+
+  test('setMode persists 24h', () async {
+    final storage = _MemorySecureStorage();
+    final cubit = ExperienceModeCubit(storage);
+
+    await cubit.setMode(ExperienceMode.allDay);
+
+    expect(cubit.state.mode, ExperienceMode.allDay);
+    expect(await storage.read('ciervo.experienceMode'), '24h');
     await cubit.close();
   });
 }
