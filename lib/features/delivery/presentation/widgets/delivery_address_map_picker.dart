@@ -9,6 +9,7 @@ import '../../../../core/location/location_permission_status.dart';
 import '../../../../core/location/location_service.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
+import '../../../../shared/widgets/map_gesture_recognizers.dart';
 
 /// Selector de dirección estilo Rappi: mapa con pin central + búsqueda.
 class DeliveryAddressMapPicker extends StatefulWidget {
@@ -193,6 +194,7 @@ class _DeliveryAddressMapPickerState extends State<DeliveryAddressMapPicker> {
                 myLocationEnabled: true,
                 myLocationButtonEnabled: false,
                 zoomControlsEnabled: false,
+                gestureRecognizers: mapEagerGestureRecognizers,
                 onMapCreated: (controller) => _mapController = controller,
                 onCameraIdle: () async {
                   final controller = _mapController;

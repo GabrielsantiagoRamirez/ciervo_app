@@ -29,6 +29,7 @@ class MoveRepositoryImpl implements MoveRepository {
     required String destAddress,
     required MovePaymentMethod paymentMethod,
     int offeredFare = 0,
+    String? childProfileId,
   }) => _guard(
     () => _remote.requestTrip(
       fare: fare,
@@ -40,6 +41,7 @@ class MoveRepositoryImpl implements MoveRepository {
       destAddress: destAddress,
       paymentMethod: paymentMethod,
       offeredFare: offeredFare,
+      childProfileId: childProfileId,
     ),
   );
 
@@ -91,6 +93,33 @@ class MoveRepositoryImpl implements MoveRepository {
   @override
   Future<Result<MoveDriverLocation?>> getTripLocation(String tripId) =>
       _guard(() => _remote.getTripLocation(tripId));
+
+  @override
+  Future<Result<List<MoveTrip>>> kidsApprovals() =>
+      _guard(() => _remote.kidsApprovals());
+
+  @override
+  Future<Result<MoveTrip>> parentApprove(String tripId) =>
+      _guard(() => _remote.parentApprove(tripId));
+
+  @override
+  Future<Result<MoveTrip>> parentReject(String tripId, {String? reason}) =>
+      _guard(() => _remote.parentReject(tripId, reason: reason));
+
+  @override
+  Future<Result<void>> sos({
+    required String tripId,
+    double? latitude,
+    double? longitude,
+    String? note,
+  }) => _guard(
+    () => _remote.sos(
+      tripId,
+      latitude: latitude,
+      longitude: longitude,
+      note: note,
+    ),
+  );
 
   @override
   Future<Result<MoveDriverProfile?>> getDriverProfile() =>

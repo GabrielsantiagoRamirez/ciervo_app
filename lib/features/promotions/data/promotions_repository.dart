@@ -158,4 +158,11 @@ class PromotionsRepository {
 
   Future<void> _clearClaimIdempotencyKey() =>
       _storage.delete(_claimIdempotencyKey);
+
+  /// Borra el estado local de promociones (no está asociado a la cuenta) para
+  /// evitar que se arrastre entre usuarios al cerrar sesión.
+  Future<void> clearLocalState() async {
+    await _storage.delete(_dismissedKey);
+    await _storage.delete(_claimIdempotencyKey);
+  }
 }

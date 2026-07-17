@@ -23,8 +23,8 @@ import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../../notifications/presentation/pages/notifications_page.dart';
 import '../../../kids/presentation/pages/kids_page.dart';
 import '../../../memberships/presentation/pages/membership_page.dart';
-import '../../../transport/presentation/pages/transport_page.dart';
 import '../../../move/presentation/pages/move_home_page.dart';
+import '../../../move/presentation/pages/move_driver_page.dart';
 import '../../../kyc/presentation/pages/kyc_page.dart';
 import '../../../wallet/presentation/pages/wallet_page.dart';
 import '../../../wallet/presentation/pages/payment_requests_page.dart';
@@ -548,10 +548,10 @@ class _AccountActions extends StatelessWidget {
             ),
           ),
           _ActionTile(
-            icon: Icons.directions_bus_outlined,
-            title: 'Transporte',
+            icon: Icons.drive_eta_outlined,
+            title: 'Conducir con Ciervo Move',
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const TransportPage()),
+              MaterialPageRoute<void>(builder: (_) => const MoveDriverPage()),
             ),
           ),
           _ActionTile(

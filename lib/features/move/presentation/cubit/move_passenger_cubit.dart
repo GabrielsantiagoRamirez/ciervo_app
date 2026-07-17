@@ -50,6 +50,7 @@ class MovePassengerCubit extends Cubit<MovePassengerState> {
     required String destAddress,
     required MovePaymentMethod paymentMethod,
     int offeredFare = 0,
+    String? childProfileId,
   }) async {
     emit(
       state.copyWith(
@@ -67,6 +68,7 @@ class MovePassengerCubit extends Cubit<MovePassengerState> {
       destAddress: destAddress,
       paymentMethod: paymentMethod,
       offeredFare: offeredFare,
+      childProfileId: childProfileId,
     );
     return result.when(
       success: (trip) {
@@ -257,6 +259,39 @@ class MovePassengerCubit extends Cubit<MovePassengerState> {
           errorMessage: UserErrorMessage.from(error),
         ),
       ),
+    );
+  }
+
+  /// Envía una alerta SOS del viaje activo (notifica al tutor y al conductor).
+  Future<bool> sendSos({double? latitude, double? longitude, String? note}) async {
+    final tripId = state.trip?.id;
+    if (tripId == null) return false;
+    emit(state.copyWith(actionInProgress: true, clearMessages: true));
+    final result = await _repository.sos(
+      tripId: tripId,
+      latitude: latitude,
+      longitude: longitude,
+      note: note,
+    );
+    return result.when(
+      success: (_) {
+        emit(
+          state.copyWith(
+            actionInProgress: false,
+            successMessage: 'Alerta SOS enviada. Notificamos al tutor y al conductor.',
+          ),
+        );
+        return true;
+      },
+      failure: (error) {
+        emit(
+          state.copyWith(
+            actionInProgress: false,
+            errorMessage: UserErrorMessage.from(error),
+          ),
+        );
+        return false;
+      },
     );
   }
 

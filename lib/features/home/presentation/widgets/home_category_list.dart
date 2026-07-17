@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/utils/display_labels.dart';
 import '../../../../shared/widgets/ciervo_chip_tag.dart';
 
 class HomeCategoryList extends StatelessWidget {
@@ -37,17 +38,5 @@ class HomeCategoryList extends StatelessWidget {
     );
   }
 
-  String _label(String category) => switch (category) {
-    'Top' => 'Todos',
-    'bar' => 'Bar',
-    'hoteles' => 'Hoteles',
-    'restaurantes' => 'Restaurantes',
-    'bares' => 'Bares',
-    'discotecas' => 'Discotecas',
-    'licorerias' => 'Licorerias',
-    'farmacias' => 'Farmacias',
-    'turismo' => 'Turismo',
-    'transporte' => 'Transporte',
-    _ => category,
-  };
+  String _label(String category) => DisplayLabels.categoryLabel(category);
 }

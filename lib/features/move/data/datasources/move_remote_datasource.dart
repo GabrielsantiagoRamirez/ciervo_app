@@ -39,6 +39,7 @@ class MoveRemoteDataSource {
     required String destAddress,
     required MovePaymentMethod paymentMethod,
     int offeredFare = 0,
+    String? childProfileId,
   }) async {
     final response = await _client.dio.post<dynamic>(
       '$_base/trips',
@@ -62,10 +63,52 @@ class MoveRemoteDataSource {
         'tolls': fare.tolls,
         'paymentMethod': paymentMethod.value,
         'offeredFare': offeredFare,
+        'childProfileId': ?childProfileId,
       },
       options: _idempotent(),
     );
     return MoveMappers.trip(unwrapApiMap(response.data));
+  }
+
+  // --- CIERVO MOVE Kids (tutor) -----------------------------------------
+  /// Viajes de menores pendientes de aprobación del tutor.
+  Future<List<MoveTrip>> kidsApprovals() async {
+    final response = await _client.dio.get<dynamic>(
+      '$_base/trips/kids/approvals',
+    );
+    return MoveMappers.tripList(unwrapApiList(response.data));
+  }
+
+  Future<MoveTrip> parentApprove(String tripId) async {
+    final response = await _client.dio.post<dynamic>(
+      '$_base/trips/$tripId/parent-approve',
+      options: _idempotent(),
+    );
+    return MoveMappers.trip(unwrapApiMap(response.data));
+  }
+
+  Future<MoveTrip> parentReject(String tripId, {String? reason}) async {
+    final response = await _client.dio.post<dynamic>(
+      '$_base/trips/$tripId/parent-reject',
+      data: {'reason': ?reason},
+    );
+    return MoveMappers.trip(unwrapApiMap(response.data));
+  }
+
+  Future<void> sos(
+    String tripId, {
+    double? latitude,
+    double? longitude,
+    String? note,
+  }) async {
+    await _client.dio.post<dynamic>(
+      '$_base/trips/$tripId/sos',
+      data: {
+        'latitude': ?latitude,
+        'longitude': ?longitude,
+        'note': ?note,
+      },
+    );
   }
 
   Future<MoveTrip> getTrip(String tripId) async {

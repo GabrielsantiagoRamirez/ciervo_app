@@ -6,6 +6,7 @@ class PaymentIntent {
     required this.checkoutUrl,
     this.amount,
     this.currency,
+    this.countryCode,
     this.membershipPlanId,
     this.receiptUrl,
   });
@@ -16,6 +17,7 @@ class PaymentIntent {
   final String checkoutUrl;
   final double? amount;
   final String? currency;
+  final String? countryCode;
   final String? membershipPlanId;
   final String? receiptUrl;
 

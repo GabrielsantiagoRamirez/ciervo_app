@@ -222,6 +222,7 @@ class _DeliveryPageState extends State<DeliveryPage> {
         location.accuracy,
       );
       if (!mounted) return;
+      setState(() => _acting = false);
       result.when(success: (_) => _load(), failure: _showError);
     } catch (e) {
       if (mounted) {

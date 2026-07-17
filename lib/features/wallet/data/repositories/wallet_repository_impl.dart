@@ -3,6 +3,7 @@ import '../../../../core/errors/error_mapper.dart';
 import '../../../../core/result/result.dart';
 import '../../../payments/domain/entities/payment_intent.dart';
 import '../../../payments/domain/repositories/payments_repository.dart';
+import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../domain/entities/ciervo_wallet_identity.dart';
 import '../../domain/entities/nfc_models.dart';
 import '../../domain/entities/payment_request.dart';
@@ -16,10 +17,15 @@ import '../datasources/wallet_remote_datasource.dart';
 import '../dtos/payment_request_dto.dart';
 
 class WalletRepositoryImpl implements WalletRepository {
-  const WalletRepositoryImpl(this._remoteDataSource, this._payments);
+  const WalletRepositoryImpl(
+    this._remoteDataSource,
+    this._payments,
+    this._profileRepository,
+  );
 
   final WalletRemoteDataSource _remoteDataSource;
   final PaymentsRepository _payments;
+  final ProfileRepository _profileRepository;
 
   @override
   Future<Result<List<WalletCard>>> cards() async {
@@ -72,9 +78,7 @@ class WalletRepositoryImpl implements WalletRepository {
     required double amount,
     String? currency,
   }) async {
-    // Preferir la moneda de la tarjeta (CLP/COP/…). El config global y el
-    // locale del dispositivo caen en COP/Colombia y abren Mercado Pago CO.
-    final resolvedCurrency = await _resolveRechargeCurrency(currency);
+    final resolvedCurrency = await resolveRechargeCurrency(currency);
     final key =
         'wallet-recharge-$cardId-${DateTime.now().microsecondsSinceEpoch}';
     final result = await _payments.createWalletRecharge(
@@ -89,8 +93,24 @@ class WalletRepositoryImpl implements WalletRepository {
     );
   }
 
-  Future<String> _resolveRechargeCurrency(String? preferred) async {
+  @override
+  Future<String> resolveRechargeCurrency(String? preferred) async {
     final fromCard = preferred?.trim().toUpperCase();
+    final profileCountry = await _profileCountryCode();
+
+    if (profileCountry != null && profileCountry.isNotEmpty) {
+      final expected = CountryRegistration.currencyForCountry(profileCountry);
+      if (fromCard == null || fromCard.isEmpty) {
+        return expected;
+      }
+      final cardCountry = CountryRegistration.countryCodeFromCurrency(fromCard);
+      // País de cuenta gana si la tarjeta trae moneda de otro país (ej. COP en CL).
+      if (cardCountry != null && cardCountry == profileCountry) {
+        return fromCard;
+      }
+      return expected;
+    }
+
     if (fromCard != null && fromCard.isNotEmpty) {
       return fromCard;
     }
@@ -107,6 +127,17 @@ class WalletRepositoryImpl implements WalletRepository {
       failure: (_) => CountryRegistration.currencyForCountry(
         CountryRegistration.defaultCountryCode(),
       ),
+    );
+  }
+
+  Future<String?> _profileCountryCode() async {
+    final result = await _profileRepository.getMe();
+    return result.when(
+      success: (profile) {
+        final code = (profile.countryCode ?? '').trim().toUpperCase();
+        return code.isEmpty ? null : code;
+      },
+      failure: (_) => null,
     );
   }
 

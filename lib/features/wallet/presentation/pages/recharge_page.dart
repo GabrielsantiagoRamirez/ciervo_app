@@ -26,15 +26,30 @@ class _RechargePageState extends State<RechargePage>
     with WidgetsBindingObserver {
   final _amountController = TextEditingController();
   late final WalletCubit _walletCubit;
+  late final WalletRepository _walletRepository;
   String? _lastIntentId;
   bool _pollingOnResume = false;
   bool _rechargeSucceeded = false;
+  late String _displayCurrency;
 
   @override
   void initState() {
     super.initState();
-    _walletCubit = WalletCubit(getIt<WalletRepository>());
+    _walletRepository = getIt<WalletRepository>();
+    _walletCubit = WalletCubit(_walletRepository);
+    _displayCurrency = widget.card.currency.trim().isNotEmpty
+        ? widget.card.currency.trim().toUpperCase()
+        : 'COP';
     WidgetsBinding.instance.addObserver(this);
+    _resolveDisplayCurrency();
+  }
+
+  Future<void> _resolveDisplayCurrency() async {
+    final resolved = await _walletRepository.resolveRechargeCurrency(
+      widget.card.currency,
+    );
+    if (!mounted) return;
+    setState(() => _displayCurrency = resolved);
   }
 
   @override
@@ -73,7 +88,7 @@ class _RechargePageState extends State<RechargePage>
         confirmationCode: state.rechargeIntent?.id ?? _lastIntentId ?? '',
         userCiervoCode: userCode,
         amount: amount > 0 ? amount : null,
-        currency: widget.card.currency,
+        currency: _displayCurrency,
         status: 'Pago realizado con éxito',
         shareDescription: 'Tu saldo CIERVO fue recargado correctamente.',
       ),
@@ -141,7 +156,7 @@ class _RechargePageState extends State<RechargePage>
                           ),
                           const SizedBox(height: AppSpacing.xs),
                           Text(
-                            'Disponible: ${widget.card.currency} ${widget.card.availableBalance.toStringAsFixed(0)}',
+                            'Disponible: $_displayCurrency ${widget.card.availableBalance.toStringAsFixed(0)}',
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                           const SizedBox(height: AppSpacing.sm),
@@ -154,9 +169,10 @@ class _RechargePageState extends State<RechargePage>
                           TextField(
                             controller: _amountController,
                             keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               hintText: 'Monto a recargar',
-                              prefixIcon: Icon(Icons.attach_money),
+                              prefixText: '$_displayCurrency ',
+                              prefixIcon: const Icon(Icons.attach_money),
                             ),
                           ),
                           const SizedBox(height: AppSpacing.lg),
@@ -185,7 +201,7 @@ class _RechargePageState extends State<RechargePage>
                               context.read<WalletCubit>().createRechargeIntent(
                                 widget.card.id,
                                 amount,
-                                currency: widget.card.currency,
+                                currency: _displayCurrency,
                               );
                             },
                           ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../../../../shared/widgets/map_gesture_recognizers.dart';
 import '../../domain/entities/delivery_models.dart';
 
 class AvailableDeliveryOrdersMap extends StatelessWidget {
@@ -72,6 +73,7 @@ class AvailableDeliveryOrdersMap extends StatelessWidget {
       markers: markers,
       myLocationEnabled: true,
       myLocationButtonEnabled: true,
+      gestureRecognizers: mapEagerGestureRecognizers,
       onTap: (_) {},
     );
   }

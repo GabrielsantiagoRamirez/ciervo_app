@@ -4,10 +4,12 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/location/location_service.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/display_formatters.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
+import '../../../../shared/widgets/map_gesture_recognizers.dart';
 import '../../domain/entities/move_driver_location.dart';
 import '../../domain/entities/move_enums.dart';
 import '../../domain/entities/move_offer.dart';
@@ -67,6 +69,10 @@ class _MoveTripView extends StatelessWidget {
             ),
             children: [
               _StatusHeader(trip: trip),
+              if (trip.isKidsTrip) ...[
+                const SizedBox(height: AppSpacing.md),
+                _KidsTripBanner(trip: trip),
+              ],
               const SizedBox(height: AppSpacing.md),
               _TripMap(trip: trip, driverLocation: state.driverLocation),
               const SizedBox(height: AppSpacing.md),
@@ -85,6 +91,32 @@ class _MoveTripView extends StatelessWidget {
     MovePassengerState state,
     MoveTrip trip,
   ) {
+    if (trip.status.isPendingParent) {
+      return [
+        CiervoCard(
+          child: Row(
+            children: [
+              const Icon(Icons.hourglass_top, color: Colors.amber),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  'Tu solicitud espera la aprobación de tu tutor. '
+                  'Cuando la apruebe, buscaremos conductores cercanos.',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        CiervoButton(
+          label: 'Cancelar solicitud',
+          icon: Icons.close,
+          variant: CiervoButtonVariant.danger,
+          onPressed: () => _confirmCancel(context),
+        ),
+      ];
+    }
     if (trip.status == MoveTripStatus.searching ||
         trip.status == MoveTripStatus.offered) {
       return [
@@ -106,11 +138,22 @@ class _MoveTripView extends StatelessWidget {
       return [
         _DriverCard(trip: trip),
         const SizedBox(height: AppSpacing.md),
+        if (trip.hasDriver)
+          CiervoButton(
+            label: 'Emergencia (SOS)',
+            icon: Icons.sos,
+            variant: CiervoButtonVariant.danger,
+            state: state.actionInProgress
+                ? CiervoButtonState.loading
+                : CiervoButtonState.normal,
+            onPressed: () => _confirmSos(context),
+          ),
+        if (trip.hasDriver) const SizedBox(height: AppSpacing.sm),
         if (trip.canCancel)
           CiervoButton(
             label: 'Cancelar viaje',
             icon: Icons.close,
-            variant: CiervoButtonVariant.danger,
+            variant: CiervoButtonVariant.secondary,
             onPressed: () => _confirmCancel(context),
           ),
       ];
@@ -166,6 +209,99 @@ class _MoveTripView extends StatelessWidget {
     if (reason != null) {
       await cubit.cancelTrip(reason);
     }
+  }
+
+  Future<void> _confirmSos(BuildContext context) async {
+    final cubit = context.read<MovePassengerCubit>();
+    final controller = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        icon: const Icon(Icons.sos, color: Colors.redAccent),
+        title: const Text('Enviar alerta SOS'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Notificaremos de inmediato a tu tutor y al conductor con tu '
+              'ubicación actual.',
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                hintText: '¿Qué está pasando? (opcional)',
+              ),
+              maxLines: 2,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Enviar SOS'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    double? lat;
+    double? lng;
+    try {
+      final location = await getIt<LocationService>().currentLocation();
+      lat = location.latitude;
+      lng = location.longitude;
+    } catch (_) {
+      // Enviamos el SOS aunque no tengamos ubicación disponible.
+    }
+    await cubit.sendSos(
+      latitude: lat,
+      longitude: lng,
+      note: controller.text.trim().isEmpty ? null : controller.text.trim(),
+    );
+  }
+}
+
+class _KidsTripBanner extends StatelessWidget {
+  const _KidsTripBanner({required this.trip});
+
+  final MoveTrip trip;
+
+  @override
+  Widget build(BuildContext context) {
+    final rule = trip.ruleReason;
+    return CiervoCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.child_care, color: Colors.deepPurple),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  'Viaje Ciervo Move Kids',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+            ],
+          ),
+          if (rule != null && rule.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              rule,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }
 
@@ -262,6 +398,7 @@ class _TripMap extends StatelessWidget {
           myLocationEnabled: true,
           myLocationButtonEnabled: false,
           zoomControlsEnabled: false,
+          gestureRecognizers: mapEagerGestureRecognizers,
         ),
       ),
     );

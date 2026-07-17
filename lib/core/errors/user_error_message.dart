@@ -11,6 +11,16 @@ abstract final class UserErrorMessage {
         message.contains('PLAN_LIMIT_REACHED');
   }
 
+  /// Mercado Pago no permite pagos entre países (vendedor de otro país que el
+  /// comprador). En ese caso conviene ofrecer pagar con saldo Ciervo (wallet).
+  static bool isCrossBorderError(Object error) {
+    if (error is! AppException) return false;
+    final code = error.code?.toUpperCase();
+    final message = error.message.toUpperCase();
+    return code == 'CROSS_BORDER_NOT_SUPPORTED' ||
+        message.contains('CROSS_BORDER_NOT_SUPPORTED');
+  }
+
   static String from(Object error) {
     if (error is AppContactsPermissionException) {
       return error.toString();
@@ -39,6 +49,10 @@ abstract final class UserErrorMessage {
       'FILE_TOO_LARGE' => 'La imagen supera el tamaño permitido.',
       'INVALID_FILE_TYPE' => 'Formato de imagen no permitido.',
       'USER_NOT_PARTICIPANT' => 'No tienes acceso a esta conversación.',
+      'CROSS_BORDER_NOT_SUPPORTED' =>
+        error.message.isNotEmpty
+            ? error.message
+            : 'Este vendedor es de otro país y Mercado Pago no permite pagos entre países. Puedes pagar con tu saldo Ciervo.',
       'INSUFFICIENT_BALANCE' =>
         'Saldo insuficiente. Recarga tu wallet con Mercado Pago o transferencia.',
       'NO_WALLET' =>

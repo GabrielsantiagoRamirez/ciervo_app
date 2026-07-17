@@ -8,7 +8,6 @@ import '../../../../core/location/location_service.dart';
 import '../../../../core/sync/home_feed_refresh.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../shared/widgets/ciervo_brand_loader.dart';
 import '../../../home/domain/entities/home_place.dart';
 import '../../../home/presentation/widgets/home_place_card.dart';
 import '../../../place_detail/presentation/pages/place_detail_page.dart';
@@ -77,13 +76,7 @@ class _HomeFavoritesSectionState extends State<HomeFavoritesSection> {
     future: _preview,
     builder: (context, snapshot) {
       if (snapshot.connectionState != ConnectionState.done) {
-        return const SizedBox(
-          height: 120,
-          child: CiervoBrandLoader(
-            message: 'Cargando favoritos',
-            compact: true,
-          ),
-        );
+        return const SizedBox.shrink();
       }
       final items = snapshot.data?.items ?? const [];
       if (items.isEmpty) return const SizedBox.shrink();

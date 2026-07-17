@@ -6,7 +6,6 @@ import '../../../../core/location/location_service.dart';
 import '../../../../core/sync/home_feed_refresh.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../shared/widgets/ciervo_brand_loader.dart';
 import '../../domain/entities/bonus.dart';
 import '../../domain/repositories/bonuses_repository.dart';
 import '../pages/bonus_detail_page.dart';
@@ -77,10 +76,7 @@ class _HomeBonusesSectionState extends State<HomeBonusesSection> {
     future: _items,
     builder: (context, snapshot) {
       if (snapshot.connectionState != ConnectionState.done) {
-        return const SizedBox(
-          height: 120,
-          child: CiervoBrandLoader(message: 'Cargando bonos', compact: true),
-        );
+        return const SizedBox.shrink();
       }
       final items = snapshot.data ?? const [];
       if (items.isEmpty) return const SizedBox.shrink();

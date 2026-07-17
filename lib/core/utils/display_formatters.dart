@@ -80,16 +80,26 @@ abstract final class DisplayFormatters {
 
   static String formatMoney(num? amount, {String currency = 'COP'}) {
     final value = (amount?.toDouble() ?? 0).round();
-    final digits = value.abs().toString();
+    final sign = value < 0 ? '-' : '';
+    final code = currency.trim().toUpperCase();
+    return '$code $sign${_groupThousands(value.abs())}';
+  }
+
+  /// Precio con símbolo `$` y separador de miles, sin decimales: `$15.000`.
+  static String formatPrice(num? amount, {String symbol = '\$'}) {
+    final value = (amount?.toDouble() ?? 0).round();
+    final sign = value < 0 ? '-' : '';
+    return '$sign$symbol${_groupThousands(value.abs())}';
+  }
+
+  static String _groupThousands(int value) {
+    final digits = value.toString();
     final buffer = StringBuffer();
     for (var i = 0; i < digits.length; i++) {
       if (i > 0 && (digits.length - i) % 3 == 0) buffer.write('.');
       buffer.write(digits[i]);
     }
-    final formatted = buffer.toString();
-    final sign = value < 0 ? '-' : '';
-    final code = currency.trim().toUpperCase();
-    return '$code $sign$formatted';
+    return buffer.toString();
   }
 
   static String formatStatus(String? status) =>

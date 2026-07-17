@@ -36,6 +36,10 @@ class MoveTrip {
     this.driverLocation,
     this.createdAt,
     this.completedAt,
+    this.isKidsTrip = false,
+    this.childProfileId,
+    this.guardianUserId,
+    this.ruleReason,
   });
 
   final String id;
@@ -70,6 +74,16 @@ class MoveTrip {
   final MoveDriverLocation? driverLocation;
   final DateTime? createdAt;
   final DateTime? completedAt;
+
+  /// Datos de CIERVO MOVE Kids.
+  final bool isKidsTrip;
+  final String? childProfileId;
+  final String? guardianUserId;
+
+  /// Motivos de reglas parentales (zona/horario/límite) para mostrar al tutor.
+  final String? ruleReason;
+
+  bool get isPendingParent => status.isPendingParent;
 
   bool get hasDriver => (driverId ?? '').isNotEmpty;
 

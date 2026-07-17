@@ -134,13 +134,43 @@ class _QrMerchantPayPageState extends State<QrMerchantPayPage> {
         }
         if (mounted) Navigator.of(context).pop(true);
       },
-      failure: (error) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
+      failure: (error) async {
+        if (UserErrorMessage.isCrossBorderError(error)) {
+          await _offerWalletFallback(error);
+        } else {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
+        }
       },
     );
     if (mounted) setState(() => _paying = false);
+  }
+
+  Future<void> _offerWalletFallback(Object error) async {
+    final useWallet = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        icon: const Icon(Icons.public_off_outlined),
+        title: const Text('Pago no disponible con Mercado Pago'),
+        content: Text(
+          '${UserErrorMessage.from(error)}\n\n¿Quieres pagar con tu saldo Ciervo?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Pagar con saldo Ciervo'),
+          ),
+        ],
+      ),
+    );
+    if (useWallet == true && mounted) {
+      await _pay();
+    }
   }
 
   @override

@@ -17,6 +17,7 @@ enum MoveTripStatus {
   cancelledByDriver(12),
   cancelledBySystem(13),
   expired(14),
+  pendingParent(16),
   unknown(0);
 
   const MoveTripStatus(this.value);
@@ -51,11 +52,16 @@ enum MoveTripStatus {
       'cancelledbysystem' || 'cancelled_by_system' =>
         MoveTripStatus.cancelledBySystem,
       'expired' => MoveTripStatus.expired,
+      'pendingparent' || 'pending_parent' => MoveTripStatus.pendingParent,
       _ => MoveTripStatus.unknown,
     };
   }
 
+  /// Viaje Kids esperando aprobación del tutor (no difundido a conductores).
+  bool get isPendingParent => this == pendingParent;
+
   bool get isActive =>
+      this == pendingParent ||
       this == searching ||
       this == offered ||
       this == driverAssigned ||

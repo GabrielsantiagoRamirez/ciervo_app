@@ -62,6 +62,7 @@ class PaymentIntentDto {
     required this.checkoutUrl,
     this.amount,
     this.currency,
+    this.countryCode,
     this.membershipPlanId,
     this.receiptUrl,
   });
@@ -80,6 +81,11 @@ class PaymentIntentDto {
       ]),
       amount: _double(json, const ['amount', 'localChargeAmount']),
       currency: _stringOrNull(json, const ['currency', 'localChargeCurrency']),
+      countryCode: _stringOrNull(json, const [
+        'countryCode',
+        'sellerCountryCode',
+        'merchantCountryCode',
+      ]),
       membershipPlanId: _stringOrNull(json, const [
         'membershipPlanId',
         'planId',
@@ -94,6 +100,7 @@ class PaymentIntentDto {
   final String checkoutUrl;
   final double? amount;
   final String? currency;
+  final String? countryCode;
   final String? membershipPlanId;
   final String? receiptUrl;
 
@@ -104,6 +111,7 @@ class PaymentIntentDto {
     checkoutUrl: checkoutUrl,
     amount: amount,
     currency: currency,
+    countryCode: countryCode,
     membershipPlanId: membershipPlanId,
     receiptUrl: receiptUrl,
   );

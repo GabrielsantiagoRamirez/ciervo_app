@@ -8,6 +8,8 @@ import '../../../../core/result/result.dart';
 import '../../../../core/session/auth_token_claims.dart';
 import '../../../../core/session/session_manager.dart';
 import '../../../../core/firebase/firebase_auth_service.dart';
+import '../../../../features/promotions/data/promotions_repository.dart';
+import '../../../../features/safety/data/services/safety_filter_cache.dart';
 import '../../domain/entities/auth_session.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
@@ -64,6 +66,7 @@ class AuthRepositoryImpl implements AuthRepository {
       } catch (_) {}
     }
     getIt<SelectedKidContext>().clear();
+    await _clearLocalUserState();
     try {
       await _firebaseAuthService?.signOut();
     } catch (_) {}
@@ -75,7 +78,18 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> clearLocalSession() async {
     getIt<SelectedKidContext>().clear();
+    await _clearLocalUserState();
     await _sessionManager.clear();
+  }
+
+  /// Borra caches y estado local que no deben cruzarse entre cuentas.
+  Future<void> _clearLocalUserState() async {
+    try {
+      getIt<SafetyFilterCache>().clear();
+    } catch (_) {}
+    try {
+      await getIt<PromotionsRepository>().clearLocalState();
+    } catch (_) {}
   }
 
   @override

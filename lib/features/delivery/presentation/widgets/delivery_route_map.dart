@@ -3,6 +3,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../shared/widgets/map_gesture_recognizers.dart';
 
 /// Mapa de ruta delivery: comercio, entrega y domiciliario (estilo Rappi/Uber Eats).
 class DeliveryRouteMap extends StatefulWidget {
@@ -147,6 +148,7 @@ class _DeliveryRouteMapState extends State<DeliveryRouteMap> {
               myLocationEnabled: true,
               myLocationButtonEnabled: false,
               zoomControlsEnabled: false,
+              gestureRecognizers: mapEagerGestureRecognizers,
               onMapCreated: (controller) async {
                 _controller = controller;
                 await _fitBounds();

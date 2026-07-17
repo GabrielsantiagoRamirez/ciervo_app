@@ -37,6 +37,7 @@ class _CiervoAppState extends State<CiervoApp> with WidgetsBindingObserver {
   late final SessionManager _sessionManager;
   late final StreamSubscription<SessionState> _sessionSubscription;
   late final NotificationBadgesCubit _badgesCubit;
+  late final ExperienceModeCubit _experienceModeCubit;
   StreamSubscription<void>? _notificationsSyncSubscription;
   bool _requestingEntryPermissions = false;
   bool _entryPermissionsHandled = false;
@@ -48,9 +49,10 @@ class _CiervoAppState extends State<CiervoApp> with WidgetsBindingObserver {
     _sessionManager = getIt<SessionManager>();
     _badgesCubit = getIt<NotificationBadgesCubit>();
     getIt<CiervoPushService>().bindNavigator(rootNavigatorKey);
+    _experienceModeCubit = context.read<ExperienceModeCubit>();
     _router = createAppRouter(
       _sessionManager,
-      context.read<ExperienceModeCubit>(),
+      _experienceModeCubit,
       navigatorKey: rootNavigatorKey,
     );
     _sessionSubscription = _sessionManager.stream.listen(_onSessionChanged);
@@ -96,6 +98,8 @@ class _CiervoAppState extends State<CiervoApp> with WidgetsBindingObserver {
     } else {
       stopNotificationEventsListener();
       getIt<MembershipCubit>().clear();
+      _badgesCubit.clear();
+      _experienceModeCubit.requireSelection();
     }
   }
 

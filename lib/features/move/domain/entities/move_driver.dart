@@ -76,6 +76,7 @@ class MoveDriverProfile {
     this.vehicles = const [],
     this.documents = const [],
     this.rejectionReason,
+    this.isKidsEligible = false,
   });
 
   final String id;
@@ -90,6 +91,9 @@ class MoveDriverProfile {
   final List<MoveVehicle> vehicles;
   final List<MoveDocument> documents;
   final String? rejectionReason;
+
+  /// Habilitado por el backend para viajes de menores (CIERVO MOVE Kids).
+  final bool isKidsEligible;
 
   bool get isApproved => status.isApproved;
 

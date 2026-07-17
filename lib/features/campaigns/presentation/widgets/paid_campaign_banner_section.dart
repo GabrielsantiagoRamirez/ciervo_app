@@ -5,7 +5,6 @@ import '../../../../core/location/location_service.dart';
 import '../../../../core/sync/home_feed_refresh.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../shared/widgets/ciervo_brand_loader.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../bonuses/presentation/pages/bonus_detail_page.dart';
 import '../../../home/domain/entities/home_place.dart';
@@ -89,10 +88,7 @@ class _PaidCampaignBannerSectionState extends State<PaidCampaignBannerSection> {
     future: _campaigns,
     builder: (context, snapshot) {
       if (snapshot.connectionState != ConnectionState.done) {
-        return const SizedBox(
-          height: 120,
-          child: CiervoBrandLoader(message: 'Cargando campañas', compact: true),
-        );
+        return const SizedBox.shrink();
       }
       final items = snapshot.data ?? const [];
       if (items.isEmpty) return const SizedBox.shrink();

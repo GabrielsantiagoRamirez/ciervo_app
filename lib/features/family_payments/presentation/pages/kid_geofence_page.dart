@@ -11,6 +11,7 @@ import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
+import '../../../../shared/widgets/map_gesture_recognizers.dart';
 import '../../../../core/result/result.dart';
 import '../../domain/entities/kid_parental_rules.dart';
 import '../../domain/repositories/family_payments_repository.dart';
@@ -183,6 +184,8 @@ class _KidGeofencePageState extends State<KidGeofencePage> {
                                 },
                                 onTap: (position) =>
                                     setState(() => _center = position),
+                                gestureRecognizers:
+                                    mapEagerGestureRecognizers,
                                 markers: {
                                   Marker(
                                     markerId: const MarkerId('center'),

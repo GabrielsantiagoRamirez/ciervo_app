@@ -6,6 +6,7 @@ import '../../../../core/experience/experience_mode_cubit.dart';
 import '../../../../core/geo/geo_repository.dart';
 import '../../../../core/location/location_service.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/utils/display_labels.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
@@ -286,17 +287,5 @@ class _SearchViewState extends State<_SearchView> {
     cubit.search(_controller.text, category: _category);
   }
 
-  String _label(String category) => switch (category) {
-    'Top' => 'Todos',
-    'bar' => 'Bar',
-    'hoteles' => 'Hoteles',
-    'restaurantes' => 'Restaurantes',
-    'bares' => 'Bares',
-    'discotecas' => 'Discotecas',
-    'licorerias' => 'Licorerias',
-    'farmacias' => 'Farmacias',
-    'turismo' => 'Turismo',
-    'transporte' => 'Transporte',
-    _ => category,
-  };
+  String _label(String category) => DisplayLabels.categoryLabel(category);
 }

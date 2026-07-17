@@ -55,6 +55,7 @@ abstract interface class MoveRepository {
     required String destAddress,
     required MovePaymentMethod paymentMethod,
     int offeredFare = 0,
+    String? childProfileId,
   });
 
   Future<Result<MoveTrip>> getTrip(String tripId);
@@ -90,6 +91,20 @@ abstract interface class MoveRepository {
   });
 
   Future<Result<MoveDriverLocation?>> getTripLocation(String tripId);
+
+  // --- CIERVO MOVE Kids (tutor) -----------------------------------------
+  Future<Result<List<MoveTrip>>> kidsApprovals();
+
+  Future<Result<MoveTrip>> parentApprove(String tripId);
+
+  Future<Result<MoveTrip>> parentReject(String tripId, {String? reason});
+
+  Future<Result<void>> sos({
+    required String tripId,
+    double? latitude,
+    double? longitude,
+    String? note,
+  });
 
   // --- Conductor --------------------------------------------------------
   Future<Result<MoveDriverProfile?>> getDriverProfile();

@@ -6,7 +6,6 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/sync/home_feed_refresh.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../shared/widgets/ciervo_brand_loader.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../bonuses/presentation/pages/bonus_detail_page.dart';
 import '../../../home/domain/entities/home_place.dart';
@@ -85,13 +84,7 @@ class _ActivityFeedSectionState extends State<ActivityFeedSection> {
     future: _items,
     builder: (context, snapshot) {
       if (snapshot.connectionState != ConnectionState.done) {
-        return const SizedBox(
-          height: 132,
-          child: CiervoBrandLoader(
-            message: 'Buscando novedades',
-            compact: true,
-          ),
-        );
+        return const SizedBox.shrink();
       }
       if (snapshot.hasError) {
         return CiervoCard(

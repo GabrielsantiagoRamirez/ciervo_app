@@ -55,6 +55,7 @@ class PlaceDetailLocationCard extends StatelessWidget {
                 longitude: longitude!,
                 height: 150,
                 borderRadius: AppRadii.card,
+                showAddressLabel: false,
               )
             else
               DecoratedBox(

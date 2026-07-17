@@ -11,6 +11,7 @@ import '../../../../core/firebase/firebase_auth_errors.dart';
 import '../../../../core/firebase/firebase_auth_service.dart';
 import '../../../../core/firebase/phone_country.dart';
 import '../../../../core/location/app_location.dart';
+import '../../../../core/location/location_permission_status.dart';
 import '../../../../core/location/location_service.dart';
 import '../../../../core/utils/input_validators.dart';
 import '../../data/dtos/account_lookup_dto.dart';
@@ -37,7 +38,10 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
   Future<void> captureLocation() async {
     emit(state.copyWith(status: FirebaseAuthStatus.loading, clearError: true));
     try {
-      await _locationService.requestPermission();
+      final permission = await _locationService.permissionStatus();
+      if (permission != AppLocationPermissionStatus.granted) {
+        await _locationService.requestPermission();
+      }
       AppLocation? location;
       try {
         location = await _locationService.currentLocation();

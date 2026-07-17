@@ -39,4 +39,10 @@ class SafetyFilterCache {
       ..clear()
       ..addAll(contentBlocks.map((e) => e.key));
   }
+
+  /// Vacía el cache de bloqueos para evitar arrastrar datos entre cuentas.
+  void clear() {
+    _blockedUserIds.clear();
+    _blockedContentKeys.clear();
+  }
 }

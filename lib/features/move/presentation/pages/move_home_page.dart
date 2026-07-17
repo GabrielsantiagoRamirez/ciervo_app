@@ -11,6 +11,9 @@ import '../../../../core/location/location_service.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
+import '../../../../shared/widgets/map_gesture_recognizers.dart';
+import '../../../kids/domain/entities/child_profile.dart';
+import '../../../kids/domain/repositories/kids_repository.dart';
 import '../../domain/entities/move_enums.dart';
 import '../../domain/entities/move_fare_quote.dart';
 import '../../domain/repositories/move_repository.dart';
@@ -20,6 +23,7 @@ import '../utils/move_labels.dart';
 import '../widgets/move_category_selector.dart';
 import '../widgets/move_fare_quote_card.dart';
 import 'move_driver_page.dart';
+import 'move_kids_approvals_page.dart';
 import 'move_trip_page.dart';
 import 'move_trips_history_page.dart';
 
@@ -53,10 +57,25 @@ class _MoveHomeViewState extends State<_MoveHomeView> {
   MovePaymentMethod _paymentMethod = MovePaymentMethod.wallet;
   bool _loadingLocation = true;
 
+  List<ChildProfile> _children = const [];
+  ChildProfile? _selectedChild;
+
   @override
   void initState() {
     super.initState();
     _loadCurrentLocation();
+    _loadChildren();
+  }
+
+  Future<void> _loadChildren() async {
+    final result = await getIt<KidsRepository>().children();
+    if (!mounted) return;
+    result.when(
+      success: (children) => setState(
+        () => _children = children.where((c) => c.isActive).toList(),
+      ),
+      failure: (_) {},
+    );
   }
 
   @override
@@ -160,6 +179,7 @@ class _MoveHomeViewState extends State<_MoveHomeView> {
       return;
     }
     final cubit = context.read<MovePassengerCubit>();
+    final child = _selectedChild;
     final tripId = await cubit.requestTrip(
       fare: _buildFareRequest(),
       originLat: origin.latitude,
@@ -168,7 +188,9 @@ class _MoveHomeViewState extends State<_MoveHomeView> {
       destLat: destination.latitude,
       destLng: destination.longitude,
       destAddress: _destinationController.text.trim(),
-      paymentMethod: _paymentMethod,
+      // Los viajes Kids se cobran siempre de la wallet del tutor.
+      paymentMethod: child != null ? MovePaymentMethod.wallet : _paymentMethod,
+      childProfileId: child?.id,
     );
     if (tripId != null && mounted) {
       await Navigator.of(context).push(
@@ -191,6 +213,15 @@ class _MoveHomeViewState extends State<_MoveHomeView> {
       appBar: AppBar(
         title: const Text('Ciervo Move'),
         actions: [
+          IconButton(
+            tooltip: 'Aprobaciones Kids',
+            icon: const Icon(Icons.verified_user_outlined),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const MoveKidsApprovalsPage(),
+              ),
+            ),
+          ),
           IconButton(
             tooltip: 'Historial',
             icon: const Icon(Icons.history),
@@ -281,11 +312,39 @@ class _MoveHomeViewState extends State<_MoveHomeView> {
                   context.read<MovePassengerCubit>().clearQuote();
                 },
               ),
+              if (_children.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.md),
+                _ChildSelector(
+                  children: _children,
+                  selected: _selectedChild,
+                  onChanged: (value) => setState(() => _selectedChild = value),
+                ),
+              ],
               const SizedBox(height: AppSpacing.md),
-              _PaymentMethodSelector(
-                selected: _paymentMethod,
-                onChanged: (value) => setState(() => _paymentMethod = value),
-              ),
+              if (_selectedChild != null)
+                CiervoCard(
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.account_balance_wallet_outlined,
+                        color: Colors.deepPurple,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          'El viaje se cobrará de tu wallet. Si lo solicita el '
+                          'menor, quedará pendiente de tu aprobación.',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                _PaymentMethodSelector(
+                  selected: _paymentMethod,
+                  onChanged: (value) => setState(() => _paymentMethod = value),
+                ),
               if (_distanceKm > 0) ...[
                 const SizedBox(height: AppSpacing.md),
                 Text(
@@ -374,6 +433,7 @@ class _MapCard extends StatelessWidget {
               myLocationEnabled: true,
               myLocationButtonEnabled: false,
               zoomControlsEnabled: false,
+              gestureRecognizers: mapEagerGestureRecognizers,
               onMapCreated: onMapCreated,
               onTap: onTap,
             ),
@@ -396,6 +456,54 @@ class _MapCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ChildSelector extends StatelessWidget {
+  const _ChildSelector({
+    required this.children,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  final List<ChildProfile> children;
+  final ChildProfile? selected;
+  final ValueChanged<ChildProfile?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '¿Para quién es el viaje?',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        DropdownButtonFormField<String>(
+          value: selected?.id ?? '',
+          decoration: const InputDecoration(
+            prefixIcon: Icon(Icons.person_outline),
+          ),
+          items: [
+            const DropdownMenuItem(value: '', child: Text('Para mí')),
+            ...children.map(
+              (child) => DropdownMenuItem(
+                value: child.id,
+                child: Text(child.fullName),
+              ),
+            ),
+          ],
+          onChanged: (value) {
+            if (value == null || value.isEmpty) {
+              onChanged(null);
+              return;
+            }
+            onChanged(children.firstWhere((c) => c.id == value));
+          },
+        ),
+      ],
     );
   }
 }

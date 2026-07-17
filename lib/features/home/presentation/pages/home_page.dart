@@ -221,6 +221,12 @@ class _HomeViewState extends State<_HomeView> {
                                   ),
                                 ],
                                 const SizedBox(height: AppSpacing.lg),
+                                HomeCategoryList(
+                                  categories: cubit.categories,
+                                  selectedCategory: state.selectedCategory,
+                                  onCategorySelected: cubit.selectCategory,
+                                ),
+                                const SizedBox(height: AppSpacing.lg),
                                 const ActivityFeedSection(),
                                 const SizedBox(height: AppSpacing.lg),
                                 PaidCampaignBannerSection(
@@ -245,12 +251,6 @@ class _HomeViewState extends State<_HomeView> {
                                   onlyFavorites: true,
                                   country: state.countryCode,
                                   city: state.city,
-                                ),
-                                const SizedBox(height: AppSpacing.lg),
-                                HomeCategoryList(
-                                  categories: cubit.categories,
-                                  selectedCategory: state.selectedCategory,
-                                  onCategorySelected: cubit.selectCategory,
                                 ),
                                 const SizedBox(height: AppSpacing.xl),
                               ],

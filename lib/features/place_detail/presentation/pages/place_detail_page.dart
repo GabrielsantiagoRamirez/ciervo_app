@@ -25,6 +25,7 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/country/country_registration.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/sync/home_feed_refresh.dart';
+import '../../../../core/utils/display_formatters.dart';
 import '../../../../core/utils/display_labels.dart';
 import '../../../../core/widgets/membership_upgrade_dialog.dart';
 import '../../../../core/location/app_location.dart';
@@ -634,7 +635,10 @@ class _ProductTile extends StatelessWidget {
           if (flags.isNotEmpty) flags.join(' - '),
         ].join('\n'),
       ),
-      trailing: Text('\$${product.price}'),
+      trailing: Text(
+        DisplayFormatters.formatPrice(product.price),
+        style: Theme.of(context).textTheme.titleSmall,
+      ),
     );
   }
 }
@@ -767,8 +771,18 @@ class _ReviewSheetState extends State<_ReviewSheet> {
     setState(() => _submitting = false);
     result.when(
       success: (_) {
+        final messenger = ScaffoldMessenger.of(context);
         Navigator.of(context).pop();
         widget.onSaved();
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              widget.reviewId == null
+                  ? 'Reseña enviada. ¡Gracias por tu opinión!'
+                  : 'Reseña actualizada.',
+            ),
+          ),
+        );
       },
       failure: (error) => ScaffoldMessenger.of(
         context,

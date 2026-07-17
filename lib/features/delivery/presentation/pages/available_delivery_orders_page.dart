@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
+import '../../../../core/location/location_service.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
@@ -27,6 +29,8 @@ class _AvailableDeliveryOrdersPageState
   bool _loading = true;
   String? _claimingId;
   String? _error;
+  double? _courierLat;
+  double? _courierLng;
 
   @override
   void initState() {
@@ -40,6 +44,7 @@ class _AvailableDeliveryOrdersPageState
       _error = null;
     });
     final repository = getIt<DeliveryRepository>();
+    await _resolveCourierLocation();
     final profileResult = await repository.me();
     final result = await repository.availableOrders();
     if (!mounted) return;
@@ -57,6 +62,54 @@ class _AvailableDeliveryOrdersPageState
         _loading = false;
       }),
     );
+  }
+
+  Future<void> _resolveCourierLocation() async {
+    try {
+      final location = await getIt<LocationService>().currentLocation();
+      _courierLat = location.latitude;
+      _courierLng = location.longitude;
+    } catch (_) {
+      _courierLat ??= _profile?.lastLatitude;
+      _courierLng ??= _profile?.lastLongitude;
+    }
+  }
+
+  /// Distancia en km desde el domiciliario hasta el punto de recogida.
+  double? _distanceToPickup(AvailableDeliveryOrder order) {
+    final lat = _courierLat;
+    final lng = _courierLng;
+    final pickupLat = order.pickupLatitude;
+    final pickupLng = order.pickupLongitude;
+    if (lat == null ||
+        lng == null ||
+        pickupLat == null ||
+        pickupLng == null) {
+      return null;
+    }
+    return Geolocator.distanceBetween(lat, lng, pickupLat, pickupLng) / 1000;
+  }
+
+  /// Distancia del trayecto (recogida → entrega).
+  double? _tripDistance(AvailableDeliveryOrder order) {
+    if (order.distanceKm != null) return order.distanceKm;
+    final pickupLat = order.pickupLatitude;
+    final pickupLng = order.pickupLongitude;
+    final dropLat = order.deliveryLatitude;
+    final dropLng = order.deliveryLongitude;
+    if (pickupLat == null ||
+        pickupLng == null ||
+        dropLat == null ||
+        dropLng == null) {
+      return null;
+    }
+    return Geolocator.distanceBetween(
+          pickupLat,
+          pickupLng,
+          dropLat,
+          dropLng,
+        ) /
+        1000;
   }
 
   @override
@@ -117,8 +170,22 @@ class _AvailableDeliveryOrdersPageState
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                           const SizedBox(height: AppSpacing.sm),
-                          Text('Recogida: ${order.businessAddress}'),
-                          Text('Entrega: ${order.deliveryAddress}'),
+                          _AddressLine(
+                            icon: Icons.store_mall_directory_outlined,
+                            label: 'Recogida',
+                            address: order.businessAddress,
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          _AddressLine(
+                            icon: Icons.flag_outlined,
+                            label: 'Entrega',
+                            address: order.deliveryAddress,
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          _DistanceChips(
+                            toPickupKm: _distanceToPickup(order),
+                            tripKm: _tripDistance(order),
+                          ),
                           const SizedBox(height: AppSpacing.sm),
                           DeliveryPricingCard(
                             pricing: order.effectivePricing,
@@ -179,6 +246,104 @@ class _AvailableDeliveryOrdersPageState
         ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
         _load();
       },
+    );
+  }
+}
+
+class _AddressLine extends StatelessWidget {
+  const _AddressLine({
+    required this.icon,
+    required this.label,
+    required this.address,
+  });
+
+  final IconData icon;
+  final String label;
+  final String address;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 18, color: theme.colorScheme.onSurfaceVariant),
+        const SizedBox(width: AppSpacing.xs),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              Text(
+                address.isEmpty ? 'Sin dirección' : address,
+                style: theme.textTheme.bodyMedium,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DistanceChips extends StatelessWidget {
+  const _DistanceChips({this.toPickupKm, this.tripKm});
+
+  final double? toPickupKm;
+  final double? tripKm;
+
+  String _format(double km) =>
+      km < 1 ? '${(km * 1000).round()} m' : '${km.toStringAsFixed(1)} km';
+
+  @override
+  Widget build(BuildContext context) {
+    if (toPickupKm == null && tripKm == null) {
+      return const SizedBox.shrink();
+    }
+    return Wrap(
+      spacing: AppSpacing.xs,
+      runSpacing: AppSpacing.xs,
+      children: [
+        if (toPickupKm != null)
+          _chip(
+            context,
+            Icons.directions_walk,
+            'A ${_format(toPickupKm!)} de la recogida',
+          ),
+        if (tripKm != null)
+          _chip(
+            context,
+            Icons.route_outlined,
+            'Trayecto ${_format(tripKm!)}',
+          ),
+      ],
+    );
+  }
+
+  Widget _chip(BuildContext context, IconData icon, String label) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: AppSpacing.xxs),
+          Text(label, style: theme.textTheme.labelSmall),
+        ],
+      ),
     );
   }
 }

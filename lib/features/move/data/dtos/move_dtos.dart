@@ -83,6 +83,13 @@ abstract final class MoveMappers {
       driverLocation: _embeddedLocation(json),
       createdAt: _date(json, const ['createdAt', 'requestedAt', 'date']),
       completedAt: _date(json, const ['completedAt', 'finishedAt']),
+      isKidsTrip:
+          json['isKidsTrip'] == true ||
+          json['isKids'] == true ||
+          _str(json, const ['childProfileId']) != null,
+      childProfileId: _str(json, const ['childProfileId', 'kidProfileId']),
+      guardianUserId: _str(json, const ['guardianUserId', 'guardianId']),
+      ruleReason: _str(json, const ['ruleReason', 'ruleReasons', 'parentRule']),
     );
   }
 
@@ -189,6 +196,8 @@ abstract final class MoveMappers {
                 .toList()
           : const [],
       rejectionReason: _str(json, const ['rejectionReason', 'reason']),
+      isKidsEligible:
+          json['isKidsEligible'] == true || json['kidsEligible'] == true,
     );
   }
 

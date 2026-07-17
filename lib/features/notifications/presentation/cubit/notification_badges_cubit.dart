@@ -12,4 +12,7 @@ class NotificationBadgesCubit extends Cubit<NotificationBadges> {
     final result = await _repository.badges();
     result.when(success: emit, failure: (_) {});
   }
+
+  /// Reinicia los contadores al cerrar sesión para no mostrar datos ajenos.
+  void clear() => emit(const NotificationBadges());
 }

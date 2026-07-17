@@ -17,6 +17,40 @@ abstract final class DisplayLabels {
     };
   }
 
+  /// Etiqueta amigable para una categoría de negocio.
+  ///
+  /// Convierte slugs técnicos (`food_trucks`, `taxis_transporte_privado`) en
+  /// texto legible. Usa nombres curados para casos comunes y humaniza el resto.
+  static String categoryLabel(String? category) {
+    final raw = (category ?? '').trim();
+    if (raw.isEmpty) return 'Todos';
+    final key = raw.toLowerCase().replaceAll(' ', '_');
+    return switch (key) {
+      'top' || 'todos' || 'all' => 'Todos',
+      'bar' => 'Bar',
+      'bares' => 'Bares',
+      'pubs' => 'Pubs',
+      'bowling' => 'Bowling',
+      'casinos' => 'Casinos',
+      'cines' => 'Cines',
+      'discotecas' => 'Discotecas',
+      'karaokes' => 'Karaokes',
+      'moteles' => 'Moteles',
+      'hoteles' => 'Hoteles',
+      'restaurantes' => 'Restaurantes',
+      'licorerias' => 'Licorerías',
+      'farmacias' => 'Farmacias',
+      'turismo' => 'Turismo',
+      'transporte' => 'Transporte',
+      'cafeterias_nocturnas' => 'Cafeterías nocturnas',
+      'eventos_conciertos' => 'Eventos y conciertos',
+      'food_trucks' => 'Food trucks',
+      'pool_billar' => 'Pool y billar',
+      'taxis_transporte_privado' => 'Taxis y transporte privado',
+      _ => _humanize(raw),
+    };
+  }
+
   static String settlementFieldLabel(String field, {String? countryCode}) {
     final key = field.toLowerCase().replaceAll('_', '');
     return switch (key) {
@@ -433,6 +467,13 @@ abstract final class DisplayLabels {
     if (trimmed.toLowerCase().contains('credential must be set')) {
       return 'El servidor no tiene configuradas las credenciales Firebase Admin. '
           'El equipo backend debe inicializar FirebaseApp en Cloud Run.';
+    }
+
+    if (trimmed.toLowerCase().contains('proveedor de correo') ||
+        trimmed.toLowerCase().contains('email provider') ||
+        trimmed.toLowerCase().contains('mail provider')) {
+      return 'El servidor aún no tiene configurado el envío de correos. '
+          'Prueba más tarde o contacta soporte.';
     }
 
     if (trimmed.toLowerCase().contains('idx10206') ||

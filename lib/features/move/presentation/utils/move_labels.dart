@@ -17,6 +17,7 @@ abstract final class MoveLabels {
     MoveTripStatus.cancelledByDriver => 'Cancelado por el conductor',
     MoveTripStatus.cancelledBySystem => 'Cancelado por el sistema',
     MoveTripStatus.expired => 'Expirado',
+    MoveTripStatus.pendingParent => 'Esperando aprobación del tutor',
     MoveTripStatus.unknown => 'Estado desconocido',
   };
 
