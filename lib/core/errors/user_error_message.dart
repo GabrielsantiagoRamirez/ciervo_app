@@ -41,6 +41,14 @@ abstract final class UserErrorMessage {
       'USER_NOT_PARTICIPANT' => 'No tienes acceso a esta conversación.',
       'INSUFFICIENT_BALANCE' =>
         'Saldo insuficiente. Recarga tu wallet con Mercado Pago o transferencia.',
+      'NO_WALLET' =>
+        'No tienes una wallet activa. Créala o recárgala para pagar tu viaje.',
+      'CURRENCY_MISMATCH' =>
+        'La moneda de tu wallet no coincide con la del viaje.',
+      'PAYMENT_ERROR' =>
+        'No pudimos procesar el pago del viaje. Intenta nuevamente.',
+      'CONCURRENCY' =>
+        'La oferta cambió mientras respondías. Actualiza e intenta de nuevo.',
       'TERMS_NOT_ACCEPTED' =>
         'Debes aceptar los términos de la promoción para continuar.',
       'ALREADY_PREMIUM' => 'Ya tienes un plan premium activo.',
@@ -53,6 +61,10 @@ abstract final class UserErrorMessage {
       _ => null,
     };
     if (codeMessage != null) return codeMessage;
+
+    // Recuperación de contraseña OTP (mensajes del backend Ciervo).
+    final recoveryMessage = _passwordRecoveryMessage(message);
+    if (recoveryMessage != null) return recoveryMessage;
 
     final upperMsg = error.message.toUpperCase();
     if (upperMsg.contains('FRONT_DOCUMENT_MEDIA_REQUIRED')) {
@@ -119,5 +131,41 @@ abstract final class UserErrorMessage {
     }
 
     return sanitized;
+  }
+
+  /// Mensajes del flujo de recuperación de contraseña OTP.
+  /// Devuelve texto amigable o null si no aplica.
+  static String? _passwordRecoveryMessage(String lowerMessage) {
+    final message = lowerMessage;
+    if (message.contains('proveedor de correo') ||
+        message.contains('correo no configurado') ||
+        message.contains('email provider') ||
+        message.contains('mail provider')) {
+      return 'El servidor aún no tiene configurado el envío de correos. '
+          'Intenta más tarde o contacta soporte.';
+    }
+    if (message.contains('debes esperar antes de solicitar')) {
+      return 'Espera unos segundos antes de pedir otro código.';
+    }
+    if (message.contains('codigo no encontrado') ||
+        message.contains('código no encontrado')) {
+      return 'No encontramos un código activo. Solicita uno nuevo.';
+    }
+    if (message.contains('codigo invalido') ||
+        message.contains('código inválido')) {
+      return 'Código incorrecto. Revisa e inténtalo de nuevo.';
+    }
+    if (message.contains('codigo expirado') ||
+        message.contains('código expirado')) {
+      return 'El código expiró. Solicita uno nuevo.';
+    }
+    if (message.contains('codigo bloqueado') ||
+        message.contains('código bloqueado')) {
+      return 'Demasiados intentos. Espera unos minutos o solicita un código nuevo.';
+    }
+    if (message.contains('usuario no encontrado')) {
+      return 'No encontramos esa cuenta. Vuelve a solicitar el código.';
+    }
+    return null;
   }
 }

@@ -24,6 +24,7 @@ import '../../../notifications/presentation/pages/notifications_page.dart';
 import '../../../kids/presentation/pages/kids_page.dart';
 import '../../../memberships/presentation/pages/membership_page.dart';
 import '../../../transport/presentation/pages/transport_page.dart';
+import '../../../move/presentation/pages/move_home_page.dart';
 import '../../../kyc/presentation/pages/kyc_page.dart';
 import '../../../wallet/presentation/pages/wallet_page.dart';
 import '../../../wallet/presentation/pages/payment_requests_page.dart';
@@ -537,6 +538,13 @@ class _AccountActions extends StatelessWidget {
             title: 'Verificación de identidad',
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(builder: (_) => const KycPage()),
+            ),
+          ),
+          _ActionTile(
+            icon: Icons.local_taxi_outlined,
+            title: 'Ciervo Move',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const MoveHomePage()),
             ),
           ),
           _ActionTile(

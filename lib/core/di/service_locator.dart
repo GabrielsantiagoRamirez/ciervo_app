@@ -91,6 +91,9 @@ import '../../features/reservations/data/booking_repository.dart';
 import '../../features/staff_orders/data/staff_orders_repository.dart';
 import '../../features/staff_scanner/data/staff_scanner_repository.dart';
 import '../../features/transport/data/transport_repository.dart';
+import '../../features/move/data/datasources/move_remote_datasource.dart';
+import '../../features/move/data/repositories/move_repository_impl.dart';
+import '../../features/move/domain/repositories/move_repository.dart';
 import '../../features/pins/data/datasources/pins_remote_datasource.dart';
 import '../../features/pins/data/durable_pin_service.dart';
 import '../../features/pins/data/pin_p2p_service.dart';
@@ -290,6 +293,12 @@ Future<void> configureDependencies() async {
     ..registerLazySingleton<TransportRepository>(
       () => TransportRepository(getIt<NetworkClient>()),
     )
+    ..registerLazySingleton<MoveRemoteDataSource>(
+      () => MoveRemoteDataSource(getIt<NetworkClient>()),
+    )
+    ..registerLazySingleton<MoveRepository>(
+      () => MoveRepositoryImpl(getIt<MoveRemoteDataSource>()),
+    )
     ..registerLazySingleton<PaymentsRemoteDataSource>(
       () => DioPaymentsRemoteDataSource(getIt<NetworkClient>()),
     )
@@ -322,6 +331,7 @@ Future<void> configureDependencies() async {
       () => WalletRepositoryImpl(
         getIt<WalletRemoteDataSource>(),
         getIt<PaymentsRepository>(),
+        getIt<ProfileRepository>(),
       ),
     )
     ..registerLazySingleton<PinsRemoteDataSource>(

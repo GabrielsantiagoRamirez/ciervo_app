@@ -6,6 +6,8 @@ import '../../core/di/service_locator.dart';
 import '../../core/session/auth_token_claims.dart';
 import '../../core/session/session_manager.dart';
 import '../../features/kid_wallet/presentation/pages/kid_wallet_page.dart';
+import '../../features/move/presentation/pages/move_home_page.dart';
+import '../../features/move/presentation/pages/move_trip_page.dart';
 import '../../features/bonuses/presentation/pages/bonus_detail_page.dart';
 import '../../features/bonuses/presentation/pages/bonuses_pages.dart';
 import '../../features/chat/presentation/pages/chat_conversation_page.dart';
@@ -112,6 +114,15 @@ class NotificationDeepLink {
         return true;
       }
       return false;
+    }
+    if (lower.contains('/move') || lower.contains('/ride') || lower.contains('/trip')) {
+      final id = _segmentId(path);
+      if (id != null && int.tryParse(id) != null) {
+        _push(context, MoveTripPage(tripId: id));
+        return true;
+      }
+      _push(context, const MoveHomePage());
+      return true;
     }
     if (lower.contains('/wallet') || lower.contains('/nfc')) {
       _push(context, const WalletPage());
@@ -227,6 +238,18 @@ class NotificationDeepLink {
         return true;
       }
       _push(context, const PaymentRequestsPage());
+      return true;
+    }
+    if (text.contains('move') ||
+        text.contains('move_trip') ||
+        text.contains('ride')) {
+      final tripId =
+          data['resourceId']?.toString() ?? data['tripId']?.toString();
+      if (tripId != null && tripId.isNotEmpty) {
+        _push(context, MoveTripPage(tripId: tripId));
+      } else {
+        _push(context, const MoveHomePage());
+      }
       return true;
     }
     if (text.contains('vakupli')) {
