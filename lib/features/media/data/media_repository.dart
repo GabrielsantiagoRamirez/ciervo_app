@@ -1,5 +1,6 @@
-import 'package:dio/dio.dart';
 import 'dart:typed_data';
+
+import 'package:dio/dio.dart';
 
 import '../../../core/di/service_locator.dart';
 import '../../../core/errors/app_exception.dart';
@@ -7,7 +8,8 @@ import '../../../core/errors/error_mapper.dart';
 import '../../../core/network/api_response_unwrapper.dart';
 import '../../../core/network/network_client.dart';
 import '../../../core/result/result.dart';
-import '../../profile/domain/repositories/profile_repository.dart';
+import '../../../core/session/auth_token_claims.dart';
+import '../../../core/session/session_manager.dart';
 
 class MediaAsset {
   const MediaAsset({required this.id});
@@ -46,15 +48,17 @@ class MediaRepository {
   });
 
   Future<String> _resolveOwnerId() async {
-    final result = await getIt<ProfileRepository>().getMe();
-    return result.when(
-      success: (profile) => profile.id,
-      failure: (error) => throw error is AppException
-          ? error
-          : AppException(
-              message: 'No pudimos obtener tu perfil para subir el archivo.',
-            ),
-    );
+    final token = await getIt<SessionManager>().accessToken();
+    final ownerId = token == null
+        ? null
+        : AuthTokenClaims.fromJwt(token).userId?.trim();
+    if (ownerId == null || ownerId.isEmpty) {
+      throw const AppException(
+        message: 'No pudimos validar tu identidad para subir el archivo.',
+        code: 'media_owner_missing',
+      );
+    }
+    return ownerId;
   }
 
   Future<Result<MediaAsset>> get(String id) => _guard(() async {

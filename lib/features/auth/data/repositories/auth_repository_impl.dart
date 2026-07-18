@@ -10,6 +10,7 @@ import '../../../../core/session/session_manager.dart';
 import '../../../../core/firebase/firebase_auth_service.dart';
 import '../../../../features/promotions/data/promotions_repository.dart';
 import '../../../../features/safety/data/services/safety_filter_cache.dart';
+import '../../../../features/move/domain/onboarding/move_onboarding_draft.dart';
 import '../../domain/entities/auth_session.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
@@ -66,6 +67,7 @@ class AuthRepositoryImpl implements AuthRepository {
       } catch (_) {}
     }
     getIt<SelectedKidContext>().clear();
+    await _clearMoveOnboardingDraft();
     await _clearLocalUserState();
     try {
       await _firebaseAuthService?.signOut();
@@ -78,6 +80,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> clearLocalSession() async {
     getIt<SelectedKidContext>().clear();
+    await _clearMoveOnboardingDraft();
     await _clearLocalUserState();
     await _sessionManager.clear();
   }
@@ -90,6 +93,20 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await getIt<PromotionsRepository>().clearLocalState();
     } catch (_) {}
+  }
+
+  Future<void> _clearMoveOnboardingDraft() async {
+    try {
+      final token = await _sessionManager.accessToken();
+      if (token == null) return;
+      final userId = AuthTokenClaims.fromJwt(token).userId?.trim();
+      if (userId == null || userId.isEmpty) return;
+      if (getIt.isRegistered<MoveOnboardingDraftStore>()) {
+        await getIt<MoveOnboardingDraftStore>().clear(userId);
+      }
+    } catch (_) {
+      // La limpieza de sesión no debe bloquearse por un borrador local dañado.
+    }
   }
 
   @override

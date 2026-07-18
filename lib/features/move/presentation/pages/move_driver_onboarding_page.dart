@@ -30,7 +30,9 @@ class _MoveDriverOnboardingPageState extends State<MoveDriverOnboardingPage> {
   @override
   void initState() {
     super.initState();
-    _cityController.text = CountryRegistration.contextForCode(_countryCode).city;
+    _cityController.text = CountryRegistration.contextForCode(
+      _countryCode,
+    ).city;
   }
 
   @override

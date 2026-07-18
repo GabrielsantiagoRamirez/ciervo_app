@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/location/location_service.dart';
+import '../../../../core/permissions/permission_kind.dart';
+import '../../../../core/permissions/permission_manager.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/display_formatters.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
@@ -13,12 +17,14 @@ import '../../../../shared/widgets/ciervo_loading_state.dart';
 import '../../domain/entities/move_driver.dart';
 import '../../domain/entities/move_enums.dart';
 import '../../domain/entities/move_trip.dart';
+import '../../domain/onboarding/move_onboarding_repository.dart';
+import '../../domain/onboarding/move_onboarding_status.dart';
 import '../../domain/repositories/move_repository.dart';
+import '../onboarding/move_onboarding_page.dart';
 import '../cubit/move_driver_cubit.dart';
 import '../cubit/move_driver_state.dart';
 import '../utils/move_labels.dart';
 import 'move_driver_documents.dart';
-import 'move_driver_onboarding_page.dart';
 import 'move_driver_vehicle_form.dart';
 
 class MoveDriverPage extends StatelessWidget {
@@ -30,13 +36,73 @@ class MoveDriverPage extends StatelessWidget {
       create: (_) =>
           MoveDriverCubit(getIt<MoveRepository>(), getIt<LocationService>())
             ..load(),
-      child: const _MoveDriverView(),
+      child: const _MoveDriverBootstrap(),
     );
   }
 }
 
+class _MoveDriverBootstrap extends StatefulWidget {
+  const _MoveDriverBootstrap();
+
+  @override
+  State<_MoveDriverBootstrap> createState() => _MoveDriverBootstrapState();
+}
+
+class _MoveDriverBootstrapState extends State<_MoveDriverBootstrap> {
+  MoveDriverOnboardingStatus? _onboardingStatus;
+  bool _legacyWithoutV2Status = false;
+  bool _onboardingCheckFailed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshOnboarding();
+  }
+
+  Future<void> _refreshOnboarding() async {
+    final result = await getIt<MoveOnboardingRepository>().getStatus();
+    result.when(
+      success: (status) {
+        if (mounted) {
+          setState(() {
+            _onboardingStatus = status;
+            _legacyWithoutV2Status = false;
+            _onboardingCheckFailed = false;
+          });
+        }
+      },
+      failure: (error) {
+        if (!mounted) return;
+        setState(() {
+          _legacyWithoutV2Status =
+              error is AppException && error.statusCode == 404;
+          _onboardingCheckFailed = !_legacyWithoutV2Status;
+        });
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => _MoveDriverView(
+    onboardingStatus: _onboardingStatus,
+    allowLegacyOnline: _legacyWithoutV2Status,
+    onboardingCheckFailed: _onboardingCheckFailed,
+    refreshOnboarding: _refreshOnboarding,
+  );
+}
+
 class _MoveDriverView extends StatelessWidget {
-  const _MoveDriverView();
+  const _MoveDriverView({
+    required this.onboardingStatus,
+    required this.allowLegacyOnline,
+    required this.onboardingCheckFailed,
+    required this.refreshOnboarding,
+  });
+
+  final MoveDriverOnboardingStatus? onboardingStatus;
+  final bool allowLegacyOnline;
+  final bool onboardingCheckFailed;
+  final Future<void> Function() refreshOnboarding;
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +127,8 @@ class _MoveDriverView extends StatelessWidget {
               state.status == MoveDriverStatusView.initial) {
             return const CiervoLoadingState();
           }
-          if (state.status == MoveDriverStatusView.failure && !state.hasProfile) {
+          if (state.status == MoveDriverStatusView.failure &&
+              !state.hasProfile) {
             return Padding(
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: CiervoErrorState(
@@ -73,10 +140,18 @@ class _MoveDriverView extends StatelessWidget {
           }
           final profile = state.profile;
           if (profile == null) {
-            return _ApplyPrompt(cubit: context.read<MoveDriverCubit>());
+            return const _ApplyPrompt();
+          }
+          if (!profile.isApproved) {
+            return _LegacyIncompleteBlock(status: onboardingStatus);
           }
           return RefreshIndicator(
-            onRefresh: () => context.read<MoveDriverCubit>().load(),
+            onRefresh: () async {
+              await Future.wait([
+                context.read<MoveDriverCubit>().load(),
+                refreshOnboarding(),
+              ]);
+            },
             child: ListView(
               padding: EdgeInsets.fromLTRB(
                 AppSpacing.lg,
@@ -93,11 +168,23 @@ class _MoveDriverView extends StatelessWidget {
                 ],
                 if (profile.isApproved) ...[
                   const SizedBox(height: AppSpacing.md),
-                  _OnlineToggle(state: state),
+                  if (onboardingCheckFailed) ...[
+                    const _OnboardingStatusUnavailableCard(),
+                    const SizedBox(height: AppSpacing.md),
+                  ],
+                  _OnlineToggle(
+                    state: state,
+                    backendCanGoOnline:
+                        onboardingStatus?.canGoOnline ??
+                        (allowLegacyOnline && profile.canGoOnline),
+                  ),
                 ],
                 if (profile.isApproved && state.activeTrip != null) ...[
                   const SizedBox(height: AppSpacing.md),
-                  _ActiveTripCard(trip: state.activeTrip!, busy: state.actionInProgress),
+                  _ActiveTripCard(
+                    trip: state.activeTrip!,
+                    busy: state.actionInProgress,
+                  ),
                 ],
                 if (profile.isApproved &&
                     state.isOnline &&
@@ -119,9 +206,7 @@ class _MoveDriverView extends StatelessWidget {
 }
 
 class _ApplyPrompt extends StatelessWidget {
-  const _ApplyPrompt({required this.cubit});
-
-  final MoveDriverCubit cubit;
+  const _ApplyPrompt();
 
   @override
   Widget build(BuildContext context) {
@@ -155,15 +240,78 @@ class _ApplyPrompt extends StatelessWidget {
         CiervoButton(
           label: 'Quiero ser conductor',
           icon: Icons.how_to_reg_outlined,
-          onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => MoveDriverOnboardingPage(cubit: cubit),
-            ),
-          ),
+          onPressed: () => context.push(MoveOnboardingRouteStage.identity.path),
         ),
       ],
     );
   }
+}
+
+class _LegacyIncompleteBlock extends StatelessWidget {
+  const _LegacyIncompleteBlock({required this.status});
+
+  final MoveDriverOnboardingStatus? status;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasV2Status = status != null;
+    return ListView(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      children: [
+        CiervoCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                hasV2Status ? Icons.fact_check_outlined : Icons.lock_outline,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                hasV2Status
+                    ? 'Alta MOVE v2 en curso'
+                    : 'Perfil anterior incompleto',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                hasV2Status
+                    ? 'Tu solicitud está al ${status!.percentage}%. Continúa desde '
+                          'el estado que informó el servidor.'
+                    : 'Por seguridad no mezclaremos el alta anterior con MOVE v2. '
+                          'Contacta soporte para migrar este perfil.',
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        CiervoButton(
+          label: hasV2Status ? 'Continuar alta MOVE v2' : 'Ver estado MOVE v2',
+          icon: Icons.fact_check_outlined,
+          onPressed: () => context.push(MoveOnboardingRouteStage.status.path),
+        ),
+      ],
+    );
+  }
+}
+
+class _OnboardingStatusUnavailableCard extends StatelessWidget {
+  const _OnboardingStatusUnavailableCard();
+
+  @override
+  Widget build(BuildContext context) => const CiervoCard(
+    child: Row(
+      children: [
+        Icon(Icons.cloud_off_outlined),
+        SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Text(
+            'No pudimos validar canGoOnline con MOVE v2. Actualiza la pantalla '
+            'antes de conectarte.',
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _DriverHeader extends StatelessWidget {
@@ -229,9 +377,7 @@ class _RejectionCard extends StatelessWidget {
         children: [
           const Icon(Icons.error_outline, color: Colors.redAccent),
           const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text('Solicitud rechazada: $reason'),
-          ),
+          Expanded(child: Text('Solicitud rechazada: $reason')),
         ],
       ),
     );
@@ -239,9 +385,10 @@ class _RejectionCard extends StatelessWidget {
 }
 
 class _OnlineToggle extends StatelessWidget {
-  const _OnlineToggle({required this.state});
+  const _OnlineToggle({required this.state, required this.backendCanGoOnline});
 
   final MoveDriverState state;
+  final bool backendCanGoOnline;
 
   @override
   Widget build(BuildContext context) {
@@ -281,8 +428,34 @@ class _OnlineToggle extends StatelessWidget {
           else
             Switch(
               value: state.isOnline,
-              onChanged: (value) =>
-                  context.read<MoveDriverCubit>().toggleOnline(value),
+              onChanged: state.isOnline || backendCanGoOnline
+                  ? (value) async {
+                      if (value) {
+                        final allowed = await PermissionManager.instance.ensure(
+                          context,
+                          AppPermissionKind.location,
+                        );
+                        if (!allowed) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Activa ubicación para conectarte y recibir '
+                                  'viajes cercanos.',
+                                ),
+                              ),
+                            );
+                          }
+                          return;
+                        }
+                      }
+                      if (context.mounted) {
+                        await context.read<MoveDriverCubit>().toggleOnline(
+                          value,
+                        );
+                      }
+                    }
+                  : null,
             ),
         ],
       ),
@@ -311,7 +484,8 @@ class _AvailableTripsSection extends StatelessWidget {
             ),
             IconButton(
               icon: const Icon(Icons.refresh),
-              onPressed: () => context.read<MoveDriverCubit>().refreshAvailable(),
+              onPressed: () =>
+                  context.read<MoveDriverCubit>().refreshAvailable(),
             ),
           ],
         ),
@@ -319,14 +493,18 @@ class _AvailableTripsSection extends StatelessWidget {
         if (trips.isEmpty)
           const CiervoEmptyState(
             title: 'Sin viajes por ahora',
-            description: 'Mantente en línea; los viajes cercanos aparecerán aquí.',
+            description:
+                'Mantente en línea; los viajes cercanos aparecerán aquí.',
             icon: Icons.map_outlined,
           )
         else
           ...trips.map(
             (trip) => Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: _AvailableTripTile(trip: trip, busy: state.actionInProgress),
+              child: _AvailableTripTile(
+                trip: trip,
+                busy: state.actionInProgress,
+              ),
             ),
           ),
       ],
@@ -411,9 +589,8 @@ class _AvailableTripTile extends StatelessWidget {
 
   Future<void> _offer(BuildContext context) async {
     final cubit = context.read<MoveDriverCubit>();
-    final vehicles = cubit.state.profile?.vehicles
-            .where((v) => v.isActive)
-            .toList() ??
+    final vehicles =
+        cubit.state.profile?.vehicles.where((v) => v.isActive).toList() ??
         const [];
     if (vehicles.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -505,30 +682,25 @@ class _OfferSheetState extends State<_OfferSheet> {
                   ),
                 )
                 .toList(),
-            onChanged: (value) => setState(() => _vehicleId = value ?? _vehicleId),
+            onChanged: (value) =>
+                setState(() => _vehicleId = value ?? _vehicleId),
           ),
           const SizedBox(height: AppSpacing.md),
           TextField(
             controller: _amountController,
             keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              labelText: 'Tu tarifa ($currency)',
-            ),
+            decoration: InputDecoration(labelText: 'Tu tarifa ($currency)'),
           ),
           const SizedBox(height: AppSpacing.md),
           TextField(
             controller: _etaController,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: 'Minutos para llegar',
-            ),
+            decoration: const InputDecoration(labelText: 'Minutos para llegar'),
           ),
           const SizedBox(height: AppSpacing.md),
           TextField(
             controller: _messageController,
-            decoration: const InputDecoration(
-              labelText: 'Mensaje (opcional)',
-            ),
+            decoration: const InputDecoration(labelText: 'Mensaje (opcional)'),
           ),
           const SizedBox(height: AppSpacing.lg),
           CiervoButton(

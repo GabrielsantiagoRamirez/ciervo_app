@@ -74,7 +74,8 @@ class MoveRepositoryImpl implements MoveRepository {
     required String offerId,
     required int amount,
   }) => _guard(
-    () => _remote.counterOffer(tripId: tripId, offerId: offerId, amount: amount),
+    () =>
+        _remote.counterOffer(tripId: tripId, offerId: offerId, amount: amount),
   );
 
   @override

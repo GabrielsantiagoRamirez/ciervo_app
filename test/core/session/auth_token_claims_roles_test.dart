@@ -24,6 +24,19 @@ void main() {
       'SuperAdmin',
     );
   });
+
+  test('MOVE Client gate fails closed for ambiguous and non-client JWTs', () {
+    expect(AuthTokenClaims.fromJwt(_jwt({'role': 1})).isExplicitClient, isTrue);
+    expect(
+      AuthTokenClaims.fromJwt(_jwt({'accountKind': 'Client'})).isExplicitClient,
+      isFalse,
+    );
+    expect(
+      AuthTokenClaims.fromJwt(_jwt({'role': 4})).isExplicitClient,
+      isFalse,
+    );
+    expect(AuthTokenClaims.fromJwt(_jwt({})).isExplicitClient, isFalse);
+  });
 }
 
 String _jwt(Map<String, dynamic> claims) {

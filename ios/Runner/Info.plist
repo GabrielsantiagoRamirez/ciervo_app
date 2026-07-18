@@ -7,9 +7,9 @@
 	<key>GMSApiKey</key>
 	<string>$(GOOGLE_MAPS_API_KEY)</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Ciervo necesita acceso a tus fotos para actualizar tu imagen de perfil.</string>
+	<string>Ciervo usa las fotos que elijas para tu perfil y para adjuntar imágenes de identidad, licencia, vehículo y documentos de CIERVO MOVE.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Ciervo necesita acceso a la camara para que el staff pueda escanear codigos QR.</string>
+	<string>Ciervo usa la cámara para escanear códigos QR y capturar tu selfie, licencia, vehículo y documentos durante el registro de CIERVO MOVE.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>

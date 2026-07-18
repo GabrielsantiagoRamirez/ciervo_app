@@ -9,10 +9,7 @@ import '../cubit/move_driver_cubit.dart';
 import '../utils/move_labels.dart';
 
 /// Muestra el formulario para registrar un vehículo del conductor.
-Future<void> showMoveVehicleForm(
-  BuildContext context,
-  MoveDriverCubit cubit,
-) {
+Future<void> showMoveVehicleForm(BuildContext context, MoveDriverCubit cubit) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,

@@ -5,8 +5,8 @@ import 'package:dio/dio.dart';
 
 /// Reintenta fallos transitorios sin repetir mutaciones no idempotentes.
 ///
-/// Las mutaciones solo son elegibles cuando su body contiene `idempotencyKey`
-/// o el caller declara `extra['allowRetry'] == true`.
+/// Las mutaciones solo son elegibles cuando llevan `Idempotency-Key` como
+/// header o el caller declara `extra['allowRetry'] == true`.
 class RetryInterceptor extends Interceptor {
   RetryInterceptor(this._dio, {this.maxRetries = 2, Random? random})
     : _random = random ?? Random.secure();
@@ -47,7 +47,8 @@ abstract final class RetryPolicy {
   static bool isTransient(DioException error) {
     if (error.type == DioExceptionType.connectionTimeout ||
         error.type == DioExceptionType.sendTimeout ||
-        error.type == DioExceptionType.receiveTimeout) {
+        error.type == DioExceptionType.receiveTimeout ||
+        error.type == DioExceptionType.connectionError) {
       return true;
     }
     final status = error.response?.statusCode;
@@ -59,8 +60,10 @@ abstract final class RetryPolicy {
     if (method == 'GET' || method == 'HEAD' || method == 'OPTIONS') return true;
     if (options.extra['allowRetry'] == true) return true;
 
-    final data = options.data;
-    return data is Map &&
-        data['idempotencyKey']?.toString().trim().isNotEmpty == true;
+    final idempotencyKey = options.headers.entries
+        .where((entry) => entry.key.toLowerCase() == 'idempotency-key')
+        .map((entry) => entry.value.toString().trim())
+        .firstOrNull;
+    return idempotencyKey != null && idempotencyKey.isNotEmpty;
   }
 }

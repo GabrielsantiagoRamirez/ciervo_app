@@ -23,7 +23,10 @@ class MoveFareQuoteCard extends StatelessWidget {
           Text('Tarifa sugerida', style: theme.textTheme.labelLarge),
           const SizedBox(height: AppSpacing.xxs),
           Text(
-            DisplayFormatters.formatMoney(quote.suggestedFare, currency: currency),
+            DisplayFormatters.formatMoney(
+              quote.suggestedFare,
+              currency: currency,
+            ),
             style: theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.w800,
               color: theme.colorScheme.primary,

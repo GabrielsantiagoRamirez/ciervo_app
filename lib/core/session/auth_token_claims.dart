@@ -112,6 +112,10 @@ class AuthTokenClaims {
     return value >= 0 && value <= 120 ? value : null;
   }
 
+  /// MOVE Driver es exclusivo de actores Client explícitos (rol numérico 1).
+  /// No usa el fallback de [routeKind] para evitar habilitarlo con JWT ambiguos.
+  bool get isExplicitClient => role?.trim() == '1';
+
   String get routeKind {
     final values = [
       accountKind,

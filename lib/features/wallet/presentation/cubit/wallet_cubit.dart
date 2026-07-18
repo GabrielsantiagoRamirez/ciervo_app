@@ -134,6 +134,36 @@ class WalletCubit extends Cubit<WalletState> {
     }
   }
 
+  Future<void> syncRechargeIntent(String intentId) async {
+    emit(
+      state.copyWith(status: WalletStatus.actionLoading, clearMessages: true),
+    );
+    final result = await _repository.syncRechargeIntent(intentId);
+    await result.when(
+      success: (intent) async {
+        emit(
+          state.copyWith(
+            status: WalletStatus.loaded,
+            rechargeIntent: intent,
+            successMessage: intent.isSucceeded
+                ? 'Recarga acreditada correctamente.'
+                : 'Estado de recarga: ${intent.statusLabel}',
+          ),
+        );
+        if (intent.isSucceeded) {
+          _refreshNotificationsInbox();
+          await load();
+        }
+      },
+      failure: (error) async => emit(
+        state.copyWith(
+          status: WalletStatus.loaded,
+          errorMessage: UserErrorMessage.from(error),
+        ),
+      ),
+    );
+  }
+
   Future<void> createRechargeIntent(
     String cardId,
     double amount, {
@@ -146,20 +176,6 @@ class WalletCubit extends Cubit<WalletState> {
         clearRechargeIntent: true,
       ),
     );
-    final configResult = await _repository.mercadoPagoConfig();
-    final configOk = configResult.when(
-      success: (config) => config['enabled'] != false,
-      failure: (_) => true,
-    );
-    if (!configOk) {
-      emit(
-        state.copyWith(
-          status: WalletStatus.loaded,
-          errorMessage: 'Mercado Pago no esta habilitado en este momento.',
-        ),
-      );
-      return;
-    }
     final result = await _repository.createRechargeIntent(
       cardId: cardId,
       amount: amount,

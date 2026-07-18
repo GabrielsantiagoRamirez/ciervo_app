@@ -27,9 +27,8 @@ class MovePassengerCubit extends Cubit<MovePassengerState> {
     );
     final result = await _repository.calculateFare(request);
     result.when(
-      success: (quote) => emit(
-        state.copyWith(status: MovePassengerStatus.idle, quote: quote),
-      ),
+      success: (quote) =>
+          emit(state.copyWith(status: MovePassengerStatus.idle, quote: quote)),
       failure: (error) => emit(
         state.copyWith(
           status: MovePassengerStatus.idle,
@@ -263,7 +262,11 @@ class MovePassengerCubit extends Cubit<MovePassengerState> {
   }
 
   /// Envía una alerta SOS del viaje activo (notifica al tutor y al conductor).
-  Future<bool> sendSos({double? latitude, double? longitude, String? note}) async {
+  Future<bool> sendSos({
+    double? latitude,
+    double? longitude,
+    String? note,
+  }) async {
     final tripId = state.trip?.id;
     if (tripId == null) return false;
     emit(state.copyWith(actionInProgress: true, clearMessages: true));
@@ -278,7 +281,8 @@ class MovePassengerCubit extends Cubit<MovePassengerState> {
         emit(
           state.copyWith(
             actionInProgress: false,
-            successMessage: 'Alerta SOS enviada. Notificamos al tutor y al conductor.',
+            successMessage:
+                'Alerta SOS enviada. Notificamos al tutor y al conductor.',
           ),
         );
         return true;

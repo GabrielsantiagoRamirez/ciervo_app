@@ -72,8 +72,7 @@ class _MoveTripsHistoryPageState extends State<MoveTripsHistoryPage> {
             child: ListView.separated(
               padding: const EdgeInsets.all(AppSpacing.lg),
               itemCount: trips.length,
-              separatorBuilder: (_, _) =>
-                  const SizedBox(height: AppSpacing.sm),
+              separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
               itemBuilder: (context, index) => _TripTile(trip: trips[index]),
             ),
           );

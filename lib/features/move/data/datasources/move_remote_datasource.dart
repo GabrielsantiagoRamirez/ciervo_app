@@ -103,11 +103,7 @@ class MoveRemoteDataSource {
   }) async {
     await _client.dio.post<dynamic>(
       '$_base/trips/$tripId/sos',
-      data: {
-        'latitude': ?latitude,
-        'longitude': ?longitude,
-        'note': ?note,
-      },
+      data: {'latitude': ?latitude, 'longitude': ?longitude, 'note': ?note},
     );
   }
 

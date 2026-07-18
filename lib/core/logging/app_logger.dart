@@ -20,7 +20,8 @@ class AppLogger {
     if (_config.environment.enablesVerboseLogs) {
       debugPrint(
         'CIERVO ERROR: ${sanitizeForLog(message)}\n'
-        '${sanitizeForLog(error.toString())}\n$stackTrace',
+        '${sanitizeForLog(error.toString())}\n'
+        '${sanitizeForLog(stackTrace.toString())}',
       );
     }
   }
@@ -49,10 +50,24 @@ String sanitizeForLog(String value) {
   );
   sanitized = sanitized.replaceAllMapped(
     RegExp(
-      r'''(["']?(?:accessToken|refreshToken|firebaseIdToken|fcmToken|token|pin|merchantQr|payloadNfc)["']?\s*[:=]\s*["']?)([^"',}\s]+)''',
+      r'''(["']?(?:accessToken|refreshToken|firebaseIdToken|fcmToken|token|externalProviderToken|providerToken|pin|merchantQr|payloadNfc)["']?\s*[:=]\s*["']?)([^"',}\s]+)''',
       caseSensitive: false,
     ),
     (match) => '${match.group(1)}[REDACTED]',
+  );
+  sanitized = sanitized.replaceAllMapped(
+    RegExp(
+      r'''(["']?(?:firstNames|lastNames|fullName|documentNumber|licenseNumber|number|plate|vin|email|phone|emergencyName|emergencyPhone|accountLast4|birthDate|scheduleJson)["']?\s*[:=]\s*)(["'][^"']*["']|[^,}\s]+)''',
+      caseSensitive: false,
+    ),
+    (match) => '${match.group(1)}"[REDACTED_PII]"',
+  );
+  sanitized = sanitized.replaceAllMapped(
+    RegExp(
+      r'''(["']?(?:file|bytes|image|media|multipartFile)["']?\s*[:=]\s*)([^,}\n]+)''',
+      caseSensitive: false,
+    ),
+    (match) => '${match.group(1)}[REDACTED_MEDIA]',
   );
   return sanitized;
 }

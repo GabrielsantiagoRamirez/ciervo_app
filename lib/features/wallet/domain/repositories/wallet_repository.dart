@@ -25,6 +25,7 @@ abstract interface class WalletRepository {
   /// Moneda para recarga: prioriza país del perfil sobre moneda incorrecta de la card.
   Future<String> resolveRechargeCurrency(String? preferred);
   Future<Result<RechargeIntent>> rechargeIntent(String intentId);
+  Future<Result<RechargeIntent>> syncRechargeIntent(String intentId);
   Future<Result<CiervoWalletIdentity>> myCiervoId();
   Future<Result<Map<String, dynamic>>> mercadoPagoConfig();
   Future<Result<ResolvedWalletUser>> resolveUser(String ciervoUserCode);

@@ -98,9 +98,7 @@ class _MoveHomeViewState extends State<_MoveHomeView> {
           _origin = LatLng(location.latitude, location.longitude);
           _loadingLocation = false;
         });
-        _mapController?.animateCamera(
-          CameraUpdate.newLatLngZoom(_origin!, 14),
-        );
+        _mapController?.animateCamera(CameraUpdate.newLatLngZoom(_origin!, 14));
         return;
       }
     } catch (_) {
@@ -194,9 +192,7 @@ class _MoveHomeViewState extends State<_MoveHomeView> {
     );
     if (tripId != null && mounted) {
       await Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => MoveTripPage(tripId: tripId),
-        ),
+        MaterialPageRoute<void>(builder: (_) => MoveTripPage(tripId: tripId)),
       );
     }
   }
@@ -300,10 +296,7 @@ class _MoveHomeViewState extends State<_MoveHomeView> {
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
-              Text(
-                'Categoría',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+              Text('Categoría', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: AppSpacing.sm),
               MoveCategorySelector(
                 selected: _category,
@@ -408,7 +401,9 @@ class _MapCard extends StatelessWidget {
         Marker(
           markerId: const MarkerId('origin'),
           position: origin!,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueAzure,
+          ),
           infoWindow: const InfoWindow(title: 'Origen'),
         ),
       if (destination != null)
@@ -482,7 +477,7 @@ class _ChildSelector extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
         DropdownButtonFormField<String>(
-          value: selected?.id ?? '',
+          initialValue: selected?.id ?? '',
           decoration: const InputDecoration(
             prefixIcon: Icon(Icons.person_outline),
           ),
@@ -517,10 +512,7 @@ class _PaymentMethodSelector extends StatelessWidget {
   final MovePaymentMethod selected;
   final ValueChanged<MovePaymentMethod> onChanged;
 
-  static const _methods = [
-    MovePaymentMethod.wallet,
-    MovePaymentMethod.cash,
-  ];
+  static const _methods = [MovePaymentMethod.wallet, MovePaymentMethod.cash];
 
   @override
   Widget build(BuildContext context) {

@@ -214,7 +214,7 @@ class _RechargePageState extends State<RechargePage>
                                 ? null
                                 : () => context
                                       .read<WalletCubit>()
-                                      .pollRechargeIntent(intentId),
+                                      .syncRechargeIntent(intentId),
                           ),
                         ],
                       ),

@@ -1,8 +1,10 @@
+import 'dart:math';
+
 import '../../../../core/country/country_registration.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/errors/error_mapper.dart';
+import '../../../../core/logging/app_logger.dart';
 import '../../../../core/result/result.dart';
-import '../../../payments/domain/entities/payment_intent.dart';
-import '../../../payments/domain/repositories/payments_repository.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../domain/entities/ciervo_wallet_identity.dart';
 import '../../domain/entities/nfc_models.dart';
@@ -15,17 +17,24 @@ import '../../domain/entities/wallet_transaction.dart';
 import '../../domain/repositories/wallet_repository.dart';
 import '../datasources/wallet_remote_datasource.dart';
 import '../dtos/payment_request_dto.dart';
+import '../models/wallet_recharge_session.dart';
+import '../stores/wallet_recharge_session_store.dart';
 
 class WalletRepositoryImpl implements WalletRepository {
-  const WalletRepositoryImpl(
+  WalletRepositoryImpl(
     this._remoteDataSource,
-    this._payments,
     this._profileRepository,
-  );
+    this._rechargeStore, {
+    AppLogger? logger,
+    String Function()? uuid,
+  }) : _logger = logger,
+       _uuid = uuid ?? _uuidV4;
 
   final WalletRemoteDataSource _remoteDataSource;
-  final PaymentsRepository _payments;
   final ProfileRepository _profileRepository;
+  final WalletRechargeSessionStore _rechargeStore;
+  final AppLogger? _logger;
+  final String Function() _uuid;
 
   @override
   Future<Result<List<WalletCard>>> cards() async {
@@ -78,56 +87,73 @@ class WalletRepositoryImpl implements WalletRepository {
     required double amount,
     String? currency,
   }) async {
-    final resolvedCurrency = await resolveRechargeCurrency(currency);
-    final key =
-        'wallet-recharge-$cardId-${DateTime.now().microsecondsSinceEpoch}';
-    final result = await _payments.createWalletRecharge(
-      walletCardId: cardId,
-      amount: amount,
-      currency: resolvedCurrency,
-      idempotencyKey: key,
-    );
-    return result.when(
-      success: (intent) => Success(_mapIntent(intent)),
-      failure: (error) => Failure(error),
-    );
+    await _rechargeStore.clear();
+    try {
+      final profileResult = await _profileRepository.getMe();
+      final profile = switch (profileResult) {
+        Success(value: final value) => value,
+        Failure(error: final error) => throw error,
+      };
+      final countryCode = (profile.countryCode ?? '').trim().toUpperCase();
+      final resolvedCurrency = switch (countryCode) {
+        'CL' => 'CLP',
+        'CO' => 'COP',
+        _ => throw const AppException(
+          message: 'El país del perfil no admite recargas Wallet.',
+          code: 'wallet_recharge_country_unsupported',
+        ),
+      };
+      final idempotencyKey = _uuid();
+      final dto = await _remoteDataSource.createRechargeIntent(
+        cardId,
+        amount,
+        currency: resolvedCurrency,
+        idempotencyKey: idempotencyKey,
+        description: 'Recarga CIERVO Wallet',
+      );
+      final intent = dto.toDomain();
+      if (!intent.isCheckoutHostAllowedFor(countryCode)) {
+        throw const AppException(
+          message: 'El checkout recibido no es válido para tu país.',
+          code: 'wallet_recharge_invalid_checkout_host',
+        );
+      }
+      await _rechargeStore.write(
+        WalletRechargeSession(
+          intentId: intent.id,
+          preferenceId: intent.preferenceId,
+          checkoutUrl: intent.checkoutUrl,
+          currency: resolvedCurrency,
+          countryCode: countryCode,
+          idempotencyKey: idempotencyKey,
+          amount: amount,
+          cardId: cardId,
+        ),
+      );
+      final checkoutHost = Uri.parse(intent.checkoutUrl).host.toLowerCase();
+      _logger?.info(
+        'Wallet recharge checkout created: intentId=${intent.id}, '
+        'countryCode=$countryCode, currency=$resolvedCurrency, '
+        'checkoutHost=$checkoutHost',
+      );
+      return Success(intent);
+    } catch (error) {
+      await _rechargeStore.clear();
+      return Failure(ErrorMapper.fromObject(error));
+    }
   }
 
   @override
   Future<String> resolveRechargeCurrency(String? preferred) async {
-    final fromCard = preferred?.trim().toUpperCase();
     final profileCountry = await _profileCountryCode();
-
-    if (profileCountry != null && profileCountry.isNotEmpty) {
-      final expected = CountryRegistration.currencyForCountry(profileCountry);
-      if (fromCard == null || fromCard.isEmpty) {
-        return expected;
-      }
-      final cardCountry = CountryRegistration.countryCodeFromCurrency(fromCard);
-      // País de cuenta gana si la tarjeta trae moneda de otro país (ej. COP en CL).
-      if (cardCountry != null && cardCountry == profileCountry) {
-        return fromCard;
-      }
-      return expected;
-    }
-
-    if (fromCard != null && fromCard.isNotEmpty) {
-      return fromCard;
-    }
-
-    final configResult = await _payments.config();
-    return configResult.when(
-      success: (config) {
-        final fromConfig = config.currency.trim().toUpperCase();
-        if (fromConfig.isNotEmpty) return fromConfig;
-        return CountryRegistration.currencyForCountry(
-          CountryRegistration.defaultCountryCode(),
-        );
-      },
-      failure: (_) => CountryRegistration.currencyForCountry(
-        CountryRegistration.defaultCountryCode(),
-      ),
-    );
+    if (profileCountry == 'CL') return 'CLP';
+    if (profileCountry == 'CO') return 'COP';
+    final fromCard = preferred?.trim().toUpperCase();
+    return fromCard == 'CLP' || fromCard == 'COP'
+        ? fromCard!
+        : CountryRegistration.currencyForCountry(
+            CountryRegistration.defaultCountryCode(),
+          );
   }
 
   Future<String?> _profileCountryCode() async {
@@ -147,12 +173,19 @@ class WalletRepositoryImpl implements WalletRepository {
       return Success(
         (await _remoteDataSource.rechargeIntent(intentId)).toDomain(),
       );
-    } catch (walletError) {
-      final result = await _payments.intent(intentId);
-      return result.when(
-        success: (intent) => Success(_mapIntent(intent)),
-        failure: (_) => Failure(ErrorMapper.fromObject(walletError)),
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
+  Future<Result<RechargeIntent>> syncRechargeIntent(String intentId) async {
+    try {
+      return Success(
+        (await _remoteDataSource.syncRechargeIntent(intentId)).toDomain(),
       );
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
     }
   }
 
@@ -199,19 +232,6 @@ class WalletRepositoryImpl implements WalletRepository {
 
   @override
   Future<Result<Map<String, dynamic>>> mercadoPagoConfig() async {
-    final result = await _payments.config();
-    if (result case Success(value: final config)) {
-      return Success({
-        'provider': config.provider,
-        'enabled': config.enabled,
-        'isSandbox': config.isSandbox,
-        'publicKey': config.publicKey,
-        'currency': config.currency,
-        'successUrl': config.successUrl,
-        'failureUrl': config.failureUrl,
-        'pendingUrl': config.pendingUrl,
-      });
-    }
     try {
       return Success(await _remoteDataSource.mercadoPagoConfig());
     } catch (error) {
@@ -219,11 +239,18 @@ class WalletRepositoryImpl implements WalletRepository {
     }
   }
 
-  RechargeIntent _mapIntent(PaymentIntent intent) => RechargeIntent(
-    id: intent.id,
-    checkoutUrl: intent.checkoutUrl,
-    status: intent.status,
-  );
+  static String _uuidV4() {
+    final random = Random.secure();
+    final bytes = List<int>.generate(16, (_) => random.nextInt(256));
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    final hex = bytes
+        .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+        .join();
+    return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-'
+        '${hex.substring(12, 16)}-${hex.substring(16, 20)}-'
+        '${hex.substring(20)}';
+  }
 
   @override
   Future<Result<ResolvedWalletUser>> resolveUser(String ciervoUserCode) async {

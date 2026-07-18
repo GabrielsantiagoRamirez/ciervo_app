@@ -33,6 +33,8 @@ import '../features/movie/domain/models/movie_commands.dart';
 import '../features/movie/presentation/cubit/movie_cubit.dart';
 import '../features/movie/presentation/cubit/movie_realtime_cubit.dart';
 import '../features/movie/presentation/pages/movie_pages.dart';
+import '../features/move/presentation/onboarding/move_onboarding_page.dart';
+import '../features/move/presentation/pages/move_driver_page.dart';
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/password_recovery_page.dart';
 import '../features/auth/presentation/pages/register_page.dart';
@@ -58,6 +60,8 @@ abstract final class AppRoutePaths {
   static const movieHistory = '/movie/history';
   static const movieConsume = '/movie/consume';
   static const kidsQr = '/kids-v2/qr';
+  static const moveDriver = '/move/driver';
+  static const moveDriverOnboarding = '/move/driver/onboarding';
 }
 
 GoRouter createAppRouter(
@@ -98,10 +102,15 @@ GoRouter createAppRouter(
       }
 
       final token = await sessionManager.accessToken();
+      final claims = token == null ? null : AuthTokenClaims.fromJwt(token);
       final role = RouteAccessPolicy.roleFromRouteKind(
-        token == null ? 'Client' : AuthTokenClaims.fromJwt(token).routeKind,
+        claims?.routeKind ?? 'Client',
       );
-      if (!RouteAccessPolicy.canAccess(state.uri.path, role)) {
+      if (!RouteAccessPolicy.canAccess(
+        state.uri.path,
+        role,
+        isExplicitClient: claims?.isExplicitClient == true,
+      )) {
         return AppRoutePaths.root;
       }
 
@@ -270,6 +279,19 @@ GoRouter createAppRouter(
         path: AppRoutePaths.kidsQr,
         builder: (context, state) => const _KidsQrRoute(),
       ),
+      GoRoute(
+        path: AppRoutePaths.moveDriver,
+        builder: (context, state) => const MoveDriverPage(),
+      ),
+      GoRoute(
+        path: AppRoutePaths.moveDriverOnboarding,
+        redirect: (_, _) => MoveOnboardingRouteStage.status.path,
+      ),
+      for (final stage in MoveOnboardingRouteStage.values)
+        GoRoute(
+          path: stage.path,
+          builder: (context, state) => MoveOnboardingPage(stage: stage),
+        ),
       GoRoute(
         path: '/master/kids/:kidId/devices',
         builder: (context, state) {

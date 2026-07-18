@@ -5,6 +5,7 @@ import '../../domain/entities/transfer_result.dart';
 class RechargeIntentDto {
   const RechargeIntentDto({
     required this.id,
+    required this.preferenceId,
     required this.checkoutUrl,
     required this.status,
   });
@@ -16,6 +17,7 @@ class RechargeIntentDto {
     final intentSource = intent is Map<String, dynamic> ? intent : source;
     return RechargeIntentDto(
       id: _string(intentSource, const ['id', 'paymentIntentId', 'intentId']),
+      preferenceId: _string(source, const ['preferenceId', 'preference_id']),
       checkoutUrl: _string(source, const [
         'checkoutUrl',
         'initPoint',
@@ -28,11 +30,16 @@ class RechargeIntentDto {
   }
 
   final String id;
+  final String preferenceId;
   final String checkoutUrl;
   final String status;
 
-  RechargeIntent toDomain() =>
-      RechargeIntent(id: id, checkoutUrl: checkoutUrl, status: status);
+  RechargeIntent toDomain() => RechargeIntent(
+    id: id,
+    preferenceId: preferenceId,
+    checkoutUrl: checkoutUrl,
+    status: status,
+  );
 }
 
 class ResolvedWalletUserDto {

@@ -15,4 +15,6 @@ abstract final class AppRoutes {
   static const String movieHistory = AppRoutePaths.movieHistory;
   static const String movieConsume = AppRoutePaths.movieConsume;
   static const String kidsQr = AppRoutePaths.kidsQr;
+  static const String moveDriver = AppRoutePaths.moveDriver;
+  static const String moveDriverOnboarding = AppRoutePaths.moveDriverOnboarding;
 }

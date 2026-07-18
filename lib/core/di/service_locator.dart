@@ -103,7 +103,15 @@ import '../../features/staff_orders/data/staff_orders_repository.dart';
 import '../../features/staff_scanner/data/staff_scanner_repository.dart';
 import '../../features/transport/data/transport_repository.dart';
 import '../../features/move/data/datasources/move_remote_datasource.dart';
+import '../../features/move/data/media/move_media_repository.dart';
+import '../../features/move/data/onboarding/move_onboarding_remote_datasource.dart';
+import '../../features/move/data/onboarding/move_onboarding_repository_impl.dart';
+import '../../features/move/data/onboarding/release_terms_configuration_repository.dart';
+import '../../features/move/data/onboarding/secure_move_onboarding_draft_store.dart';
 import '../../features/move/data/repositories/move_repository_impl.dart';
+import '../../features/move/domain/onboarding/move_onboarding_draft.dart';
+import '../../features/move/domain/onboarding/move_onboarding_repository.dart';
+import '../../features/move/domain/onboarding/move_terms_configuration.dart';
 import '../../features/move/domain/repositories/move_repository.dart';
 import '../../features/movie/data/datasources/movie_remote_datasource.dart';
 import '../../features/movie/data/realtime/movie_realtime_service.dart';
@@ -127,6 +135,7 @@ import '../../features/family_payments/data/services/mercado_pago_card_tokenizer
 import '../../features/family_payments/domain/repositories/family_payments_repository.dart';
 import '../../features/wallet/data/datasources/wallet_remote_datasource.dart';
 import '../../features/wallet/data/repositories/wallet_repository_impl.dart';
+import '../../features/wallet/data/stores/wallet_recharge_session_store.dart';
 import '../../features/wallet/domain/repositories/wallet_repository.dart';
 import '../../features/safety/data/datasources/safety_remote_datasource.dart';
 import '../../features/safety/data/repositories/safety_repository_impl.dart';
@@ -319,6 +328,25 @@ Future<void> configureDependencies() async {
     ..registerLazySingleton<MoveRepository>(
       () => MoveRepositoryImpl(getIt<MoveRemoteDataSource>()),
     )
+    ..registerLazySingleton<MoveOnboardingRemoteDataSource>(
+      () => DioMoveOnboardingRemoteDataSource(getIt<NetworkClient>()),
+    )
+    ..registerLazySingleton<MoveOnboardingRepository>(
+      () =>
+          MoveOnboardingRepositoryImpl(getIt<MoveOnboardingRemoteDataSource>()),
+    )
+    ..registerLazySingleton<MoveOnboardingDraftStore>(
+      () => SecureMoveOnboardingDraftStore(getIt<SecureStorage>()),
+    )
+    ..registerLazySingleton<TermsConfigurationRepository>(
+      () => ReleaseTermsConfigurationRepository(getIt<AppConfig>()),
+    )
+    ..registerLazySingleton<MoveMediaRepository>(
+      () => MoveMediaRepository(
+        client: getIt<NetworkClient>(),
+        sessionManager: getIt<SessionManager>(),
+      ),
+    )
     ..registerLazySingleton<PaymentsRemoteDataSource>(
       () => DioPaymentsRemoteDataSource(getIt<NetworkClient>()),
     )
@@ -344,14 +372,18 @@ Future<void> configureDependencies() async {
     ..registerLazySingleton<WalletRemoteDataSource>(
       () => DioWalletRemoteDataSource(getIt<NetworkClient>()),
     )
+    ..registerLazySingleton<WalletRechargeSessionStore>(
+      () => WalletRechargeSessionStore(getIt<SecureStorage>()),
+    )
     ..registerLazySingleton<PaymentApprovalsRemoteDataSource>(
       () => PaymentApprovalsRemoteDataSource(getIt<NetworkClient>()),
     )
     ..registerLazySingleton<WalletRepository>(
       () => WalletRepositoryImpl(
         getIt<WalletRemoteDataSource>(),
-        getIt<PaymentsRepository>(),
         getIt<ProfileRepository>(),
+        getIt<WalletRechargeSessionStore>(),
+        logger: getIt<AppLogger>(),
       ),
     )
     ..registerLazySingleton<PinsRemoteDataSource>(

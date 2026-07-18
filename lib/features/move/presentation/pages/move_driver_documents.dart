@@ -20,10 +20,7 @@ const _documentTypes = <String, String>{
 };
 
 /// Muestra el formulario para subir un documento del conductor.
-Future<void> showMoveDocumentForm(
-  BuildContext context,
-  MoveDriverCubit cubit,
-) {
+Future<void> showMoveDocumentForm(BuildContext context, MoveDriverCubit cubit) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -78,9 +75,8 @@ class _MoveDocumentFormState extends State<_MoveDocumentForm> {
     if (date != null) setState(() => _expiresAt = date);
   }
 
-  void _message(String text) => ScaffoldMessenger.of(
-    context,
-  ).showSnackBar(SnackBar(content: Text(text)));
+  void _message(String text) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
 
   Future<void> _submit() async {
     if (_photoPath == null || _photoName == null) {
@@ -154,9 +150,7 @@ class _MoveDocumentFormState extends State<_MoveDocumentForm> {
             const SizedBox(height: AppSpacing.md),
             TextField(
               controller: _numberController,
-              decoration: const InputDecoration(
-                labelText: 'Número (opcional)',
-              ),
+              decoration: const InputDecoration(labelText: 'Número (opcional)'),
             ),
             const SizedBox(height: AppSpacing.md),
             ListTile(

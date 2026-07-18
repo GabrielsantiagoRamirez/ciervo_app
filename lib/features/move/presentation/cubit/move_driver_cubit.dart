@@ -26,7 +26,9 @@ class MoveDriverCubit extends Cubit<MoveDriverState> {
   static const _availableInterval = Duration(seconds: 5);
 
   Future<void> load() async {
-    emit(state.copyWith(status: MoveDriverStatusView.loading, clearMessages: true));
+    emit(
+      state.copyWith(status: MoveDriverStatusView.loading, clearMessages: true),
+    );
     final result = await _repository.getDriverProfile();
     await result.when(
       success: (profile) async {
@@ -169,6 +171,17 @@ class MoveDriverCubit extends Cubit<MoveDriverState> {
     AppLocation? location;
     if (goOnline) {
       location = await _safeLocation();
+      if (location == null) {
+        emit(
+          state.copyWith(
+            actionInProgress: false,
+            errorMessage:
+                'No pudimos obtener tu ubicación. Intenta nuevamente antes '
+                'de conectarte.',
+          ),
+        );
+        return;
+      }
     }
     final result = await _repository.setOnline(
       isOnline: goOnline,
@@ -360,10 +373,7 @@ class MoveDriverCubit extends Cubit<MoveDriverState> {
       _availableInterval,
       (_) => refreshAvailable(),
     );
-    _locationTimer = Timer.periodic(
-      _locationInterval,
-      (_) => _pushLocation(),
-    );
+    _locationTimer = Timer.periodic(_locationInterval, (_) => _pushLocation());
   }
 
   void _stopPolling() {

@@ -1,6 +1,5 @@
 // ignore_for_file: use_null_aware_elements
 
-import '../../../../core/country/country_registration.dart';
 import '../../../../core/network/api_response_unwrapper.dart';
 import '../../../../core/network/network_client.dart';
 import '../dtos/nfc_dto.dart';
@@ -22,9 +21,12 @@ abstract interface class WalletRemoteDataSource {
   Future<RechargeIntentDto> createRechargeIntent(
     String cardId,
     double amount, {
-    String? currency,
+    required String currency,
+    required String idempotencyKey,
+    required String description,
   });
   Future<RechargeIntentDto> rechargeIntent(String intentId);
+  Future<RechargeIntentDto> syncRechargeIntent(String intentId);
   Future<ResolvedWalletUserDto> resolveUser(String ciervoUserCode);
   Future<TransferResultDto> transfer({
     required String targetCiervoUserCode,
@@ -149,19 +151,17 @@ class DioWalletRemoteDataSource implements WalletRemoteDataSource {
   Future<RechargeIntentDto> createRechargeIntent(
     String cardId,
     double amount, {
-    String? currency,
+    required String currency,
+    required String idempotencyKey,
+    required String description,
   }) async {
     final response = await _client.dio.post<Map<String, dynamic>>(
       '/api/wallet/cards/$cardId/recharge-intents',
       data: {
         'amount': amount,
-        'currency':
-            (currency ??
-                    CountryRegistration.currencyForCountry(
-                      CountryRegistration.defaultCountryCode(),
-                    ))
-                .toUpperCase(),
-        'idempotencyKey': _idempotencyKey('recharge', cardId),
+        'currency': currency.toUpperCase(),
+        'idempotencyKey': idempotencyKey,
+        'description': description,
       },
     );
     return RechargeIntentDto.fromJson(unwrapApiMap(response.data));
@@ -171,6 +171,15 @@ class DioWalletRemoteDataSource implements WalletRemoteDataSource {
   Future<RechargeIntentDto> rechargeIntent(String intentId) async {
     final response = await _client.dio.get<Map<String, dynamic>>(
       '/api/wallet/recharge-intents/$intentId',
+    );
+    return RechargeIntentDto.fromJson(unwrapApiMap(response.data));
+  }
+
+  @override
+  Future<RechargeIntentDto> syncRechargeIntent(String intentId) async {
+    final response = await _client.dio.post<Map<String, dynamic>>(
+      '/api/wallet/recharge-intents/$intentId/sync',
+      data: const <String, dynamic>{},
     );
     return RechargeIntentDto.fromJson(unwrapApiMap(response.data));
   }

@@ -175,7 +175,9 @@ abstract final class MoveMappers {
     final documentsRaw = json['documents'];
     return MoveDriverProfile(
       id: _str(json, const ['id', 'driverId', 'profileId']) ?? '',
-      status: MoveDriverStatus.fromValue(json['status'] ?? json['driverStatus']),
+      status: MoveDriverStatus.fromValue(
+        json['status'] ?? json['driverStatus'],
+      ),
       fullName: _str(json, const ['fullName', 'name']),
       phone: _str(json, const ['phone']),
       countryCode: _str(json, const ['countryCode', 'country']),

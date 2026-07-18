@@ -184,9 +184,7 @@ class _MoveTripView extends StatelessWidget {
           title: const Text('Cancelar viaje'),
           content: TextField(
             controller: controller,
-            decoration: const InputDecoration(
-              hintText: 'Motivo (opcional)',
-            ),
+            decoration: const InputDecoration(hintText: 'Motivo (opcional)'),
           ),
           actions: [
             TextButton(
@@ -294,10 +292,7 @@ class _KidsTripBanner extends StatelessWidget {
           ),
           if (rule != null && rule.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.xs),
-            Text(
-              rule,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+            Text(rule, style: Theme.of(context).textTheme.bodySmall),
           ],
         ],
       ),
@@ -365,14 +360,18 @@ class _TripMap extends StatelessWidget {
         Marker(
           markerId: const MarkerId('origin'),
           position: LatLng(trip.originLat!, trip.originLng!),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueAzure,
+          ),
           infoWindow: const InfoWindow(title: 'Origen'),
         ),
       if (trip.hasDestination)
         Marker(
           markerId: const MarkerId('destination'),
           position: LatLng(trip.destLat!, trip.destLng!),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueGreen,
+          ),
           infoWindow: const InfoWindow(title: 'Destino'),
         ),
       if (driverLocation case final loc? when loc.hasCoordinates)
@@ -578,10 +577,7 @@ class _OfferTile extends StatelessWidget {
           ),
           if ((offer.message ?? '').isNotEmpty) ...[
             const SizedBox(height: AppSpacing.xs),
-            Text(
-              offer.message!,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+            Text(offer.message!, style: Theme.of(context).textTheme.bodySmall),
           ],
           const SizedBox(height: AppSpacing.sm),
           Row(
@@ -598,10 +594,9 @@ class _OfferTile extends StatelessWidget {
                 child: FilledButton.icon(
                   onPressed: busy
                       ? null
-                      : () =>
-                            context.read<MovePassengerCubit>().acceptOffer(
-                              offer.id,
-                            ),
+                      : () => context.read<MovePassengerCubit>().acceptOffer(
+                          offer.id,
+                        ),
                   icon: const Icon(Icons.check, size: 18),
                   label: const Text('Aceptar'),
                 ),
@@ -675,10 +670,7 @@ class _DriverCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const CircleAvatar(
-                radius: 28,
-                child: Icon(Icons.person),
-              ),
+              const CircleAvatar(radius: 28, child: Icon(Icons.person)),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(

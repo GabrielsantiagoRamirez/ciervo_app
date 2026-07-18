@@ -25,4 +25,21 @@ void main() {
     expect(NotificationDeepLinkParser.parse('/chat/%2e%2e/wallet'), isNull);
     expect(NotificationDeepLinkParser.parse('/unknown/123'), isNull);
   });
+
+  test('solo acepta etapas conocidas del onboarding MOVE Driver', () {
+    expect(
+      NotificationDeepLinkParser.parse(
+        'https://app.ciervo.club/app/move/driver/onboarding/status',
+      ),
+      '/move/driver/onboarding/status',
+    );
+    expect(
+      NotificationDeepLinkParser.parse('/move/driver/onboarding/admin'),
+      isNull,
+    );
+    expect(
+      NotificationDeepLinkParser.parse('/move/driver/onboarding/status/25'),
+      isNull,
+    );
+  });
 }

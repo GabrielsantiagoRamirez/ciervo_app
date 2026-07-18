@@ -1,13 +1,28 @@
 class RechargeIntent {
   const RechargeIntent({
     required this.id,
+    this.preferenceId = '',
     required this.checkoutUrl,
     required this.status,
   });
 
   final String id;
+  final String preferenceId;
   final String checkoutUrl;
   final String status;
+
+  bool isCheckoutHostAllowedFor(String countryCode) {
+    final uri = Uri.tryParse(checkoutUrl);
+    if (uri == null || uri.scheme != 'https' || uri.host.isEmpty) return false;
+    final expected = switch (countryCode.trim().toUpperCase()) {
+      'CL' => 'mercadopago.cl',
+      'CO' => 'mercadopago.com.co',
+      _ => '',
+    };
+    if (expected.isEmpty) return false;
+    final host = uri.host.toLowerCase();
+    return host == expected || host.endsWith('.$expected');
+  }
 
   bool get isSucceeded {
     final normalized = status.toLowerCase();

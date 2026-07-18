@@ -45,12 +45,12 @@ enum MoveTripStatus {
       'driverarrived' || 'driver_arrived' => MoveTripStatus.driverArrived,
       'inprogress' || 'in_progress' => MoveTripStatus.inProgress,
       'completed' => MoveTripStatus.completed,
-      'cancelledbyuser' || 'cancelled_by_user' =>
-        MoveTripStatus.cancelledByUser,
-      'cancelledbydriver' || 'cancelled_by_driver' =>
-        MoveTripStatus.cancelledByDriver,
-      'cancelledbysystem' || 'cancelled_by_system' =>
-        MoveTripStatus.cancelledBySystem,
+      'cancelledbyuser' ||
+      'cancelled_by_user' => MoveTripStatus.cancelledByUser,
+      'cancelledbydriver' ||
+      'cancelled_by_driver' => MoveTripStatus.cancelledByDriver,
+      'cancelledbysystem' ||
+      'cancelled_by_system' => MoveTripStatus.cancelledBySystem,
       'expired' => MoveTripStatus.expired,
       'pendingparent' || 'pending_parent' => MoveTripStatus.pendingParent,
       _ => MoveTripStatus.unknown,
@@ -163,8 +163,9 @@ enum MoveDriverStatus {
     }
     final name = raw?.toString().trim().toLowerCase() ?? '';
     return switch (name) {
-      'pendingreview' || 'pending_review' || 'pending' =>
-        MoveDriverStatus.pendingReview,
+      'pendingreview' ||
+      'pending_review' ||
+      'pending' => MoveDriverStatus.pendingReview,
       'approved' => MoveDriverStatus.approved,
       'rejected' => MoveDriverStatus.rejected,
       'suspended' => MoveDriverStatus.suspended,

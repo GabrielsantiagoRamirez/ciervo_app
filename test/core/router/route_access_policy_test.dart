@@ -85,4 +85,20 @@ void main() {
       isTrue,
     );
   });
+
+  test('restringe onboarding MOVE Driver a Client explícito rol 1', () {
+    const path = '/move/driver/onboarding/identity';
+    expect(RouteAccessPolicy.canAccess(path, AppRouteRole.client), isTrue);
+    expect(
+      RouteAccessPolicy.canAccess(
+        path,
+        AppRouteRole.client,
+        isExplicitClient: false,
+      ),
+      isFalse,
+    );
+    expect(RouteAccessPolicy.canAccess(path, AppRouteRole.kid), isFalse);
+    expect(RouteAccessPolicy.canAccess(path, AppRouteRole.business), isFalse);
+    expect(RouteAccessPolicy.canAccess(path, AppRouteRole.admin), isFalse);
+  });
 }

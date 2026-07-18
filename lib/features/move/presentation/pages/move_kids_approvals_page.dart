@@ -150,8 +150,7 @@ class _MoveKidsApprovalsPageState extends State<MoveKidsApprovalsPage> {
                 AppSpacing.xxl + MediaQuery.paddingOf(context).bottom,
               ),
               itemCount: trips.length,
-              separatorBuilder: (_, _) =>
-                  const SizedBox(height: AppSpacing.md),
+              separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
               itemBuilder: (context, index) {
                 final trip = trips[index];
                 return _ApprovalCard(

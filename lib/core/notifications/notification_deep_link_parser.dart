@@ -100,6 +100,29 @@ class NotificationDeepLinkParser {
         lower[1] == 'payment-requests') {
       return '/master/payment-requests';
     }
+    if (lower.length == 2 && root == 'move' && lower[1] == 'driver') {
+      return '/move/driver';
+    }
+    if (lower.length == 3 &&
+        root == 'move' &&
+        lower[1] == 'driver' &&
+        lower[2] == 'onboarding') {
+      return '/move/driver/onboarding';
+    }
+    if (lower.length == 4 &&
+        root == 'move' &&
+        lower[1] == 'driver' &&
+        lower[2] == 'onboarding' &&
+        {
+          'identity',
+          'license',
+          'vehicle',
+          'operations',
+          'review',
+          'status',
+        }.contains(lower[3])) {
+      return '/${lower.join('/')}';
+    }
 
     const rootsWithoutId = {
       'vakupli',

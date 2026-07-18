@@ -11,7 +11,11 @@ abstract final class RouteAccessPolicy {
     };
   }
 
-  static bool canAccess(String path, AppRouteRole role) {
+  static bool canAccess(
+    String path,
+    AppRouteRole role, {
+    bool isExplicitClient = true,
+  }) {
     final normalized = Uri.tryParse(path)?.path ?? path;
 
     if (normalized == '/movie/consume') {
@@ -43,6 +47,10 @@ abstract final class RouteAccessPolicy {
     }
     if (normalized == '/kids-v2/qr') {
       return role == AppRouteRole.kid;
+    }
+    if (normalized == '/move/driver' ||
+        normalized.startsWith('/move/driver/')) {
+      return role == AppRouteRole.client && isExplicitClient;
     }
     if (normalized == '/movies' ||
         normalized.startsWith('/movies/') ||

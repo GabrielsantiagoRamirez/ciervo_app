@@ -183,6 +183,9 @@ class NotificationDeepLink {
     final text = '$type $category'.toLowerCase();
     final publicId =
         data['resourceId']?.toString() ?? data['publicId']?.toString();
+    if (_openMoveDriverTarget(context, text)) {
+      return true;
+    }
     if (_openMovieOrKidsTarget(context, text, data)) {
       return true;
     }
@@ -352,7 +355,35 @@ class NotificationDeepLink {
     return path.startsWith('/movie-requests/') ||
         path.startsWith('/movie/qr/') ||
         path.startsWith('/movie/reservations/') ||
+        path == '/move/driver' ||
+        path.startsWith('/move/driver/') ||
         path.startsWith('/master/');
+  }
+
+  static bool _openMoveDriverTarget(BuildContext context, String text) {
+    final isDriverEvent =
+        text.contains('move.driver.') ||
+        text.contains('move_driver_') ||
+        text.contains('move driver');
+    if (!isDriverEvent) return false;
+    const supportedEvents = {
+      'submitted',
+      'approve',
+      'approved',
+      'reject',
+      'rejected',
+      'request-correction',
+      'correction',
+      'suspend',
+      'suspended',
+      'reactivate',
+      'reactivated',
+      'requirement.expired',
+      'expired',
+    };
+    if (!supportedEvents.any(text.contains)) return false;
+    context.push('/move/driver/onboarding/status');
+    return true;
   }
 
   static bool _openMovieOrKidsTarget(

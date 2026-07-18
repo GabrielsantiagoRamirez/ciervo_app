@@ -9,6 +9,13 @@ class AppConfig {
     required this.refreshTokenPath,
     required this.connectTimeout,
     required this.receiveTimeout,
+    this.moveOnboardingEnabled = false,
+    this.moveTermsCoTextBase64 = '',
+    this.moveTermsCoVersion = '',
+    this.moveTermsCoContentHash = '',
+    this.moveTermsClTextBase64 = '',
+    this.moveTermsClVersion = '',
+    this.moveTermsClContentHash = '',
   });
 
   /// Configuración central por ambiente.
@@ -26,6 +33,34 @@ class AppConfig {
       'AUTH_REFRESH_PATH',
       defaultValue: '/api/auth/refresh-token',
     );
+    const moveOnboardingEnabled = bool.fromEnvironment(
+      'MOVE_ONBOARDING_ENABLED',
+      defaultValue: false,
+    );
+    const moveTermsCoTextBase64 = String.fromEnvironment(
+      'MOVE_TERMS_CO_TEXT_BASE64',
+      defaultValue: '',
+    );
+    const moveTermsCoVersion = String.fromEnvironment(
+      'MOVE_TERMS_CO_VERSION',
+      defaultValue: '',
+    );
+    const moveTermsCoContentHash = String.fromEnvironment(
+      'MOVE_TERMS_CO_CONTENT_HASH',
+      defaultValue: '',
+    );
+    const moveTermsClTextBase64 = String.fromEnvironment(
+      'MOVE_TERMS_CL_TEXT_BASE64',
+      defaultValue: '',
+    );
+    const moveTermsClVersion = String.fromEnvironment(
+      'MOVE_TERMS_CL_VERSION',
+      defaultValue: '',
+    );
+    const moveTermsClContentHash = String.fromEnvironment(
+      'MOVE_TERMS_CL_CONTENT_HASH',
+      defaultValue: '',
+    );
 
     final environment = environmentName.isNotEmpty
         ? AppEnvironmentX.fromName(environmentName)
@@ -41,6 +76,13 @@ class AppConfig {
       refreshTokenPath: refreshTokenPath,
       connectTimeout: const Duration(seconds: 20),
       receiveTimeout: const Duration(seconds: 30),
+      moveOnboardingEnabled: moveOnboardingEnabled,
+      moveTermsCoTextBase64: moveTermsCoTextBase64,
+      moveTermsCoVersion: moveTermsCoVersion,
+      moveTermsCoContentHash: moveTermsCoContentHash,
+      moveTermsClTextBase64: moveTermsClTextBase64,
+      moveTermsClVersion: moveTermsClVersion,
+      moveTermsClContentHash: moveTermsClContentHash,
     );
   }
 
@@ -49,4 +91,11 @@ class AppConfig {
   final String refreshTokenPath;
   final Duration connectTimeout;
   final Duration receiveTimeout;
+  final bool moveOnboardingEnabled;
+  final String moveTermsCoTextBase64;
+  final String moveTermsCoVersion;
+  final String moveTermsCoContentHash;
+  final String moveTermsClTextBase64;
+  final String moveTermsClVersion;
+  final String moveTermsClContentHash;
 }
