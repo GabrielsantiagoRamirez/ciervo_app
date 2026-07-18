@@ -132,7 +132,7 @@ class AuthBootstrapService {
       );
     } catch (error) {
       if (kDebugMode) {
-        debugPrint('[AUTH] reconcile Firebase falló: $error');
+        debugPrint('[AUTH] reconcile Firebase falló: ${error.runtimeType}');
       }
       if (hasJwt) {
         final refreshed = await _tokenRefresher.refreshAccessToken();

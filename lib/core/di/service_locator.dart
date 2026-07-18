@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 import '../analytics/analytics_service.dart';
 import '../config/app_config.dart';
 import '../crash/crash_reporting_service.dart';
+import '../device/device_installation_service.dart';
 import '../logging/app_logger.dart';
 import '../network/auth_token_refresher.dart';
 import '../network/network_client.dart';
@@ -54,6 +55,16 @@ import '../../features/universal_nfc/domain/repositories/universal_nfc_repositor
 import '../../features/kid_auth/data/datasources/kid_auth_remote_datasource.dart';
 import '../../features/kid_auth/data/repositories/kid_auth_repository_impl.dart';
 import '../../features/kid_me/data/kid_me_repository.dart';
+import '../../features/kids_v2/data/datasources/kids_v2_remote_datasource.dart'
+    as kids_v2_ds;
+import '../../features/kids_v2/data/repositories/kids_v2_repositories.dart'
+    as kids_v2_repo;
+import '../../features/master_kids/data/datasources/master_kids_remote_datasource.dart'
+    as master_ds;
+import '../../features/master_kids/data/repositories/master_kids_repository.dart'
+    as master_repo;
+import '../../features/business_nfc/data/business_nfc_remote_datasource.dart';
+import '../../features/business_nfc/data/business_nfc_repository.dart';
 import '../../features/catalogs/data/catalog_repository.dart';
 import '../../features/exchange/data/exchange_rate_repository.dart';
 import '../../features/kyc/data/kyc_repository.dart';
@@ -94,6 +105,13 @@ import '../../features/transport/data/transport_repository.dart';
 import '../../features/move/data/datasources/move_remote_datasource.dart';
 import '../../features/move/data/repositories/move_repository_impl.dart';
 import '../../features/move/domain/repositories/move_repository.dart';
+import '../../features/movie/data/datasources/movie_remote_datasource.dart';
+import '../../features/movie/data/realtime/movie_realtime_service.dart';
+import '../../features/movie/data/realtime/movie_realtime_cursor_store.dart';
+import '../../features/movie/data/repositories/movie_repository_impl.dart';
+import '../../features/movie/domain/repositories/movie_repository.dart';
+import '../../features/movie/presentation/cubit/movie_cubit.dart';
+import '../../features/movie/presentation/cubit/movie_realtime_cubit.dart';
 import '../../features/pins/data/datasources/pins_remote_datasource.dart';
 import '../../features/pins/data/durable_pin_service.dart';
 import '../../features/pins/data/pin_p2p_service.dart';
@@ -137,6 +155,9 @@ Future<void> configureDependencies() async {
     ..registerLazySingleton<SessionManager>(
       () => SessionManager(getIt<SecureStorage>()),
     )
+    ..registerLazySingleton<DeviceInstallationService>(
+      () => DeviceInstallationService(getIt<SecureStorage>()),
+    )
     ..registerLazySingleton<LocationService>(
       () => GeolocatorLocationService(getIt<SecureStorage>()),
     )
@@ -163,7 +184,6 @@ Future<void> configureDependencies() async {
         config: getIt<AppConfig>(),
         sessionManager: getIt<SessionManager>(),
         tokenRefresher: getIt<AuthTokenRefresher>(),
-        logger: getIt<AppLogger>(),
       ),
     )
     ..registerLazySingleton<AnalyticsService>(
@@ -370,7 +390,11 @@ Future<void> configureDependencies() async {
       () => KidsRepositoryImpl(getIt<KidsRemoteDataSource>()),
     )
     ..registerLazySingleton<KidAuthRemoteDataSource>(
-      () => DioKidAuthRemoteDataSource(getIt<NetworkClient>()),
+      () => DioKidAuthRemoteDataSource(
+        getIt<NetworkClient>(),
+        getIt<DeviceInstallationService>(),
+        getIt<AppVersionService>(),
+      ),
     )
     ..registerLazySingleton<KidAuthRepository>(
       () => KidAuthRepositoryImpl(getIt<KidAuthRemoteDataSource>()),
@@ -401,6 +425,7 @@ Future<void> configureDependencies() async {
         getIt<AppConfig>(),
         getIt<SessionManager>(),
         getIt<NotificationsSync>(),
+        getIt<SecureStorage>(),
       ),
     )
     ..registerLazySingleton<KycRepository>(
@@ -414,7 +439,11 @@ Future<void> configureDependencies() async {
       ),
     )
     ..registerLazySingleton<NotificationsRemoteDataSource>(
-      () => DioNotificationsRemoteDataSource(getIt<NetworkClient>()),
+      () => DioNotificationsRemoteDataSource(
+        getIt<NetworkClient>(),
+        getIt<DeviceInstallationService>(),
+        getIt<AppVersionService>(),
+      ),
     )
     ..registerLazySingleton<NotificationsRepository>(
       () => NotificationsRepositoryImpl(getIt<NotificationsRemoteDataSource>()),
@@ -448,5 +477,63 @@ Future<void> configureDependencies() async {
     ..registerLazySingleton<PromotionsRepository>(
       () =>
           PromotionsRepository(getIt<NetworkClient>(), getIt<SecureStorage>()),
+    )
+    ..registerLazySingleton<MovieRemoteDataSource>(
+      () => DioMovieRemoteDataSource(getIt<NetworkClient>()),
+    )
+    ..registerLazySingleton<MovieRepository>(
+      () => MovieRepositoryImpl(getIt<MovieRemoteDataSource>()),
+    )
+    ..registerFactory<MovieRealtimeService>(
+      () => MovieRealtimeService(getIt<MovieRepository>()),
+    )
+    ..registerLazySingleton<MovieRealtimeCursorStore>(
+      () => MovieRealtimeCursorStore(
+        getIt<SecureStorage>(),
+        getIt<SessionManager>(),
+      ),
+    )
+    ..registerFactory<MovieCubit>(() => MovieCubit(getIt<MovieRepository>()))
+    ..registerFactory<MovieRealtimeCubit>(
+      () => MovieRealtimeCubit(
+        getIt<MovieRealtimeService>(),
+        cursorStore: getIt<MovieRealtimeCursorStore>(),
+      ),
+    )
+    ..registerLazySingleton<kids_v2_ds.KidsV2RemoteDataSource>(
+      () => kids_v2_ds.DioKidsV2RemoteDataSource(getIt<NetworkClient>()),
+    )
+    ..registerLazySingleton<kids_v2_repo.KidSessionStore>(
+      () => kids_v2_repo.SessionManagerKidSessionStore(getIt<SessionManager>()),
+    )
+    ..registerLazySingleton<kids_v2_repo.KidsAuthRepository>(
+      () => kids_v2_repo.KidsAuthRepositoryImpl(
+        getIt<kids_v2_ds.KidsV2RemoteDataSource>(),
+        getIt<kids_v2_repo.KidSessionStore>(),
+      ),
+    )
+    ..registerLazySingleton<kids_v2_repo.KidsRepository>(
+      () => kids_v2_repo.KidsRepositoryImpl(
+        getIt<kids_v2_ds.KidsV2RemoteDataSource>(),
+      ),
+    )
+    ..registerLazySingleton<kids_v2_repo.KidsRealtimeRepository>(
+      () => kids_v2_repo.KidsRealtimeRepositoryImpl(
+        getIt<kids_v2_ds.KidsV2RemoteDataSource>(),
+      ),
+    )
+    ..registerLazySingleton<master_ds.MasterKidsRemoteDataSource>(
+      () => master_ds.DioMasterKidsRemoteDataSource(getIt<NetworkClient>()),
+    )
+    ..registerLazySingleton<master_repo.MasterKidsRepository>(
+      () => master_repo.MasterKidsRepositoryImpl(
+        getIt<master_ds.MasterKidsRemoteDataSource>(),
+      ),
+    )
+    ..registerLazySingleton<BusinessNfcRemoteDataSource>(
+      () => DioBusinessNfcRemoteDataSource(getIt<NetworkClient>()),
+    )
+    ..registerLazySingleton<BusinessNfcRepository>(
+      () => BusinessNfcRepositoryImpl(getIt<BusinessNfcRemoteDataSource>()),
     );
 }

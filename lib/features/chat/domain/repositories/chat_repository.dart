@@ -46,6 +46,13 @@ abstract interface class ChatRepository {
     String? storagePath,
     String? mediaType,
   });
+  Future<Result<ChatMessage>> shareMovie({
+    required String movieId,
+    String? conversationId,
+    String? chatId,
+    String? ciervoId,
+    String? message,
+  });
   Future<Result<List<ChatButton>>> buttons();
   Future<Result<void>> markAsRead(String id);
 }

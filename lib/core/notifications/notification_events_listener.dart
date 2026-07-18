@@ -1,41 +1,67 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:dio/dio.dart';
 
 import '../config/app_config.dart';
 import '../di/service_locator.dart';
+import '../session/auth_token_claims.dart';
 import '../session/session_manager.dart';
+import '../storage/secure_storage.dart';
 import '../../features/memberships/presentation/cubit/membership_cubit.dart';
 import 'notifications_sync.dart';
 
-/// Escucha SSE de `/api/notifications/events` y dispara sync de inbox.
+/// Escucha SSE de `/api/v1/notifications/events` y dispara sync de inbox.
 class NotificationEventsListener {
   NotificationEventsListener(
     this._config,
     this._sessionManager,
     this._notificationsSync,
+    this._storage,
   );
 
   final AppConfig _config;
   final SessionManager _sessionManager;
   final NotificationsSync _notificationsSync;
+  final SecureStorage _storage;
 
   CancelToken? _cancelToken;
   int _sinceId = 0;
+  int _reconnectAttempt = 0;
+  String? _activeCursorKey;
+  static const _cursorKeyPrefix = 'ciervo.notifications.sinceId';
 
   Future<void> start() async {
     if (_cancelToken != null) return;
+    final cancelToken = CancelToken();
+    _cancelToken = cancelToken;
     final token = await _sessionManager.accessToken();
-    if (token == null || token.isEmpty) return;
+    if (token == null || token.isEmpty) {
+      _cancelToken = null;
+      return;
+    }
+    final cursorKey = _cursorKeyFor(token);
+    if (_activeCursorKey != cursorKey) {
+      _activeCursorKey = cursorKey;
+      _sinceId = cursorKey == null
+          ? 0
+          : int.tryParse(await _storage.read(cursorKey) ?? '') ?? 0;
+    }
 
-    _cancelToken = CancelToken();
-    unawaited(_listen(token, _cancelToken!));
+    unawaited(_listen(token, cancelToken));
   }
 
-  void stop() {
+  void stop({bool clearCursor = false}) {
     _cancelToken?.cancel();
     _cancelToken = null;
+    _reconnectAttempt = 0;
+    if (clearCursor) {
+      final cursorKey = _activeCursorKey;
+      if (cursorKey != null) unawaited(_storage.delete(cursorKey));
+      _activeCursorKey = null;
+      _sinceId = 0;
+    }
   }
 
   Future<void> _listen(String token, CancelToken cancelToken) async {
@@ -54,7 +80,7 @@ class NotificationEventsListener {
       );
 
       final response = await dio.get<ResponseBody>(
-        '/api/notifications/events',
+        '/api/v1/notifications/events',
         queryParameters: {'sinceId': _sinceId},
         cancelToken: cancelToken,
       );
@@ -65,7 +91,10 @@ class NotificationEventsListener {
       var buffer = '';
       await for (final chunk in stream) {
         if (cancelToken.isCancelled) break;
-        buffer += utf8.decode(chunk, allowMalformed: true);
+        buffer += utf8
+            .decode(chunk, allowMalformed: true)
+            .replaceAll('\r\n', '\n');
+        _reconnectAttempt = 0;
         while (buffer.contains('\n\n')) {
           final index = buffer.indexOf('\n\n');
           final block = buffer.substring(0, index);
@@ -78,7 +107,13 @@ class NotificationEventsListener {
     } finally {
       if (!cancelToken.isCancelled) {
         _cancelToken = null;
-        await Future<void>.delayed(const Duration(seconds: 5));
+        final delays = <int>[1, 2, 5, 10, 30];
+        final seconds = delays[min(_reconnectAttempt, delays.length - 1)];
+        _reconnectAttempt++;
+        final jitter = Random.secure().nextInt(500);
+        await Future<void>.delayed(
+          Duration(seconds: seconds, milliseconds: jitter),
+        );
         await start();
       }
     }
@@ -98,6 +133,10 @@ class NotificationEventsListener {
             final parsed = id is int ? id : int.tryParse('$id');
             if (parsed != null && parsed > _sinceId) {
               _sinceId = parsed;
+              final cursorKey = _activeCursorKey;
+              if (cursorKey != null) {
+                unawaited(_storage.write(cursorKey, '$_sinceId'));
+              }
             }
             final eventType =
                 '${notification['eventType'] ?? notification['type'] ?? notification['category'] ?? ''}';
@@ -111,6 +150,13 @@ class NotificationEventsListener {
       break;
     }
   }
+
+  String? _cursorKeyFor(String token) {
+    final userId = AuthTokenClaims.fromJwt(token).userId;
+    if (userId == null || userId.trim().isEmpty) return null;
+    final encoded = base64Url.encode(utf8.encode(userId)).replaceAll('=', '');
+    return '$_cursorKeyPrefix.$encoded';
+  }
 }
 
 void startNotificationEventsListener() {
@@ -118,7 +164,7 @@ void startNotificationEventsListener() {
   unawaited(getIt<NotificationEventsListener>().start());
 }
 
-void stopNotificationEventsListener() {
+void stopNotificationEventsListener({bool clearCursor = false}) {
   if (!getIt.isRegistered<NotificationEventsListener>()) return;
-  getIt<NotificationEventsListener>().stop();
+  getIt<NotificationEventsListener>().stop(clearCursor: clearCursor);
 }

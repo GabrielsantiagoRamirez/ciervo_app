@@ -1,19 +1,18 @@
 import 'package:dio/dio.dart';
 
 import '../config/app_config.dart';
-import '../config/app_environment.dart';
-import '../logging/app_logger.dart';
 import '../session/session_manager.dart';
+import 'api_envelope_interceptor.dart';
 import 'auth_interceptor.dart';
 import 'auth_token_refresher.dart';
 import 'correlation_interceptor.dart';
+import 'retry_interceptor.dart';
 
 class NetworkClient {
   NetworkClient({
     required AppConfig config,
     required SessionManager sessionManager,
     required AuthTokenRefresher tokenRefresher,
-    required AppLogger logger,
   }) : dio = Dio(
          BaseOptions(
            baseUrl: config.apiBaseUrl,
@@ -26,6 +25,8 @@ class NetworkClient {
          ),
        ) {
     dio.interceptors.add(CorrelationInterceptor());
+    dio.interceptors.add(RetryInterceptor(dio));
+    dio.interceptors.add(ApiEnvelopeInterceptor());
     dio.interceptors.add(
       AuthInterceptor(
         sessionManager: sessionManager,
@@ -33,15 +34,6 @@ class NetworkClient {
         dio: dio,
       ),
     );
-    if (config.environment.enablesVerboseLogs) {
-      dio.interceptors.add(
-        LogInterceptor(
-          requestBody: false,
-          responseBody: false,
-          logPrint: (object) => logger.info(object.toString()),
-        ),
-      );
-    }
   }
 
   final Dio dio;

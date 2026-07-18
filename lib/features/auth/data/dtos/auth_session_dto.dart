@@ -14,11 +14,13 @@ class AuthSessionDto {
     this.authAction,
     this.linkedLegacy = false,
     this.refreshPath,
+    this.deviceId,
   });
 
   factory AuthSessionDto.fromJson(
     Map<String, dynamic> json, {
     String? refreshPath,
+    String? deviceId,
   }) {
     final data = json['value'] ?? json['data'];
     final source = data is Map<String, dynamic> ? data : json;
@@ -64,6 +66,7 @@ class AuthSessionDto {
       authAction: _optionalString(source, const ['authAction']),
       linkedLegacy: source['linkedLegacy'] == true,
       refreshPath: refreshPath,
+      deviceId: deviceId,
     );
   }
 
@@ -78,6 +81,7 @@ class AuthSessionDto {
   final String? authAction;
   final bool linkedLegacy;
   final String? refreshPath;
+  final String? deviceId;
 
   AuthSession toDomain() {
     return AuthSession(
@@ -85,6 +89,7 @@ class AuthSessionDto {
         accessToken: accessToken,
         refreshToken: refreshToken,
         refreshPath: refreshPath,
+        deviceId: deviceId,
       ),
       userId: userId,
       email: email,

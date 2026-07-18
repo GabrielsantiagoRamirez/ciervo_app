@@ -91,6 +91,25 @@ class ChatMessage {
     if (meta == null) return null;
     return ChatGiftPayload.fromJson(meta);
   }
+
+  ChatMoviePayload? get moviePayload {
+    final type = messageType.toLowerCase();
+    final meta = _metadata;
+    if (meta == null) return null;
+    final payloadType =
+        '${meta['shareType'] ?? meta['type'] ?? meta['kind'] ?? ''}'
+            .toLowerCase();
+    final isMovie =
+        type.contains('movie') ||
+        payloadType.contains('movie') ||
+        meta['movieId'] != null ||
+        meta['movie'] is Map;
+    if (!isMovie) return null;
+    final source = meta['movie'] is Map
+        ? Map<String, dynamic>.from(meta['movie'] as Map)
+        : meta;
+    return ChatMoviePayload.fromJson(source);
+  }
 }
 
 class ChatLocationPayload {
@@ -186,6 +205,36 @@ class ChatGiftPayload {
   final num amount;
   final String currency;
   final String? description;
+}
+
+class ChatMoviePayload {
+  const ChatMoviePayload({
+    required this.movieId,
+    required this.title,
+    this.imageUrl,
+    this.minimumAge,
+    this.showtimeId,
+    this.requestId,
+  });
+
+  factory ChatMoviePayload.fromJson(Map<String, dynamic> json) {
+    return ChatMoviePayload(
+      movieId: '${json['movieId'] ?? json['id'] ?? ''}',
+      title: '${json['movieTitle'] ?? json['title'] ?? 'Película'}',
+      imageUrl: json['imageUrl']?.toString() ?? json['posterUrl']?.toString(),
+      minimumAge: int.tryParse('${json['minimumAge'] ?? ''}'),
+      showtimeId: json['showtimeId']?.toString(),
+      requestId:
+          json['movieRequestId']?.toString() ?? json['requestId']?.toString(),
+    );
+  }
+
+  final String movieId;
+  final String title;
+  final String? imageUrl;
+  final int? minimumAge;
+  final String? showtimeId;
+  final String? requestId;
 }
 
 class BookingReceipt {

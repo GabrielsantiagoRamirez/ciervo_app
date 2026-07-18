@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/di/service_locator.dart';
 import '../../core/session/auth_token_claims.dart';
@@ -26,6 +27,7 @@ import '../../features/wallet/presentation/pages/wallet_page.dart';
 import '../../features/family_payments/presentation/pages/family_payment_navigation.dart';
 import '../../features/universal_nfc/presentation/pages/kids_nfc_parent_approvals_page.dart';
 import '../../features/universal_nfc/presentation/pages/universal_nfc_pay_page.dart';
+import 'notification_deep_link_parser.dart';
 
 /// Navega desde una notificacion (in-app o push) a la pantalla correspondiente.
 class NotificationDeepLink {
@@ -68,8 +70,14 @@ class NotificationDeepLink {
     String link,
     AppNotification? item,
   ) {
-    final path = link.startsWith('/') ? link : '/$link';
+    final path = NotificationDeepLinkParser.parse(link);
+    if (path == null) return false;
     final lower = path.toLowerCase();
+
+    if (_isGuardedRouterPath(lower)) {
+      context.push(path);
+      return true;
+    }
 
     if (FamilyPaymentNavigation.openFromDeepLink(context, path)) {
       return true;
@@ -115,7 +123,9 @@ class NotificationDeepLink {
       }
       return false;
     }
-    if (lower.contains('/move') || lower.contains('/ride') || lower.contains('/trip')) {
+    if (lower.contains('/move') ||
+        lower.contains('/ride') ||
+        lower.contains('/trip')) {
       final id = _segmentId(path);
       if (id != null && int.tryParse(id) != null) {
         _push(context, MoveTripPage(tripId: id));
@@ -173,6 +183,9 @@ class NotificationDeepLink {
     final text = '$type $category'.toLowerCase();
     final publicId =
         data['resourceId']?.toString() ?? data['publicId']?.toString();
+    if (_openMovieOrKidsTarget(context, text, data)) {
+      return true;
+    }
     if (text.contains('secure_shipment') ||
         text.contains('secure shipment') ||
         text.startsWith('secure_')) {
@@ -325,7 +338,66 @@ class NotificationDeepLink {
   static String? _segmentId(String path) {
     final parts = path.split('/').where((p) => p.isNotEmpty).toList();
     if (parts.isEmpty) return null;
-    return parts.last;
+    final id = parts.last;
+    if (id.length > 128 ||
+        !RegExp(r'^[a-zA-Z0-9._~-]+$').hasMatch(id) ||
+        id == '.' ||
+        id == '..') {
+      return null;
+    }
+    return id;
+  }
+
+  static bool _isGuardedRouterPath(String path) {
+    return path.startsWith('/movie-requests/') ||
+        path.startsWith('/movie/qr/') ||
+        path.startsWith('/movie/reservations/') ||
+        path.startsWith('/master/');
+  }
+
+  static bool _openMovieOrKidsTarget(
+    BuildContext context,
+    String text,
+    Map<String, dynamic> data,
+  ) {
+    final requestId =
+        data['movieRequestId']?.toString() ??
+        data['requestId']?.toString() ??
+        data['resourceId']?.toString();
+    final reservationId =
+        data['movieReservationId']?.toString() ??
+        data['reservationId']?.toString();
+    final conversationId =
+        data['conversationId']?.toString() ??
+        data['chatConversationId']?.toString();
+
+    String? raw;
+    if (text.contains('movie') && text.contains('chat')) {
+      if (conversationId != null) raw = '/movie/chat/$conversationId';
+    } else if (text.contains('movie') && text.contains('payment')) {
+      if (reservationId != null) {
+        raw = '/movie/reservations/$reservationId/payment';
+      }
+    } else if (text.contains('movie') && text.contains('qr')) {
+      if (reservationId != null) raw = '/movie/qr/$reservationId';
+    } else if (text.contains('movie') && text.contains('request')) {
+      if (requestId != null) raw = '/movie/request/$requestId';
+    } else if (text.contains('kids') && text.contains('device')) {
+      final kidId =
+          data['kidId']?.toString() ?? data['childProfileId']?.toString();
+      if (kidId != null) raw = '/kids/device/$kidId';
+    } else if (text.contains('kids') && text.contains('request')) {
+      if (requestId != null) raw = '/kids/request/$requestId';
+    }
+    if (raw == null) return false;
+    final path = NotificationDeepLinkParser.parse(raw);
+    if (path == null) return false;
+    if (_isGuardedRouterPath(path)) {
+      context.push(path);
+    } else {
+      _openPath(context, path, null);
+    }
+    return true;
   }
 
   static void _push(BuildContext context, Widget page) {

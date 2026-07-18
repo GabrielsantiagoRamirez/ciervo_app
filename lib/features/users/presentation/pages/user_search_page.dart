@@ -217,7 +217,7 @@ class _UserSearchPageState extends State<UserSearchPage> {
                       ciervoId: user.ciervoUserCode,
                     ).isEmpty
                     ? [
-                        if (user.distanceLabel != null) user.distanceLabel,
+                        if (user.distanceLabel.isNotEmpty) user.distanceLabel,
                         if (user.city != null) user.city,
                         if (user.country != null) user.country,
                       ].whereType<String>().join(' · ')
@@ -439,7 +439,7 @@ class _UserSearchPageState extends State<UserSearchPage> {
             if (identity.isNotEmpty) identity,
             if (user.phoneMasked != null) user.phoneMasked,
             if (user.matchedByPhone) 'Contacto del teléfono',
-            if (user.distanceLabel != null) user.distanceLabel,
+            if (user.distanceLabel.isNotEmpty) user.distanceLabel,
             if (user.distanceKm == null && user.city != null) user.city,
             if (user.country != null) user.country,
           ].join(' · ');

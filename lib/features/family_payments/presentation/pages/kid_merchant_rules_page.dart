@@ -26,7 +26,6 @@ class _KidMerchantRulesPageState extends State<KidMerchantRulesPage> {
   final _searchController = TextEditingController();
   KidMerchantRules _rules = const KidMerchantRules();
   List<Map<String, dynamic>> _categories = const [];
-  List<Map<String, dynamic>> _businesses = const [];
   List<Map<String, dynamic>> _searchResults = const [];
   bool _loading = true;
   bool _saving = false;
@@ -64,7 +63,7 @@ class _KidMerchantRulesPageState extends State<KidMerchantRulesPage> {
       failure: (e) => error ??= UserErrorMessage.from(e),
     );
     businesses.when(
-      success: (items) => _businesses = _mapList(items),
+      success: (items) => _searchResults = _mapList(items),
       failure: (e) => error ??= UserErrorMessage.from(e),
     );
     setState(() {

@@ -1,3 +1,4 @@
+import 'package:ciervo_clud/features/chat/data/dtos/chat_dtos.dart';
 import 'package:ciervo_clud/features/chat/domain/entities/chat_message.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -34,5 +35,33 @@ void main() {
     );
     expect(malformed.bookingReceipt, isNull);
     expect(text.bookingReceipt, isNull);
+  });
+
+  test('parses a typed Movie share payload', () {
+    const message = ChatMessage(
+      id: 'movie-message',
+      body: 'Miremos esta película',
+      messageType: 'Share',
+      isMine: false,
+      metadataJson:
+          '{"type":"movie_share","movie":{"movieId":"11111111-1111-1111-1111-111111111111","title":"Ciervo: La película","minimumAge":12,"imageUrl":"https://cdn.example/movie.jpg"}}',
+    );
+
+    expect(
+      message.moviePayload?.movieId,
+      '11111111-1111-1111-1111-111111111111',
+    );
+    expect(message.moviePayload?.title, 'Ciervo: La película');
+    expect(message.moviePayload?.minimumAge, 12);
+  });
+
+  test('accepts the v2 text alias as message body', () {
+    final message = messageFromJson({
+      'id': 9,
+      'messageType': 'Text',
+      'text': 'Mensaje v2',
+    });
+
+    expect(message.body, 'Mensaje v2');
   });
 }

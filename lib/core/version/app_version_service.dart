@@ -12,6 +12,8 @@ class AppVersionService {
     return 'v${info.version} (${info.buildNumber})';
   }
 
+  Future<String> version() async => (await load()).version;
+
   Future<int> buildNumber() async {
     final info = await load();
     return int.tryParse(info.buildNumber) ?? 0;

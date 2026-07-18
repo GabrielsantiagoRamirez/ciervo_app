@@ -1,14 +1,19 @@
 import '../errors/app_exception.dart';
+import 'api_models.dart';
 
 Object? unwrapApiResponse(Object? response) {
   if (response is Map<String, dynamic>) {
     if (response['status'] == false) {
+      final problem = ProblemDetailsModel.fromJson(response);
       throw AppException(
         message:
-            response['msg']?.toString() ?? 'No pudimos completar la solicitud.',
+            response['msg']?.toString() ??
+            problem.safeMessage ??
+            'No pudimos completar la solicitud.',
         code: response['errorCode']?.toString() ?? response['code']?.toString(),
+        statusCode: problem.status,
         correlationId: response['correlationId']?.toString(),
-        fieldErrors: _fieldErrors(response['errors']),
+        fieldErrors: problem.errors,
       );
     }
     if (response.containsKey('value')) {
@@ -35,17 +40,4 @@ List<dynamic> unwrapApiList(Object? response) {
     return value['items'] as List;
   }
   return const [];
-}
-
-Map<String, List<String>> _fieldErrors(Object? raw) {
-  if (raw is! Map) return const <String, List<String>>{};
-
-  return Map<String, List<String>>.unmodifiable(
-    raw.map((key, value) {
-      final messages = value is Iterable
-          ? value.map((item) => item.toString()).toList(growable: false)
-          : <String>[if (value != null) value.toString()];
-      return MapEntry(key.toString(), messages);
-    }),
-  );
 }

@@ -57,6 +57,14 @@ class AuthTokenClaims {
   final String? role;
   final String? businessRoleId;
 
+  String? get userId => _firstString(claims, const [
+    'nameidentifier',
+    'sub',
+    'userId',
+    'user_id',
+    'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier',
+  ]);
+
   int? get childProfileId {
     for (final key in const [
       'childProfileId',
@@ -82,6 +90,28 @@ class AuthTokenClaims {
     return null;
   }
 
+  int? get age {
+    for (final key in const ['age', 'kidAge', 'kid_age']) {
+      final parsed = int.tryParse('${claims[key] ?? ''}');
+      if (parsed != null && parsed >= 0 && parsed <= 120) return parsed;
+    }
+    final rawBirthDate = _firstString(claims, const [
+      'birthDate',
+      'birth_date',
+      'dateOfBirth',
+      'date_of_birth',
+    ]);
+    final birthDate = DateTime.tryParse(rawBirthDate ?? '');
+    if (birthDate == null) return null;
+    final now = DateTime.now();
+    var value = now.year - birthDate.year;
+    if (now.month < birthDate.month ||
+        (now.month == birthDate.month && now.day < birthDate.day)) {
+      value--;
+    }
+    return value >= 0 && value <= 120 ? value : null;
+  }
+
   String get routeKind {
     final values = [
       accountKind,
@@ -90,10 +120,17 @@ class AuthTokenClaims {
       claims['account_type']?.toString(),
     ].whereType<String>().map((item) => item.toLowerCase()).join(' ');
 
-    if (values.contains('superadmin') || values.contains('super_admin')) {
+    if (role == '3' ||
+        values.contains('platformadmin') ||
+        values.contains('platform_admin') ||
+        values.contains('superadmin') ||
+        values.contains('super_admin')) {
       return 'SuperAdmin';
     }
-    if (values.contains('businessowner') ||
+    if (role == '2' ||
+        values.contains('businessuser') ||
+        values.contains('business_user') ||
+        values.contains('businessowner') ||
         values.contains('business_owner') ||
         values.contains('owner') ||
         values.contains('dueno') ||

@@ -12,8 +12,6 @@ import 'core/experience/experience_mode_cubit.dart';
 import 'core/notifications/ciervo_push_service.dart';
 import 'core/notifications/notifications_sync.dart';
 import 'core/notifications/notification_events_listener.dart';
-import 'core/permissions/app_permission_service.dart';
-import 'features/onboarding/entry_permissions_prompt.dart';
 import 'core/session/session_manager.dart';
 import 'core/session/session_state.dart';
 import 'core/theme/app_theme.dart';
@@ -39,8 +37,6 @@ class _CiervoAppState extends State<CiervoApp> with WidgetsBindingObserver {
   late final NotificationBadgesCubit _badgesCubit;
   late final ExperienceModeCubit _experienceModeCubit;
   StreamSubscription<void>? _notificationsSyncSubscription;
-  bool _requestingEntryPermissions = false;
-  bool _entryPermissionsHandled = false;
 
   @override
   void initState() {
@@ -62,20 +58,8 @@ class _CiervoAppState extends State<CiervoApp> with WidgetsBindingObserver {
         });
     _onSessionChanged(_sessionManager.state);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _ensureEntryPermissions();
+      unawaited(getIt<CiervoPushService>().initialize());
     });
-  }
-
-  Future<void> _ensureEntryPermissions() async {
-    if (_entryPermissionsHandled) return;
-    _entryPermissionsHandled = true;
-    final context = rootNavigatorKey.currentContext;
-    if (context != null) {
-      await EntryPermissionsPrompt.showIfNeeded(context);
-    }
-    await getIt<AppPermissionService>().requestRequiredEntryPermissions();
-    await getIt<CiervoPushService>().initialize();
-    await getIt<CiervoPushService>().syncTokenIfAuthenticated();
   }
 
   @override
@@ -94,30 +78,12 @@ class _CiervoAppState extends State<CiervoApp> with WidgetsBindingObserver {
       startNotificationEventsListener();
       _badgesCubit.refresh();
       getIt<MembershipCubit>().load();
-      _requestEntryPermissionsWhenAuthenticated(state);
     } else {
-      stopNotificationEventsListener();
+      stopNotificationEventsListener(clearCursor: true);
       getIt<MembershipCubit>().clear();
       _badgesCubit.clear();
       _experienceModeCubit.requireSelection();
     }
-  }
-
-  void _requestEntryPermissionsWhenAuthenticated(SessionState state) {
-    if (state.status != SessionStatus.authenticated ||
-        _requestingEntryPermissions) {
-      return;
-    }
-    _requestingEntryPermissions = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      try {
-        await getIt<AppPermissionService>().requestRequiredEntryPermissions();
-        await getIt<CiervoPushService>().initialize();
-        await getIt<CiervoPushService>().syncTokenIfAuthenticated();
-      } finally {
-        _requestingEntryPermissions = false;
-      }
-    });
   }
 
   @override
@@ -125,7 +91,12 @@ class _CiervoAppState extends State<CiervoApp> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed &&
         _sessionManager.state.status == SessionStatus.authenticated) {
       unawaited(getIt<CiervoPushService>().syncTokenIfAuthenticated());
+      startNotificationEventsListener();
       _badgesCubit.refresh();
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
+      stopNotificationEventsListener();
     }
   }
 

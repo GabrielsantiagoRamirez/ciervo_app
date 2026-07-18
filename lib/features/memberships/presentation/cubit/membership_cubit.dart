@@ -26,8 +26,8 @@ class MembershipCubit extends Cubit<MembershipState> {
     var limits = state.limits;
     String? error;
 
-    final meResult = results[0] as Result<Map<String, dynamic>>;
-    final benefitsResult = results[1] as Result<Map<String, dynamic>>;
+    final meResult = results[0];
+    final benefitsResult = results[1];
     final limitsResult = results[2] as Result<Map<String, PlanLimit>>;
 
     meResult.when(

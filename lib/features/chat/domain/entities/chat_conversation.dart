@@ -27,6 +27,6 @@ class ChatConversation {
   final String? lastMessage;
   final DateTime? updatedAt;
 
-  bool get canSend => status == 'Open';
+  bool get canSend => status.toLowerCase() == 'open';
   bool get isDirect => type.toLowerCase().contains('direct');
 }

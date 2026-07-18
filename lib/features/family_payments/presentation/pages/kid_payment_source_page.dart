@@ -5,7 +5,6 @@ import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/layout/responsive_layout.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
-import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
 import '../../domain/entities/family_payment_card.dart';

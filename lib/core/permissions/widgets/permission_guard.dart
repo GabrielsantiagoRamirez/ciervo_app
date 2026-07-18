@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../app_permission_state.dart';
 import '../permission_kind.dart';
 import '../permission_manager.dart';
 import 'permission_denied_state.dart';
@@ -9,7 +10,7 @@ class PermissionGuard extends StatefulWidget {
   const PermissionGuard({
     required this.kind,
     required this.builder,
-    this.autoRequest = true,
+    this.autoRequest = false,
     super.key,
   });
 
@@ -33,9 +34,14 @@ class _PermissionGuardState extends State<PermissionGuard> {
 
   Future<void> _check({required bool request}) async {
     setState(() => _checking = true);
-    final granted = request
-        ? await PermissionManager.instance.ensure(context, widget.kind)
-        : false;
+    final manager = PermissionManager.instance;
+    late final bool granted;
+    if (request) {
+      if (!mounted) return;
+      granted = await manager.ensure(context, widget.kind);
+    } else {
+      granted = (await manager.status(widget.kind)).allowsUse;
+    }
     if (!mounted) return;
     setState(() {
       _granted = granted;

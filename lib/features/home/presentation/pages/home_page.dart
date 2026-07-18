@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/kids/selected_kid_context.dart';
 import '../../../../shared/widgets/kids_mode_banner.dart';
@@ -174,19 +175,17 @@ class _HomeViewState extends State<_HomeView> {
                               children: [
                                 HomeTopBar(
                                   mode: modeState.mode,
-                                  activeFilterCount:
-                                      state.filters.activeCount,
+                                  activeFilterCount: state.filters.activeCount,
                                   onModeChanged: (mode) {
-                                    context
-                                        .read<ExperienceModeCubit>()
-                                        .setMode(mode);
+                                    context.read<ExperienceModeCubit>().setMode(
+                                      mode,
+                                    );
                                   },
                                   onOpenFilters: () async {
-                                    final applied =
-                                        await showSmartFiltersSheet(
-                                          context: context,
-                                          initial: state.filters,
-                                        );
+                                    final applied = await showSmartFiltersSheet(
+                                      context: context,
+                                      initial: state.filters,
+                                    );
                                     if (applied != null && context.mounted) {
                                       await cubit.applyFilters(applied);
                                     }
@@ -208,6 +207,12 @@ class _HomeViewState extends State<_HomeView> {
                                 HomeSearchBar(onSubmitted: cubit.search),
                                 const SizedBox(height: AppSpacing.md),
                                 _CurrentCountry(countryCode: state.countryCode),
+                                const SizedBox(height: AppSpacing.md),
+                                CiervoButton(
+                                  label: 'Películas y entradas',
+                                  icon: Icons.local_movies_outlined,
+                                  onPressed: () => context.push('/movies'),
+                                ),
                                 if (shouldShowPermission) ...[
                                   const SizedBox(height: AppSpacing.lg),
                                   LocationPermissionCard(

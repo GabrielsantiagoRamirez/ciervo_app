@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:nfc_manager/nfc_manager.dart';
@@ -34,6 +35,50 @@ abstract final class NfcTagReader {
     } catch (_) {}
 
     return uid;
+  }
+
+  /// Lee el contenido NDEF textual/JSON sin persistirlo.
+  static Future<String?> readPayload({
+    Duration timeout = const Duration(seconds: 30),
+  }) async {
+    if (!await isAvailable()) return null;
+    String? payload;
+    var completed = false;
+
+    await NfcManager.instance.startSession(
+      onDiscovered: (tag) async {
+        final message = Ndef.from(tag)?.cachedMessage;
+        for (final record in message?.records ?? const <NdefRecord>[]) {
+          payload = _decodePayload(record.payload);
+          if (payload != null) break;
+        }
+        completed = true;
+        await NfcManager.instance.stopSession();
+      },
+    );
+
+    final started = DateTime.now();
+    while (!completed && DateTime.now().difference(started) < timeout) {
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+    }
+    try {
+      await NfcManager.instance.stopSession();
+    } catch (_) {}
+    return payload;
+  }
+
+  static String? _decodePayload(Uint8List bytes) {
+    if (bytes.isEmpty) return null;
+    final direct = utf8.decode(bytes, allowMalformed: true).trim();
+    if (direct.startsWith('{') && direct.endsWith('}')) return direct;
+
+    final languageLength = bytes.first & 0x3f;
+    final textStart = 1 + languageLength;
+    if (textStart >= bytes.length) return null;
+    final text = utf8
+        .decode(bytes.sublist(textStart), allowMalformed: true)
+        .trim();
+    return text.isEmpty ? null : text;
   }
 
   static String? _extractUid(NfcTag tag) {

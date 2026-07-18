@@ -307,10 +307,11 @@ class KidsRepositoryImpl implements KidsRepository {
   }
 
   @override
-  Future<Result<void>> approvePayForMeRequest(int requestId) async {
+  Future<Result<Map<String, dynamic>>> approvePayForMeRequest(
+    int requestId,
+  ) async {
     try {
-      await _remoteDataSource.approvePayForMeRequest(requestId);
-      return const Success<void>(null);
+      return Success(await _remoteDataSource.approvePayForMeRequest(requestId));
     } catch (error) {
       return Failure(ErrorMapper.fromObject(error));
     }

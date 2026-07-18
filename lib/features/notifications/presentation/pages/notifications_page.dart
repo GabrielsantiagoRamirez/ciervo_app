@@ -9,6 +9,9 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/notifications/notifications_sync.dart';
 import '../../../../core/notifications/notification_deep_link.dart';
+import '../../../../core/permissions/app_permission_state.dart';
+import '../../../../core/permissions/permission_kind.dart';
+import '../../../../core/permissions/permission_manager.dart';
 import '../../../../core/layout/ciervo_page_layout.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../wallet/presentation/widgets/ciervo_digital_card.dart';
@@ -133,6 +136,7 @@ class _NotificationsViewState extends State<_NotificationsView> {
     ),
     body: Column(
       children: [
+        const _PushPermissionCard(),
         SizedBox(
           height: 44,
           child: ListView(
@@ -336,6 +340,63 @@ class _NotificationsViewState extends State<_NotificationsView> {
       ],
     ),
   );
+}
+
+class _PushPermissionCard extends StatefulWidget {
+  const _PushPermissionCard();
+
+  @override
+  State<_PushPermissionCard> createState() => _PushPermissionCardState();
+}
+
+class _PushPermissionCardState extends State<_PushPermissionCard> {
+  AppPermissionState? _state;
+
+  @override
+  void initState() {
+    super.initState();
+    _refresh();
+  }
+
+  Future<void> _refresh() async {
+    final state = await PermissionManager.instance.status(
+      AppPermissionKind.notifications,
+    );
+    if (mounted) setState(() => _state = state);
+  }
+
+  Future<void> _enable() async {
+    await PermissionManager.instance.ensure(
+      context,
+      AppPermissionKind.notifications,
+    );
+    if (mounted) await _refresh();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = _state;
+    if (state == null || state.allowsUse) return const SizedBox.shrink();
+    return MaterialBanner(
+      content: Text(
+        state.needsSettings
+            ? 'Las notificaciones están bloqueadas en el sistema.'
+            : 'Activa las notificaciones para recibir alertas de pagos, seguridad y Movie.',
+      ),
+      leading: const Icon(Icons.notifications_off_outlined),
+      actions: [
+        TextButton(
+          onPressed: state.needsSettings
+              ? () async {
+                  await PermissionManager.instance.openSettings();
+                  await _refresh();
+                }
+              : _enable,
+          child: Text(state.needsSettings ? 'Abrir ajustes' : 'Activar'),
+        ),
+      ],
+    );
+  }
 }
 
 String _formatNotificationDate(DateTime date) {
@@ -614,45 +675,4 @@ Map<String, bool> _boolMap(Map<String, dynamic> source) {
     if (value is bool) result[entry.key] = value;
   }
   return result;
-}
-
-Map<String, List<String>> _groupedPreferenceKeys(Iterable<String> keys) {
-  final groups = <String, List<String>>{
-    'Mensajes': [],
-    'Wallet': [],
-    'Pagos': [],
-    'Reservas': [],
-    'Delivery': [],
-    'Eventos': [],
-    'Promociones': [],
-    'Recompensas': [],
-    'Seguridad': [],
-    'Sistema': [],
-  };
-  for (final key in keys) {
-    groups[_groupFor(key)]!.add(key);
-  }
-  groups.removeWhere((_, value) => value.isEmpty);
-  return groups;
-}
-
-String _groupFor(String key) {
-  final text = key.toLowerCase();
-  if (text.contains('message') || text.contains('chat')) return 'Mensajes';
-  if (text.contains('wallet')) return 'Wallet';
-  if (text.contains('pago') || text.contains('payment')) return 'Pagos';
-  if (text.contains('booking') || text.contains('reserv')) return 'Reservas';
-  if (text.contains('delivery') || text.contains('order')) return 'Delivery';
-  if (text.contains('event') || text.contains('ticket')) return 'Eventos';
-  if (text.contains('promo') || text.contains('coupon')) return 'Promociones';
-  if (text.contains('reward') || text.contains('recompensa')) {
-    return 'Recompensas';
-  }
-  if (text.contains('security') ||
-      text.contains('seguridad') ||
-      text.contains('kyc') ||
-      text.contains('fraud')) {
-    return 'Seguridad';
-  }
-  return 'Sistema';
 }

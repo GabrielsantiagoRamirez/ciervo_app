@@ -123,6 +123,25 @@ class ChatRepositoryImpl implements ChatRepository {
   );
 
   @override
+  Future<Result<ChatMessage>> shareMovie({
+    required String movieId,
+    String? conversationId,
+    String? chatId,
+    String? ciervoId,
+    String? message,
+  }) => _guard(
+    () async => messageFromJson(
+      await _remote.shareMovie(
+        movieId: movieId,
+        conversationId: conversationId,
+        chatId: chatId,
+        ciervoId: ciervoId,
+        message: message,
+      ),
+    ),
+  );
+
+  @override
   Future<Result<ChatMessage>> sendMedia(
     String id,
     String path,

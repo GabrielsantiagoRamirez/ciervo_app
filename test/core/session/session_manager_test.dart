@@ -13,6 +13,7 @@ void main() {
         accessToken: 'access',
         refreshToken: 'refresh',
         refreshPath: '/api/v1/kids/auth/refresh',
+        deviceId: 'device-123',
       ),
     );
 
@@ -21,6 +22,7 @@ void main() {
     expect(storage.values['ciervo.accessToken'], isNull);
     expect(storage.values['ciervo.refreshToken'], isNull);
     expect(storage.values['ciervo.authTokens.v2'], contains('refreshPath'));
+    expect((await manager.tokens())?.deviceId, 'device-123');
   });
 
   test(

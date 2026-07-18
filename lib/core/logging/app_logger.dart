@@ -18,7 +18,10 @@ class AppLogger {
 
   void error(String message, Object error, StackTrace stackTrace) {
     if (_config.environment.enablesVerboseLogs) {
-      debugPrint('CIERVO ERROR: $message\n$error\n$stackTrace');
+      debugPrint(
+        'CIERVO ERROR: ${sanitizeForLog(message)}\n'
+        '${sanitizeForLog(error.toString())}\n$stackTrace',
+      );
     }
   }
 
@@ -26,7 +29,30 @@ class AppLogger {
     if (!_config.environment.enablesVerboseLogs) {
       return;
     }
-    final suffix = error == null ? '' : ' | $error';
-    debugPrint('CIERVO $level: $message$suffix');
+    final suffix = error == null ? '' : ' | ${sanitizeForLog('$error')}';
+    debugPrint('CIERVO $level: ${sanitizeForLog(message)}$suffix');
   }
+}
+
+String sanitizeForLog(String value) {
+  var sanitized = value;
+  sanitized = sanitized.replaceAllMapped(
+    RegExp(
+      r'(authorization\s*[:=]\s*bearer\s+)[^\s,;}]+',
+      caseSensitive: false,
+    ),
+    (match) => '${match.group(1)}[REDACTED]',
+  );
+  sanitized = sanitized.replaceAll(
+    RegExp(r'[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}'),
+    '[REDACTED_JWT]',
+  );
+  sanitized = sanitized.replaceAllMapped(
+    RegExp(
+      r'''(["']?(?:accessToken|refreshToken|firebaseIdToken|fcmToken|token|pin|merchantQr|payloadNfc)["']?\s*[:=]\s*["']?)([^"',}\s]+)''',
+      caseSensitive: false,
+    ),
+    (match) => '${match.group(1)}[REDACTED]',
+  );
+  return sanitized;
 }

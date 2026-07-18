@@ -8,27 +8,29 @@ import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
 import '../../../kid_pay_for_me/presentation/pages/kid_pay_for_me_request_page.dart';
-import '../../../universal_nfc/presentation/pages/kid_universal_nfc_pay_page.dart';
-import '../../../../core/country/country_registration.dart';
-import '../../../kid_me/data/kid_me_repository.dart';
+import '../../../kids_v2/data/repositories/kids_v2_repositories.dart';
+import '../../../kids_v2/domain/models/kids_v2_models.dart';
 
 class KidBusinessesPage extends StatefulWidget {
-  const KidBusinessesPage({super.key});
+  const KidBusinessesPage({this.repository, super.key});
+
+  final KidsRepository? repository;
 
   @override
   State<KidBusinessesPage> createState() => _KidBusinessesPageState();
 }
 
 class _KidBusinessesPageState extends State<KidBusinessesPage> {
-  final _repository = getIt<KidMeRepository>();
+  late final KidsRepository _repository;
   final _search = TextEditingController();
-  List<Map<String, dynamic>> _items = const [];
+  List<KidsCommerceItem> _items = const [];
   bool _loading = true;
   String? _error;
 
   @override
   void initState() {
     super.initState();
+    _repository = widget.repository ?? getIt<KidsRepository>();
     _load();
   }
 
@@ -43,9 +45,7 @@ class _KidBusinessesPageState extends State<KidBusinessesPage> {
       _loading = true;
       _error = null;
     });
-    final result = await _repository.allowedBusinesses(
-      query: _search.text.trim(),
-    );
+    final result = await _repository.searchCommerce(name: _search.text.trim());
     if (!mounted) return;
     result.when(
       success: (items) => setState(() {
@@ -56,6 +56,76 @@ class _KidBusinessesPageState extends State<KidBusinessesPage> {
         _error = UserErrorMessage.from(error);
         _loading = false;
       }),
+    );
+  }
+
+  Future<void> _readQr() => _resolveCommerce(
+    title: 'Leer QR de comercio',
+    label: 'Contenido del QR',
+    action: (value) => _repository.readCommerceQr(CommerceQrReadRequest(value)),
+  );
+
+  Future<void> _validateId() => _resolveCommerce(
+    title: 'Validar ID de comercio',
+    label: 'ID numérico',
+    action: (value) {
+      final id = int.tryParse(value);
+      if (id == null || id <= 0) {
+        throw const FormatException('invalid-commerce-id');
+      }
+      return _repository.validateCommerceId(CommerceIdValidateRequest(id));
+    },
+  );
+
+  Future<void> _resolveCommerce({
+    required String title,
+    required String label,
+    required Future<dynamic> Function(String value) action,
+  }) async {
+    final controller = TextEditingController();
+    final value = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(title),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(labelText: label),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.pop(dialogContext, controller.text.trim()),
+            child: const Text('Validar'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (value == null || value.isEmpty || !mounted) return;
+    try {
+      final dynamic result = await action(value);
+      if (!mounted) return;
+      result.when(
+        success: (KidsCommerceItem item) => _openBusinessActions(item),
+        failure: (Object error) =>
+            setState(() => _error = UserErrorMessage.from(error)),
+      );
+    } on FormatException catch (error) {
+      if (mounted) setState(() => _error = UserErrorMessage.from(error));
+    }
+  }
+
+  Future<void> _openDetail(KidsCommerceItem item) async {
+    final result = await _repository.commerce(item.commerceId);
+    if (!mounted) return;
+    result.when(
+      success: _openBusinessActions,
+      failure: (error) => setState(() => _error = UserErrorMessage.from(error)),
     );
   }
 
@@ -80,6 +150,26 @@ class _KidBusinessesPageState extends State<KidBusinessesPage> {
               ),
               onSubmitted: (_) => _load(),
             ),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _readQr,
+                    icon: const Icon(Icons.qr_code_scanner),
+                    label: const Text('Leer QR'),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _validateId,
+                    icon: const Icon(Icons.verified_outlined),
+                    label: const Text('Validar ID'),
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: AppSpacing.lg),
             if (_loading)
               const CiervoLoadingState(itemCount: 4)
@@ -88,7 +178,8 @@ class _KidBusinessesPageState extends State<KidBusinessesPage> {
             else if (_items.isEmpty)
               const CiervoEmptyState(
                 title: 'Sin comercios',
-                description: 'Tu tutor aún no ha habilitado comercios para ti.',
+                description:
+                    'No encontramos comercios CIERVO disponibles con esa búsqueda.',
                 icon: Icons.storefront_outlined,
               )
             else
@@ -99,27 +190,15 @@ class _KidBusinessesPageState extends State<KidBusinessesPage> {
                     child: ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.storefront_outlined),
-                      title: Text('${item['name'] ?? 'Comercio'}'),
+                      title: Text(item.name),
                       subtitle: Text(
-                        [
-                              if (item['ciervoUserCode'] != null)
-                                '@${item['ciervoUserCode']}',
-                              item['categoryName'] ?? item['category'],
-                              item['city'],
-                              item['country'] != null
-                                  ? CountryRegistration.countryLabel(
-                                      '${item['country']}',
-                                    )
-                                  : item['zone'],
-                              if (item['status'] != null) '${item['status']}',
-                            ]
-                            .where((v) => v != null && '$v'.isNotEmpty)
+                        [item.address, item.city]
+                            .whereType<String>()
+                            .where((value) => value.isNotEmpty)
                             .join(' · '),
                       ),
-                      trailing: item['isOpen'] == false
-                          ? const Text('Cerrado')
-                          : const Icon(Icons.chevron_right),
-                      onTap: () => _openBusinessActions(context, item),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => _openDetail(item),
                     ),
                   ),
                 ),
@@ -130,14 +209,7 @@ class _KidBusinessesPageState extends State<KidBusinessesPage> {
     );
   }
 
-  Future<void> _openBusinessActions(
-    BuildContext context,
-    Map<String, dynamic> item,
-  ) async {
-    final businessId = '${item['id'] ?? item['businessId'] ?? ''}';
-    final businessName = '${item['name'] ?? 'Comercio'}';
-    if (businessId.isEmpty) return;
-
+  Future<void> _openBusinessActions(KidsCommerceItem item) async {
     await showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -149,38 +221,31 @@ class _KidBusinessesPageState extends State<KidBusinessesPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                businessName,
+                item.name,
                 style: Theme.of(sheetContext).textTheme.titleLarge,
               ),
+              if (item.address != null) Text(item.address!),
+              Text(
+                item.acceptsCiervoPayments
+                    ? 'Acepta pagos CIERVO'
+                    : 'No acepta pagos CIERVO',
+              ),
+              if (item.requiresReservation)
+                const Text('Este comercio requiere reserva'),
               const SizedBox(height: AppSpacing.md),
               ListTile(
                 leading: const Icon(Icons.family_restroom_outlined),
-                title: const Text('Pedir a mi familia'),
-                subtitle: const Text('Tu tutor aprueba el pago'),
+                title: const Text('Solicitar con Pinduck'),
+                subtitle: const Text(
+                  'El comercio y las reglas se validan antes de avisar a tu tutor',
+                ),
                 onTap: () async {
                   Navigator.pop(sheetContext);
                   await Navigator.of(context).push<bool>(
                     MaterialPageRoute(
                       builder: (_) => KidPayForMeRequestPage(
-                        businessId: businessId,
-                        businessName: businessName,
-                      ),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.nfc),
-                title: const Text('Pagar con NFC Universal'),
-                subtitle: const Text('Acerca tu dispositivo al datáfono'),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => KidUniversalNfcPayPage(
-                        businessId: businessId,
-                        businessName: businessName,
-                        merchantId: int.tryParse(businessId),
+                        businessId: '${item.commerceId}',
+                        businessName: item.name,
                       ),
                     ),
                   );

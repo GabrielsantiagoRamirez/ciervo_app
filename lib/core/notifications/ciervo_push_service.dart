@@ -32,7 +32,6 @@ class CiervoPushService {
 
   Future<void> initialize() async {
     if (_listenersBound) {
-      await NotificationPresenter.ensureDisplayPermission();
       await syncTokenIfAuthenticated();
       return;
     }
@@ -41,18 +40,12 @@ class CiervoPushService {
     } on TimeoutException {
       debugPrint('[FCM] Inicializacion cancelada por tiempo de espera.');
     } catch (error) {
-      debugPrint('[FCM] Inicializacion fallida: $error');
+      debugPrint('[FCM] Inicializacion fallida: ${error.runtimeType}');
     }
   }
 
   Future<void> _initializeInternal() async {
     await NotificationPresenter.ensureInitialized();
-    final permissionOk = await NotificationPresenter.ensureDisplayPermission();
-    if (!permissionOk) {
-      debugPrint(
-        '[FCM] Notificaciones del sistema desactivadas. Activalas en Ajustes.',
-      );
-    }
 
     if (!_hasValidFirebaseOptions()) {
       debugPrint(
@@ -67,7 +60,7 @@ class CiervoPushService {
       );
       _firebaseReady = true;
     } catch (error) {
-      debugPrint('[FCM] Firebase no configurado: $error');
+      debugPrint('[FCM] Firebase no configurado: ${error.runtimeType}');
       return;
     }
 
@@ -90,10 +83,12 @@ class CiervoPushService {
     final initial = await messaging.getInitialMessage();
     if (initial != null) _handleOpenedPayload(initial.data);
 
-    final token = await messaging.getToken().timeout(
-      const Duration(seconds: 8),
-    );
-    if (token != null) await _registerToken(token);
+    if (await NotificationPresenter.hasDisplayPermission()) {
+      final token = await messaging.getToken().timeout(
+        const Duration(seconds: 8),
+      );
+      if (token != null) await _registerToken(token);
+    }
   }
 
   bool _hasValidFirebaseOptions() {
@@ -108,11 +103,11 @@ class CiervoPushService {
     if (!_firebaseReady) return;
     if (_sessionManager.state.status.name != 'authenticated') return;
     try {
-      await NotificationPresenter.ensureDisplayPermission();
+      if (!await NotificationPresenter.hasDisplayPermission()) return;
       final token = await FirebaseMessaging.instance.getToken();
       if (token != null) await _registerToken(token);
     } catch (error) {
-      debugPrint('[FCM] sync token error: $error');
+      debugPrint('[FCM] sync token error: ${error.runtimeType}');
     }
   }
 
@@ -124,7 +119,7 @@ class CiervoPushService {
       }
       _currentToken = null;
     } catch (error) {
-      debugPrint('[FCM] unregister error: $error');
+      debugPrint('[FCM] unregister error: ${error.runtimeType}');
     }
   }
 
@@ -139,7 +134,7 @@ class CiervoPushService {
       _currentToken = token;
       debugPrint('[FCM] Token registrado en backend.');
     } catch (error) {
-      debugPrint('[FCM] register token error: $error');
+      debugPrint('[FCM] register token error: ${error.runtimeType}');
     }
   }
 

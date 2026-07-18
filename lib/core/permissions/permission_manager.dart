@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import '../di/service_locator.dart';
+import '../notifications/ciervo_push_service.dart';
+import 'app_permission_state.dart';
 import 'app_permission_service.dart';
 import 'permission_kind.dart';
 import 'widgets/permission_explanation_modal.dart';
@@ -15,11 +16,20 @@ class PermissionManager {
   static PermissionManager get instance =>
       PermissionManager(getIt<AppPermissionService>());
 
+  Future<AppPermissionState> status(AppPermissionKind kind) =>
+      _service.status(kind);
+
+  Future<bool> openSettings() => _service.openSettings();
+
   Future<bool> ensure(
     BuildContext context,
     AppPermissionKind kind, {
     bool showExplanation = true,
   }) async {
+    if (!context.mounted) return false;
+    final current = await _service.status(kind);
+    if (current.allowsUse) return true;
+    if (!current.canRequest) return false;
     if (!context.mounted) return false;
 
     if (showExplanation) {
@@ -41,19 +51,17 @@ class PermissionManager {
   }
 
   Future<bool> _requestLocation() async {
-    await _service.requestRequiredEntryPermissions();
-    return true;
+    return _service.requestLocationIfNeeded();
   }
 
   Future<bool> _requestNotifications() async {
-    final status = await Permission.notification.status;
-    if (status.isGranted || status.isLimited) return true;
-    if (status.isPermanentlyDenied) {
-      await openAppSettings();
-      return false;
+    final granted = await _service.requestNotificationsIfNeeded();
+    if (granted && getIt.isRegistered<CiervoPushService>()) {
+      final push = getIt<CiervoPushService>();
+      await push.initialize();
+      await push.syncTokenIfAuthenticated();
     }
-    final result = await Permission.notification.request();
-    return result.isGranted || result.isLimited;
+    return granted;
   }
 
   Future<bool> _nfcAvailable() async {

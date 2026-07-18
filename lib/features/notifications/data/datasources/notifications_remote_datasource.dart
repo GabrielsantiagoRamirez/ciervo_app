@@ -1,9 +1,10 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, TargetPlatform;
 
+import '../../../../core/device/device_installation_service.dart';
 import '../../../../core/network/api_response_unwrapper.dart';
 import '../../../../core/network/network_client.dart';
+import '../../../../core/version/app_version_service.dart';
 import '../dtos/app_notification_dto.dart';
 import '../../domain/entities/notification_badges.dart';
 
@@ -27,8 +28,16 @@ abstract interface class NotificationsRemoteDataSource {
 
 class DioNotificationsRemoteDataSource
     implements NotificationsRemoteDataSource {
-  const DioNotificationsRemoteDataSource(this._client);
+  const DioNotificationsRemoteDataSource(
+    this._client,
+    this._deviceInstallation,
+    this._appVersion,
+  );
+
   final NetworkClient _client;
+  final DeviceInstallationService _deviceInstallation;
+  final AppVersionService _appVersion;
+  static const _base = '/api/v1/notifications';
 
   @override
   Future<List<AppNotificationDto>> notifications({
@@ -37,7 +46,7 @@ class DioNotificationsRemoteDataSource
     bool? isRead,
   }) async {
     final response = await _client.dio.get<dynamic>(
-      '/api/notifications',
+      _base,
       queryParameters: {
         if (category != null && category.isNotEmpty) 'category': category,
         if (type != null && type.isNotEmpty) 'type': type,
@@ -50,92 +59,69 @@ class DioNotificationsRemoteDataSource
   @override
   Future<NotificationBadges> badges() async {
     final response = await _client.dio.get<Map<String, dynamic>>(
-      '/api/notifications/badges',
+      '$_base/badges',
     );
     return NotificationBadges.fromJson(unwrapApiMap(response.data));
   }
 
   @override
   Future<void> markAsRead(String id) async {
-    await _client.dio.post<void>('/api/notifications/$id/read');
+    await _client.dio.post<void>('$_base/$id/read');
   }
 
   @override
   Future<void> markAllAsRead() async {
-    await _client.dio.post<void>('/api/notifications/read-all');
+    await _client.dio.post<void>('$_base/read-all');
   }
 
   @override
   Future<void> deleteNotification(String id) async {
-    await _client.dio.delete<void>('/api/notifications/$id');
+    await _client.dio.delete<void>('$_base/$id');
   }
 
   @override
   Future<void> deleteAllNotifications() async {
-    await _client.dio.delete<void>('/api/notifications');
+    await _client.dio.delete<void>(_base);
   }
 
   @override
   Future<Map<String, dynamic>> preferences() async {
-    final response = await _client.dio.get<dynamic>(
-      '/api/notifications/preferences',
-    );
+    final response = await _client.dio.get<dynamic>('$_base/preferences');
     return unwrapApiMap(response.data);
   }
 
   @override
   Future<void> updatePreferences(Map<String, dynamic> preferences) async {
-    await _client.dio.put<void>(
-      '/api/notifications/preferences',
-      data: preferences,
-    );
+    await _client.dio.put<void>('$_base/preferences', data: preferences);
   }
 
   @override
   Future<void> registerFcmToken(String token, {String? deviceId}) async {
-    final id = deviceId ?? token;
-    try {
-      await _client.dio.post<void>(
-        '/api/devices/register',
-        data: {
-          'fcmToken': token,
-          'platform': _platformLabel(),
-          'deviceId': id,
-          'appVersion': '1.0.0',
-        },
-      );
-    } on DioException catch (error) {
-      if (error.response?.statusCode == 404) {
-        await _client.dio.post<void>(
-          '/api/notifications/fcm/register',
-          data: {'token': token, 'platform': _platformLabel()},
-        );
-        return;
-      }
-      rethrow;
-    }
+    await _client.dio.post<void>(
+      '$_base/fcm/register',
+      data: {
+        'fcmToken': token,
+        'platform': _platformLabel(),
+        'deviceId': deviceId ?? await _deviceInstallation.deviceId(),
+        'appVersion': await _appVersion.version(),
+      },
+    );
   }
 
   @override
   Future<void> unregisterFcmToken(String token, {String? deviceId}) async {
-    final id = deviceId ?? token;
-    try {
-      await _client.dio.delete<void>('/api/devices/$id');
-    } on DioException catch (error) {
-      if (error.response?.statusCode == 404) {
-        await _client.dio.post<void>(
-          '/api/notifications/fcm/unregister',
-          data: {'token': token},
-        );
-        return;
-      }
-      rethrow;
-    }
+    await _client.dio.post<void>(
+      '$_base/fcm/unregister',
+      data: {
+        'fcmToken': token,
+        'deviceId': deviceId ?? await _deviceInstallation.deviceId(),
+      },
+    );
   }
 
   @override
   Future<void> unregisterAllFcmTokens() async {
-    await _client.dio.delete<void>('/api/notifications/fcm/tokens');
+    await _client.dio.delete<void>('$_base/fcm/tokens');
   }
 
   String _platformLabel() {

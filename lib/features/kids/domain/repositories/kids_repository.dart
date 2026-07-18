@@ -62,7 +62,7 @@ abstract interface class KidsRepository {
     String? currency,
   });
   Future<Result<List<dynamic>>> payForMeRequests();
-  Future<Result<void>> approvePayForMeRequest(int requestId);
+  Future<Result<Map<String, dynamic>>> approvePayForMeRequest(int requestId);
   Future<Result<void>> rejectPayForMeRequest(int requestId, {String? reason});
   Future<Result<ChildProfile>> linkChild({
     required String kidsPublicId,

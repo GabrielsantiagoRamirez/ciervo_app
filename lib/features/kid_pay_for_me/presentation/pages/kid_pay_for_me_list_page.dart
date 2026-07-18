@@ -10,7 +10,8 @@ import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
 import '../../../kid_pay_for_me/presentation/pages/kid_pay_for_me_request_page.dart';
-import '../../../kid_me/data/kid_me_repository.dart';
+import '../../../kids_v2/data/repositories/kids_v2_repositories.dart';
+import '../../../kids_v2/domain/models/kids_v2_models.dart';
 
 class KidPayForMeListPage extends StatefulWidget {
   const KidPayForMeListPage({super.key});
@@ -20,8 +21,8 @@ class KidPayForMeListPage extends StatefulWidget {
 }
 
 class _KidPayForMeListPageState extends State<KidPayForMeListPage> {
-  final _repository = getIt<KidMeRepository>();
-  List<Map<String, dynamic>> _items = const [];
+  final _repository = getIt<KidsRepository>();
+  List<PaymentRequest> _items = const [];
   bool _loading = true;
   String? _error;
 
@@ -36,7 +37,7 @@ class _KidPayForMeListPageState extends State<KidPayForMeListPage> {
       _loading = true;
       _error = null;
     });
-    final result = await _repository.payForMeRequests();
+    final result = await _repository.sentPaymentRequests();
     if (!mounted) return;
     result.when(
       success: (items) => setState(() {
@@ -50,8 +51,14 @@ class _KidPayForMeListPageState extends State<KidPayForMeListPage> {
     );
   }
 
-  double _num(dynamic value) =>
-      value is num ? value.toDouble() : double.tryParse('$value') ?? 0;
+  Future<void> _cancel(PaymentRequest item) async {
+    final result = await _repository.cancelPaymentRequest(item.id);
+    if (!mounted) return;
+    result.when(
+      success: (_) => _load(),
+      failure: (error) => setState(() => _error = UserErrorMessage.from(error)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -101,8 +108,9 @@ class _KidPayForMeListPageState extends State<KidPayForMeListPage> {
                     const SizedBox(height: AppSpacing.sm),
                 itemBuilder: (context, index) {
                   final item = _items[index];
-                  final status =
-                      '${item['status'] ?? item['requestStatus'] ?? ''}';
+                  final status = item.statusLabel.isNotEmpty
+                      ? item.statusLabel
+                      : item.status?.name ?? '${item.statusCode}';
                   final color = PayForMeLabels.statusColor(context, status);
                   return CiervoCard(
                     child: Column(
@@ -112,7 +120,7 @@ class _KidPayForMeListPageState extends State<KidPayForMeListPage> {
                           children: [
                             Expanded(
                               child: Text(
-                                '${item['businessName'] ?? item['description'] ?? 'Solicitud'}',
+                                item.description ?? 'Solicitud Pinduck',
                                 style: Theme.of(context).textTheme.titleMedium,
                               ),
                             ),
@@ -140,19 +148,26 @@ class _KidPayForMeListPageState extends State<KidPayForMeListPage> {
                         const SizedBox(height: AppSpacing.xs),
                         Text(
                           DisplayFormatters.formatMoney(
-                            _num(item['amount']),
-                            currency: '${item['currency'] ?? 'COP'}',
+                            item.amount,
+                            currency: item.currency,
                           ),
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                         if (DisplayFormatters.formatBackendDate(
-                          item['createdAt'] ?? item['requestedAt'],
+                          item.createdAt,
                         ).isNotEmpty)
                           Text(
-                            DisplayFormatters.formatBackendDate(
-                              item['createdAt'] ?? item['requestedAt'],
-                            ),
+                            DisplayFormatters.formatBackendDate(item.createdAt),
                             style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        if (item.status == PaymentRequestStatus.pending)
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton.icon(
+                              onPressed: () => _cancel(item),
+                              icon: const Icon(Icons.cancel_outlined),
+                              label: const Text('Cancelar'),
+                            ),
                           ),
                       ],
                     ),

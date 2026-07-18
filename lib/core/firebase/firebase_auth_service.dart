@@ -38,10 +38,6 @@ class FirebaseAuthService {
         if (token != null &&
             token.isNotEmpty &&
             FirebaseIdToken.isValidIdToken(token)) {
-          if (kDebugMode) {
-            final kid = FirebaseIdToken.decodeHeader(token)['kid'];
-            debugPrint('[AUTH] Firebase ID token kid=$kid len=${token.length}');
-          }
           return token;
         }
         lastError = 'Token sin kid o malformado (intento ${attempt + 1}).';

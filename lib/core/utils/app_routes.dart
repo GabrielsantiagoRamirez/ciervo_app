@@ -11,4 +11,8 @@ abstract final class AppRoutes {
   static const String firebaseRegister = AppRoutePaths.firebaseRegister;
   static const String register = AppRoutePaths.register;
   static const String experienceMode = AppRoutePaths.experienceMode;
+  static const String movies = AppRoutePaths.movies;
+  static const String movieHistory = AppRoutePaths.movieHistory;
+  static const String movieConsume = AppRoutePaths.movieConsume;
+  static const String kidsQr = AppRoutePaths.kidsQr;
 }

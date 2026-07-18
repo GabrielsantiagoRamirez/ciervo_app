@@ -5,19 +5,20 @@ import 'package:dio/dio.dart';
 class ChatRemoteDataSource {
   const ChatRemoteDataSource(this._client);
   final NetworkClient _client;
+  static const _base = '/api/v1/chat';
 
   Future<List<dynamic>> conversations() async => unwrapApiList(
-    (await _client.dio.get<dynamic>('/api/chat/conversations')).data,
+    (await _client.dio.get<dynamic>('$_base/conversations')).data,
   );
 
   Future<Map<String, dynamic>> conversation(String id) async => unwrapApiMap(
-    (await _client.dio.get<dynamic>('/api/chat/conversations/$id')).data,
+    (await _client.dio.get<dynamic>('$_base/conversations/$id')).data,
   );
 
   Future<List<dynamic>> messages(String id, int page, int pageSize) async =>
       unwrapApiList(
         (await _client.dio.get<dynamic>(
-          '/api/chat/conversations/$id/messages',
+          '$_base/conversations/$id/messages',
           queryParameters: {'page': page, 'pageSize': pageSize},
         )).data,
       );
@@ -26,7 +27,7 @@ class ChatRemoteDataSource {
     required String targetUserId,
   }) async => unwrapApiMap(
     (await _client.dio.post<dynamic>(
-      '/api/chat/conversations',
+      '$_base/conversations',
       data: {
         'type': 'Direct',
         'targetUserId': int.tryParse(targetUserId) ?? targetUserId,
@@ -41,7 +42,7 @@ class ChatRemoteDataSource {
     String? comment,
   }) async => unwrapApiMap(
     (await _client.dio.post<dynamic>(
-      '/api/chat/conversations/$conversationId/messages/$messageId/forward',
+      '$_base/conversations/$conversationId/messages/$messageId/forward',
       data: {
         'targetConversationId':
             int.tryParse(targetConversationId) ?? targetConversationId,
@@ -54,7 +55,7 @@ class ChatRemoteDataSource {
     required String title,
   }) async => unwrapApiMap(
     (await _client.dio.post<dynamic>(
-      '/api/chat/conversations',
+      '$_base/conversations',
       data: {'type': 'Support', 'title': title},
     )).data,
   );
@@ -66,7 +67,7 @@ class ChatRemoteDataSource {
     int? orderId,
   }) async => unwrapApiMap(
     (await _client.dio.post<dynamic>(
-      '/api/chat/conversations',
+      '$_base/conversations',
       data: {
         'type': 'Business',
         'businessId': businessId,
@@ -80,7 +81,7 @@ class ChatRemoteDataSource {
   Future<Map<String, dynamic>> sendText(String id, String body) async =>
       unwrapApiMap(
         (await _client.dio.post<dynamic>(
-          '/api/chat/conversations/$id/messages',
+          '$_base/conversations/$id/messages',
           data: {
             'messageType': 'Text',
             'body': body,
@@ -96,7 +97,7 @@ class ChatRemoteDataSource {
     String fileName,
   ) async => unwrapApiMap(
     (await _client.dio.post<dynamic>(
-      '/api/chat/conversations/$id/messages/media',
+      '$_base/conversations/$id/messages/media',
       data: FormData.fromMap({
         'file': await MultipartFile.fromFile(path, filename: fileName),
       }),
@@ -104,11 +105,35 @@ class ChatRemoteDataSource {
   );
 
   Future<void> markAsRead(String id) async {
-    await _client.dio.post<void>('/api/chat/conversations/$id/read');
+    await _client.dio.post<void>('$_base/conversations/$id/read');
   }
 
   Future<List<dynamic>> buttons() async =>
-      unwrapApiList((await _client.dio.get<dynamic>('/api/chat/buttons')).data);
+      unwrapApiList((await _client.dio.get<dynamic>('$_base/buttons')).data);
+
+  Future<Map<String, dynamic>> shareMovie({
+    required String movieId,
+    String? conversationId,
+    String? chatId,
+    String? ciervoId,
+    String? message,
+  }) async => unwrapApiMap(
+    (await _client.dio.post<dynamic>(
+      '$_base/typed/movie/share',
+      data: {
+        if (conversationId != null && conversationId.trim().isNotEmpty)
+          'conversationId':
+              int.tryParse(conversationId.trim()) ?? conversationId.trim(),
+        if (chatId != null && chatId.trim().isNotEmpty)
+          'chatId': int.tryParse(chatId.trim()) ?? chatId.trim(),
+        if (ciervoId != null && ciervoId.trim().isNotEmpty)
+          'ciervoId': ciervoId.trim(),
+        'movieId': movieId,
+        if (message != null && message.trim().isNotEmpty)
+          'message': message.trim(),
+      },
+    )).data,
+  );
 
   Future<Map<String, dynamic>> sendTypedMessage(
     String id, {
@@ -122,16 +147,16 @@ class ChatRemoteDataSource {
     String? mediaType,
   }) async => unwrapApiMap(
     (await _client.dio.post<dynamic>(
-      '/api/chat/conversations/$id/messages',
+      '$_base/conversations/$id/messages',
       data: {
         'messageType': messageType,
-        if (body != null) 'body': body,
-        if (metadataJson != null) 'metadataJson': metadataJson,
-        if (attachmentUrl != null) 'attachmentUrl': attachmentUrl,
-        if (mediaUrl != null) 'mediaUrl': mediaUrl,
-        if (thumbnailUrl != null) 'thumbnailUrl': thumbnailUrl,
-        if (storagePath != null) 'storagePath': storagePath,
-        if (mediaType != null) 'mediaType': mediaType,
+        'body': ?body,
+        'metadataJson': ?metadataJson,
+        'attachmentUrl': ?attachmentUrl,
+        'mediaUrl': ?mediaUrl,
+        'thumbnailUrl': ?thumbnailUrl,
+        'storagePath': ?storagePath,
+        'mediaType': ?mediaType,
       },
     )).data,
   );

@@ -72,7 +72,7 @@ ChatMessage messageFromJson(Map<String, dynamic> json) {
   final updatedRaw = json['updatedAt'] ?? json['createdAt'] ?? json['sentAt'];
   return ChatMessage(
     id: '${json['id'] ?? json['messageId'] ?? ''}',
-    body: json['body']?.toString() ?? '',
+    body: json['body']?.toString() ?? json['text']?.toString() ?? '',
     messageType: '${json['messageType'] ?? json['type'] ?? 'Text'}',
     isMine: json['isOwnMessage'] == true,
     senderName: json['senderRole']?.toString(),

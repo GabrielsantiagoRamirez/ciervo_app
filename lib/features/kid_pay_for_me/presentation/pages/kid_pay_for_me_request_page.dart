@@ -5,11 +5,14 @@ import '../../../../core/country/country_registration.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/layout/responsive_layout.dart';
-import '../../../../core/location/location_service.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/utils/idempotency_key.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../kid_me/data/kid_me_repository.dart';
+import '../../../kids_v2/data/repositories/kids_v2_repositories.dart'
+    as kids_v2;
+import '../../../kids_v2/domain/models/kids_v2_models.dart';
 
 class KidPayForMeRequestPage extends StatefulWidget {
   const KidPayForMeRequestPage({
@@ -32,10 +35,11 @@ class _KidPayForMeRequestPageState extends State<KidPayForMeRequestPage> {
   final _amount = TextEditingController();
   final _description = TextEditingController();
   List<Map<String, dynamic>> _tutors = const [];
-  String? _selectedTutorId;
+  String? _selectedTutorCode;
+  String? _familyConversationId;
+  final String _idempotencyKey = IdempotencyKey.generate('kid-pinduck');
   String _currency = 'COP';
   String _country = 'CO';
-  bool _attachLocation = true;
   bool _shareInChat = true;
   bool _loadingMeta = true;
   bool _submitting = false;
@@ -64,12 +68,14 @@ class _KidPayForMeRequestPageState extends State<KidPayForMeRequestPage> {
     return !_submitting &&
         amount != null &&
         amount > 0 &&
-        description.length >= 3;
+        description.length >= 3 &&
+        _selectedTutorCode != null;
   }
 
   Future<void> _loadMeta() async {
     final profileResult = await _repository.profile();
     final tutorsResult = await _repository.tutors();
+    final familyChatResult = await _repository.familyChat();
     if (!mounted) return;
     profileResult.when(
       success: (profile) {
@@ -82,12 +88,22 @@ class _KidPayForMeRequestPageState extends State<KidPayForMeRequestPage> {
     tutorsResult.when(
       success: (items) => setState(() {
         _tutors = items;
-        if (items.length == 1) {
-          _selectedTutorId = '${items.first['userId'] ?? items.first['id']}';
+        if (items.isNotEmpty) {
+          final primary = items.cast<Map<String, dynamic>>().firstWhere(
+            (item) => item['isPrimaryGuardian'] == true,
+            orElse: () => items.first,
+          );
+          final code = '${primary['ciervoUserCode'] ?? ''}'.trim();
+          _selectedTutorCode = code.isEmpty ? null : code;
         }
         _loadingMeta = false;
       }),
       failure: (_) => setState(() => _loadingMeta = false),
+    );
+    familyChatResult.when(
+      success: (conversation) =>
+          _familyConversationId = conversation.id.toString(),
+      failure: (_) {},
     );
   }
 
@@ -100,38 +116,18 @@ class _KidPayForMeRequestPageState extends State<KidPayForMeRequestPage> {
       _error = null;
     });
 
-    double? latitude;
-    double? longitude;
-    if (_attachLocation) {
-      try {
-        final location = await getIt<LocationService>().currentLocation();
-        latitude = location.latitude;
-        longitude = location.longitude;
-      } catch (_) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'No pudimos incluir tu ubicación. La solicitud se enviará igual.',
-              ),
-            ),
-          );
-        }
-      }
-    }
-
-    final result = await _repository.requestPayForMe(
-      businessId: widget.businessId,
-      amount: amount,
-      description: _description.text.trim(),
-      currency: _currency,
-      country: _country,
-      requestedToTutorId: _selectedTutorId,
-      commerceCiervoId: widget.commerceCiervoId,
-      method: widget.businessId != null ? 'favorite' : 'manual',
-      latitude: latitude,
-      longitude: longitude,
-      shareInFamilyChat: _shareInChat,
+    final result = await getIt<kids_v2.KidsRepository>().createPaymentRequest(
+      PayForMeCommand(
+        businessId: int.tryParse(widget.businessId ?? ''),
+        amount: amount,
+        idempotencyKey: _idempotencyKey,
+        description: _description.text.trim(),
+        currency: _currency,
+        payerCiervoUserCode: _selectedTutorCode,
+        chatConversationId: _shareInChat
+            ? int.tryParse(_familyConversationId ?? '')
+            : null,
+      ),
     );
 
     if (!mounted) return;
@@ -201,19 +197,15 @@ class _KidPayForMeRequestPageState extends State<KidPayForMeRequestPage> {
               const LinearProgressIndicator()
             else if (_tutors.isNotEmpty) ...[
               DropdownButtonFormField<String?>(
-                initialValue: _selectedTutorId,
+                initialValue: _selectedTutorCode,
                 decoration: const InputDecoration(
                   labelText: 'Tutor',
                   prefixIcon: Icon(Icons.family_restroom_outlined),
                 ),
                 items: [
-                  const DropdownMenuItem<String?>(
-                    value: null,
-                    child: Text('Cualquier tutor de mi familia'),
-                  ),
                   ..._tutors.map(
                     (tutor) => DropdownMenuItem<String?>(
-                      value: '${tutor['userId'] ?? tutor['id']}',
+                      value: '${tutor['ciervoUserCode']}',
                       child: Text(
                         '${tutor['displayName'] ?? tutor['name'] ?? 'Tutor'}',
                       ),
@@ -222,7 +214,7 @@ class _KidPayForMeRequestPageState extends State<KidPayForMeRequestPage> {
                 ],
                 onChanged: _submitting
                     ? null
-                    : (value) => setState(() => _selectedTutorId = value),
+                    : (value) => setState(() => _selectedTutorCode = value),
               ),
               const SizedBox(height: AppSpacing.md),
             ],
@@ -246,15 +238,6 @@ class _KidPayForMeRequestPageState extends State<KidPayForMeRequestPage> {
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Incluir mi ubicación'),
-              subtitle: const Text('Ayuda a tu familia a saber dónde estás.'),
-              value: _attachLocation,
-              onChanged: _submitting
-                  ? null
-                  : (value) => setState(() => _attachLocation = value),
-            ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: const Text('Compartir en chat familiar'),

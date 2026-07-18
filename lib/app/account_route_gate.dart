@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../core/di/service_locator.dart';
 import '../core/experience/experience_mode_cubit.dart';
@@ -12,7 +12,6 @@ import '../features/kid_shell/presentation/pages/kid_shell_page.dart';
 import '../features/staff_scanner/presentation/pages/staff_mode_gate.dart';
 import '../shared/widgets/ciervo_bottom_nav_scaffold.dart';
 import '../shared/widgets/ciervo_brand_loader.dart';
-import '../shared/widgets/ciervo_error_state.dart';
 
 class AccountRouteGate extends StatefulWidget {
   const AccountRouteGate({super.key});
@@ -33,14 +32,7 @@ class _AccountRouteGateState extends State<AccountRouteGate> {
   Future<AuthTokenClaims?> _loadClaims() async {
     final token = await getIt<SessionManager>().accessToken();
     if (token == null || token.isEmpty) return null;
-    final claims = AuthTokenClaims.fromJwt(token);
-    if (kDebugMode) {
-      debugPrint('[AUTH] JWT recibido len=${token.length}');
-      debugPrint('[AUTH] accountKind: ${claims.accountKind}');
-      debugPrint('[AUTH] role: ${claims.role}');
-      debugPrint('[AUTH] businessRoleId: ${claims.businessRoleId}');
-    }
-    return claims;
+    return AuthTokenClaims.fromJwt(token);
   }
 
   @override
@@ -55,20 +47,15 @@ class _AccountRouteGateState extends State<AccountRouteGate> {
 
       final claims = snapshot.data;
       final routeKind = claims?.routeKind ?? 'Client';
-      if (kDebugMode) {
-        debugPrint('[AUTH] ruta elegida: $routeKind');
-      }
 
       return switch (routeKind) {
         'Staff' => const StaffModeGate(),
         'Kid' => const KidShellPage(),
-        'BusinessOwner' => const _AdminPlaceholder(
-          title: 'Dashboard dueño',
-          description: 'Tu cuenta fue identificada como dueño de negocio.',
+        'BusinessOwner' => const _OperationsHome(
+          title: 'Operaciones del negocio',
         ),
-        'SuperAdmin' => const _AdminPlaceholder(
-          title: 'Dashboard superadmin',
-          description: 'Tu cuenta fue identificada como superadmin.',
+        'SuperAdmin' => const _OperationsHome(
+          title: 'Operaciones de administración',
         ),
         _ => const _ClientEntry(),
       };
@@ -88,11 +75,10 @@ class _ClientEntry extends StatelessWidget {
   }
 }
 
-class _AdminPlaceholder extends StatelessWidget {
-  const _AdminPlaceholder({required this.title, required this.description});
+class _OperationsHome extends StatelessWidget {
+  const _OperationsHome({required this.title});
 
   final String title;
-  final String description;
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -106,9 +92,32 @@ class _AdminPlaceholder extends StatelessWidget {
         ),
       ],
     ),
-    body: Padding(
+    body: ListView(
       padding: const EdgeInsets.all(24),
-      child: CiervoErrorState(title: title, description: description),
+      children: [
+        Text(
+          'Selecciona una operación autorizada.',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        const SizedBox(height: 20),
+        FilledButton.icon(
+          onPressed: () => context.push('/movie/consume'),
+          icon: const Icon(Icons.qr_code_scanner),
+          label: const Text('Consumir entrada QR Movie'),
+        ),
+        const SizedBox(height: 12),
+        FilledButton.icon(
+          onPressed: () => context.push('/business/kids-payment'),
+          icon: const Icon(Icons.point_of_sale_outlined),
+          label: const Text('Validar y ejecutar pago Kids'),
+        ),
+        const SizedBox(height: 12),
+        FilledButton.icon(
+          onPressed: () => context.push('/business/nfc'),
+          icon: const Icon(Icons.nfc),
+          label: const Text('Validar y cobrar con NFC'),
+        ),
+      ],
     ),
   );
 }

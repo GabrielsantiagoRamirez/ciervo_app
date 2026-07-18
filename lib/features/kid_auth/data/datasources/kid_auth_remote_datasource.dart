@@ -1,5 +1,7 @@
+import '../../../../core/device/device_installation_service.dart';
 import '../../../../core/network/api_response_unwrapper.dart';
 import '../../../../core/network/network_client.dart';
+import '../../../../core/version/app_version_service.dart';
 import '../../../auth/data/dtos/auth_session_dto.dart';
 import '../../domain/entities/kid_registration.dart';
 
@@ -15,22 +17,36 @@ abstract interface class KidAuthRemoteDataSource {
 }
 
 class DioKidAuthRemoteDataSource implements KidAuthRemoteDataSource {
-  const DioKidAuthRemoteDataSource(this._client);
+  const DioKidAuthRemoteDataSource(
+    this._client,
+    this._deviceInstallation,
+    this._appVersion,
+  );
 
   final NetworkClient _client;
+  final DeviceInstallationService _deviceInstallation;
+  final AppVersionService _appVersion;
 
   @override
   Future<AuthSessionDto> kidLogin({
     required String username,
     required String pin,
   }) async {
+    final deviceId = await _deviceInstallation.deviceId();
     final response = await _client.dio.post<Map<String, dynamic>>(
       '/api/v1/kids/auth/login',
-      data: {'username': username.trim(), 'pin': pin.trim()},
+      data: {
+        'username': username.trim(),
+        'pin': pin.trim(),
+        'deviceId': deviceId,
+        'platform': _deviceInstallation.platform,
+        'appVersion': await _appVersion.version(),
+      },
     );
     return AuthSessionDto.fromJson(
       unwrapApiMap(response.data),
       refreshPath: '/api/v1/kids/auth/refresh',
+      deviceId: deviceId,
     );
   }
 

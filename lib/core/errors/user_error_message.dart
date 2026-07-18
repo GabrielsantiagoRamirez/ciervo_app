@@ -60,7 +60,7 @@ abstract final class UserErrorMessage {
       'CURRENCY_MISMATCH' =>
         'La moneda de tu wallet no coincide con la del viaje.',
       'PAYMENT_ERROR' =>
-        'No pudimos procesar el pago del viaje. Intenta nuevamente.',
+        'No pudimos procesar el pago. Conservamos tu operación para que puedas reintentarlo.',
       'CONCURRENCY' =>
         'La oferta cambió mientras respondías. Actualiza e intenta de nuevo.',
       'TERMS_NOT_ACCEPTED' =>
@@ -111,7 +111,24 @@ abstract final class UserErrorMessage {
       return 'No tienes permiso o no estas relacionado con este recurso.';
     }
     if (statusCode == 404) {
-      return 'Esta función estará disponible cuando el servidor se actualice.';
+      return sanitized.isNotEmpty
+          ? sanitized
+          : 'No encontramos el recurso solicitado.';
+    }
+    if (statusCode == 409) {
+      return sanitized.isNotEmpty
+          ? sanitized
+          : 'La operación cambió o ya fue procesada. Actualiza la información.';
+    }
+    if (statusCode == 410) {
+      return sanitized.isNotEmpty
+          ? sanitized
+          : 'Esta operación o credencial ya expiró.';
+    }
+    if (statusCode == 422) {
+      return sanitized.isNotEmpty
+          ? sanitized
+          : 'El pago no pudo completarse. Revisa el método e intenta nuevamente.';
     }
     if (statusCode == 400) {
       if (message.contains('subscribe-intents')) {

@@ -64,7 +64,7 @@ abstract interface class KidsRemoteDataSource {
     String? idempotencyKey,
   });
   Future<List<dynamic>> payForMeRequests();
-  Future<void> approvePayForMeRequest(int requestId);
+  Future<Map<String, dynamic>> approvePayForMeRequest(int requestId);
   Future<void> rejectPayForMeRequest(int requestId, {String? reason});
   Future<ChildProfileDto> linkChild(LinkChildRequest request);
   Future<ChildPhotoUpload> uploadChildPhoto({
@@ -351,20 +351,21 @@ class DioKidsRemoteDataSource implements KidsRemoteDataSource {
 
   @override
   Future<List<dynamic>> payForMeRequests() async {
-    return _list('/api/guardians/pay-for-me/requests');
+    return _list('/api/v1/master/payment-requests/pending');
   }
 
   @override
-  Future<void> approvePayForMeRequest(int requestId) async {
-    await _client.dio.post<void>(
-      '/api/guardians/pay-for-me/requests/$requestId/approve',
+  Future<Map<String, dynamic>> approvePayForMeRequest(int requestId) async {
+    final response = await _client.dio.post<dynamic>(
+      '/api/v1/master/payment-requests/$requestId/approve',
     );
+    return unwrapApiMap(response.data);
   }
 
   @override
   Future<void> rejectPayForMeRequest(int requestId, {String? reason}) async {
     await _client.dio.post<void>(
-      '/api/guardians/pay-for-me/requests/$requestId/reject',
+      '/api/v1/master/payment-requests/$requestId/reject',
       data: {
         if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
       },

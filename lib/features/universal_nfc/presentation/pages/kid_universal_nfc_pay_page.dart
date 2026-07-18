@@ -102,11 +102,6 @@ class _KidUniversalNfcPayPageState extends State<KidUniversalNfcPayPage> {
     setState(() => _loading = false);
   }
 
-  int? _intOrNull(dynamic value) {
-    if (value is int) return value;
-    return int.tryParse('$value');
-  }
-
   int? get _merchantId => widget.merchantId ?? int.tryParse(widget.businessId);
 
   @override

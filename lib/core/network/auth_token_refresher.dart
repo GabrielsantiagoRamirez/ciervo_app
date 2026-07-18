@@ -56,15 +56,21 @@ class AuthTokenRefresher {
     try {
       final response = await _dio.post<Map<String, dynamic>>(
         currentTokens?.refreshPath ?? _config.refreshTokenPath,
-        data: {'refreshToken': refreshToken},
+        data: {
+          'refreshToken': refreshToken,
+          if (currentTokens?.deviceId != null)
+            'deviceId': currentTokens!.deviceId,
+        },
       );
       final source = unwrapApiMap(response.data);
       final accessToken =
           source['accessToken']?.toString() ?? source['token']?.toString();
-      final nextRefreshToken =
-          source['refreshToken']?.toString() ?? refreshToken;
+      final nextRefreshToken = source['refreshToken']?.toString();
 
-      if (accessToken == null || accessToken.isEmpty) {
+      if (accessToken == null ||
+          accessToken.isEmpty ||
+          nextRefreshToken == null ||
+          nextRefreshToken.isEmpty) {
         await _sessionManager.clear();
         return null;
       }
@@ -74,6 +80,7 @@ class AuthTokenRefresher {
           accessToken: accessToken,
           refreshToken: nextRefreshToken,
           refreshPath: currentTokens?.refreshPath,
+          deviceId: currentTokens?.deviceId,
         ),
       );
       return accessToken;

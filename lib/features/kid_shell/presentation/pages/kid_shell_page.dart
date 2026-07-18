@@ -24,11 +24,12 @@ class _KidShellPageState extends State<KidShellPage> {
   int _index = 0;
 
   Widget _pageForIndex(int index) => switch (index) {
-    0 => const KidHomePage(),
+    0 => const KidWalletPage(),
     1 => const KidBusinessesPage(),
-    2 => const KidFamilyPage(),
-    3 => const KidProfilePage(),
-    _ => const KidHomePage(),
+    2 => const KidHomePage(),
+    3 => const KidFamilyPage(),
+    4 => const KidProfilePage(),
+    _ => const KidWalletPage(),
   };
 
   @override
@@ -40,9 +41,9 @@ class _KidShellPageState extends State<KidShellPage> {
         onDestinationSelected: (value) => setState(() => _index = value),
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'Inicio',
+            icon: Icon(Icons.account_balance_wallet_outlined),
+            selectedIcon: Icon(Icons.account_balance_wallet),
+            label: 'Wallet',
           ),
           NavigationDestination(
             icon: Icon(Icons.storefront_outlined),
@@ -50,14 +51,19 @@ class _KidShellPageState extends State<KidShellPage> {
             label: 'Comercios',
           ),
           NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Inicio',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.family_restroom_outlined),
             selectedIcon: Icon(Icons.family_restroom),
-            label: 'Familia',
+            label: 'Chat',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),
             selectedIcon: Icon(Icons.person),
-            label: 'Yo',
+            label: 'Perfil',
           ),
         ],
       ),

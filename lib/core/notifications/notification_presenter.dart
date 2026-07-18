@@ -45,44 +45,49 @@ abstract final class NotificationPresenter {
       for (final channel in CiervoNotificationChannels.androidChannels()) {
         await androidPlugin.createNotificationChannel(channel);
       }
-      await _ensureAndroidNotificationPermission(androidPlugin);
     }
 
     _initialized = true;
   }
 
-  static Future<bool> _ensureAndroidNotificationPermission(
-    AndroidFlutterLocalNotificationsPlugin androidPlugin,
-  ) async {
+  static Future<bool> requestDisplayPermission() async {
+    await ensureInitialized();
     try {
-      final enabled = await androidPlugin.areNotificationsEnabled();
-      if (enabled == true) return true;
-
-      final requested = await androidPlugin.requestNotificationsPermission();
-      if (requested == true) return true;
-
+      final androidPlugin = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      if (androidPlugin != null) {
+        final enabled = await androidPlugin.areNotificationsEnabled();
+        if (enabled == true) return true;
+        final requested = await androidPlugin.requestNotificationsPermission();
+        if (requested == true) return true;
+      }
       final status = await Permission.notification.request();
       return status.isGranted || status.isLimited;
     } catch (error) {
-      debugPrint('[Notifications] permiso Android: $error');
+      debugPrint('[Notifications] permiso Android: ${error.runtimeType}');
       return false;
     }
   }
 
-  static Future<bool> ensureDisplayPermission() async {
+  static Future<bool> hasDisplayPermission() async {
     await ensureInitialized();
     final androidPlugin = _plugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
         >();
-    if (androidPlugin == null) return true;
-    return _ensureAndroidNotificationPermission(androidPlugin);
+    if (androidPlugin != null) {
+      return await androidPlugin.areNotificationsEnabled() == true;
+    }
+    final status = await Permission.notification.status;
+    return status.isGranted || status.isLimited;
   }
 
   static Future<void> showRemoteMessage(RemoteMessage message) async {
     await ensureInitialized();
 
-    final allowed = await ensureDisplayPermission();
+    final allowed = await hasDisplayPermission();
     if (!allowed) {
       debugPrint(
         '[Notifications] Sin permiso POST_NOTIFICATIONS; no se muestra en bandeja.',
@@ -137,7 +142,7 @@ abstract final class NotificationPresenter {
             color: const Color(CiervoNotificationChannels.brandColor),
             importance: Importance.high,
             priority: Priority.high,
-            visibility: NotificationVisibility.public,
+            visibility: NotificationVisibility.private,
             styleInformation: BigTextStyleInformation(displayBody),
             category: AndroidNotificationCategory.message,
             playSound: true,
@@ -149,10 +154,10 @@ abstract final class NotificationPresenter {
             presentSound: true,
           ),
         ),
-        payload: jsonEncode(data),
+        payload: jsonEncode(_safePayload(data)),
       );
     } catch (error) {
-      debugPrint('[Notifications] Error al mostrar: $error');
+      debugPrint('[Notifications] Error al mostrar: ${error.runtimeType}');
     }
   }
 
@@ -162,5 +167,28 @@ abstract final class NotificationPresenter {
       if (trimmed.isNotEmpty) return trimmed;
     }
     return null;
+  }
+
+  static Map<String, dynamic> _safePayload(Map<String, dynamic> data) {
+    const allowedKeys = {
+      'type',
+      'category',
+      'deepLink',
+      'resourceId',
+      'publicId',
+      'conversationId',
+      'chatConversationId',
+      'tripId',
+      'orderId',
+      'bonusId',
+    };
+    return <String, dynamic>{
+      for (final entry in data.entries)
+        if (allowedKeys.contains(entry.key) &&
+            (entry.value is String ||
+                entry.value is num ||
+                entry.value is bool))
+          entry.key: entry.value,
+    };
   }
 }

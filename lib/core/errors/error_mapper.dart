@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../network/api_models.dart';
 import 'app_exception.dart';
 
 abstract final class ErrorMapper {
@@ -20,17 +21,29 @@ abstract final class ErrorMapper {
   }
 
   static AppException fromDio(DioException error) {
+    final interceptorError = error.error;
+    if (interceptorError is AppException) {
+      return AppException(
+        message: interceptorError.message,
+        code: interceptorError.code,
+        statusCode: error.response?.statusCode ?? interceptorError.statusCode,
+        correlationId: interceptorError.correlationId,
+        fieldErrors: interceptorError.fieldErrors,
+        cause: error,
+      );
+    }
+
     final response = error.response;
     final data = response?.data;
     final map = data is Map
         ? Map<String, dynamic>.from(data)
         : const <String, dynamic>{};
+    final problem = ProblemDetailsModel.fromJson(map);
     final backendMessage = map.isNotEmpty
-        ? map['detail']?.toString() ??
+        ? problem.safeMessage ??
               map['message']?.toString() ??
               map['msg']?.toString() ??
-              map['error']?.toString() ??
-              map['title']?.toString()
+              map['error']?.toString()
         : null;
     final correlationId =
         _nonEmptyString(map['correlationId']) ??
@@ -41,7 +54,7 @@ abstract final class ErrorMapper {
       code: _nonEmptyString(map['errorCode']) ?? _nonEmptyString(map['code']),
       statusCode: response?.statusCode,
       correlationId: correlationId,
-      fieldErrors: _fieldErrors(map['errors']),
+      fieldErrors: problem.errors,
       cause: error,
     );
   }
@@ -49,25 +62,6 @@ abstract final class ErrorMapper {
   static String? _nonEmptyString(Object? value) {
     final text = value?.toString().trim();
     return text == null || text.isEmpty ? null : text;
-  }
-
-  static Map<String, List<String>> _fieldErrors(Object? raw) {
-    if (raw is! Map) return const <String, List<String>>{};
-
-    return Map<String, List<String>>.unmodifiable(
-      raw.map((key, value) {
-        final messages = value is Iterable
-            ? value
-                  .map((item) => item.toString().trim())
-                  .where((item) => item.isNotEmpty)
-                  .toList(growable: false)
-            : <String>[
-                if (value != null && value.toString().trim().isNotEmpty)
-                  value.toString().trim(),
-              ];
-        return MapEntry(key.toString(), messages);
-      }),
-    );
   }
 
   static String _fallbackMessage(DioException error) {

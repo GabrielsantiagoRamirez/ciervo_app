@@ -181,7 +181,7 @@ class _ChatInboxPageState extends State<ChatInboxPage> {
           AppSpacing.xxl,
         ),
         itemCount: _items.length,
-        separatorBuilder: (_, __) => Divider(
+        separatorBuilder: (_, _) => Divider(
           height: 1,
           indent: 72,
           color: Theme.of(context).dividerColor.withValues(alpha: 0.5),

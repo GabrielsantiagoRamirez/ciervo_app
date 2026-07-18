@@ -26,6 +26,32 @@ val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
     keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
 }
+val requiredSigningProperties = listOf(
+    "keyAlias",
+    "keyPassword",
+    "storeFile",
+    "storePassword",
+)
+val missingSigningProperties = requiredSigningProperties.filter {
+    keystoreProperties.getProperty(it).isNullOrBlank()
+}
+val releaseSigningReady = missingSigningProperties.isEmpty()
+val releaseTaskRequested = gradle.startParameter.taskNames.any {
+    it.contains("release", ignoreCase = true)
+}
+
+if (releaseTaskRequested && !releaseSigningReady) {
+    throw GradleException(
+        "Firma release incompleta. Define en android/key.properties: " +
+            missingSigningProperties.joinToString(", "),
+    )
+}
+if (!releaseSigningReady) {
+    logger.lifecycle(
+        "Firma release no configurada; los builds debug siguen disponibles. " +
+            "Faltan: ${missingSigningProperties.joinToString(", ")}",
+    )
+}
 
 android {
     namespace = "com.company.ciervoclub"
@@ -55,19 +81,27 @@ android {
     }
 
     signingConfigs {
-        create("release") {
-            keyAlias = keystoreProperties["keyAlias"] as String
-            keyPassword = keystoreProperties["keyPassword"] as String
-            storeFile = keystoreProperties["storeFile"]?.let { rootProject.file(it) }
-            storePassword = keystoreProperties["storePassword"] as String
+        if (releaseSigningReady) {
+            create("release") {
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+            }
         }
     }
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("release")
-            isMinifyEnabled = false
-            isShrinkResources = false
+            if (releaseSigningReady) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 }

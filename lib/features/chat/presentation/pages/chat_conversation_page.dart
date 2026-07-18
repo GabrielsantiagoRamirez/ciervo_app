@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/utils/display_labels.dart';
 import '../../../../core/di/service_locator.dart';
@@ -300,6 +301,9 @@ class _MessageContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (message.moviePayload != null) {
+      return _MovieShareCard(payload: message.moviePayload!);
+    }
     if (message.sharePayload != null) {
       return _ShareCard(payload: message.sharePayload!);
     }
@@ -338,7 +342,7 @@ class _MessageContent extends StatelessWidget {
               attachment,
               width: 220,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) =>
+              errorBuilder: (_, _, _) =>
                   const Icon(Icons.broken_image_outlined),
             ),
           )
@@ -364,6 +368,64 @@ class _MessageContent extends StatelessWidget {
       ],
     );
   }
+}
+
+class _MovieShareCard extends StatelessWidget {
+  const _MovieShareCard({required this.payload});
+
+  final ChatMoviePayload payload;
+
+  @override
+  Widget build(BuildContext context) => InkWell(
+    borderRadius: BorderRadius.circular(12),
+    onTap: payload.movieId.isEmpty
+        ? null
+        : () => context.push(
+            payload.requestId?.isNotEmpty == true
+                ? '/movie-requests/${payload.requestId}'
+                : '/movies/${payload.movieId}/showtimes',
+          ),
+    child: Padding(
+      padding: const EdgeInsets.all(AppSpacing.xs),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (payload.imageUrl?.startsWith('http') == true)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                payload.imageUrl!,
+                width: 56,
+                height: 80,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) =>
+                    const Icon(Icons.movie_outlined, size: 44),
+              ),
+            )
+          else
+            const Icon(Icons.movie_outlined, size: 44),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  payload.title,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                if (payload.minimumAge != null)
+                  Text('Edad mínima: ${payload.minimumAge} años'),
+                const SizedBox(height: AppSpacing.xs),
+                const Text('Ver funciones y disponibilidad'),
+              ],
+            ),
+          ),
+          const Icon(Icons.chevron_right),
+        ],
+      ),
+    ),
+  );
 }
 
 class _BookingReceiptCard extends StatelessWidget {

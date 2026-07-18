@@ -41,7 +41,8 @@ class AuthInterceptor extends Interceptor {
 
     if (statusCode != 401 ||
         alreadyRetried ||
-        _isAuthEndpoint(err.requestOptions)) {
+        _isAuthEndpoint(err.requestOptions) ||
+        !_isReplaySafe(err.requestOptions)) {
       handler.next(err);
       return;
     }
@@ -79,6 +80,15 @@ class AuthInterceptor extends Interceptor {
     return options.extra['skipAuth'] == true ||
         path.contains('/api/auth/') ||
         path.contains('/api/v1/kids/auth/');
+  }
+
+  bool _isReplaySafe(RequestOptions options) {
+    final method = options.method.toUpperCase();
+    if (method == 'GET' || method == 'HEAD' || method == 'OPTIONS') return true;
+    if (options.extra['allowAuthRetry'] == true) return true;
+    final data = options.data;
+    return data is Map &&
+        data['idempotencyKey']?.toString().trim().isNotEmpty == true;
   }
 
   String? _bearerToken(String? authorization) {

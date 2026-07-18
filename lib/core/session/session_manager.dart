@@ -73,6 +73,7 @@ class SessionManager {
       'accessToken': tokens.accessToken,
       'refreshToken': tokens.refreshToken,
       if (tokens.refreshPath != null) 'refreshPath': tokens.refreshPath,
+      if (tokens.deviceId != null) 'deviceId': tokens.deviceId,
     });
     await _storage.write(_tokenBundleKey, bundle);
     await _storage.write(_contractVersionKey, _currentContractVersion);
@@ -107,6 +108,7 @@ class SessionManager {
         accessToken: accessToken,
         refreshToken: refreshToken,
         refreshPath: decoded['refreshPath']?.toString(),
+        deviceId: decoded['deviceId']?.toString(),
       );
     } on FormatException {
       return null;

@@ -94,7 +94,7 @@ class _GuardianPayForMePageState extends State<GuardianPayForMePage> {
   bool _isPending(Map item) {
     final status = '${item['status'] ?? item['requestStatus'] ?? ''}'
         .toLowerCase();
-    return status.contains('pending');
+    return status == '1' || status.contains('pending');
   }
 
   String _requestCurrency(Map item) {
@@ -118,10 +118,21 @@ class _GuardianPayForMePageState extends State<GuardianPayForMePage> {
     final result = await _repository.approvePayForMeRequest(id);
     if (!mounted) return;
     result.when(
-      success: (_) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Solicitud aprobada.')));
+      success: (data) {
+        final token = '${data['token'] ?? ''}'.trim();
+        final pin = '${data['pin'] ?? ''}'.trim();
+        final secretShown = data['secretShown'] == true;
+        if (secretShown && token.isNotEmpty && pin.isNotEmpty) {
+          _showIssuedSecret(data);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Solicitud aprobada. La credencial ya había sido emitida o no requiere mostrarse.',
+              ),
+            ),
+          );
+        }
         _load();
       },
       failure: (error) {
@@ -131,6 +142,58 @@ class _GuardianPayForMePageState extends State<GuardianPayForMePage> {
       },
     );
     if (mounted) setState(() => _actingOnId = null);
+  }
+
+  Future<void> _showIssuedSecret(Map<String, dynamic> data) async {
+    final token = '${data['token'] ?? ''}';
+    final pin = '${data['pin'] ?? ''}';
+    final expiresAt = DateTime.tryParse(
+      '${data['expiresAt'] ?? ''}',
+    )?.toLocal();
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        icon: const Icon(Icons.key_outlined),
+        title: const Text('Credencial emitida una sola vez'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'No cierres esta pantalla hasta compartir la credencial con el comercio autorizado.',
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'PIN: $pin',
+              textAlign: TextAlign.center,
+              style: Theme.of(dialogContext).textTheme.headlineMedium,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              token,
+              textAlign: TextAlign.center,
+              style: Theme.of(dialogContext).textTheme.bodySmall,
+            ),
+            if (expiresAt != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'Expira: ${expiresAt.hour.toString().padLeft(2, '0')}:'
+                '${expiresAt.minute.toString().padLeft(2, '0')}:'
+                '${expiresAt.second.toString().padLeft(2, '0')}',
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Entendido, ocultar'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _reject(Map item) async {
@@ -240,7 +303,8 @@ class _GuardianPayForMePageState extends State<GuardianPayForMePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${item['childName'] ?? 'Menor'} · ${item['businessName'] ?? 'Comercio'}',
+                          '${item['childName'] ?? item['requesterName'] ?? 'Menor'} · '
+                          '${item['businessName'] ?? item['description'] ?? 'Solicitud Pinduck'}',
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: AppSpacing.xs),

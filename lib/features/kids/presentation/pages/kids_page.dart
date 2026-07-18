@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/di/service_locator.dart';
@@ -25,7 +26,6 @@ import '../../domain/entities/child_profile.dart';
 import '../../domain/repositories/kids_repository.dart';
 import '../cubit/kids_cubit.dart';
 import '../cubit/kids_state.dart';
-import 'guardian_pay_for_me_page.dart';
 import 'allowed_businesses_page.dart';
 import 'allowed_categories_page.dart';
 import 'child_spending_limits_page.dart';
@@ -84,11 +84,20 @@ class _KidsView extends StatelessWidget {
                 OutlinedButton.icon(
                   icon: const Icon(Icons.family_restroom_outlined),
                   label: const Text('Solicitudes Pinduck'),
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const GuardianPayForMePage(),
-                    ),
-                  ),
+                  onPressed: () => context.push('/master/payment-requests'),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.person_add_alt_1_outlined),
+                  label: const Text('Crear perfil y cuenta Kids v2'),
+                  onPressed: () async {
+                    final createdKidId = await context.push<int>(
+                      '/master/kids/create',
+                    );
+                    if (createdKidId != null && context.mounted) {
+                      context.read<KidsCubit>().loadChildren();
+                    }
+                  },
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 OutlinedButton.icon(
@@ -432,6 +441,33 @@ class KidsDetailPage extends StatelessWidget {
                             ),
                           ),
                         ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      OutlinedButton.icon(
+                        icon: const Icon(Icons.devices_other_outlined),
+                        label: const Text('Dispositivos Firebase Kids'),
+                        onPressed: int.tryParse(childId) == null
+                            ? null
+                            : () =>
+                                  context.push('/master/kids/$childId/devices'),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      OutlinedButton.icon(
+                        icon: const Icon(Icons.shield_outlined),
+                        label: const Text('Shield, intentos y auditoría'),
+                        onPressed: int.tryParse(childId) == null
+                            ? null
+                            : () => context.push(
+                                '/master/kids/$childId/security',
+                              ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      OutlinedButton.icon(
+                        icon: const Icon(Icons.tune_outlined),
+                        label: const Text('Reglas Master v2'),
+                        onPressed: int.tryParse(childId) == null
+                            ? null
+                            : () => context.push('/master/kids/$childId/rules'),
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       OutlinedButton.icon(

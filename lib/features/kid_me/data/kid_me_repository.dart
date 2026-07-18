@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 
-import '../../../core/country/country_registration.dart';
 import '../../../core/errors/error_mapper.dart';
 import '../../../core/network/api_response_unwrapper.dart';
 import '../../../core/network/network_client.dart';
@@ -24,6 +23,11 @@ class KidMeRepository {
 
   Future<Result<Map<String, dynamic>>> wallet() => _guard(() async {
     final response = await _client.dio.get<dynamic>('/api/kids/me/wallet');
+    return unwrapApiMap(response.data);
+  });
+
+  Future<Result<Map<String, dynamic>>> settings() => _guard(() async {
+    final response = await _client.dio.get<dynamic>('/api/v1/kids/settings');
     return unwrapApiMap(response.data);
   });
 
@@ -58,6 +62,32 @@ class KidMeRepository {
           .toList();
     }
     return const [];
+  });
+
+  Future<Result<List<Map<String, dynamic>>>> searchCommerce({
+    String? name,
+    String? city,
+    String? category,
+  }) => _guard(() async {
+    final response = await _client.dio.get<dynamic>(
+      '/api/v1/commerce/search',
+      queryParameters: {
+        if (name != null && name.trim().isNotEmpty) 'name': name.trim(),
+        if (city != null && city.trim().isNotEmpty) 'city': city.trim(),
+        if (category != null && category.trim().isNotEmpty)
+          'category': category.trim(),
+      },
+    );
+    final value = unwrapApiResponse(response.data);
+    final items = value is List
+        ? value
+        : value is Map && value['items'] is List
+        ? value['items'] as List
+        : const <dynamic>[];
+    return items
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList(growable: false);
   });
 
   Future<Result<KidMeProfile>> profile() async {
@@ -151,45 +181,31 @@ class KidMeRepository {
 
   Future<Result<Map<String, dynamic>>> requestPayForMe({
     required double amount,
+    required String idempotencyKey,
     String? businessId,
     String? description,
     String? currency,
-    String? country,
-    String? requestedToTutorId,
-    String? commerceCiervoId,
-    String? method,
-    double? latitude,
-    double? longitude,
-    String? address,
-    bool shareInFamilyChat = false,
+    String? payerCiervoUserCode,
+    String? chatConversationId,
   }) => _guard(() async {
-    final resolvedCurrency =
-        currency ?? CountryRegistration.currencyForCountry(country ?? 'CO');
+    final resolvedCurrency = currency ?? 'COP';
     final response = await _client.dio.post<dynamic>(
-      '/api/kids/me/pay-for-me/request',
+      '/api/v1/kids/payment-requests',
       data: {
+        if (payerCiervoUserCode != null &&
+            payerCiervoUserCode.trim().isNotEmpty)
+          'payerCiervoUserCode': payerCiervoUserCode.trim(),
         if (businessId != null && businessId.isNotEmpty)
           'businessId': int.tryParse(businessId) ?? businessId,
         'amount': amount,
         'currency': resolvedCurrency,
-        if (country != null && country.isNotEmpty) 'country': country,
         if (description != null && description.trim().isNotEmpty)
           'description': description.trim(),
-        if (requestedToTutorId != null && requestedToTutorId.isNotEmpty)
-          'requestedToTutorId':
-              int.tryParse(requestedToTutorId) ?? requestedToTutorId,
-        if (commerceCiervoId != null && commerceCiervoId.isNotEmpty)
-          'commerceCiervoId': commerceCiervoId,
-        if (method != null && method.isNotEmpty) 'method': method,
-        if (shareInFamilyChat) 'shareInFamilyChat': true,
-        'idempotencyKey': IdempotencyKey.generate('kid-pay-for-me'),
-        if (latitude != null && longitude != null)
-          'location': {
-            'latitude': latitude,
-            'longitude': longitude,
-            if (address != null && address.trim().isNotEmpty)
-              'address': address.trim(),
-          },
+        'purpose': 'PayForMe',
+        'idempotencyKey': idempotencyKey,
+        if (chatConversationId != null && chatConversationId.trim().isNotEmpty)
+          'chatConversationId':
+              int.tryParse(chatConversationId) ?? chatConversationId,
       },
     );
     return unwrapApiMap(response.data);
@@ -198,7 +214,7 @@ class KidMeRepository {
   Future<Result<List<Map<String, dynamic>>>> payForMeRequests() =>
       _guard(() async {
         final response = await _client.dio.get<dynamic>(
-          '/api/kids/me/pay-for-me/requests',
+          '/api/v1/kids/payment-requests',
         );
         final value = unwrapApiResponse(response.data);
         if (value is List) {
