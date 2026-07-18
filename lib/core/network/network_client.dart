@@ -6,6 +6,7 @@ import '../logging/app_logger.dart';
 import '../session/session_manager.dart';
 import 'auth_interceptor.dart';
 import 'auth_token_refresher.dart';
+import 'correlation_interceptor.dart';
 
 class NetworkClient {
   NetworkClient({
@@ -24,6 +25,7 @@ class NetworkClient {
            },
          ),
        ) {
+    dio.interceptors.add(CorrelationInterceptor());
     dio.interceptors.add(
       AuthInterceptor(
         sessionManager: sessionManager,
@@ -34,8 +36,8 @@ class NetworkClient {
     if (config.environment.enablesVerboseLogs) {
       dio.interceptors.add(
         LogInterceptor(
-          requestBody: true,
-          responseBody: true,
+          requestBody: false,
+          responseBody: false,
           logPrint: (object) => logger.info(object.toString()),
         ),
       );

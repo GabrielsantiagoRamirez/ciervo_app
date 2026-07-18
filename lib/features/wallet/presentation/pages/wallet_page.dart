@@ -303,7 +303,7 @@ class _QuickActions extends StatelessWidget {
           ),
         ),
         _ActionChipButton(
-          label: 'Paga por mi',
+          label: 'Pinduck',
           icon: Icons.request_page_outlined,
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute<void>(builder: (_) => const RequestMoneyPage()),

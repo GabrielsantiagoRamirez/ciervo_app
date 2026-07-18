@@ -13,9 +13,13 @@ class AuthSessionDto {
     this.accountKind,
     this.authAction,
     this.linkedLegacy = false,
+    this.refreshPath,
   });
 
-  factory AuthSessionDto.fromJson(Map<String, dynamic> json) {
+  factory AuthSessionDto.fromJson(
+    Map<String, dynamic> json, {
+    String? refreshPath,
+  }) {
     final data = json['value'] ?? json['data'];
     final source = data is Map<String, dynamic> ? data : json;
     final user = source['user'] ?? source['client'];
@@ -26,9 +30,10 @@ class AuthSessionDto {
       'token',
       'jwt',
     ]);
-    final refreshToken =
-        _optionalString(source, const ['refreshToken', 'refresh_token']) ??
-        accessToken;
+    final refreshToken = _requiredString(source, const [
+      'refreshToken',
+      'refresh_token',
+    ]);
 
     return AuthSessionDto(
       accessToken: accessToken,
@@ -58,6 +63,7 @@ class AuthSessionDto {
           _optionalString(source, const ['accountKind']),
       authAction: _optionalString(source, const ['authAction']),
       linkedLegacy: source['linkedLegacy'] == true,
+      refreshPath: refreshPath,
     );
   }
 
@@ -71,10 +77,15 @@ class AuthSessionDto {
   final String? accountKind;
   final String? authAction;
   final bool linkedLegacy;
+  final String? refreshPath;
 
   AuthSession toDomain() {
     return AuthSession(
-      tokens: AuthTokens(accessToken: accessToken, refreshToken: refreshToken),
+      tokens: AuthTokens(
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+        refreshPath: refreshPath,
+      ),
       userId: userId,
       email: email,
       authAction: authAction,

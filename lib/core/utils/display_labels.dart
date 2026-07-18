@@ -546,7 +546,7 @@ abstract final class DisplayLabels {
       'user' || 'email' => 'Ingresa tu correo electrónico.',
       'birthdate' => 'Selecciona tu fecha de nacimiento.',
       'businessid' =>
-        'Elige un comercio primero. Abre Paga por mí desde Comercios.',
+        'Elige un comercio primero. Abre Pinduck desde Comercios.',
       _ => 'Completa todos los campos obligatorios.',
     };
   }

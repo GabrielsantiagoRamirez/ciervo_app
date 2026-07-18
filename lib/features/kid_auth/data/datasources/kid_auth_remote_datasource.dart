@@ -25,10 +25,13 @@ class DioKidAuthRemoteDataSource implements KidAuthRemoteDataSource {
     required String pin,
   }) async {
     final response = await _client.dio.post<Map<String, dynamic>>(
-      '/api/auth/kid-login',
+      '/api/v1/kids/auth/login',
       data: {'username': username.trim(), 'pin': pin.trim()},
     );
-    return AuthSessionDto.fromJson(unwrapApiMap(response.data));
+    return AuthSessionDto.fromJson(
+      unwrapApiMap(response.data),
+      refreshPath: '/api/v1/kids/auth/refresh',
+    );
   }
 
   @override

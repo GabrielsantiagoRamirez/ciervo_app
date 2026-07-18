@@ -41,6 +41,14 @@ class AuthBootstrapService {
   Future<AuthBootstrapOutcome> reconcile() async {
     _pendingRegistration.clear();
 
+    if (_sessionManager.didInvalidateLegacySession) {
+      _startupMessage.set(
+        'Actualizamos la seguridad de tu sesión. Vuelve a iniciar sesión.',
+      );
+      await _clearAllSessions();
+      return AuthBootstrapOutcome.unauthenticated;
+    }
+
     final hasJwt = await _sessionManager.accessToken() != null;
     final firebaseUser = _firebaseAuth.currentUser;
 

@@ -83,7 +83,7 @@ class _KidsView extends StatelessWidget {
                 const SizedBox(height: AppSpacing.md),
                 OutlinedButton.icon(
                   icon: const Icon(Icons.family_restroom_outlined),
-                  label: const Text('Solicitudes de pago (pay-for-me)'),
+                  label: const Text('Solicitudes Pinduck'),
                   onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
                       builder: (_) => const GuardianPayForMePage(),

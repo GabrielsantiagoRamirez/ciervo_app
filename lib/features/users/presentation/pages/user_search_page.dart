@@ -269,7 +269,7 @@ class _UserSearchPageState extends State<UserSearchPage> {
             ),
             ListTile(
               leading: const Icon(Icons.request_page_outlined),
-              title: const Text('Paga por mi'),
+              title: const Text('Pinduck'),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.of(this.context).push(

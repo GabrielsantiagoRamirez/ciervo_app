@@ -156,7 +156,7 @@ class _KidPayForMeRequestPageState extends State<KidPayForMeRequestPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Paga por mí')),
+      appBar: AppBar(title: const Text('Pinduck')),
       body: SafeArea(
         child: ListView(
           padding: pagePaddingOf(context),
@@ -187,7 +187,7 @@ class _KidPayForMeRequestPageState extends State<KidPayForMeRequestPage> {
                     const SizedBox(height: AppSpacing.sm),
                     Text(
                       'Para pagar en un comercio, ábrelo desde Comercios y '
-                      'usa Paga por mí allí. Así el tutor ve el lugar exacto.',
+                      'usa Pinduck allí. Así el tutor ve el lugar exacto.',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.error,
                       ),

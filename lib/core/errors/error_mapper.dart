@@ -22,19 +22,51 @@ abstract final class ErrorMapper {
   static AppException fromDio(DioException error) {
     final response = error.response;
     final data = response?.data;
-    final backendMessage = data is Map<String, dynamic>
-        ? data['message']?.toString() ??
-              data['msg']?.toString() ??
-              data['error']?.toString()
+    final map = data is Map
+        ? Map<String, dynamic>.from(data)
+        : const <String, dynamic>{};
+    final backendMessage = map.isNotEmpty
+        ? map['detail']?.toString() ??
+              map['message']?.toString() ??
+              map['msg']?.toString() ??
+              map['error']?.toString() ??
+              map['title']?.toString()
         : null;
+    final correlationId =
+        _nonEmptyString(map['correlationId']) ??
+        _nonEmptyString(response?.headers.value('x-correlation-id'));
 
     return AppException(
       message: backendMessage ?? _fallbackMessage(error),
-      code: data is Map<String, dynamic>
-          ? (data['errorCode']?.toString() ?? data['code']?.toString())
-          : null,
+      code: _nonEmptyString(map['errorCode']) ?? _nonEmptyString(map['code']),
       statusCode: response?.statusCode,
+      correlationId: correlationId,
+      fieldErrors: _fieldErrors(map['errors']),
       cause: error,
+    );
+  }
+
+  static String? _nonEmptyString(Object? value) {
+    final text = value?.toString().trim();
+    return text == null || text.isEmpty ? null : text;
+  }
+
+  static Map<String, List<String>> _fieldErrors(Object? raw) {
+    if (raw is! Map) return const <String, List<String>>{};
+
+    return Map<String, List<String>>.unmodifiable(
+      raw.map((key, value) {
+        final messages = value is Iterable
+            ? value
+                  .map((item) => item.toString().trim())
+                  .where((item) => item.isNotEmpty)
+                  .toList(growable: false)
+            : <String>[
+                if (value != null && value.toString().trim().isNotEmpty)
+                  value.toString().trim(),
+              ];
+        return MapEntry(key.toString(), messages);
+      }),
     );
   }
 

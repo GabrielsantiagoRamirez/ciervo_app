@@ -75,7 +75,7 @@ class ChatButtonsBar extends StatelessWidget {
     ),
     ChatButton(
       code: 'pay_for_me',
-      label: 'Paga por mí',
+      label: 'Pinduck',
       visibility: ChatButtonVisibility.productionReady,
     ),
     ChatButton(

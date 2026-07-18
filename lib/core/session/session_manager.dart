@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import '../storage/secure_storage.dart';
 import 'auth_tokens.dart';
@@ -9,23 +10,46 @@ class SessionManager {
 
   static const _accessTokenKey = 'ciervo.accessToken';
   static const _refreshTokenKey = 'ciervo.refreshToken';
+  static const _tokenBundleKey = 'ciervo.authTokens.v2';
+  static const _contractVersionKey = 'ciervo.authContractVersion';
+  static const _currentContractVersion = '2';
 
   final SecureStorage _storage;
   final StreamController<SessionState> _controller =
       StreamController<SessionState>.broadcast();
 
   SessionState _state = const SessionState.unknown();
+  bool _didInvalidateLegacySession = false;
 
   SessionState get state => _state;
 
   Stream<SessionState> get stream => _controller.stream;
 
+  bool get didInvalidateLegacySession => _didInvalidateLegacySession;
+
   Future<void> restore() async {
     try {
-      final accessToken = await _storage.read(_accessTokenKey);
-      final refreshToken = await _storage.read(_refreshTokenKey);
+      _didInvalidateLegacySession = false;
+      final storedVersion = await _storage.read(_contractVersionKey);
+      final legacyAccessToken = await _storage.read(_accessTokenKey);
+      final legacyRefreshToken = await _storage.read(_refreshTokenKey);
+
+      if (storedVersion != _currentContractVersion &&
+          (legacyAccessToken != null || legacyRefreshToken != null)) {
+        await _deleteTokenData();
+        await _storage.write(_contractVersionKey, _currentContractVersion);
+        _didInvalidateLegacySession = true;
+        _emit(const SessionState.unauthenticated());
+        return;
+      }
+
+      if (storedVersion != _currentContractVersion) {
+        await _storage.write(_contractVersionKey, _currentContractVersion);
+      }
+
+      final tokens = await _readTokenBundle();
       _emit(
-        accessToken != null && refreshToken != null
+        tokens != null
             ? const SessionState.authenticated()
             : const SessionState.unauthenticated(),
       );
@@ -34,20 +58,59 @@ class SessionManager {
     }
   }
 
-  Future<String?> accessToken() => _storage.read(_accessTokenKey);
+  Future<String?> accessToken() async {
+    return (await tokens())?.accessToken;
+  }
 
-  Future<String?> refreshToken() => _storage.read(_refreshTokenKey);
+  Future<String?> refreshToken() async {
+    return (await tokens())?.refreshToken;
+  }
+
+  Future<AuthTokens?> tokens() => _readTokenBundle();
 
   Future<void> saveTokens(AuthTokens tokens) async {
-    await _storage.write(_accessTokenKey, tokens.accessToken);
-    await _storage.write(_refreshTokenKey, tokens.refreshToken);
+    final bundle = jsonEncode({
+      'accessToken': tokens.accessToken,
+      'refreshToken': tokens.refreshToken,
+      if (tokens.refreshPath != null) 'refreshPath': tokens.refreshPath,
+    });
+    await _storage.write(_tokenBundleKey, bundle);
+    await _storage.write(_contractVersionKey, _currentContractVersion);
+    await _storage.delete(_accessTokenKey);
+    await _storage.delete(_refreshTokenKey);
     _emit(const SessionState.authenticated());
   }
 
   Future<void> clear() async {
+    await _deleteTokenData();
+    await _storage.write(_contractVersionKey, _currentContractVersion);
+    _emit(const SessionState.unauthenticated());
+  }
+
+  Future<void> _deleteTokenData() async {
+    await _storage.delete(_tokenBundleKey);
     await _storage.delete(_accessTokenKey);
     await _storage.delete(_refreshTokenKey);
-    _emit(const SessionState.unauthenticated());
+  }
+
+  Future<AuthTokens?> _readTokenBundle() async {
+    final raw = await _storage.read(_tokenBundleKey);
+    if (raw == null || raw.isEmpty) return null;
+
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return null;
+      final accessToken = decoded['accessToken']?.toString() ?? '';
+      final refreshToken = decoded['refreshToken']?.toString() ?? '';
+      if (accessToken.isEmpty || refreshToken.isEmpty) return null;
+      return AuthTokens(
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+        refreshPath: decoded['refreshPath']?.toString(),
+      );
+    } on FormatException {
+      return null;
+    }
   }
 
   void markUnauthenticated() => _emit(const SessionState.unauthenticated());

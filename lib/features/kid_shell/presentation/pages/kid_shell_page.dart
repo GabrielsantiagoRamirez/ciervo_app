@@ -186,7 +186,7 @@ class _KidHomePageState extends State<KidHomePage> {
                   _QuickTile(
                     icon: Icons.family_restroom_outlined,
                     title: 'Pedidos a mi familia',
-                    subtitle: 'Solicitudes pay-for-me',
+                    subtitle: 'Solicitudes Pinduck',
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => const KidPayForMeListPage(),

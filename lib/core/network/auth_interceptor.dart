@@ -39,31 +39,53 @@ class AuthInterceptor extends Interceptor {
     final statusCode = err.response?.statusCode;
     final alreadyRetried = err.requestOptions.extra['authRetried'] == true;
 
-    if (statusCode != 401 || alreadyRetried) {
+    if (statusCode != 401 ||
+        alreadyRetried ||
+        _isAuthEndpoint(err.requestOptions)) {
       handler.next(err);
       return;
     }
 
-    final refreshedToken = await _tokenRefresher.refreshAccessToken();
-    if (refreshedToken == null) {
-      handler.next(err);
-      return;
+    final failedToken = _bearerToken(
+      err.requestOptions.headers['Authorization']?.toString(),
+    );
+    final currentToken = await _sessionManager.accessToken();
+    final token =
+        currentToken != null &&
+            currentToken.isNotEmpty &&
+            currentToken != failedToken
+        ? currentToken
+        : await _tokenRefresher.refreshAccessToken();
+    if (token == null) {
+      return handler.next(err);
     }
 
     final requestOptions = err.requestOptions;
     requestOptions.extra['authRetried'] = true;
-    requestOptions.headers['Authorization'] = 'Bearer $refreshedToken';
+    requestOptions.headers['Authorization'] = 'Bearer $token';
 
     try {
       final response = await _dio.fetch<dynamic>(requestOptions);
       handler.resolve(response);
-    } catch (error) {
+    } on DioException catch (retryError) {
+      handler.next(retryError);
+    } catch (_) {
       handler.next(err);
     }
   }
 
   bool _isAuthEndpoint(RequestOptions options) {
     final path = options.path.toLowerCase();
-    return options.extra['skipAuth'] == true || path.contains('/api/auth/');
+    return options.extra['skipAuth'] == true ||
+        path.contains('/api/auth/') ||
+        path.contains('/api/v1/kids/auth/');
+  }
+
+  String? _bearerToken(String? authorization) {
+    if (authorization == null ||
+        !authorization.toLowerCase().startsWith('bearer ')) {
+      return null;
+    }
+    return authorization.substring(7).trim();
   }
 }

@@ -7,6 +7,8 @@ Object? unwrapApiResponse(Object? response) {
         message:
             response['msg']?.toString() ?? 'No pudimos completar la solicitud.',
         code: response['errorCode']?.toString() ?? response['code']?.toString(),
+        correlationId: response['correlationId']?.toString(),
+        fieldErrors: _fieldErrors(response['errors']),
       );
     }
     if (response.containsKey('value')) {
@@ -33,4 +35,17 @@ List<dynamic> unwrapApiList(Object? response) {
     return value['items'] as List;
   }
   return const [];
+}
+
+Map<String, List<String>> _fieldErrors(Object? raw) {
+  if (raw is! Map) return const <String, List<String>>{};
+
+  return Map<String, List<String>>.unmodifiable(
+    raw.map((key, value) {
+      final messages = value is Iterable
+          ? value.map((item) => item.toString()).toList(growable: false)
+          : <String>[if (value != null) value.toString()];
+      return MapEntry(key.toString(), messages);
+    }),
+  );
 }

@@ -83,7 +83,7 @@ class _RequestMoneyPageState extends State<RequestMoneyPage> {
         builder: (context, state) {
           final canSubmit = _canSubmit(state);
           return Scaffold(
-            appBar: AppBar(title: const Text('Paga por mi')),
+            appBar: AppBar(title: const Text('Pinduck')),
             body: SingleChildScrollView(
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: CiervoCard(
