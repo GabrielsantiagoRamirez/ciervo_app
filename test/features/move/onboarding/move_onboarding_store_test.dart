@@ -8,7 +8,6 @@ import 'package:ciervo_clud/features/move/data/onboarding/secure_move_onboarding
 import 'package:ciervo_clud/features/move/data/onboarding/sha256.dart';
 import 'package:ciervo_clud/features/move/domain/onboarding/move_onboarding_draft.dart';
 import 'package:ciervo_clud/features/move/domain/onboarding/move_onboarding_enums.dart';
-import 'package:ciervo_clud/features/move/domain/onboarding/move_terms_configuration.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
