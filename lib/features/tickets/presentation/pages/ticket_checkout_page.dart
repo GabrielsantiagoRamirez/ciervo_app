@@ -84,9 +84,7 @@ class _TicketCheckoutPageState extends State<TicketCheckoutPage> {
           success: (paid) async {
             setState(() => _busy = false);
             if (!mounted) return;
-            context.go(
-              '/tickets/wallet/${Uri.encodeComponent(paid.ticketId)}',
-            );
+            context.go('/tickets/wallet/${Uri.encodeComponent(paid.ticketId)}');
           },
           failure: (error) async {
             setState(() {
@@ -129,9 +127,9 @@ class _TicketCheckoutPageState extends State<TicketCheckoutPage> {
             children: [
               Text(
                 detail.title,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: AppSpacing.sm),
               Text('Cantidad: ${widget.quantity}'),
@@ -161,9 +159,9 @@ class _TicketCheckoutPageState extends State<TicketCheckoutPage> {
               const SizedBox(height: AppSpacing.sm),
               Text(
                 'Tarjeta o transferencia bancaria no están disponibles en Tickets.',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
               ),
               if (_error != null) ...[
                 const SizedBox(height: AppSpacing.md),

@@ -62,9 +62,7 @@ class _ExperienceModeToggle extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDay ? const Color(0xFFF0E8D4) : const Color(0xFF151516),
         borderRadius: AppRadii.chip,
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.45),
-        ),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.45)),
       ),
       child: Row(
         children: [
@@ -101,8 +99,9 @@ class _Segment extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final unselected =
-        isDayTrack ? AppColors.dayTextMuted : AppColors.textMuted;
+    final unselected = isDayTrack
+        ? AppColors.dayTextMuted
+        : AppColors.textMuted;
     return InkWell(
       onTap: onTap,
       borderRadius: AppRadii.chip,

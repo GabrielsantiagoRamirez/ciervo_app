@@ -14,11 +14,7 @@ void main() {
             'country': 'CO',
             'city': 'Bogota',
           },
-          {
-            'businessId': 20,
-            'name': 'Hotel Dorado Funza',
-            'category': 'Hotel',
-          },
+          {'businessId': 20, 'name': 'Hotel Dorado Funza', 'category': 'Hotel'},
           {
             'id': 30,
             'businessName': 'QA Beach Club Cartagena',

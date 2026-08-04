@@ -22,8 +22,7 @@ class HomeDiscoveryState {
     this.location,
     this.categories = const [],
     this.filters = const DiscoverySmartFilters(),
-  }) : countryCode =
-           countryCode ?? CountryRegistration.defaultCountryCode(),
+  }) : countryCode = countryCode ?? CountryRegistration.defaultCountryCode(),
        city =
            city ??
            CountryRegistration.contextForCode(

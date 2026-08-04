@@ -307,8 +307,7 @@ class ReservableOption {
   });
 
   factory ReservableOption.fromJson(Map<String, dynamic> json) {
-    final price =
-        _num(json['price'] ?? json['amount'] ?? json['basePrice']);
+    final price = _num(json['price'] ?? json['amount'] ?? json['basePrice']);
     final prepaidAmount = _num(
       json['prepaymentAmount'] ??
           json['prepaidAmount'] ??

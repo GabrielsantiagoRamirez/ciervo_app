@@ -15,8 +15,7 @@ class ExperienceModeState {
 }
 
 class ExperienceModeCubit extends Cubit<ExperienceModeState> {
-  ExperienceModeCubit(this._storage)
-    : super(ExperienceModeState.unselected());
+  ExperienceModeCubit(this._storage) : super(ExperienceModeState.unselected());
 
   static const _storageKey = 'ciervo.experienceMode';
 

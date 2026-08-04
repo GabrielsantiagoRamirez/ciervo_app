@@ -17,8 +17,7 @@ class BusinessCategoriesRepository {
       final response = await _client.dio.get<dynamic>(
         '/api/business-categories',
         queryParameters: {
-          if (experienceMode != null)
-            'experienceMode': experienceMode.apiValue,
+          if (experienceMode != null) 'experienceMode': experienceMode.apiValue,
         },
       );
       final categories =

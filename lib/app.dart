@@ -19,6 +19,7 @@ import 'core/utils/keyboard_utils.dart';
 import 'features/auth/presentation/pages/splash_page.dart';
 import 'features/memberships/presentation/cubit/membership_cubit.dart';
 import 'features/notifications/presentation/cubit/notification_badges_cubit.dart';
+
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
 class CiervoApp extends StatefulWidget {
@@ -128,9 +129,7 @@ class _CiervoAppState extends State<CiervoApp> with WidgetsBindingObserver {
                 : ThemeMode.dark,
             routerConfig: _router,
             builder: (context, child) {
-              return DismissKeyboardScope(
-                child: child ?? const SplashPage(),
-              );
+              return DismissKeyboardScope(child: child ?? const SplashPage());
             },
           );
         },

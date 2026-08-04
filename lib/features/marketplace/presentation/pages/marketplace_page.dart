@@ -185,45 +185,40 @@ class _MarketplaceViewState extends State<_MarketplaceView> {
                     title: 'Destacadas',
                     items: state.highlights,
                     onTap: _openPromo,
-                    onFavorite: (promo) => context
-                        .read<MarketplaceCubit>()
-                        .toggleFavorite(promo),
+                    onFavorite: (promo) =>
+                        context.read<MarketplaceCubit>().toggleFavorite(promo),
                   ),
                 if (state.nearby.isNotEmpty)
                   _HorizontalSection(
                     title: 'Cerca de ti',
                     items: state.nearby,
                     onTap: _openPromo,
-                    onFavorite: (promo) => context
-                        .read<MarketplaceCubit>()
-                        .toggleFavorite(promo),
+                    onFavorite: (promo) =>
+                        context.read<MarketplaceCubit>().toggleFavorite(promo),
                   ),
                 if (state.cashback.isNotEmpty)
                   _HorizontalSection(
                     title: 'Cashback',
                     items: state.cashback,
                     onTap: _openPromo,
-                    onFavorite: (promo) => context
-                        .read<MarketplaceCubit>()
-                        .toggleFavorite(promo),
+                    onFavorite: (promo) =>
+                        context.read<MarketplaceCubit>().toggleFavorite(promo),
                   ),
                 if (state.points.isNotEmpty)
                   _HorizontalSection(
                     title: 'Puntos',
                     items: state.points,
                     onTap: _openPromo,
-                    onFavorite: (promo) => context
-                        .read<MarketplaceCubit>()
-                        .toggleFavorite(promo),
+                    onFavorite: (promo) =>
+                        context.read<MarketplaceCubit>().toggleFavorite(promo),
                   ),
                 if (state.popular.isNotEmpty)
                   _HorizontalSection(
                     title: 'Populares',
                     items: state.popular,
                     onTap: _openPromo,
-                    onFavorite: (promo) => context
-                        .read<MarketplaceCubit>()
-                        .toggleFavorite(promo),
+                    onFavorite: (promo) =>
+                        context.read<MarketplaceCubit>().toggleFavorite(promo),
                   ),
                 SliverToBoxAdapter(
                   child: Padding(
@@ -233,7 +228,10 @@ class _MarketplaceViewState extends State<_MarketplaceView> {
                       AppSpacing.lg,
                       AppSpacing.sm,
                     ),
-                    child: Text('Todas las ofertas', style: AppTextStyles.title),
+                    child: Text(
+                      'Todas las ofertas',
+                      style: AppTextStyles.title,
+                    ),
                   ),
                 ),
                 if (state.status == MarketplaceStatus.loading)
@@ -344,7 +342,10 @@ class _HorizontalSection extends StatelessWidget {
               AppSpacing.lg,
               AppSpacing.sm,
             ),
-            child: Text(title, style: AppTextStyles.title.copyWith(fontSize: 18)),
+            child: Text(
+              title,
+              style: AppTextStyles.title.copyWith(fontSize: 18),
+            ),
           ),
           SizedBox(
             height: 240,

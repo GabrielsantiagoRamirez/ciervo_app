@@ -311,83 +311,86 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
                       )
                     else
                       ..._products.map(
-                    (product) => Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                      child: _ProductTile(product: product),
-                    ),
-                  ),
-                if (_products.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  CiervoButton(
-                    label: 'Comprar',
-                    icon: Icons.shopping_bag_outlined,
-                    onPressed: () => _openOrderCheckout(context),
-                  ),
-                ],
-                if (_products.any((item) => item.allowsPickup)) ...[
-                  const SizedBox(height: AppSpacing.xs),
-                  const _CapabilityLine(
-                    icon: Icons.storefront_outlined,
-                    text: 'Recoger en tienda disponible',
-                  ),
-                ],
-                if (_products.any((item) => item.allowsDelivery) &&
-                    (_deliveryAvailability?.deliveryAvailable ?? false)) ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  CiervoButton(
-                    label: 'Pedir domicilio',
-                    icon: Icons.delivery_dining,
-                    onPressed: () => _showDeliverySheet(context),
-                  ),
-                ] else if (_products.any((item) => item.allowsDelivery)) ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  _CapabilityLine(
-                    icon: Icons.delivery_dining_outlined,
-                    text:
-                        _deliveryAvailability?.message ??
-                        'Domicilio no disponible para tu ubicacion.',
-                  ),
-                ],
-                const SizedBox(height: AppSpacing.md),
-                const _SectionTitle('Ubicacion'),
-                const SizedBox(height: AppSpacing.sm),
-                PlaceDetailLocationCard(
-                  locationLabel: detail.locationLabel,
-                  distanceKm: detail.distanceKm,
-                  latitude: _publicDetail?.latitude,
-                  longitude: _publicDetail?.longitude,
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                Row(
-                  children: [
-                    const Expanded(child: _SectionTitle('Reseñas')),
-                    if ((_hasReviewed && _userReviewId != null) ||
-                        (!_hasReviewed && _canCreateReview))
-                      TextButton.icon(
-                        icon: const Icon(Icons.star_outline),
-                        label: Text(_hasReviewed ? 'Editar' : 'Calificar'),
-                        onPressed: () => _showReviewSheet(context),
+                        (product) => Padding(
+                          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                          child: _ProductTile(product: product),
+                        ),
                       ),
-                  ],
+                    if (_products.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      CiervoButton(
+                        label: 'Comprar',
+                        icon: Icons.shopping_bag_outlined,
+                        onPressed: () => _openOrderCheckout(context),
+                      ),
+                    ],
+                    if (_products.any((item) => item.allowsPickup)) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      const _CapabilityLine(
+                        icon: Icons.storefront_outlined,
+                        text: 'Recoger en tienda disponible',
+                      ),
+                    ],
+                    if (_products.any((item) => item.allowsDelivery) &&
+                        (_deliveryAvailability?.deliveryAvailable ??
+                            false)) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      CiervoButton(
+                        label: 'Pedir domicilio',
+                        icon: Icons.delivery_dining,
+                        onPressed: () => _showDeliverySheet(context),
+                      ),
+                    ] else if (_products.any(
+                      (item) => item.allowsDelivery,
+                    )) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      _CapabilityLine(
+                        icon: Icons.delivery_dining_outlined,
+                        text:
+                            _deliveryAvailability?.message ??
+                            'Domicilio no disponible para tu ubicacion.',
+                      ),
+                    ],
+                    const SizedBox(height: AppSpacing.md),
+                    const _SectionTitle('Ubicacion'),
+                    const SizedBox(height: AppSpacing.sm),
+                    PlaceDetailLocationCard(
+                      locationLabel: detail.locationLabel,
+                      distanceKm: detail.distanceKm,
+                      latitude: _publicDetail?.latitude,
+                      longitude: _publicDetail?.longitude,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    Row(
+                      children: [
+                        const Expanded(child: _SectionTitle('Reseñas')),
+                        if ((_hasReviewed && _userReviewId != null) ||
+                            (!_hasReviewed && _canCreateReview))
+                          TextButton.icon(
+                            icon: const Icon(Icons.star_outline),
+                            label: Text(_hasReviewed ? 'Editar' : 'Calificar'),
+                            onPressed: () => _showReviewSheet(context),
+                          ),
+                      ],
+                    ),
+                    if (!_hasReviewed && !_canCreateReview)
+                      Text(
+                        _publicDetail?.reviewEligibilityReason ??
+                            'Debes tener una reserva, pedido, recibo, ticket o promocion redimida para calificar este negocio.',
+                        style: AppTextStyles.bodyMuted,
+                      ),
+                    const SizedBox(height: AppSpacing.sm),
+                    ...(_reviews.isEmpty ? detail.reviews : _reviews).map(
+                      (review) => Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                        child: PlaceDetailReviewTile(review: review),
+                      ),
+                    ),
+                    const SizedBox(height: 96),
+                  ]),
                 ),
-                if (!_hasReviewed && !_canCreateReview)
-                  Text(
-                    _publicDetail?.reviewEligibilityReason ??
-                        'Debes tener una reserva, pedido, recibo, ticket o promocion redimida para calificar este negocio.',
-                    style: AppTextStyles.bodyMuted,
-                  ),
-                const SizedBox(height: AppSpacing.sm),
-                ...(_reviews.isEmpty ? detail.reviews : _reviews).map(
-                  (review) => Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    child: PlaceDetailReviewTile(review: review),
-                  ),
-                ),
-                const SizedBox(height: 96),
-              ]),
-            ),
-          ),
-        ],
+              ),
+            ],
           ),
           Positioned(
             top: 0,
@@ -466,9 +469,7 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.child_care_outlined),
-                    onPressed: _associatingKid
-                        ? null
-                        : _associateBusinessToKid,
+                    onPressed: _associatingKid ? null : _associateBusinessToKid,
                   ),
                 ],
                 SizedBox(width: narrow ? AppSpacing.xs : AppSpacing.sm),
@@ -535,10 +536,7 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
       if (description != null && description.isNotEmpty) description,
       link,
     ].join('\n');
-    await CiervoShare.shareText(
-      body,
-      subject: detail?.shareTitle ?? name,
-    );
+    await CiervoShare.shareText(body, subject: detail?.shareTitle ?? name);
   }
 
   Future<void> _associateBusinessToKid() async {
@@ -600,17 +598,13 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
     result.when(
       success: (_) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Comercio asociado a ${selected.firstName}.',
-            ),
-          ),
+          SnackBar(content: Text('Comercio asociado a ${selected.firstName}.')),
         );
       },
       failure: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       },
     );
   }

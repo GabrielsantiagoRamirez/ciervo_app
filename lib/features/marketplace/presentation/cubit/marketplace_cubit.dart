@@ -50,30 +50,29 @@ class MarketplaceState {
     bool clearError = false,
     bool? hasMore,
     bool? loadingMore,
-  }) =>
-      MarketplaceState(
-        status: status ?? this.status,
-        items: items ?? this.items,
-        highlights: highlights ?? this.highlights,
-        popular: popular ?? this.popular,
-        cashback: cashback ?? this.cashback,
-        points: points ?? this.points,
-        nearby: nearby ?? this.nearby,
-        filtersCatalog: filtersCatalog ?? this.filtersCatalog,
-        query: query ?? this.query,
-        errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
-        hasMore: hasMore ?? this.hasMore,
-        loadingMore: loadingMore ?? this.loadingMore,
-      );
+  }) => MarketplaceState(
+    status: status ?? this.status,
+    items: items ?? this.items,
+    highlights: highlights ?? this.highlights,
+    popular: popular ?? this.popular,
+    cashback: cashback ?? this.cashback,
+    points: points ?? this.points,
+    nearby: nearby ?? this.nearby,
+    filtersCatalog: filtersCatalog ?? this.filtersCatalog,
+    query: query ?? this.query,
+    errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+    hasMore: hasMore ?? this.hasMore,
+    loadingMore: loadingMore ?? this.loadingMore,
+  );
 }
 
 class MarketplaceCubit extends Cubit<MarketplaceState> {
   MarketplaceCubit({
     required MarketplaceRepository repository,
     required LocationService locationService,
-  })  : _repository = repository,
-        _locationService = locationService,
-        super(const MarketplaceState());
+  }) : _repository = repository,
+       _locationService = locationService,
+       super(const MarketplaceState());
 
   final MarketplaceRepository _repository;
   final LocationService _locationService;
@@ -85,10 +84,7 @@ class MarketplaceCubit extends Cubit<MarketplaceState> {
       success: (catalog) => emit(state.copyWith(filtersCatalog: catalog)),
       failure: (_) {},
     );
-    await Future.wait([
-      _loadSections(),
-      refreshFeed(reset: true),
-    ]);
+    await Future.wait([_loadSections(), refreshFeed(reset: true)]);
   }
 
   Future<void> refreshFeed({bool reset = false}) async {
@@ -216,7 +212,10 @@ class MarketplaceCubit extends Cubit<MarketplaceState> {
 
     emit(
       state.copyWith(
-        highlights: highlights.when(success: (v) => v, failure: (_) => const []),
+        highlights: highlights.when(
+          success: (v) => v,
+          failure: (_) => const [],
+        ),
         popular: popular.when(success: (v) => v, failure: (_) => const []),
         cashback: cashback.when(success: (v) => v, failure: (_) => const []),
         points: points.when(success: (v) => v, failure: (_) => const []),
@@ -228,8 +227,7 @@ class MarketplaceCubit extends Cubit<MarketplaceState> {
   List<MarketplacePromo> _replace(
     List<MarketplacePromo> source,
     MarketplacePromo updated,
-  ) =>
-      source
-          .map((item) => item.id == updated.id ? updated : item)
-          .toList(growable: false);
+  ) => source
+      .map((item) => item.id == updated.id ? updated : item)
+      .toList(growable: false);
 }

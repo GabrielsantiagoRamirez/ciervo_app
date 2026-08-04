@@ -137,9 +137,11 @@ class DioPaymentsRemoteDataSource implements PaymentsRemoteDataSource {
       data: {
         'amount': amount,
         'currency':
-            (currency ?? CountryRegistration.currencyForCountry(
-              CountryRegistration.defaultCountryCode(),
-            )).toUpperCase(),
+            (currency ??
+                    CountryRegistration.currencyForCountry(
+                      CountryRegistration.defaultCountryCode(),
+                    ))
+                .toUpperCase(),
         'idempotencyKey': idempotencyKey,
       },
     );

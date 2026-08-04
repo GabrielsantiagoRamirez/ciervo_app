@@ -184,8 +184,7 @@ class _KidGeofencePageState extends State<KidGeofencePage> {
                                 },
                                 onTap: (position) =>
                                     setState(() => _center = position),
-                                gestureRecognizers:
-                                    mapEagerGestureRecognizers,
+                                gestureRecognizers: mapEagerGestureRecognizers,
                                 markers: {
                                   Marker(
                                     markerId: const MarkerId('center'),

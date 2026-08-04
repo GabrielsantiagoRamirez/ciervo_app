@@ -1225,11 +1225,7 @@ class _ActionButton extends StatelessWidget {
 }
 
 class _SafeBlock extends StatelessWidget {
-  const _SafeBlock({
-    required this.message,
-    this.onRetry,
-    this.onRelogin,
-  });
+  const _SafeBlock({required this.message, this.onRetry, this.onRelogin});
 
   final String message;
   final VoidCallback? onRetry;

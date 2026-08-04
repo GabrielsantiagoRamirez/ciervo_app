@@ -26,9 +26,9 @@ Future<void> showMembershipRenewalReminderIfNeeded(BuildContext context) async {
   if (cycleKey == null) return;
 
   void openMembership() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const MembershipPage()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const MembershipPage()));
   }
 
   if (me.isInGrace) {
@@ -198,10 +198,7 @@ class _MembershipRenewalDialogState extends State<_MembershipRenewalDialog> {
       ),
       actions: [
         TextButton(onPressed: _close, child: const Text('Ahora no')),
-        FilledButton(
-          onPressed: widget.onRenew,
-          child: const Text('Renovar'),
-        ),
+        FilledButton(onPressed: widget.onRenew, child: const Text('Renovar')),
       ],
     );
   }

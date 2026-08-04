@@ -83,8 +83,9 @@ class _AddFamilyCardViewState extends State<_AddFamilyCardView> {
       final resolved = fromConfig ?? CountryRegistration.defaultCountryCode();
       setState(() {
         _countryCode = resolved;
-        _identificationType =
-            CountryRegistration.mercadoPagoIdentificationType(resolved);
+        _identificationType = CountryRegistration.mercadoPagoIdentificationType(
+          resolved,
+        );
         _resolvingCountry = false;
       });
     } catch (_) {
@@ -96,8 +97,9 @@ class _AddFamilyCardViewState extends State<_AddFamilyCardView> {
   void _onCountryChanged(String countryCode) {
     setState(() {
       _countryCode = countryCode;
-      _identificationType =
-          CountryRegistration.mercadoPagoIdentificationType(countryCode);
+      _identificationType = CountryRegistration.mercadoPagoIdentificationType(
+        countryCode,
+      );
     });
   }
 

@@ -68,7 +68,11 @@ class ResolvedWalletUserDto {
         'ciervoId',
       ]),
       displayName: _string(source, const ['displayName', 'name', 'maskedName']),
-      username: _nullableString(source, const ['username', 'userName', 'handle']),
+      username: _nullableString(source, const [
+        'username',
+        'userName',
+        'handle',
+      ]),
       photoUrl: _nullableString(source, const [
         'photoUrl',
         'profilePhotoUrl',
@@ -132,7 +136,12 @@ class TransferDirectoryEntryDto {
 
   factory TransferDirectoryEntryDto.fromJson(Map<String, dynamic> json) {
     return TransferDirectoryEntryDto(
-      userId: _string(json, const ['userId', 'id', 'clientId', 'favoriteUserId']),
+      userId: _string(json, const [
+        'userId',
+        'id',
+        'clientId',
+        'favoriteUserId',
+      ]),
       displayName: _string(json, const [
         'displayName',
         'name',
@@ -151,10 +160,7 @@ class TransferDirectoryEntryDto {
         'avatarUrl',
       ]),
       countryCode: _nullableString(json, const ['countryCode', 'country']),
-      localCurrency: _nullableString(json, const [
-        'localCurrency',
-        'currency',
-      ]),
+      localCurrency: _nullableString(json, const ['localCurrency', 'currency']),
       isVerified: json['isVerified'] == true || json['verified'] == true,
       isBusiness: json['isBusiness'] == true || json['business'] == true,
       isFavorite: json['isFavorite'] == true || json['favorite'] == true,
@@ -210,7 +216,11 @@ class TransferDirectoryEntryDto {
             Map<String, dynamic>.from(item),
           ),
         )
-        .where((item) => item.userId.isNotEmpty || (item.ciervoUserCode?.isNotEmpty ?? false))
+        .where(
+          (item) =>
+              item.userId.isNotEmpty ||
+              (item.ciervoUserCode?.isNotEmpty ?? false),
+        )
         .toList();
   }
 }

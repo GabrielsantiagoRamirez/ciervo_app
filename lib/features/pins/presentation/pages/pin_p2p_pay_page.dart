@@ -117,7 +117,9 @@ class _PinP2PPayPageState extends State<PinP2PPayPage> {
       success: (value) {
         setState(() => _busy = false);
         if (!value.success) {
-          setState(() => _error = value.message ?? 'No se pudo completar el cobro.');
+          setState(
+            () => _error = value.message ?? 'No se pudo completar el cobro.',
+          );
           return;
         }
         ScaffoldMessenger.of(context).showSnackBar(
@@ -197,7 +199,9 @@ class _PinP2PPayPageState extends State<PinP2PPayPage> {
                   const SizedBox(height: AppSpacing.md),
                   Text(
                     _error!,
-                    style: TextStyle(color: Theme.of(context).colorScheme.error),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
                 ],
                 const SizedBox(height: AppSpacing.lg),

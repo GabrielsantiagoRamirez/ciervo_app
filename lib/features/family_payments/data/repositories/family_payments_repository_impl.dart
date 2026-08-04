@@ -53,19 +53,19 @@ class FamilyPaymentsRepositoryImpl implements FamilyPaymentsRepository {
     required String cardId,
     required String alias,
   }) => _guard(
-    () async =>
-        (await _remote.updateCardAlias(cardId: cardId, alias: alias)).toDomain(),
+    () async => (await _remote.updateCardAlias(
+      cardId: cardId,
+      alias: alias,
+    )).toDomain(),
   );
 
   @override
-  Future<Result<FamilyPaymentCard>> setPrimaryCard(String cardId) => _guard(
-    () async => (await _remote.setPrimaryCard(cardId)).toDomain(),
-  );
+  Future<Result<FamilyPaymentCard>> setPrimaryCard(String cardId) =>
+      _guard(() async => (await _remote.setPrimaryCard(cardId)).toDomain());
 
   @override
-  Future<Result<FamilyPaymentCard>> setBackupCard(String cardId) => _guard(
-    () async => (await _remote.setBackupCard(cardId)).toDomain(),
-  );
+  Future<Result<FamilyPaymentCard>> setBackupCard(String cardId) =>
+      _guard(() async => (await _remote.setBackupCard(cardId)).toDomain());
 
   @override
   Future<Result<void>> deleteCard(String cardId) =>

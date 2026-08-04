@@ -191,8 +191,7 @@ GoRouter createAppRouter(
         path: '/tickets/:eventId/seats',
         builder: (context, state) {
           final eventId = Uri.decodeComponent(state.pathParameters['eventId']!);
-          final qty =
-              int.tryParse(state.uri.queryParameters['qty'] ?? '') ?? 1;
+          final qty = int.tryParse(state.uri.queryParameters['qty'] ?? '') ?? 1;
           return TicketSeatsPage(
             eventId: eventId,
             quantity: qty.clamp(1, 20),
@@ -204,8 +203,7 @@ GoRouter createAppRouter(
         path: '/tickets/:eventId/checkout',
         builder: (context, state) {
           final eventId = Uri.decodeComponent(state.pathParameters['eventId']!);
-          final qty =
-              int.tryParse(state.uri.queryParameters['qty'] ?? '') ?? 1;
+          final qty = int.tryParse(state.uri.queryParameters['qty'] ?? '') ?? 1;
           final seatsRaw = state.uri.queryParameters['seats'] ?? '';
           return TicketCheckoutPage(
             eventId: eventId,

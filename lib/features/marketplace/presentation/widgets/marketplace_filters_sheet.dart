@@ -14,10 +14,8 @@ Future<MarketplaceFeedQuery?> showMarketplaceFiltersSheet({
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (_) => _MarketplaceFiltersSheet(
-      initial: initial,
-      catalog: catalog,
-    ),
+    builder: (_) =>
+        _MarketplaceFiltersSheet(initial: initial, catalog: catalog),
   );
 }
 
@@ -53,11 +51,11 @@ class _MarketplaceFiltersSheetState extends State<_MarketplaceFiltersSheet> {
       });
   }
 
-      @override
-    void dispose() {
-      _categoryController.dispose();
-      super.dispose();
-    }
+  @override
+  void dispose() {
+    _categoryController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,9 +63,7 @@ class _MarketplaceFiltersSheetState extends State<_MarketplaceFiltersSheet> {
     final filteredCategories = widget.catalog.categories.where((category) {
       if (_categorySearch.isEmpty) return true;
 
-      return category.name
-          .toLowerCase()
-          .contains(_categorySearch);
+      return category.name.toLowerCase().contains(_categorySearch);
     }).toList();
     return Padding(
       padding: EdgeInsets.fromLTRB(
@@ -93,57 +89,57 @@ class _MarketplaceFiltersSheetState extends State<_MarketplaceFiltersSheet> {
               ),
             ),
 
-                        const SizedBox(height: AppSpacing.xs),
-                        SizedBox(
-  height: 260,
-  child: ListView(
-    children: [
-      ListTile(
-        leading: Icon(
-          _query.categoryId == null
-              ? Icons.radio_button_checked
-              : Icons.radio_button_off,
-        ),
-        title: const Text('Todas'),
-        onTap: () {
-          setState(() {
-            _query = _query.copyWith(clearCategory: true);
-          });
-        },
-      ),
+            const SizedBox(height: AppSpacing.xs),
+            SizedBox(
+              height: 260,
+              child: ListView(
+                children: [
+                  ListTile(
+                    leading: Icon(
+                      _query.categoryId == null
+                          ? Icons.radio_button_checked
+                          : Icons.radio_button_off,
+                    ),
+                    title: const Text('Todas'),
+                    onTap: () {
+                      setState(() {
+                        _query = _query.copyWith(clearCategory: true);
+                      });
+                    },
+                  ),
 
-const SizedBox(height: 8),
+                  const SizedBox(height: 8),
 
-      ...filteredCategories.map(
-        (category) => ListTile(
-          leading: Icon(
-            _query.categoryId == category.id
-                ? Icons.radio_button_checked
-                : Icons.radio_button_off,
-          ),
-          title: Text(
-          category.name,
-          style: TextStyle(
-            fontWeight: _query.categoryId == category.id
-                ? FontWeight.bold
-                : FontWeight.normal,
-          ),
-        ),
-          onTap: () {
-            FocusScope.of(context).unfocus();
-            setState(() {
-              _query = _query.copyWith(
-                categoryId: category.id,
-                categoria: category.name,
-              );
-            });
-          },
-        ),
-      ),
-    ],
-  ),
-)
-            , if (widget.catalog.cities.isNotEmpty) ...[
+                  ...filteredCategories.map(
+                    (category) => ListTile(
+                      leading: Icon(
+                        _query.categoryId == category.id
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_off,
+                      ),
+                      title: Text(
+                        category.name,
+                        style: TextStyle(
+                          fontWeight: _query.categoryId == category.id
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                        ),
+                      ),
+                      onTap: () {
+                        FocusScope.of(context).unfocus();
+                        setState(() {
+                          _query = _query.copyWith(
+                            categoryId: category.id,
+                            categoria: category.name,
+                          );
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (widget.catalog.cities.isNotEmpty) ...[
               const SizedBox(height: AppSpacing.md),
               Text('Ciudad', style: AppTextStyles.label),
               const SizedBox(height: AppSpacing.xs),
@@ -252,9 +248,8 @@ const SizedBox(height: 8),
             Row(
               children: [
                 TextButton(
-                  onPressed: () => Navigator.of(context).pop(
-                    const MarketplaceFeedQuery(),
-                  ),
+                  onPressed: () =>
+                      Navigator.of(context).pop(const MarketplaceFeedQuery()),
                   child: const Text('Limpiar'),
                 ),
                 const Spacer(),

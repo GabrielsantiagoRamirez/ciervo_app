@@ -173,7 +173,9 @@ class MoveOnboardingCubit extends Cubit<MoveOnboardingState> {
   void _loadTerms(String countryCode) {
     try {
       final terms = _termsRepository.configurationFor(countryCode);
-      emit(state.copyWith(terms: terms, clearBlocked: true, clearMessages: true));
+      emit(
+        state.copyWith(terms: terms, clearBlocked: true, clearMessages: true),
+      );
     } on MoveTermsConfigurationException catch (error) {
       // No bloqueamos toda la UI: el conductor puede cargar identidad/vehículo.
       // Solo avisa; el envío de identidad exige términos válidos.

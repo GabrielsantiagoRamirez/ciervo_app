@@ -50,7 +50,9 @@ class TicketEventSummary {
           json['category'] ?? json['categoria'],
         ),
         city: _nullableString(json['city'] ?? json['ciudad']),
-        venue: _nullableString(json['venue'] ?? json['location'] ?? json['place']),
+        venue: _nullableString(
+          json['venue'] ?? json['location'] ?? json['place'],
+        ),
         startsAt: _date(json['startsAt'] ?? json['date'] ?? json['fecha']),
         imageUrl: _nullableString(
           json['imageUrl'] ?? json['posterUrl'] ?? json['coverUrl'],
@@ -127,7 +129,8 @@ class TicketEventDetail {
     final types = _maps(
       json['ticketTypes'] ?? json['types'] ?? json['ticket_types'],
     ).map(TicketType.fromJson).toList();
-    final seatsHint = json['hasSeatingPlan'] == true ||
+    final seatsHint =
+        json['hasSeatingPlan'] == true ||
         json['hasSeats'] == true ||
         json['seatingPlan'] == true;
     return TicketEventDetail(
@@ -138,14 +141,17 @@ class TicketEventDetail {
         json['category'] ?? json['categoria'],
       ),
       city: _nullableString(json['city'] ?? json['ciudad']),
-      venue: _nullableString(json['venue'] ?? json['location'] ?? json['place']),
+      venue: _nullableString(
+        json['venue'] ?? json['location'] ?? json['place'],
+      ),
       startsAt: _date(json['startsAt'] ?? json['date'] ?? json['fecha']),
       endsAt: _date(json['endsAt'] ?? json['endDate']),
       imageUrl: _nullableString(
         json['imageUrl'] ?? json['posterUrl'] ?? json['coverUrl'],
       ),
       currency: _nullableString(json['currency']) ?? 'COP',
-      minPrice: _doubleOrNull(
+      minPrice:
+          _doubleOrNull(
             json['minPrice'] ?? json['priceFrom'] ?? json['price'],
           ) ??
           (types.isEmpty ? null : types.map((t) => t.price).reduce(_min)),
@@ -230,7 +236,8 @@ class TicketSeat {
       id: id,
       label: _string(json['label'] ?? json['name'] ?? id),
       row: _nullableString(json['row'] ?? json['fila']),
-      available: json['available'] != false &&
+      available:
+          json['available'] != false &&
           json['isAvailable'] != false &&
           json['status']?.toString().toLowerCase() != 'taken' &&
           json['status']?.toString().toLowerCase() != 'occupied',
@@ -248,11 +255,7 @@ class TicketSeat {
 }
 
 class SeatHold {
-  const SeatHold({
-    required this.holdId,
-    required this.seatIds,
-    this.expiresAt,
-  });
+  const SeatHold({required this.holdId, required this.seatIds, this.expiresAt});
 
   factory SeatHold.fromJson(Map<String, dynamic> json) => SeatHold(
     holdId: _string(json['holdId'] ?? json['id'] ?? json['reservationId']),
@@ -308,8 +311,7 @@ class TicketOrder {
       !status.toLowerCase().contains('used') &&
       !status.toLowerCase().contains('consumed');
 
-  bool get canRefund =>
-      isPaid || status.toLowerCase().contains('paid');
+  bool get canRefund => isPaid || status.toLowerCase().contains('paid');
 }
 
 class WalletTicket {
@@ -465,7 +467,11 @@ List<String> _strings(Object? value) {
         .toList();
   }
   if (value is String && value.trim().isNotEmpty) {
-    return value.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    return value
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
   }
   return const [];
 }

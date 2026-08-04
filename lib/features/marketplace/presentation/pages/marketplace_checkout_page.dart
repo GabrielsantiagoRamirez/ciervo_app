@@ -93,18 +93,14 @@ class _MarketplaceCheckoutPageState extends State<MarketplaceCheckoutPage> {
     result.when(
       success: (order) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Pedido #${order.id} · ${order.status}',
-            ),
-          ),
+          SnackBar(content: Text('Pedido #${order.id} · ${order.status}')),
         );
         context.go('/marketplace/orders');
       },
       failure: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       },
     );
   }
@@ -112,7 +108,9 @@ class _MarketplaceCheckoutPageState extends State<MarketplaceCheckoutPage> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(body: Center(child: CiervoLoadingState(itemCount: 3)));
+      return const Scaffold(
+        body: Center(child: CiervoLoadingState(itemCount: 3)),
+      );
     }
     if (_error != null || _promo == null) {
       return Scaffold(

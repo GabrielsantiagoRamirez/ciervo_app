@@ -69,9 +69,7 @@ class _CardNumberFieldState extends State<CardNumberField> {
             prefixIcon: const Icon(Icons.credit_card),
             suffixIcon: Padding(
               padding: const EdgeInsets.only(right: 10),
-              child: Center(
-                child: CardBrandLogo(brand: _brand, height: 22),
-              ),
+              child: Center(child: CardBrandLogo(brand: _brand, height: 22)),
             ),
             suffixIconConstraints: const BoxConstraints(
               minWidth: 48,

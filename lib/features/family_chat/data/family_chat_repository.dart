@@ -33,18 +33,15 @@ class FamilyChatRepository {
     final response = await _client.dio.get<dynamic>(
       '/api/family/conversations',
     );
-    return unwrapApiList(response.data)
-        .whereType<Map>()
-        .map((item) {
-          final json = Map<String, dynamic>.from(item);
-          json.putIfAbsent('type', () => 'Family');
-          json.putIfAbsent(
-            'id',
-            () => json['conversationId'] ?? json['ConversationId'],
-          );
-          return conversationFromJson(json);
-        })
-        .toList();
+    return unwrapApiList(response.data).whereType<Map>().map((item) {
+      final json = Map<String, dynamic>.from(item);
+      json.putIfAbsent('type', () => 'Family');
+      json.putIfAbsent(
+        'id',
+        () => json['conversationId'] ?? json['ConversationId'],
+      );
+      return conversationFromJson(json);
+    }).toList();
   });
 
   Future<Result<ChatConversation>> create({

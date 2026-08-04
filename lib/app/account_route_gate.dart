@@ -74,9 +74,7 @@ class _ClientEntry extends StatelessWidget {
       return const ExperienceModePage();
     }
 
-    return const CiervoUserIdOverlay(
-      child: CiervoBottomNavScaffold(),
-    );
+    return const CiervoUserIdOverlay(child: CiervoBottomNavScaffold());
   }
 }
 

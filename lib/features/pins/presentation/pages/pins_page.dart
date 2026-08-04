@@ -325,7 +325,8 @@ class _PinsPageState extends State<PinsPage> {
                               ),
                             ),
                             TextButton(
-                              onPressed: () => showDurablePinHelpDialog(context),
+                              onPressed: () =>
+                                  showDurablePinHelpDialog(context),
                               child: const Text('¿Para qué sirve?'),
                             ),
                           ],
@@ -390,7 +391,9 @@ class _PinsPageState extends State<PinsPage> {
                         ],
                         const SizedBox(height: AppSpacing.md),
                         CiervoButton(
-                          label: durable == null ? 'Obtener PIN' : 'Actualizar PIN',
+                          label: durable == null
+                              ? 'Obtener PIN'
+                              : 'Actualizar PIN',
                           icon: Icons.autorenew,
                           onPressed: _rotating
                               ? null

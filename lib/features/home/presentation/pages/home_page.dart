@@ -99,13 +99,10 @@ class _HomeViewState extends State<_HomeView> with WidgetsBindingObserver {
     getIt<SafetyRepository>().refreshLocalFilters();
     _kidContext = getIt<SelectedKidContext>();
     _kidContext.addListener(_onKidModeChanged);
-    _autoRefreshTimer = Timer.periodic(
-      const Duration(minutes: 3),
-      (_) {
-        if (!_appResumed || !mounted) return;
-        _refreshFeedSections();
-      },
-    );
+    _autoRefreshTimer = Timer.periodic(const Duration(minutes: 3), (_) {
+      if (!_appResumed || !mounted) return;
+      _refreshFeedSections();
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       await showGoldTrialPromotionIfEligible(context);
@@ -287,8 +284,7 @@ class _HomeViewState extends State<_HomeView> with WidgetsBindingObserver {
                                   label: 'Marketplace',
                                   icon: Icons.storefront_outlined,
                                   variant: CiervoButtonVariant.secondary,
-                                  onPressed: () =>
-                                      context.push('/marketplace'),
+                                  onPressed: () => context.push('/marketplace'),
                                 ),
                                 if (shouldShowPermission) ...[
                                   const SizedBox(height: AppSpacing.lg),

@@ -265,7 +265,9 @@ class VakupliRepository {
     if (value is List) {
       return value
           .whereType<Map>()
-          .map((item) => VakupliContact.fromJson(Map<String, dynamic>.from(item)))
+          .map(
+            (item) => VakupliContact.fromJson(Map<String, dynamic>.from(item)),
+          )
           .where((item) => item.userId > 0)
           .toList();
     }
@@ -335,11 +337,13 @@ class VakupliRepository {
     final extraSlotPackSize = _intOr(json['extraSlotPackSize'], 4);
     final usedSlots = _intOrNull(json['usedSlots']);
     final remainingSlots = _intOrNull(json['remainingSlots']);
-    final maxParticipants = maxTotal ??
+    final maxParticipants =
+        maxTotal ??
         (maxGuests != null
             ? maxGuests + 1
             : _intOr(json['maxParticipants'], 4));
-    final participantCount = usedSlots ??
+    final participantCount =
+        usedSlots ??
         _intOr(json['participantCount'] ?? paymentMap['participantCount'], 0);
     final periodEnds = DateTime.tryParse(
       '${json['extraSlotsPeriodEndsAt'] ?? ''}',

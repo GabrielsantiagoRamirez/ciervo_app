@@ -20,7 +20,8 @@ class ChatEmptyDismissStore {
   Future<void> dismiss(String conversationId) async {
     final id = conversationId.trim();
     if (id.isEmpty) return;
-    final ids = await load()..add(id);
+    final ids = await load()
+      ..add(id);
     await _storage.write(_key, ids.join(','));
   }
 

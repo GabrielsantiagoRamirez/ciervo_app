@@ -43,8 +43,7 @@ class _SplashPageState extends State<SplashPage> {
       _phraseTimer = Timer.periodic(const Duration(seconds: 5), (_) {
         if (!mounted) return;
         setState(() {
-          _phraseIndex =
-              (_phraseIndex + 1) % SplashPage.rotatingPhrases.length;
+          _phraseIndex = (_phraseIndex + 1) % SplashPage.rotatingPhrases.length;
         });
       });
     }
@@ -82,9 +81,7 @@ class _SplashPageState extends State<SplashPage> {
               Expanded(
                 child: Column(
                   children: [
-                    Expanded(
-                      child: CiervoBrandLoader(message: widget.message),
-                    ),
+                    Expanded(child: CiervoBrandLoader(message: widget.message)),
                     if (widget.showRotatingPhrases)
                       Padding(
                         padding: const EdgeInsets.fromLTRB(

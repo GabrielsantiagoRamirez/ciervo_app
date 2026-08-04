@@ -302,7 +302,9 @@ bool _isBookingConfirmed(String status) {
 
 CiervoQrStatus _qrStatusForBooking(Booking booking) {
   final text = booking.status.trim().toLowerCase();
-  if (text.contains('cancel') || text.contains('reject') || text.contains('denied')) {
+  if (text.contains('cancel') ||
+      text.contains('reject') ||
+      text.contains('denied')) {
     return CiervoQrStatus.cancelled;
   }
   if (text.contains('expir')) {

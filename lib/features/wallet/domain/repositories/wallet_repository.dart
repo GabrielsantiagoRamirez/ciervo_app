@@ -30,7 +30,9 @@ abstract interface class WalletRepository {
   Future<Result<CiervoWalletIdentity>> myCiervoId();
   Future<Result<Map<String, dynamic>>> mercadoPagoConfig();
   Future<Result<ResolvedWalletUser>> resolveUser(String ciervoUserCode);
-  Future<Result<List<TransferDirectoryEntry>>> transferContacts({int take = 50});
+  Future<Result<List<TransferDirectoryEntry>>> transferContacts({
+    int take = 50,
+  });
   Future<Result<List<TransferDirectoryEntry>>> transferFavorites();
   Future<Result<void>> addTransferFavorite({
     String? targetUserId,

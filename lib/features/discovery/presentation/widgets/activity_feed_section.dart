@@ -85,47 +85,46 @@ class _ActivityFeedSectionState extends State<ActivityFeedSection> {
 
   @override
   Widget build(BuildContext context) => FutureBuilder<List<ActivityFeedItem>>(
-        future: _items,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const SizedBox.shrink();
-          }
-          if (snapshot.hasError) {
-            return CiervoCard(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Text(UserErrorMessage.from(snapshot.error!)),
-            );
-          }
-          final items = snapshot.data ?? const [];
-          if (items.isEmpty) {
-            return const CiervoCard(
-              padding: EdgeInsets.all(AppSpacing.md),
-              child: Text('Sin novedades por ahora.'),
-            );
-          }
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Novedades para ti',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              SizedBox(
-                height: 220,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: items.length,
-                  separatorBuilder: (_, __) =>
-                      const SizedBox(width: AppSpacing.sm),
-                  itemBuilder: (context, index) =>
-                      _ActivityCard(item: items[index]),
-                ),
-              ),
-            ],
-          );
-        },
+    future: _items,
+    builder: (context, snapshot) {
+      if (snapshot.connectionState != ConnectionState.done) {
+        return const SizedBox.shrink();
+      }
+      if (snapshot.hasError) {
+        return CiervoCard(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Text(UserErrorMessage.from(snapshot.error!)),
+        );
+      }
+      final items = snapshot.data ?? const [];
+      if (items.isEmpty) {
+        return const CiervoCard(
+          padding: EdgeInsets.all(AppSpacing.md),
+          child: Text('Sin novedades por ahora.'),
+        );
+      }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Novedades para ti',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          SizedBox(
+            height: 220,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: items.length,
+              separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+              itemBuilder: (context, index) =>
+                  _ActivityCard(item: items[index]),
+            ),
+          ),
+        ],
       );
+    },
+  );
 }
 
 class _ActivityCard extends StatelessWidget {
@@ -203,10 +202,7 @@ class _ActivityCard extends StatelessWidget {
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [
-                          Color(0x33000000),
-                          Color(0xCC000000),
-                        ],
+                        colors: [Color(0x33000000), Color(0xCC000000)],
                       ),
                     ),
                   ),
@@ -224,19 +220,11 @@ class _ActivityCard extends StatelessWidget {
                               runSpacing: 4,
                               alignment: WrapAlignment.center,
                               children: [
-                                _MiniChip(
-                                  label: item.category ?? item.type,
-                                ),
+                                _MiniChip(label: item.category ?? item.type),
                                 if (cashback != null)
-                                  _MiniChip(
-                                    label: cashback,
-                                    highlight: true,
-                                  ),
+                                  _MiniChip(label: cashback, highlight: true),
                                 if (points != null)
-                                  _MiniChip(
-                                    label: points,
-                                    highlight: true,
-                                  ),
+                                  _MiniChip(label: points, highlight: true),
                               ],
                             ),
                           ),
@@ -255,16 +243,16 @@ class _ActivityCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.white70,
-                              ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: Colors.white70),
                         ),
                       Text(
                         item.title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.w700,
                             ),
@@ -277,9 +265,8 @@ class _ActivityCard extends StatelessWidget {
                             currency: item.currency,
                           ),
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                color: AppColors.primary,
-                              ),
+                          style: Theme.of(context).textTheme.labelLarge
+                              ?.copyWith(color: AppColors.primary),
                         ),
                       ] else if (item.description.isNotEmpty)
                         Text(
@@ -287,9 +274,8 @@ class _ActivityCard extends StatelessWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.white70,
-                              ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: Colors.white70),
                         ),
                     ],
                   ),
@@ -399,17 +385,15 @@ void _openActivity(BuildContext context, ActivityFeedItem item) {
 }
 
 HomePlace _placeFromActivity(ActivityFeedItem item) => HomePlace(
-      id: '${item.businessId}',
-      name: item.businessName?.isNotEmpty == true
-          ? item.businessName!
-          : item.title,
-      category: item.category ?? 'Experiencia',
-      rating: 0,
-      priceLevel: '',
-      distanceKm: 0,
-      matchPercent: 0,
-      imageUrl: item.imageUrl ?? item.imageMediaId ?? '',
-    );
+  id: '${item.businessId}',
+  name: item.businessName?.isNotEmpty == true ? item.businessName! : item.title,
+  category: item.category ?? 'Experiencia',
+  rating: 0,
+  priceLevel: '',
+  distanceKm: 0,
+  matchPercent: 0,
+  imageUrl: item.imageUrl ?? item.imageMediaId ?? '',
+);
 
 class _ActivityDetailPage extends StatelessWidget {
   const _ActivityDetailPage({required this.item});
@@ -418,29 +402,29 @@ class _ActivityDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Novedad')),
-        body: ListView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          children: [
-            CiervoCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(item.title, style: Theme.of(context).textTheme.titleLarge),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(item.description),
-                  const SizedBox(height: AppSpacing.md),
-                  _line('Tipo', item.type),
-                  _line('Categoría', item.category),
-                  _line('Cashback', item.cashbackDisplay),
-                  _line('Puntos', item.pointsDisplay),
-                  _line('Ruta interna', item.deepLink),
-                ],
-              ),
-            ),
-          ],
+    appBar: AppBar(title: const Text('Novedad')),
+    body: ListView(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      children: [
+        CiervoCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(item.title, style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: AppSpacing.sm),
+              Text(item.description),
+              const SizedBox(height: AppSpacing.md),
+              _line('Tipo', item.type),
+              _line('Categoría', item.category),
+              _line('Cashback', item.cashbackDisplay),
+              _line('Puntos', item.pointsDisplay),
+              _line('Ruta interna', item.deepLink),
+            ],
+          ),
         ),
-      );
+      ],
+    ),
+  );
 
   Widget _line(String label, String? value) {
     if (value == null || value.isEmpty) return const SizedBox.shrink();

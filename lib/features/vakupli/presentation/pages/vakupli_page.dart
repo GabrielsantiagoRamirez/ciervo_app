@@ -433,9 +433,7 @@ class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
     if (!mounted) return;
 
     final userId = await Navigator.of(context).push<String>(
-      MaterialPageRoute(
-        builder: (_) => const VakupliContactsPickerPage(),
-      ),
+      MaterialPageRoute(builder: (_) => const VakupliContactsPickerPage()),
     );
     if (userId == null || !mounted) return;
 
@@ -454,9 +452,9 @@ class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
     if (!mounted) return;
     result.when(
       success: (_) async {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invitación enviada.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Invitación enviada.')));
         await _loadParticipants();
       },
       failure: (error) async {
@@ -470,9 +468,9 @@ class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
           return;
         }
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
       },
     );
   }
@@ -577,10 +575,7 @@ class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
     if (!mounted) return;
     final due = dueResult.when(
       success: (value) => value,
-      failure: (_) => (
-        amount: _pendingAmountFallback(),
-        currency: 'COP',
-      ),
+      failure: (_) => (amount: _pendingAmountFallback(), currency: 'COP'),
     );
 
     final cards = await loadWalletCards();
@@ -610,7 +605,9 @@ class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
       }
     } else {
       final primary =
-          cards.where((c) => c.isPrimary && c.canSpend(due.amount)).firstOrNull ??
+          cards
+              .where((c) => c.isPrimary && c.canSpend(due.amount))
+              .firstOrNull ??
           cards.where((c) => c.canSpend(due.amount)).firstOrNull;
       walletCardId = int.tryParse(primary?.id ?? '');
     }
@@ -662,9 +659,7 @@ class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
               },
               failure: (retryError) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(UserErrorMessage.from(retryError)),
-                  ),
+                  SnackBar(content: Text(UserErrorMessage.from(retryError))),
                 );
               },
             );
@@ -765,14 +760,14 @@ class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
         setState(
           () => _plan = plan.copyWith(friends: _friends, messages: _messages),
         );
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Plan actualizado.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Plan actualizado.')));
       },
       failure: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       },
     );
   }
@@ -821,9 +816,9 @@ class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
         }
       },
       failure: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       },
     );
   }
@@ -869,9 +864,7 @@ class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
                         onPressed: _inviteFriend,
                         icon: const Icon(Icons.person_add_alt_1),
                         label: Text(
-                          _plan.hasCapacity
-                              ? 'Invitar'
-                              : 'Sin cupos',
+                          _plan.hasCapacity ? 'Invitar' : 'Sin cupos',
                         ),
                       ),
                     ),

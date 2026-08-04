@@ -25,9 +25,7 @@ class PinP2PService {
           if (amount != null) 'amount': amount,
         },
       );
-      return Success(
-        PinP2PVerifyResult.fromJson(unwrapApiMap(response.data)),
-      );
+      return Success(PinP2PVerifyResult.fromJson(unwrapApiMap(response.data)));
     } catch (error) {
       return Failure(ErrorMapper.fromObject(error));
     }

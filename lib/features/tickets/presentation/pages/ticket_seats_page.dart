@@ -60,8 +60,7 @@ class _TicketSeatsPageState extends State<TicketSeatsPage> {
   Future<void> _reserveAndContinue() async {
     if (_selected.length != widget.quantity) {
       setState(
-        () => _error =
-            'Selecciona exactamente ${widget.quantity} asiento(s).',
+        () => _error = 'Selecciona exactamente ${widget.quantity} asiento(s).',
       );
       return;
     }
@@ -95,10 +94,7 @@ class _TicketSeatsPageState extends State<TicketSeatsPage> {
         );
         // Si vuelve sin pagar, intenta liberar.
         if (heldId.isNotEmpty && mounted) {
-          await getIt<TicketsRepository>().releaseSeats(
-            widget.eventId,
-            heldId,
-          );
+          await getIt<TicketsRepository>().releaseSeats(widget.eventId, heldId);
         }
       },
       failure: (error) async {
@@ -205,14 +201,15 @@ class _TicketSeatsPageState extends State<TicketSeatsPage> {
                         child: Text(
                           seat.label,
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: selected
-                                ? scheme.onPrimary
-                                : seat.available
-                                ? scheme.onSurface
-                                : scheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: selected
+                                    ? scheme.onPrimary
+                                    : seat.available
+                                    ? scheme.onSurface
+                                    : scheme.onSurfaceVariant,
+                                fontWeight: FontWeight.w700,
+                              ),
                         ),
                       ),
                     );
@@ -221,11 +218,10 @@ class _TicketSeatsPageState extends State<TicketSeatsPage> {
               ),
               if (_error != null)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                  child: Text(
-                    _error!,
-                    style: TextStyle(color: scheme.error),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
                   ),
+                  child: Text(_error!, style: TextStyle(color: scheme.error)),
                 ),
               Padding(
                 padding: const EdgeInsets.all(AppSpacing.md),

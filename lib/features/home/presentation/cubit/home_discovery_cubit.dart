@@ -318,12 +318,7 @@ class HomeDiscoveryCubit extends Cubit<HomeDiscoveryState> {
     if (state.experienceMode == mode) {
       return;
     }
-    emit(
-      state.copyWith(
-        experienceMode: mode,
-        selectedCategory: 'Top',
-      ),
-    );
+    emit(state.copyWith(experienceMode: mode, selectedCategory: 'Top'));
     if (!reload) {
       return;
     }
@@ -394,11 +389,7 @@ class HomeDiscoveryCubit extends Cubit<HomeDiscoveryState> {
         : CountryRegistration.contextForCode(code!).city;
 
     emit(
-      state.copyWith(
-        countryCode: code,
-        city: resolvedCity,
-        location: location,
-      ),
+      state.copyWith(countryCode: code, city: resolvedCity, location: location),
     );
     return true;
   }

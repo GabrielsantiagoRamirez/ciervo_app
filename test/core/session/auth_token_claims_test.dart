@@ -25,14 +25,7 @@ void main() {
 
   test('extrae userId desde claim nameid de .NET JWT', () {
     final payload = base64Url
-        .encode(
-          utf8.encode(
-            jsonEncode({
-              'nameid': '81935499',
-              'role': '1',
-            }),
-          ),
-        )
+        .encode(utf8.encode(jsonEncode({'nameid': '81935499', 'role': '1'})))
         .replaceAll('=', '');
     final claims = AuthTokenClaims.fromJwt('header.$payload.signature');
 

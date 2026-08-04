@@ -28,13 +28,7 @@ abstract final class MoveMappers {
           .map(
             (item) => MoveFareBreakdownItem(
               label: MoveLabels.fareBreakdownLabel(
-                _str(item, const [
-                      'label',
-                      'name',
-                      'concept',
-                      'key',
-                      'code',
-                    ]) ??
+                _str(item, const ['label', 'name', 'concept', 'key', 'code']) ??
                     'Concepto',
               ),
               amount: _int(item, const ['amount', 'value']),
@@ -69,9 +63,7 @@ abstract final class MoveMappers {
           if (amount is! num) continue;
           items.add(
             MoveFareBreakdownItem(
-              label:
-                  _str(band, const ['label', 'name', 'concept']) ??
-                  'Tramo',
+              label: _str(band, const ['label', 'name', 'concept']) ?? 'Tramo',
               amount: amount.round(),
             ),
           );

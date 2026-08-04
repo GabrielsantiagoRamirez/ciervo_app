@@ -118,12 +118,7 @@ class GlobalSearchCubit extends Cubit<GlobalSearchState> {
   }
 
   Future<void> selectType(GlobalSearchItemType? type) async {
-    emit(
-      state.copyWith(
-        selectedType: type,
-        clearSelectedType: type == null,
-      ),
-    );
+    emit(state.copyWith(selectedType: type, clearSelectedType: type == null));
     final q = state.query.trim();
     if (q.length >= 2 || state.usingLocation) {
       await search(q, type: type);

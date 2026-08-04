@@ -10,14 +10,14 @@ class ActivityFeedRepository {
   final NetworkClient _client;
 
   Future<Result<List<ActivityFeedItem>>> feed() => _guard(() async {
-        final response = await _client.dio.get<dynamic>(
-          '/api/discovery/activity-feed',
-        );
-        return unwrapApiList(response.data)
-            .whereType<Map>()
-            .map((item) => _fromJson(Map<String, dynamic>.from(item)))
-            .toList();
-      });
+    final response = await _client.dio.get<dynamic>(
+      '/api/discovery/activity-feed',
+    );
+    return unwrapApiList(response.data)
+        .whereType<Map>()
+        .map((item) => _fromJson(Map<String, dynamic>.from(item)))
+        .toList();
+  });
 
   Future<Result<T>> _guard<T>(Future<T> Function() action) async {
     try {
@@ -46,12 +46,16 @@ ActivityFeedItem _fromJson(Map<String, dynamic> json) {
         json['pointsReward'] ??
         json['loyaltyPoints'],
   );
-  final hasCashback = _bool(
-        json['hasCashback'] ?? json['cashbackEnabled'] ?? json['offersCashback'],
+  final hasCashback =
+      _bool(
+        json['hasCashback'] ??
+            json['cashbackEnabled'] ??
+            json['offersCashback'],
       ) ||
       (cashbackAmount != null && cashbackAmount > 0) ||
       (cashbackPercent != null && cashbackPercent > 0);
-  final hasPoints = _bool(
+  final hasPoints =
+      _bool(
         json['hasPoints'] ?? json['pointsEnabled'] ?? json['offersPoints'],
       ) ||
       (points != null && points > 0);
@@ -59,8 +63,13 @@ ActivityFeedItem _fromJson(Map<String, dynamic> json) {
   return ActivityFeedItem(
     id: '${json['id'] ?? json['activityId'] ?? ''}',
     type: '${json['type'] ?? json['activityType'] ?? ''}',
-    title: _s(json, const ['title', 'name', 'productName', 'promotionTitle'])
-            .isEmpty
+    title:
+        _s(json, const [
+          'title',
+          'name',
+          'productName',
+          'promotionTitle',
+        ]).isEmpty
         ? 'Novedad Ciervo'
         : _s(json, const ['title', 'name', 'productName', 'promotionTitle']),
     description: _s(json, const ['description', 'message', 'body']),

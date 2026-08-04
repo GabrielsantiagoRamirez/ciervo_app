@@ -32,9 +32,10 @@ class _StaggeredRevealState extends State<StaggeredReveal>
     super.initState();
     _controller = AnimationController(vsync: this, duration: widget.duration);
     _opacity = CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
-    _scale = Tween<double>(begin: widget.beginScale, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
-    );
+    _scale = Tween<double>(
+      begin: widget.beginScale,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
     final delayMs = widget.baseDelay.inMilliseconds * widget.index;
     Future<void>.delayed(Duration(milliseconds: delayMs.clamp(0, 700)), () {
       if (mounted) _controller.forward();

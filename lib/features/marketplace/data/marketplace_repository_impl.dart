@@ -27,10 +27,9 @@ class MarketplaceRepositoryImpl implements MarketplaceRepository {
     required double lng,
     double radio = 10,
     int limit = 20,
-  }) =>
-      _guard(
-        () => _remote.nearby(lat: lat, lng: lng, radio: radio, limit: limit),
-      );
+  }) => _guard(
+    () => _remote.nearby(lat: lat, lng: lng, radio: radio, limit: limit),
+  );
 
   @override
   Future<Result<List<MarketplacePromo>>> search(String q, {int limit = 20}) =>
@@ -57,51 +56,46 @@ class MarketplaceRepositoryImpl implements MarketplaceRepository {
     required String qrCode,
     double? latitude,
     double? longitude,
-  }) =>
-      _guard(
-        () => _remote.scanQr(
-          qrCode: qrCode,
-          latitude: latitude,
-          longitude: longitude,
-        ),
-      );
+  }) => _guard(
+    () => _remote.scanQr(
+      qrCode: qrCode,
+      latitude: latitude,
+      longitude: longitude,
+    ),
+  );
 
   @override
   Future<Result<MarketplaceStore>> storeProfile(
     int storeId, {
     double? lat,
     double? lng,
-  }) =>
-      _guard(() => _remote.storeProfile(storeId, lat: lat, lng: lng));
+  }) => _guard(() => _remote.storeProfile(storeId, lat: lat, lng: lng));
 
   @override
   Future<Result<MarketplaceStore>> storeByCiervo(
     String ciervoId, {
     double? lat,
     double? lng,
-  }) =>
-      _guard(() => _remote.storeByCiervo(ciervoId, lat: lat, lng: lng));
+  }) => _guard(() => _remote.storeByCiervo(ciervoId, lat: lat, lng: lng));
 
   @override
   Future<Result<MarketplaceFeedPage>> storePromotions(
     int storeId, {
     MarketplaceFeedQuery query = const MarketplaceFeedQuery(),
-  }) =>
-      _guard(() => _remote.storePromotions(storeId, query: query));
+  }) => _guard(() => _remote.storePromotions(storeId, query: query));
 
   @override
   Future<Result<MarketplaceBenefits>> calculateBenefits({
     required int promotionId,
     int quantity = 1,
     String? paymentMethod,
-  }) =>
-      _guard(
-        () => _remote.calculateBenefits(
-          promotionId: promotionId,
-          quantity: quantity,
-          paymentMethod: paymentMethod,
-        ),
-      );
+  }) => _guard(
+    () => _remote.calculateBenefits(
+      promotionId: promotionId,
+      quantity: quantity,
+      paymentMethod: paymentMethod,
+    ),
+  );
 
   @override
   Future<Result<void>> recordView(int promotionId) =>
@@ -133,15 +127,14 @@ class MarketplaceRepositoryImpl implements MarketplaceRepository {
     int quantity = 1,
     String paymentMethod = 'CIERVO',
     String? notes,
-  }) =>
-      _guard(
-        () => _remote.checkout(
-          promotionId: promotionId,
-          quantity: quantity,
-          paymentMethod: paymentMethod,
-          notes: notes,
-        ),
-      );
+  }) => _guard(
+    () => _remote.checkout(
+      promotionId: promotionId,
+      quantity: quantity,
+      paymentMethod: paymentMethod,
+      notes: notes,
+    ),
+  );
 
   @override
   Future<Result<MarketplaceOrder>> createOrder({
@@ -149,25 +142,23 @@ class MarketplaceRepositoryImpl implements MarketplaceRepository {
     int quantity = 1,
     String paymentMethod = 'PENDING',
     String? notes,
-  }) =>
-      _guard(
-        () => _remote.createOrder(
-          promotionId: promotionId,
-          quantity: quantity,
-          paymentMethod: paymentMethod,
-          notes: notes,
-        ),
-      );
+  }) => _guard(
+    () => _remote.createOrder(
+      promotionId: promotionId,
+      quantity: quantity,
+      paymentMethod: paymentMethod,
+      notes: notes,
+    ),
+  );
 
   @override
   Future<Result<MarketplaceOrder>> payOrder({
     required int orderId,
     String wallet = 'CIERVO',
     String? pin,
-  }) =>
-      _guard(
-        () => _remote.payOrder(orderId: orderId, wallet: wallet, pin: pin),
-      );
+  }) => _guard(
+    () => _remote.payOrder(orderId: orderId, wallet: wallet, pin: pin),
+  );
 
   @override
   Future<Result<List<MarketplaceOrder>>> orders() => _guard(_remote.orders);
@@ -187,16 +178,15 @@ class MarketplaceRepositoryImpl implements MarketplaceRepository {
     String? time,
     int people = 1,
     String? comments,
-  }) =>
-      _guard(
-        () => _remote.createReservation(
-          promotionId: promotionId,
-          date: date,
-          time: time,
-          people: people,
-          comments: comments,
-        ),
-      );
+  }) => _guard(
+    () => _remote.createReservation(
+      promotionId: promotionId,
+      date: date,
+      time: time,
+      people: people,
+      comments: comments,
+    ),
+  );
 
   @override
   Future<Result<void>> confirmReservation(int reservationId) =>

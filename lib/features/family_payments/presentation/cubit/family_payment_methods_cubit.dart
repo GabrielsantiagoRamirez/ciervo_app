@@ -211,13 +211,8 @@ class FamilyPaymentMethodsCubit extends Cubit<FamilyPaymentMethodsState> {
     );
 
     final aliasText = alias?.trim();
-    if (aliasText != null &&
-        aliasText.isNotEmpty &&
-        flow.cardId.isNotEmpty) {
-      await _repository.updateCardAlias(
-        cardId: flow.cardId,
-        alias: aliasText,
-      );
+    if (aliasText != null && aliasText.isNotEmpty && flow.cardId.isNotEmpty) {
+      await _repository.updateCardAlias(cardId: flow.cardId, alias: aliasText);
     }
 
     return flow;

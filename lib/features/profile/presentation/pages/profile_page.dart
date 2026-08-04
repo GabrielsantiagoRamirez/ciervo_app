@@ -50,10 +50,9 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => ProfileCubit(
-        getIt<ProfileRepository>(),
-        getIt<WalletRepository>(),
-      )..loadProfile(),
+      create: (_) =>
+          ProfileCubit(getIt<ProfileRepository>(), getIt<WalletRepository>())
+            ..loadProfile(),
       child: const _ProfileView(),
     );
   }
@@ -67,9 +66,9 @@ class _ProfileView extends StatelessWidget {
     return BlocConsumer<ProfileCubit, ProfileState>(
       listener: (context, state) {
         if (state.errorMessage != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.errorMessage!)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.errorMessage!)));
         }
       },
       builder: (context, state) {
@@ -110,8 +109,7 @@ class _ProfileView extends StatelessWidget {
                               title: 'No pudimos cargar tu perfil',
                               description:
                                   state.errorMessage ?? 'Intenta nuevamente.',
-                              onRetry:
-                                  context.read<ProfileCubit>().loadProfile,
+                              onRetry: context.read<ProfileCubit>().loadProfile,
                             ),
                             _ => _ProfileContent(state: state),
                           },
@@ -253,9 +251,11 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
     final length = await photo.length();
     if (!_extensions.contains(extension) || length > _maxPhotoBytes) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Usa JPG, JPEG, PNG o WEBP de máximo 5 MB.'),
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Usa JPG, JPEG, PNG o WEBP de máximo 5 MB.'),
+          ),
+        );
       }
       return;
     }
@@ -322,9 +322,8 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
                           )
                         : Text(
                             profile.initials,
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: colorScheme.onPrimary,
-                            ),
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(color: colorScheme.onPrimary),
                           ),
                   ),
                   Positioned(
@@ -382,8 +381,10 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
               if ((profile.displayOperationalSessionId ?? '').isNotEmpty)
                 Builder(
                   builder: (context) {
-                    final uiMode =
-                        context.watch<ExperienceModeCubit>().state.mode;
+                    final uiMode = context
+                        .watch<ExperienceModeCubit>()
+                        .state
+                        .mode;
                     final raw = profile.displayOperationalSessionId!;
                     final mode = OperationalSessionId.resolveMode(
                       band: profile.operationalBand,
@@ -407,12 +408,13 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
               ),
               if (!profile.emailVerified && profile.email.isNotEmpty)
                 ActionChip(
-                  avatar: const Icon(Icons.mark_email_unread_outlined, size: 18),
-                  label: const Text('Verificar correo'),
-                  onPressed: () => showEmailVerificationSheet(
-                    context,
-                    email: profile.email,
+                  avatar: const Icon(
+                    Icons.mark_email_unread_outlined,
+                    size: 18,
                   ),
+                  label: const Text('Verificar correo'),
+                  onPressed: () =>
+                      showEmailVerificationSheet(context, email: profile.email),
                 ),
               _InfoChip(
                 icon: Icons.verified_user_outlined,
@@ -485,7 +487,10 @@ class _ProfileCiervoIdChip extends StatelessWidget {
         label: SelectionArea(
           child: Text(
             resolved,
-            style: const TextStyle(fontWeight: FontWeight.w700, letterSpacing: 0.4),
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.4,
+            ),
           ),
         ),
         tooltip: 'Toca para copiar tu CIERVO ID',
@@ -547,9 +552,9 @@ class _AccountActions extends StatelessWidget {
           _ActionTile(
             icon: Icons.verified_user_outlined,
             title: 'Verificación de identidad',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const KycPage()),
-            ),
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute<void>(builder: (_) => const KycPage())),
           ),
           _ActionTile(
             icon: Icons.drive_eta_outlined,
@@ -585,7 +590,9 @@ class _AccountActions extends StatelessWidget {
             icon: Icons.local_offer_outlined,
             title: 'Bonos y cupones',
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const BonusesCatalogPage()),
+              MaterialPageRoute<void>(
+                builder: (_) => const BonusesCatalogPage(),
+              ),
             ),
           ),
           _ActionTile(
@@ -621,7 +628,9 @@ class _AccountActions extends StatelessWidget {
             icon: Icons.receipt_long_outlined,
             title: 'Mis pedidos',
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const CustomerOrdersPage()),
+              MaterialPageRoute<void>(
+                builder: (_) => const CustomerOrdersPage(),
+              ),
             ),
           ),
           _ActionTile(
@@ -657,9 +666,9 @@ class _AccountActions extends StatelessWidget {
           _ActionTile(
             icon: Icons.help_outline,
             title: 'Ayuda',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const HelpPage()),
-            ),
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute<void>(builder: (_) => const HelpPage())),
           ),
         ],
       ),

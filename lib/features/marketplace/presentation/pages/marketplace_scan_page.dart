@@ -58,9 +58,9 @@ class _MarketplaceScanPageState extends State<MarketplaceScanPage> {
       },
       failure: (error) async {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
         await _controller.start();
       },
     );

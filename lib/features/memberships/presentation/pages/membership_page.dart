@@ -51,8 +51,7 @@ class _MembershipPageState extends State<MembershipPage>
     _data = () async {
       final profileResult = await getIt<ProfileRepository>().getMe();
       final countryCode = profileResult.when(
-        success: (profile) =>
-            (profile.countryCode ?? '').trim().isNotEmpty
+        success: (profile) => (profile.countryCode ?? '').trim().isNotEmpty
             ? profile.countryCode!.trim().toUpperCase()
             : CountryRegistration.defaultCountryCode(),
         failure: (_) => CountryRegistration.defaultCountryCode(),
@@ -127,8 +126,9 @@ class _MembershipPageState extends State<MembershipPage>
     );
     if (confirmed != true || !mounted) return;
 
-    final canContinueUpgrade =
-        await acknowledgeVakuExtraSlotsBeforeUpgrade(context);
+    final canContinueUpgrade = await acknowledgeVakuExtraSlotsBeforeUpgrade(
+      context,
+    );
     if (!canContinueUpgrade || !mounted) return;
 
     setState(() => _subscribingPlanId = plan.id);
@@ -467,8 +467,7 @@ class _MyMembership extends StatelessWidget {
                     _date(DateTime.tryParse('${membership['graceEndsAt']}')),
                   ),
               ],
-              if (billingPeriod.isNotEmpty)
-                _line('Periodo', billingPeriod),
+              if (billingPeriod.isNotEmpty) _line('Periodo', billingPeriod),
               _line(
                 'Multiplicador cashback',
                 '${current.cashbackMultiplier.toStringAsFixed(2)}x',
@@ -712,7 +711,10 @@ class _PlanCard extends StatelessWidget {
             runSpacing: AppSpacing.xxs,
             children: [
               if (highlighted || plan.isCurrent)
-                const Chip(label: Text('Actual'), visualDensity: VisualDensity.compact),
+                const Chip(
+                  label: Text('Actual'),
+                  visualDensity: VisualDensity.compact,
+                ),
               if (plan.isRecommended)
                 Chip(
                   label: const Text('Recomendado'),

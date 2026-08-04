@@ -75,6 +75,7 @@ class PhysicalNfcCard {
   });
 
   final int id;
+
   /// Identificador de plataforma (ej. NFC-00000012).
   final String? identifier;
   final String cardUid;

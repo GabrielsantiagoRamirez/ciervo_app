@@ -35,10 +35,13 @@ class UserProfile {
   final String phone;
   final String? ciervoUserCode;
   final String? username;
+
   /// ID operativo canónico (DIA / NOCHE / 24H) desde `/users/me`.
   final String? operationalSessionId;
+
   /// Franja: `day` | `night` | `24h`.
   final String? operationalBand;
+
   /// Compatibilidad: suele igualar [operationalSessionId].
   final String? nightOperationalId;
   final String? identityDocument;

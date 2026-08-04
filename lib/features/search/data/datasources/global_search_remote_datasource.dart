@@ -41,9 +41,7 @@ class GlobalSearchRemoteDataSource {
       return GlobalSearchResult(
         items: value
             .whereType<Map>()
-            .map(
-              (e) => GlobalSearchItem.fromJson(Map<String, dynamic>.from(e)),
-            )
+            .map((e) => GlobalSearchItem.fromJson(Map<String, dynamic>.from(e)))
             .toList(),
         query: q,
         total: value.length,

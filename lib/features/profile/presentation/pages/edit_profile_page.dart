@@ -23,10 +23,8 @@ class EditProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => ProfileCubit(
-        getIt<ProfileRepository>(),
-        getIt<WalletRepository>(),
-      ),
+      create: (_) =>
+          ProfileCubit(getIt<ProfileRepository>(), getIt<WalletRepository>()),
       child: _EditProfileView(profile: profile),
     );
   }
@@ -109,7 +107,8 @@ class _EditProfileViewState extends State<_EditProfileView> {
         }
       },
       builder: (context, state) {
-        final saving = state.isSaving || state.status == ProfileStatus.uploadingPhoto;
+        final saving =
+            state.isSaving || state.status == ProfileStatus.uploadingPhoto;
         final profile = state.profile ?? widget.profile;
         return Scaffold(
           appBar: AppBar(title: const Text('Editar perfil')),
@@ -129,8 +128,9 @@ class _EditProfileViewState extends State<_EditProfileView> {
                           children: [
                             CircleAvatar(
                               radius: 42,
-                              backgroundColor:
-                                  Theme.of(context).colorScheme.primary,
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.primary,
                               child: profile.hasPhoto
                                   ? ClipOval(
                                       child: ProfilePhotoImage(
@@ -143,9 +143,9 @@ class _EditProfileViewState extends State<_EditProfileView> {
                                     )
                                   : Text(
                                       profile.initials,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headlineSmall,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.headlineSmall,
                                     ),
                             ),
                             Positioned(
@@ -189,7 +189,8 @@ class _EditProfileViewState extends State<_EditProfileView> {
                             ? 'Verificado. Para cambiarlo debes volver a confirmarlo.'
                             : null,
                         onTap: widget.profile.emailVerified
-                            ? () => _promptVerifiedFieldChange(context, 'correo')
+                            ? () =>
+                                  _promptVerifiedFieldChange(context, 'correo')
                             : null,
                         validator: (value) =>
                             InputValidators.email(value ?? ''),
@@ -303,9 +304,11 @@ class _EditProfileViewState extends State<_EditProfileView> {
     final length = await photo.length();
     if (!_extensions.contains(extension) || length > _maxPhotoBytes) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Usa JPG, JPEG, PNG o WEBP de máximo 5 MB.'),
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Usa JPG, JPEG, PNG o WEBP de máximo 5 MB.'),
+          ),
+        );
       }
       return;
     }

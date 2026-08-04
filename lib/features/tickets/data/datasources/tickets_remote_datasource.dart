@@ -86,7 +86,10 @@ class DioTicketsRemoteDataSource implements TicketsRemoteDataSource {
     if (value is List) {
       final items = value
           .whereType<Map>()
-          .map((item) => TicketEventSummary.fromJson(Map<String, dynamic>.from(item)))
+          .map(
+            (item) =>
+                TicketEventSummary.fromJson(Map<String, dynamic>.from(item)),
+          )
           .toList();
       return TicketEventsPage(
         page: page,
@@ -244,7 +247,10 @@ class DioTicketsRemoteDataSource implements TicketsRemoteDataSource {
     if (value is List) {
       return value
           .whereType<Map>()
-          .map((item) => TicketEventSummary.fromJson(Map<String, dynamic>.from(item)))
+          .map(
+            (item) =>
+                TicketEventSummary.fromJson(Map<String, dynamic>.from(item)),
+          )
           .toList();
     }
     final map = _asMap(value);

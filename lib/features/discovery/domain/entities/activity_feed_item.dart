@@ -49,6 +49,7 @@ class ActivityFeedItem {
   final String? campaignId;
   final String? deepLink;
   final String? imageMediaId;
+
   /// URL pública CDN (`coverImageUrl` / `productImageUrl`). Preferir sobre mediaId.
   final String? imageUrl;
   final DateTime? createdAt;
@@ -105,34 +106,34 @@ class ActivityFeedItem {
   }
 
   ActivityFeedItem copyWith({bool? isFavoriteBusiness}) => ActivityFeedItem(
-        id: id,
-        type: type,
-        title: title,
-        description: description,
-        category: category,
-        businessId: businessId,
-        businessName: businessName,
-        eventId: eventId,
-        productId: productId,
-        promotionId: promotionId,
-        giftCardId: giftCardId,
-        benefitId: benefitId,
-        rewardId: rewardId,
-        couponId: couponId,
-        bonusId: bonusId,
-        campaignId: campaignId,
-        deepLink: deepLink,
-        imageMediaId: imageMediaId,
-        imageUrl: imageUrl,
-        createdAt: createdAt,
-        price: price,
-        currency: currency,
-        cashbackAmount: cashbackAmount,
-        cashbackPercent: cashbackPercent,
-        cashbackLabel: cashbackLabel,
-        points: points,
-        hasCashback: hasCashback,
-        hasPoints: hasPoints,
-        isFavoriteBusiness: isFavoriteBusiness ?? this.isFavoriteBusiness,
-      );
+    id: id,
+    type: type,
+    title: title,
+    description: description,
+    category: category,
+    businessId: businessId,
+    businessName: businessName,
+    eventId: eventId,
+    productId: productId,
+    promotionId: promotionId,
+    giftCardId: giftCardId,
+    benefitId: benefitId,
+    rewardId: rewardId,
+    couponId: couponId,
+    bonusId: bonusId,
+    campaignId: campaignId,
+    deepLink: deepLink,
+    imageMediaId: imageMediaId,
+    imageUrl: imageUrl,
+    createdAt: createdAt,
+    price: price,
+    currency: currency,
+    cashbackAmount: cashbackAmount,
+    cashbackPercent: cashbackPercent,
+    cashbackLabel: cashbackLabel,
+    points: points,
+    hasCashback: hasCashback,
+    hasPoints: hasPoints,
+    isFavoriteBusiness: isFavoriteBusiness ?? this.isFavoriteBusiness,
+  );
 }

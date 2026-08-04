@@ -58,11 +58,7 @@ abstract final class OperationalSessionId {
     return value.replaceFirstMapped(_bandPattern, (_) => bandToken);
   }
 
-  static IconData iconFor({
-    String? raw,
-    String? band,
-    ExperienceMode? mode,
-  }) {
+  static IconData iconFor({String? raw, String? band, ExperienceMode? mode}) {
     return resolveMode(band: band, rawId: raw, uiMode: mode).icon;
   }
 

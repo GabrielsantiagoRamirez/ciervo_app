@@ -150,10 +150,7 @@ void main() {
       request.validate(countryCode: 'CO', nowUtc: DateTime.utc(2026)),
       contains('confirmsFrontShowsReadablePlate'),
     );
-    expect(
-      request.toJson()['confirmsFrontShowsReadablePlate'],
-      isFalse,
-    );
+    expect(request.toJson()['confirmsFrontShowsReadablePlate'], isFalse);
   });
 
   test('operations valida emergencia, agenda, límites y servicios', () {

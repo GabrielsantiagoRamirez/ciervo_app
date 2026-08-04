@@ -182,10 +182,8 @@ class _ChatInboxPageState extends State<ChatInboxPage> {
       );
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (_) => ChatConversationPage(
-            conversationId: item.id,
-            title: title,
-          ),
+          builder: (_) =>
+              ChatConversationPage(conversationId: item.id, title: title),
         ),
       );
     }
@@ -447,9 +445,9 @@ class _ChatInboxPageState extends State<ChatInboxPage> {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: hasUnread
-            ? Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              )
+            ? Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)
             : null,
       ),
       subtitle: Text(
@@ -469,9 +467,7 @@ class _ChatInboxPageState extends State<ChatInboxPage> {
               timeLabel,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 fontWeight: hasUnread ? FontWeight.w600 : FontWeight.normal,
-                color: hasUnread
-                    ? Theme.of(context).colorScheme.primary
-                    : null,
+                color: hasUnread ? Theme.of(context).colorScheme.primary : null,
               ),
             ),
           if (hasUnread) ...[

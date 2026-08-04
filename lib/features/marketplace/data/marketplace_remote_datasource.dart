@@ -40,12 +40,7 @@ class MarketplaceRemoteDataSource {
   }) async {
     final response = await _client.dio.get<dynamic>(
       '/api/marketplace/nearby',
-      queryParameters: {
-        'lat': lat,
-        'lng': lng,
-        'radio': radio,
-        'limit': limit,
-      },
+      queryParameters: {'lat': lat, 'lng': lng, 'radio': radio, 'limit': limit},
     );
     return MarketplaceJson.promoListFromJson(unwrapApiResponse(response.data));
   }
@@ -190,11 +185,15 @@ class MarketplaceRemoteDataSource {
   }
 
   Future<void> removeFavorite(int promotionId) async {
-    await _client.dio.delete<dynamic>('/api/marketplace/favorites/$promotionId');
+    await _client.dio.delete<dynamic>(
+      '/api/marketplace/favorites/$promotionId',
+    );
   }
 
   Future<List<MarketplacePromo>> favorites() async {
-    final response = await _client.dio.get<dynamic>('/api/marketplace/favorites');
+    final response = await _client.dio.get<dynamic>(
+      '/api/marketplace/favorites',
+    );
     return MarketplaceJson.promoListFromJson(unwrapApiResponse(response.data));
   }
 
@@ -263,9 +262,7 @@ class MarketplaceRemoteDataSource {
   }
 
   Future<void> cancelOrder(int orderId) async {
-    await _client.dio.patch<dynamic>(
-      '/api/marketplace/orders/$orderId/cancel',
-    );
+    await _client.dio.patch<dynamic>('/api/marketplace/orders/$orderId/cancel');
   }
 
   Future<MarketplaceReservation> createReservation({

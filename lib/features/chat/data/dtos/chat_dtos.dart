@@ -14,9 +14,7 @@ ChatConversation conversationFromJson(Map<String, dynamic> json) {
   return ChatConversation(
     id: '${json['id'] ?? json['conversationId'] ?? ''}',
     title: DisplayFormatters.chatTitle(
-      rawTitle: (json['title'] ??
-              json['businessName'] ??
-              json['displayName'])
+      rawTitle: (json['title'] ?? json['businessName'] ?? json['displayName'])
           ?.toString(),
       username: _optionalString(json, const [
         'peerUsername',
@@ -90,9 +88,7 @@ String? _lastMessageBody(Map<String, dynamic> json) {
 
   final last = json['lastMessage'] ?? json['LastMessage'];
   if (last is Map) {
-    final preview = _nonEmptyString(
-      last['previewText'] ?? last['PreviewText'],
-    );
+    final preview = _nonEmptyString(last['previewText'] ?? last['PreviewText']);
     if (preview != null) {
       return _withOwnPrefix(last, preview);
     }

@@ -262,8 +262,9 @@ class _ModeSegment extends StatelessWidget {
   Widget build(BuildContext context) {
     // Colores del track (día/noche), NO del ThemeMode global: evita texto
     // blanco sobre beige cuando el MaterialApp aún está en dark.
-    final unselectedColor =
-        isDayPreview ? AppColors.dayTextMuted : AppColors.textMuted;
+    final unselectedColor = isDayPreview
+        ? AppColors.dayTextMuted
+        : AppColors.textMuted;
     final selectedFg = AppColors.dayText;
 
     return Semantics(

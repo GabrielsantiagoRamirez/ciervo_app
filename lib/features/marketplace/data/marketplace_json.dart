@@ -82,9 +82,9 @@ class MarketplaceJson {
     final rawItems = map['items'] ?? map['Items'] ?? const [];
     final items = rawItems is List
         ? rawItems
-            .whereType<Map>()
-            .map((e) => promoFromJson(Map<String, dynamic>.from(e)))
-            .toList()
+              .whereType<Map>()
+              .map((e) => promoFromJson(Map<String, dynamic>.from(e)))
+              .toList()
         : <MarketplacePromo>[];
     return MarketplaceFeedPage(
       items: items,
@@ -189,7 +189,10 @@ class MarketplaceJson {
       phones: phones,
       acceptedPaymentMethods: payments,
       gallery: gallery,
-      activePromotions: _int(map['activePromotions'], fallback: promotions.length),
+      activePromotions: _int(
+        map['activePromotions'],
+        fallback: promotions.length,
+      ),
       promotions: promotions,
     );
   }
@@ -216,9 +219,7 @@ class MarketplaceJson {
   static MarketplaceOrder orderFromJson(dynamic value) {
     final map = _asMap(value);
     final nested = map['order'];
-    final source = nested is Map
-        ? Map<String, dynamic>.from(nested)
-        : map;
+    final source = nested is Map ? Map<String, dynamic>.from(nested) : map;
     return MarketplaceOrder(
       id: _int(source['id']),
       promotionId: _int(source['promotionId']),

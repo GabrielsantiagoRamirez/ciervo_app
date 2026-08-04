@@ -45,7 +45,9 @@ class DioPinsRemoteDataSource implements PinsRemoteDataSource {
           'walletCardId': int.tryParse(walletCardId) ?? walletCardId,
         'businessId': int.tryParse(businessId) ?? businessId,
         'amount': amount,
-        'currency': currency.trim().isEmpty ? 'COP' : currency.trim().toUpperCase(),
+        'currency': currency.trim().isEmpty
+            ? 'COP'
+            : currency.trim().toUpperCase(),
         'expirationMinutes': 30,
         'allowedUses': 1,
         'idempotencyKey': IdempotencyKey.generate(),

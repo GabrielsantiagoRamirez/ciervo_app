@@ -51,9 +51,9 @@ class _MarketplaceOrdersPageState extends State<MarketplaceOrdersPage> {
     result.when(
       success: (_) => _load(),
       failure: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       },
     );
   }
@@ -98,7 +98,8 @@ class _MarketplaceOrdersPageState extends State<MarketplaceOrdersPage> {
                         style: AppTextStyles.bodyMuted,
                       ),
                       isThreeLine: true,
-                      trailing: order.status == 'pending' ||
+                      trailing:
+                          order.status == 'pending' ||
                               order.status == 'pending_payment'
                           ? TextButton(
                               onPressed: () => _cancel(order),

@@ -101,10 +101,7 @@ class HomePlaceCard extends StatelessWidget {
                           size: 39,
                         )
                       else if (isFavorite ?? place.isFavorite)
-                        const _IconBadge(
-                          icon: Icons.pets,
-                          label: 'Favorito',
-                        ),
+                        const _IconBadge(icon: Icons.pets, label: 'Favorito'),
                       if (place.isOpen != null) ...[
                         const SizedBox(width: AppSpacing.xs),
                         _Badge(
@@ -225,8 +222,7 @@ List<_AmenityIcon> _amenityIcons(HomePlace place) {
       const _AmenityIcon(Icons.accessible_outlined, 'Accesible'),
     if (place.hasParking)
       const _AmenityIcon(Icons.local_parking_outlined, 'Parking'),
-    if (place.open24Hours)
-      const _AmenityIcon(Icons.schedule_outlined, '24h'),
+    if (place.open24Hours) const _AmenityIcon(Icons.schedule_outlined, '24h'),
   ];
 }
 

@@ -9,10 +9,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'notification_channels.dart';
 
 class _GroupedNotificationLine {
-  const _GroupedNotificationLine({
-    required this.title,
-    required this.body,
-  });
+  const _GroupedNotificationLine({required this.title, required this.body});
 
   final String title;
   final String body;

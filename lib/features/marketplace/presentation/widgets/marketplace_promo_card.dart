@@ -107,9 +107,7 @@ class _CardBody extends StatelessWidget {
                           visualDensity: VisualDensity.compact,
                           onPressed: onFavorite,
                           icon: Icon(
-                            promo.isFavorite
-                                ? Icons.pets
-                                : Icons.pets_outlined,
+                            promo.isFavorite ? Icons.pets : Icons.pets_outlined,
                             size: 18,
                             color: promo.isFavorite
                                 ? AppColors.primary
@@ -136,8 +134,7 @@ class _CardBody extends StatelessWidget {
                       const _Chip(label: 'Cashback'),
                     if (promo.pointsEnabled || promo.points > 0)
                       const _Chip(label: 'Puntos'),
-                    if (promo.reservationEnabled)
-                      const _Chip(label: 'Reserva'),
+                    if (promo.reservationEnabled) const _Chip(label: 'Reserva'),
                     if (promo.hasDelivery) const _Chip(label: 'Delivery'),
                   ],
                 ),

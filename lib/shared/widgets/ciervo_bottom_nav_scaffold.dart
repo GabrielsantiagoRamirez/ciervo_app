@@ -61,8 +61,7 @@ class _CiervoBottomNavScaffoldState extends State<CiervoBottomNavScaffold> {
     context.read<NotificationBadgesCubit>().refresh(force: index == _chatIndex);
   }
 
-  bool get _canPopTabHistory =>
-      _tabHistory.length > 1 || _selectedIndex != 0;
+  bool get _canPopTabHistory => _tabHistory.length > 1 || _selectedIndex != 0;
 
   void _popTabHistory() {
     if (_tabHistory.length > 1) {
@@ -173,7 +172,10 @@ class _CiervoBottomNavScaffoldState extends State<CiervoBottomNavScaffold> {
                           label: 'Perfil',
                           selected: _selectedIndex == 4,
                           onTap: () => _selectTab(4),
-                          icon: _badgedIcon(Icons.person_outline, badges.promos),
+                          icon: _badgedIcon(
+                            Icons.person_outline,
+                            badges.promos,
+                          ),
                           selectedIcon: _badgedIcon(
                             Icons.person_rounded,
                             badges.promos,
@@ -251,10 +253,7 @@ class _CiervoNavItem extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconTheme(
-                  data: IconThemeData(
-                    color: foregroundColor,
-                    size: 24,
-                  ),
+                  data: IconThemeData(color: foregroundColor, size: 24),
                   child: selected ? selectedIcon : icon,
                 ),
                 const SizedBox(height: 2),

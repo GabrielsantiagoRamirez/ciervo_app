@@ -101,13 +101,9 @@ class _SplitOptionTile extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                selected
-                    ? Icons.check_circle
-                    : Icons.radio_button_unchecked,
+                selected ? Icons.check_circle : Icons.radio_button_unchecked,
                 size: 18,
-                color: selected
-                    ? selectedText
-                    : colorScheme.onSurfaceVariant,
+                color: selected ? selectedText : colorScheme.onSurfaceVariant,
               ),
               const SizedBox(width: AppSpacing.xs),
               Flexible(

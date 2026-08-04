@@ -154,9 +154,7 @@ class PhysicalNfcCardDto {
       blockedAt: _date(json['blockedAt']),
       updatedAt: _date(json['updatedAt']),
       canEdit: json['canEdit'] is bool ? json['canEdit'] as bool : true,
-      canBlock: json['canBlock'] is bool
-          ? json['canBlock'] as bool
-          : !blocked,
+      canBlock: json['canBlock'] is bool ? json['canBlock'] as bool : !blocked,
       canUnblock: json['canUnblock'] is bool
           ? json['canUnblock'] as bool
           : blocked,
@@ -190,7 +188,10 @@ class PhysicalNfcCardDto {
         : const [];
     return list
         .whereType<Map>()
-        .map((item) => PhysicalNfcCardDto.fromJson(Map<String, dynamic>.from(item)))
+        .map(
+          (item) =>
+              PhysicalNfcCardDto.fromJson(Map<String, dynamic>.from(item)),
+        )
         .toList();
   }
 }

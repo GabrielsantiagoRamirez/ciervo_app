@@ -8,6 +8,7 @@ abstract interface class GlobalSearchRepository {
     double? longitude,
     double? radiusKm,
     int limit = 20,
+
     /// null / vacío = todos los tipos. Valores API: people,businesses,...
     String? types,
   });

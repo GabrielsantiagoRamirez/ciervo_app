@@ -234,9 +234,9 @@ class _CampaignBanner extends StatelessWidget {
                         campaign.businessName!,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.white70,
-                            ),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodySmall?.copyWith(color: Colors.white70),
                       ),
                     const SizedBox(height: AppSpacing.xs),
                     Row(
@@ -249,7 +249,8 @@ class _CampaignBanner extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           'Ver productos en promo',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
                                 color: AppColors.primary,
                                 fontWeight: FontWeight.w700,
                               ),

@@ -92,9 +92,8 @@ class _VakupliContactsPickerPageState extends State<VakupliContactsPickerPage> {
                   return CiervoErrorState(
                     title: 'No pudimos cargar contactos',
                     description: UserErrorMessage.from(snapshot.error!),
-                    onRetry: () => setState(() => _future = _load(
-                          query: _search.text,
-                        )),
+                    onRetry: () =>
+                        setState(() => _future = _load(query: _search.text)),
                   );
                 }
                 final items = snapshot.data ?? const <VakupliContact>[];
@@ -114,9 +113,7 @@ class _VakupliContactsPickerPageState extends State<VakupliContactsPickerPage> {
                   itemBuilder: (context, index) {
                     final contact = items[index];
                     return ListTile(
-                      leading: CircleAvatar(
-                        child: Text(contact.initials),
-                      ),
+                      leading: CircleAvatar(child: Text(contact.initials)),
                       title: Text(contact.displayName),
                       subtitle: Text(
                         contact.subtitle.isEmpty

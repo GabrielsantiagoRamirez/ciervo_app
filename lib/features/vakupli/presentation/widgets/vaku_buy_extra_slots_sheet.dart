@@ -41,7 +41,8 @@ class _VakuBuyExtraSlotsSheetState extends State<_VakuBuyExtraSlotsSheet> {
   int get _guestsPerPack =>
       _plan.extraSlotPackSize > 0 ? _plan.extraSlotPackSize : 4;
 
-  double get _unitPrice => _plan.nextPackPriceUsd ??
+  double get _unitPrice =>
+      _plan.nextPackPriceUsd ??
       (((_plan.planCode ?? 'free').toLowerCase() == 'free') ? 2 : 1);
 
   @override
@@ -73,10 +74,7 @@ class _VakuBuyExtraSlotsSheetState extends State<_VakuBuyExtraSlotsSheet> {
           ),
           if (_plan.nextPackPriceLabel.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.xs),
-            Text(
-              _plan.nextPackPriceLabel,
-              style: theme.textTheme.bodySmall,
-            ),
+            Text(_plan.nextPackPriceLabel, style: theme.textTheme.bodySmall),
           ],
           const SizedBox(height: AppSpacing.md),
           Row(
@@ -135,9 +133,9 @@ class _VakuBuyExtraSlotsSheetState extends State<_VakuBuyExtraSlotsSheet> {
           _submitting = false;
           _idempotencyKey = null;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       },
     );
   }

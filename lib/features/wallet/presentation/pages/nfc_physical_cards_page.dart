@@ -224,9 +224,9 @@ class _NfcPhysicalCardsPageState extends State<NfcPhysicalCardsPage> {
     if (!mounted) return;
     result.when(
       success: (_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Etiqueta actualizada.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Etiqueta actualizada.')));
         _load();
       },
       failure: (error) => handleNfcError(context, error),
@@ -312,7 +312,9 @@ class _NfcPhysicalCardsPageState extends State<NfcPhysicalCardsPage> {
     result.when(
       success: (_) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tarjeta revocada. El UID quedó libre.')),
+          const SnackBar(
+            content: Text('Tarjeta revocada. El UID quedó libre.'),
+          ),
         );
         _load();
       },
@@ -414,9 +416,7 @@ class _NfcPhysicalCardsPageState extends State<NfcPhysicalCardsPage> {
                               ListTile(
                                 contentPadding: EdgeInsets.zero,
                                 leading: Icon(
-                                  card.isBlocked
-                                      ? Icons.block
-                                      : Icons.nfc,
+                                  card.isBlocked ? Icons.block : Icons.nfc,
                                 ),
                                 title: Text(card.label),
                                 subtitle: Text(
@@ -447,7 +447,9 @@ class _NfcPhysicalCardsPageState extends State<NfcPhysicalCardsPage> {
                                   if (card.canUnblock)
                                     TextButton.icon(
                                       onPressed: () => _unblock(card),
-                                      icon: const Icon(Icons.lock_open_outlined),
+                                      icon: const Icon(
+                                        Icons.lock_open_outlined,
+                                      ),
                                       label: const Text('Desbloquear'),
                                     ),
                                   if (card.canRevoke)

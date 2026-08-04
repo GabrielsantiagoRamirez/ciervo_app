@@ -193,7 +193,10 @@ class DioFamilyPaymentsRemoteDataSource
   }
 
   @override
-  Future<FamilyPaymentCardDto> freezeCard(String cardId, {String? reason}) async {
+  Future<FamilyPaymentCardDto> freezeCard(
+    String cardId, {
+    String? reason,
+  }) async {
     final response = await _client.dio.post<Map<String, dynamic>>(
       '/api/family/payment-methods/cards/$cardId/freeze',
       data: {

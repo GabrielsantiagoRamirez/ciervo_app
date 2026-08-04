@@ -10,24 +10,29 @@ enum GlobalSearchItemType {
   static GlobalSearchItemType fromApi(String? raw) {
     final value = (raw ?? '').trim().toLowerCase();
     return switch (value) {
-      'person' || 'people' || 'persona' || 'personas' || 'user' || 'users' =>
-        person,
+      'person' ||
+      'people' ||
+      'persona' ||
+      'personas' ||
+      'user' ||
+      'users' => person,
       'business' ||
       'businesses' ||
       'lugar' ||
       'lugares' ||
       'comercio' ||
-      'comercios' =>
-        business,
-      'product' || 'products' || 'producto' || 'productos' || 'comida' =>
-        product,
+      'comercios' => business,
+      'product' ||
+      'products' ||
+      'producto' ||
+      'productos' ||
+      'comida' => product,
       'promotion' ||
       'promotions' ||
       'promo' ||
       'promos' ||
       'promocion' ||
-      'promociones' =>
-        promotion,
+      'promociones' => promotion,
       'service' || 'services' || 'servicio' || 'servicios' => service,
       'event' || 'events' || 'evento' || 'eventos' => event,
       _ => unknown,

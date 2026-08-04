@@ -78,7 +78,8 @@ class DurablePinService {
       '/api/pins/durable',
       data: {
         'walletCardId': int.tryParse(walletCardId) ?? walletCardId,
-        if (currency.trim().isNotEmpty) 'currency': currency.trim().toUpperCase(),
+        if (currency.trim().isNotEmpty)
+          'currency': currency.trim().toUpperCase(),
         'idempotencyKey': IdempotencyKey.generate(),
       },
     );
@@ -99,8 +100,9 @@ class DurablePinService {
           ? currency
           : '${map['currency']}',
       validFrom:
-          DateTime.tryParse('${map['validFrom'] ?? map['createdAt'] ?? ''}')
-              ?.toUtc() ??
+          DateTime.tryParse(
+            '${map['validFrom'] ?? map['createdAt'] ?? ''}',
+          )?.toUtc() ??
           now,
       expiresAt:
           DateTime.tryParse(

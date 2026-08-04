@@ -166,9 +166,10 @@ class BusinessSummaryDto {
 
     return rawItems
         .whereType<Map>()
-        .map((item) => BusinessSummaryDto.fromJson(
-              Map<String, dynamic>.from(item),
-            ))
+        .map(
+          (item) =>
+              BusinessSummaryDto.fromJson(Map<String, dynamic>.from(item)),
+        )
         .toList();
   }
 

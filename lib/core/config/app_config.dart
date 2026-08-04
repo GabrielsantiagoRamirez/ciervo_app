@@ -39,8 +39,7 @@ class AppConfig {
     );
     // En debug/dev el alta debe poder abrirse sin pelear con dart-defines.
     // En release solo con --dart-define=MOVE_ONBOARDING_ENABLED=true.
-    final moveOnboardingEnabled =
-        moveOnboardingEnabledDefine || !kReleaseMode;
+    final moveOnboardingEnabled = moveOnboardingEnabledDefine || !kReleaseMode;
     const moveTermsCoTextBase64 = String.fromEnvironment(
       'MOVE_TERMS_CO_TEXT_BASE64',
       defaultValue: '',

@@ -345,8 +345,10 @@ abstract final class DisplayLabels {
       'sharedwallet' => 'Wallet compartida',
       'familybudget' => 'Presupuesto familiar',
       'approvals' => 'Aprobaciones de pagos',
-      'vakuplimaxguests' || 'vakuplimaxtotal' || 'maxguests' || 'maxtotal' =>
-          'Cupos del grupo',
+      'vakuplimaxguests' ||
+      'vakuplimaxtotal' ||
+      'maxguests' ||
+      'maxtotal' => 'Cupos del grupo',
       _ => _humanize(key),
     };
   }

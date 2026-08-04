@@ -40,8 +40,7 @@ class _TransferPageState extends State<TransferPage> {
   String _currency = CountryRegistration.currencyForCountry(
     CountryRegistration.defaultCountryCode(),
   );
-  TransferDirectoryAction? _selectedAction =
-      TransferDirectoryAction.ciervoId;
+  TransferDirectoryAction? _selectedAction = TransferDirectoryAction.ciervoId;
   String? _recipientLabel;
 
   @override
@@ -223,9 +222,9 @@ class _TransferPageState extends State<TransferPage> {
         );
       },
       failure: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       },
     );
   }
@@ -329,9 +328,8 @@ class _TransferPageState extends State<TransferPage> {
                                   : CiervoButtonState.normal,
                               onPressed: state.isLoading
                                   ? null
-                                  : () => context
-                                        .read<WalletCubit>()
-                                        .resolveUser(
+                                  : () =>
+                                        context.read<WalletCubit>().resolveUser(
                                           _codeController.text.trim(),
                                         ),
                             ),
@@ -424,8 +422,7 @@ class _TransferPageState extends State<TransferPage> {
       return;
     }
     final resolved = context.read<WalletCubit>().state.resolvedUser;
-    final destinationLabel =
-        resolved?.displayName ?? _recipientLabel ?? target;
+    final destinationLabel = resolved?.displayName ?? _recipientLabel ?? target;
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -448,8 +445,9 @@ class _TransferPageState extends State<TransferPage> {
     if (ok != true || !context.mounted) return;
     final resolvedCode = resolved?.ciervoUserCode.trim();
     await context.read<WalletCubit>().transfer(
-      targetCiervoUserCode:
-          (resolvedCode != null && resolvedCode.isNotEmpty) ? resolvedCode : target,
+      targetCiervoUserCode: (resolvedCode != null && resolvedCode.isNotEmpty)
+          ? resolvedCode
+          : target,
       amount: amount,
       description: _descriptionController.text.trim(),
       walletCardId: widget.card?.id,
@@ -488,8 +486,7 @@ class _RecipientPreview extends StatelessWidget {
         children: [
           CircleAvatar(
             backgroundColor: CiervoBrandColors.gold.withValues(alpha: 0.18),
-            backgroundImage:
-                user.photoUrl != null && user.photoUrl!.isNotEmpty
+            backgroundImage: user.photoUrl != null && user.photoUrl!.isNotEmpty
                 ? NetworkImage(user.photoUrl!)
                 : null,
             child: user.photoUrl == null || user.photoUrl!.isEmpty

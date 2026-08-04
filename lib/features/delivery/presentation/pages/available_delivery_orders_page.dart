@@ -81,10 +81,7 @@ class _AvailableDeliveryOrdersPageState
     final lng = _courierLng;
     final pickupLat = order.pickupLatitude;
     final pickupLng = order.pickupLongitude;
-    if (lat == null ||
-        lng == null ||
-        pickupLat == null ||
-        pickupLng == null) {
+    if (lat == null || lng == null || pickupLat == null || pickupLng == null) {
       return null;
     }
     return Geolocator.distanceBetween(lat, lng, pickupLat, pickupLng) / 1000;
@@ -103,12 +100,7 @@ class _AvailableDeliveryOrdersPageState
         dropLng == null) {
       return null;
     }
-    return Geolocator.distanceBetween(
-          pickupLat,
-          pickupLng,
-          dropLat,
-          dropLng,
-        ) /
+    return Geolocator.distanceBetween(pickupLat, pickupLng, dropLat, dropLng) /
         1000;
   }
 
@@ -316,11 +308,7 @@ class _DistanceChips extends StatelessWidget {
             'A ${_format(toPickupKm!)} de la recogida',
           ),
         if (tripKm != null)
-          _chip(
-            context,
-            Icons.route_outlined,
-            'Trayecto ${_format(tripKm!)}',
-          ),
+          _chip(context, Icons.route_outlined, 'Trayecto ${_format(tripKm!)}'),
       ],
     );
   }

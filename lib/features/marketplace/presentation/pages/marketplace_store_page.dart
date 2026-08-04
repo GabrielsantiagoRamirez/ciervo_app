@@ -51,7 +51,9 @@ class _MarketplaceStorePageState extends State<MarketplaceStorePage> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(body: Center(child: CiervoLoadingState(itemCount: 3)));
+      return const Scaffold(
+        body: Center(child: CiervoLoadingState(itemCount: 3)),
+      );
     }
     if (_error != null || _store == null) {
       return Scaffold(
@@ -75,7 +77,11 @@ class _MarketplaceStorePageState extends State<MarketplaceStorePage> {
             expandedHeight: 220,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
-              title: Text(store.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+              title: Text(
+                store.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
               background: store.coverImage?.isNotEmpty == true
                   ? AuthenticatedMediaImage(
                       mediaId: store.coverImage!,
@@ -175,17 +181,14 @@ class _MarketplaceStorePageState extends State<MarketplaceStorePage> {
                   crossAxisSpacing: AppSpacing.md,
                   childAspectRatio: columns == 1 ? 1.35 : 0.78,
                 ),
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final promo = store.promotions[index];
-                    return MarketplacePromoCard(
-                      promo: promo,
-                      onTap: () =>
-                          context.push('/marketplace/promos/${promo.id}'),
-                    );
-                  },
-                  childCount: store.promotions.length,
-                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final promo = store.promotions[index];
+                  return MarketplacePromoCard(
+                    promo: promo,
+                    onTap: () =>
+                        context.push('/marketplace/promos/${promo.id}'),
+                  );
+                }, childCount: store.promotions.length),
               ),
             ),
         ],

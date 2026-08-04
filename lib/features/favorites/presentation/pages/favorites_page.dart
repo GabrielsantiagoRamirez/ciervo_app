@@ -296,8 +296,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
         children: const [
           CiervoEmptyState(
             title: 'Sin favoritos',
-            description:
-                'Guarda comercios para encontrarlos rápido después.',
+            description: 'Guarda comercios para encontrarlos rápido después.',
             icon: Icons.favorite_border,
           ),
         ],

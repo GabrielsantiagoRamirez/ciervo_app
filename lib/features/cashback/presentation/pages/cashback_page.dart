@@ -102,9 +102,7 @@ class _CashbackPageState extends State<CashbackPage> {
             const SizedBox(height: AppSpacing.sm),
             TextField(
               controller: noteController,
-              decoration: const InputDecoration(
-                labelText: 'Nota (opcional)',
-              ),
+              decoration: const InputDecoration(labelText: 'Nota (opcional)'),
             ),
           ],
         ),
@@ -140,15 +138,15 @@ class _CashbackPageState extends State<CashbackPage> {
 
     result.when(
       success: (_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Canjeaste $points puntos.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Canjeaste $points puntos.')));
         setState(_load);
       },
       failure: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       },
     );
   }
@@ -296,7 +294,10 @@ class _PointsBalanceCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Balance de puntos', style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            'Balance de puntos',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: AppSpacing.sm),
           Text(
             '${balance!.balance}',
@@ -355,10 +356,12 @@ class _PlanBenefitSummary extends StatelessWidget {
     final membership = context.watch<MembershipCubit>().state;
     final planName = membership.isLoaded ? membership.planName : 'tu plan';
     final pointsLimit = membership.limits['points.multiplier'];
-    final cashbackLimit = membership.limits['cashback.multiplier'] ??
+    final cashbackLimit =
+        membership.limits['cashback.multiplier'] ??
         membership.limits['cashbackPercent'];
     final multiplier = pointsLimit?.multiplier ?? cashbackLimit?.multiplier;
-    final percentOrFactor = pointsLimit?.limitValue ?? cashbackLimit?.limitValue;
+    final percentOrFactor =
+        pointsLimit?.limitValue ?? cashbackLimit?.limitValue;
 
     String benefitLine;
     if (multiplier != null && multiplier > 0) {
@@ -377,10 +380,7 @@ class _PlanBenefitSummary extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Tu beneficio',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text('Tu beneficio', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: AppSpacing.sm),
           Text(benefitLine),
           const SizedBox(height: AppSpacing.xs),

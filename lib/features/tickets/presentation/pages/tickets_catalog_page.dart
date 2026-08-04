@@ -59,14 +59,20 @@ class _TicketsCatalogPageState extends State<TicketsCatalogPage> {
       success: (value) => value,
       failure: (error) {
         errors.add(UserErrorMessage.from(error));
-        return const TicketEventsPage(page: 1, pageSize: 40, total: 0, items: []);
+        return const TicketEventsPage(
+          page: 1,
+          pageSize: 40,
+          total: 0,
+          items: [],
+        );
       },
     );
     final highlights = highlightsResult.when(
       success: (value) => value,
       failure: (_) => const <TicketEventSummary>[],
     );
-    final nearby = nearbyResult?.when(
+    final nearby =
+        nearbyResult?.when(
           success: (value) => value,
           failure: (_) => const <TicketEventSummary>[],
         ) ??
@@ -281,90 +287,92 @@ class _EventCard extends StatelessWidget {
     return SizedBox(
       height: compact ? double.infinity : null,
       child: Card(
-      margin: EdgeInsets.only(bottom: compact ? 0 : AppSpacing.sm),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.push('/tickets/${Uri.encodeComponent(event.id)}'),
-        child: Padding(
-          padding: EdgeInsets.all(compact ? AppSpacing.sm : AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: compact ? MainAxisSize.max : MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  Flexible(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: scheme.primary.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        event.category.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: scheme.primary,
-                          fontWeight: FontWeight.w700,
+        margin: EdgeInsets.only(bottom: compact ? 0 : AppSpacing.sm),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () =>
+              context.push('/tickets/${Uri.encodeComponent(event.id)}'),
+          child: Padding(
+            padding: EdgeInsets.all(compact ? AppSpacing.sm : AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: compact ? MainAxisSize.max : MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: scheme.primary.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          event.category.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: scheme.primary,
+                                fontWeight: FontWeight.w700,
+                              ),
                         ),
                       ),
                     ),
-                  ),
-                  if (price != null) ...[
-                    const SizedBox(width: 8),
-                    Text(
-                      'desde $price',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: scheme.primary,
+                    if (price != null) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        'desde $price',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.labelLarge?.copyWith(color: scheme.primary),
                       ),
-                    ),
+                    ],
                   ],
+                ),
+                SizedBox(height: compact ? 6 : AppSpacing.sm),
+                Text(
+                  event.title,
+                  maxLines: compact ? 2 : 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontSize: compact ? 15 : null,
+                    height: 1.2,
+                  ),
+                ),
+                if (subtitle.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    maxLines: compact ? 1 : 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
                 ],
-              ),
-              SizedBox(height: compact ? 6 : AppSpacing.sm),
-              Text(
-                event.title,
-                maxLines: compact ? 2 : 3,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  fontSize: compact ? 15 : null,
-                  height: 1.2,
-                ),
-              ),
-              if (subtitle.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  maxLines: compact ? 1 : 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
+                if (event.startsAt != null) ...[
+                  if (compact) const Spacer() else const SizedBox(height: 4),
+                  Text(
+                    DisplayFormatters.formatDate(
+                      event.startsAt!,
+                      includeTime: true,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall,
                   ),
-                ),
+                ],
               ],
-              if (event.startsAt != null) ...[
-                if (compact) const Spacer() else const SizedBox(height: 4),
-                Text(
-                  DisplayFormatters.formatDate(
-                    event.startsAt!,
-                    includeTime: true,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }

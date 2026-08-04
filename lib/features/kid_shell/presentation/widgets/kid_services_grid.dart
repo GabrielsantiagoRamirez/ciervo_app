@@ -32,10 +32,7 @@ class KidServicesGrid extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Servicios CIERVO',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
+        Text('Servicios CIERVO', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: AppSpacing.xs),
         Text(
           'Todo lo que puedes hacer desde aquí',

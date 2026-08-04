@@ -58,12 +58,16 @@ abstract final class CountryRegistration {
     return null;
   }
 
-  static CountryContext defaultContext() => contextForCode(defaultCountryCode());
+  static CountryContext defaultContext() =>
+      contextForCode(defaultCountryCode());
 
   static CountryContext contextForCode(String countryCode) =>
       switch (countryCode.toUpperCase()) {
         'CL' => CountryContext.chile,
-        'MX' => const CountryContext(countryCode: 'MX', city: 'Ciudad de Mexico'),
+        'MX' => const CountryContext(
+          countryCode: 'MX',
+          city: 'Ciudad de Mexico',
+        ),
         'PE' => const CountryContext(countryCode: 'PE', city: 'Lima'),
         'AR' => const CountryContext(countryCode: 'AR', city: 'Buenos Aires'),
         _ => CountryContext.colombia,
@@ -162,25 +166,25 @@ abstract final class CountryRegistration {
         _ => 'CC',
       };
 
-  static String countryLabel(String countryCode) => switch (countryCode
-      .toUpperCase()) {
-    'CL' => 'Chile',
-    'CO' => 'Colombia',
-    'MX' => 'México',
-    'PE' => 'Perú',
-    'AR' => 'Argentina',
-    _ => countryCode,
-  };
-
-  static String documentHelperText(String countryCode) =>
+  static String countryLabel(String countryCode) =>
       switch (countryCode.toUpperCase()) {
-        'CL' =>
-          'Usa el RUT de tu tarjeta (p. ej. Cuenta RUT Visa) para tokenizar en Mercado Pago Chile.',
-        'MX' => 'Usa CURP o RFC del titular según tu cuenta Mercado Pago México.',
-        'PE' => 'Usa el DNI del titular para Mercado Pago Perú.',
-        'AR' => 'Usa DNI o CUIL del titular para Mercado Pago Argentina.',
-        _ => 'Usa el documento del titular según tu país (Colombia: CC).',
+        'CL' => 'Chile',
+        'CO' => 'Colombia',
+        'MX' => 'México',
+        'PE' => 'Perú',
+        'AR' => 'Argentina',
+        _ => countryCode,
       };
+
+  static String documentHelperText(String countryCode) => switch (countryCode
+      .toUpperCase()) {
+    'CL' =>
+      'Usa el RUT de tu tarjeta (p. ej. Cuenta RUT Visa) para tokenizar en Mercado Pago Chile.',
+    'MX' => 'Usa CURP o RFC del titular según tu cuenta Mercado Pago México.',
+    'PE' => 'Usa el DNI del titular para Mercado Pago Perú.',
+    'AR' => 'Usa DNI o CUIL del titular para Mercado Pago Argentina.',
+    _ => 'Usa el documento del titular según tu país (Colombia: CC).',
+  };
 
   static List<AdultDocumentOption> adultDocumentOptions(String countryCode) {
     return switch (countryCode.toUpperCase()) {

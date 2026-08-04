@@ -93,9 +93,7 @@ abstract final class MoveLabels {
   static String fareBreakdownLabel(String raw) {
     final key = raw.trim();
     if (key.isEmpty) return 'Concepto';
-    final normalized = key
-        .replaceAll(RegExp(r'[\s_\-]+'), '')
-        .toLowerCase();
+    final normalized = key.replaceAll(RegExp(r'[\s_\-]+'), '').toLowerCase();
     return switch (normalized) {
       'basefare' || 'base' => 'Tarifa base',
       'distanceamount' || 'distance' || 'distancia' => 'Distancia',
@@ -103,10 +101,10 @@ abstract final class MoveLabels {
       'tolls' || 'peajes' => 'Peajes',
       'nightsurcharge' || 'night' || 'noche' => 'Recargo nocturno',
       'rainsurcharge' || 'rain' || 'lluvia' => 'Recargo por lluvia',
-      'highdemandsurcharge' || 'highdemand' || 'surge' =>
-        'Recargo por alta demanda',
-      'airportsurcharge' || 'airport' || 'aeropuerto' =>
-        'Recargo aeropuerto',
+      'highdemandsurcharge' ||
+      'highdemand' ||
+      'surge' => 'Recargo por alta demanda',
+      'airportsurcharge' || 'airport' || 'aeropuerto' => 'Recargo aeropuerto',
       'promodiscount' || 'promo' || 'discount' => 'Descuento promo',
       'cashbackdiscount' || 'cashback' => 'Descuento cashback',
       'subtotal' => 'Subtotal',
@@ -119,10 +117,7 @@ abstract final class MoveLabels {
 
   static String _humanizeCamelCase(String value) {
     final spaced = value
-        .replaceAllMapped(
-          RegExp(r'([a-z])([A-Z])'),
-          (m) => '${m[1]} ${m[2]}',
-        )
+        .replaceAllMapped(RegExp(r'([a-z])([A-Z])'), (m) => '${m[1]} ${m[2]}')
         .replaceAll('_', ' ')
         .trim();
     if (spaced.isEmpty) return 'Concepto';

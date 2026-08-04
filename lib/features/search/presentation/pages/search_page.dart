@@ -259,11 +259,7 @@ class _SearchResultTile extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: theme.textTheme.titleMedium,
       ),
-      subtitle: Text(
-        secondary,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-      ),
+      subtitle: Text(secondary, maxLines: 2, overflow: TextOverflow.ellipsis),
       trailing: const Icon(Icons.chevron_right),
       onTap: () => GlobalSearchNavigation.open(context, item),
     );

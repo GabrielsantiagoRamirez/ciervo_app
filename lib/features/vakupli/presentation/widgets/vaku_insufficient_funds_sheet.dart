@@ -13,10 +13,7 @@ import '../../../wallet/presentation/pages/wallet_page.dart';
 enum VakuFundsAction { recharge, pickCard, addCard, cancel }
 
 class VakuFundsResolution {
-  const VakuFundsResolution({
-    required this.action,
-    this.card,
-  });
+  const VakuFundsResolution({required this.action, this.card});
 
   final VakuFundsAction action;
   final WalletCard? card;
@@ -31,8 +28,9 @@ Future<VakuFundsResolution?> showVakuInsufficientFundsSheet(
   required List<WalletCard> cards,
 }) {
   final shortfall = (amountDue - availableBalance).clamp(0, double.infinity);
-  final payableCards =
-      cards.where((card) => card.canSpend(amountDue)).toList(growable: false);
+  final payableCards = cards
+      .where((card) => card.canSpend(amountDue))
+      .toList(growable: false);
 
   return showModalBottomSheet<VakuFundsResolution>(
     context: context,
@@ -146,7 +144,8 @@ Future<void> openVakuFundsAction(
 }) async {
   switch (resolution.action) {
     case VakuFundsAction.recharge:
-      final card = resolution.card ??
+      final card =
+          resolution.card ??
           cards.where((c) => c.isPrimary).firstOrNull ??
           (cards.isNotEmpty ? cards.first : null);
       if (card != null) {
@@ -154,9 +153,9 @@ Future<void> openVakuFundsAction(
           MaterialPageRoute<void>(builder: (_) => RechargePage(card: card)),
         );
       } else {
-        await Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const WalletPage()),
-        );
+        await Navigator.of(
+          context,
+        ).push(MaterialPageRoute<void>(builder: (_) => const WalletPage()));
       }
     case VakuFundsAction.addCard:
       // Métodos de pago (Visa/MC) + wallet Ciervo.
@@ -187,9 +186,9 @@ Future<void> openVakuFundsAction(
           ),
         );
       } else {
-        await Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const WalletPage()),
-        );
+        await Navigator.of(
+          context,
+        ).push(MaterialPageRoute<void>(builder: (_) => const WalletPage()));
       }
     case VakuFundsAction.pickCard:
     case VakuFundsAction.cancel:

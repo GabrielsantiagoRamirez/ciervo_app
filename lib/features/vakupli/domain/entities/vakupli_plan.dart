@@ -66,8 +66,10 @@ class VakupliPlan {
   final String? shareUrl;
   final String? deepLink;
   final DateTime? createdAt;
+
   /// Fin del plan/chat temporal (UTC del API).
   final DateTime? expiresAt;
+
   /// Segundos restantes al momento de la respuesta (`0` si venció).
   final int? remainingSeconds;
   final int paidContributions;
@@ -75,6 +77,7 @@ class VakupliPlan {
   final int participantCount;
   final int maxParticipants;
   final int? maxGuests;
+
   /// Cupos del grupo incluyendo creador (`maxGuests + 1`).
   final int? maxTotal;
   final int? planGuests;
@@ -186,8 +189,7 @@ class VakupliPlan {
     maxGuests: maxGuests ?? this.maxGuests,
     maxTotal: maxTotal ?? this.maxTotal,
     planGuests: planGuests ?? this.planGuests,
-    purchasedExtraGuests:
-        purchasedExtraGuests ?? this.purchasedExtraGuests,
+    purchasedExtraGuests: purchasedExtraGuests ?? this.purchasedExtraGuests,
     extraSlotPackSize: extraSlotPackSize ?? this.extraSlotPackSize,
     nextPackPriceUsd: nextPackPriceUsd ?? this.nextPackPriceUsd,
     extraSlotsPeriodEndsAt:

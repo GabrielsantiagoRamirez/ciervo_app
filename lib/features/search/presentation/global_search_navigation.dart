@@ -23,8 +23,7 @@ abstract final class GlobalSearchNavigation {
       GlobalSearchItemType.business => _openBusiness(context, item),
       GlobalSearchItemType.product ||
       GlobalSearchItemType.service ||
-      GlobalSearchItemType.event =>
-        _openBusinessLinked(context, item),
+      GlobalSearchItemType.event => _openBusinessLinked(context, item),
       GlobalSearchItemType.promotion => _openPromotion(context, item),
       GlobalSearchItemType.unknown => _openBusinessLinked(context, item),
     };
@@ -162,9 +161,9 @@ abstract final class GlobalSearchNavigation {
         );
       },
       failure: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       },
     );
   }

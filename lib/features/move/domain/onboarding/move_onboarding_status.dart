@@ -67,7 +67,8 @@ class MoveVehiclePhotoReview {
   factory MoveVehiclePhotoReview.fromJson(Map<String, dynamic> json) {
     return MoveVehiclePhotoReview(
       photoType: _int(json['photoType'] ?? json['type']),
-      photoTypeName: json['photoTypeName']?.toString() ??
+      photoTypeName:
+          json['photoTypeName']?.toString() ??
           json['typeName']?.toString() ??
           '',
       mediaAssetId: _int(json['mediaAssetId']),

@@ -114,7 +114,8 @@ class _TicketsWalletPageState extends State<TicketsWalletPage>
               _TicketList(
                 items: data.history,
                 emptyTitle: 'Sin historial',
-                emptyDescription: 'Tus entradas usadas o canceladas saldrán aquí.',
+                emptyDescription:
+                    'Tus entradas usadas o canceladas saldrán aquí.',
                 onRefresh: _reload,
               ),
             ],
@@ -246,15 +247,15 @@ class _TicketWalletDetailPageState extends State<TicketWalletDetailPage> {
     setState(() => _busy = false);
     result.when(
       success: (_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Entrada cancelada.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Entrada cancelada.')));
         setState(() => _future = _load());
       },
       failure: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       },
     );
   }
@@ -286,15 +287,15 @@ class _TicketWalletDetailPageState extends State<TicketWalletDetailPage> {
     setState(() => _busy = false);
     result.when(
       success: (_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Reembolso solicitado.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Reembolso solicitado.')));
         setState(() => _future = _load());
       },
       failure: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       },
     );
   }
@@ -347,9 +348,9 @@ class _TicketWalletDetailPageState extends State<TicketWalletDetailPage> {
                     ticket.amount!,
                     currency: ticket.currency,
                   ),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: scheme.primary,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleMedium?.copyWith(color: scheme.primary),
                 ),
               ],
               const SizedBox(height: AppSpacing.lg),

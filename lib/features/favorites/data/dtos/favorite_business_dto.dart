@@ -80,7 +80,8 @@ class FavoriteBusinessDto {
         business['activeCampaignsCount'] ?? business['campaignsCount'],
       ),
       // Este DTO solo se usa en listados/check de favoritos.
-      isFavorite: business['isFavorite'] != false && json['isFavorite'] != false,
+      isFavorite:
+          business['isFavorite'] != false && json['isFavorite'] != false,
       businessCategoryId: _intOrNull(
         business['categoryId'] ??
             business['businessCategoryId'] ??

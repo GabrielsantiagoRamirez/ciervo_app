@@ -25,17 +25,13 @@ class VakupliFriendsGroup extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Quién pagó',
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
+        Text('Quién pagó', style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: AppSpacing.sm),
         ...friends.map((friend) {
           final paid =
               friend.hasPaid ||
               friend.paymentStatus == VakupliPaymentStatus.paid;
-          final pending =
-              friend.paymentStatus == VakupliPaymentStatus.pending;
+          final pending = friend.paymentStatus == VakupliPaymentStatus.pending;
           final statusColor = paid
               ? Colors.green
               : pending
@@ -51,9 +47,7 @@ class VakupliFriendsGroup extends StatelessWidget {
                 child: Text(
                   friend.initials,
                   style: AppTextStyles.label.copyWith(
-                    color: paid
-                        ? colorScheme.onPrimary
-                        : colorScheme.onSurface,
+                    color: paid ? colorScheme.onPrimary : colorScheme.onSurface,
                   ),
                 ),
               ),

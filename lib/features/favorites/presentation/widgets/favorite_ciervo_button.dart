@@ -111,9 +111,9 @@ class _FavoriteCiervoButtonState extends State<FavoriteCiervoButton> {
       },
       failure: (error) async {
         if (!await handlePlanLimitError(context, error)) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(UserErrorMessage.from(error))),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
         }
       },
     );

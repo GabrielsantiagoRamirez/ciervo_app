@@ -19,7 +19,8 @@ class DurableUserPin {
 
   bool get isExpired => DateTime.now().toUtc().isAfter(expiresAt.toUtc());
 
-  Duration get remaining => expiresAt.toUtc().difference(DateTime.now().toUtc());
+  Duration get remaining =>
+      expiresAt.toUtc().difference(DateTime.now().toUtc());
 
   Map<String, dynamic> toJson() => {
     'code': code,

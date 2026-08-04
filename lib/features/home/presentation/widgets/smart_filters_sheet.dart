@@ -158,9 +158,8 @@ class _SmartFiltersSheetState extends State<SmartFiltersSheet> {
             Row(
               children: [
                 TextButton(
-                  onPressed: () => Navigator.of(context).pop(
-                    const DiscoverySmartFilters(),
-                  ),
+                  onPressed: () =>
+                      Navigator.of(context).pop(const DiscoverySmartFilters()),
                   child: const Text('Limpiar'),
                 ),
                 const Spacer(),

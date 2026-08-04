@@ -114,9 +114,9 @@ class _PasswordRecoveryViewState extends State<_PasswordRecoveryView> {
       _error = null;
     });
 
-    final result = await context.read<FirebaseAuthCubit>().requestPasswordRecovery(
-      _emailController.text,
-    );
+    final result = await context
+        .read<FirebaseAuthCubit>()
+        .requestPasswordRecovery(_emailController.text);
 
     if (!mounted) return;
     setState(() => _submitting = false);
@@ -322,10 +322,7 @@ class _PasswordRecoveryViewState extends State<_PasswordRecoveryView> {
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: AppSpacing.lg),
-          AuthSmsCodeField(
-            controller: _codeController,
-            enabled: !_submitting,
-          ),
+          AuthSmsCodeField(controller: _codeController, enabled: !_submitting),
           const SizedBox(height: AppSpacing.md),
           Align(
             alignment: Alignment.centerLeft,

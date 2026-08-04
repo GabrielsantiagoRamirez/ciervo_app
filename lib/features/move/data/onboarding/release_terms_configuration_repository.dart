@@ -27,9 +27,7 @@ class ReleaseTermsConfigurationRepository
   MoveTermsConfiguration configurationFor(String countryCode) {
     final code = countryCode.trim().toUpperCase();
     if (code != 'CO' && code != 'CL') {
-      throw const MoveTermsConfigurationException(
-        'País no admitido por MOVE.',
-      );
+      throw const MoveTermsConfigurationException('País no admitido por MOVE.');
     }
 
     if (!isOnboardingEnabled) {

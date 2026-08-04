@@ -92,9 +92,9 @@ class _MarketplacePromoDetailPageState
         });
       },
       failure: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       },
     );
     if (mounted) setState(() => _favoriteBusy = false);
@@ -136,14 +136,14 @@ class _MarketplacePromoDetailPageState
     if (!mounted) return;
     result.when(
       success: (_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Reserva creada.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Reserva creada.')));
       },
       failure: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(UserErrorMessage.from(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
       },
     );
   }
@@ -151,7 +151,9 @@ class _MarketplacePromoDetailPageState
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(body: Center(child: CiervoLoadingState(itemCount: 3)));
+      return const Scaffold(
+        body: Center(child: CiervoLoadingState(itemCount: 3)),
+      );
     }
     if (_error != null || _promo == null) {
       return Scaffold(
@@ -179,10 +181,8 @@ class _MarketplacePromoDetailPageState
                     'assets/notifications/ciervo_logo_gold.png',
                     width: 22,
                     height: 22,
-                    errorBuilder: (_, _, _) => Icon(
-                      Icons.pets,
-                      color: AppColors.primary,
-                    ),
+                    errorBuilder: (_, _, _) =>
+                        Icon(Icons.pets, color: AppColors.primary),
                   )
                 : const Icon(Icons.pets_outlined),
             color: promo.isFavorite ? AppColors.primary : null,
@@ -226,7 +226,8 @@ class _MarketplacePromoDetailPageState
           Text(promo.title, style: AppTextStyles.title),
           const SizedBox(height: AppSpacing.xs),
           InkWell(
-            onTap: () => context.push('/marketplace/stores/${promo.businessId}'),
+            onTap: () =>
+                context.push('/marketplace/stores/${promo.businessId}'),
             child: Text(
               promo.businessName,
               style: AppTextStyles.body.copyWith(color: AppColors.primary),
@@ -358,10 +359,7 @@ class _MarketplacePromoDetailPageState
             icon: Icons.shopping_bag_outlined,
             onPressed: () => context.push(
               '/marketplace/promos/${promo.id}/checkout',
-              extra: {
-                'quantity': _quantity,
-                'paymentMethod': _paymentMethod,
-              },
+              extra: {'quantity': _quantity, 'paymentMethod': _paymentMethod},
             ),
           ),
         ],

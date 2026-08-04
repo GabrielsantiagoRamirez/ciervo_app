@@ -139,17 +139,10 @@ class _VakupliPlanCardState extends State<VakupliPlanCard> {
             const SizedBox(height: AppSpacing.sm),
             Row(
               children: [
-                const Icon(
-                  Icons.tag,
-                  size: 16,
-                  color: AppColors.textMuted,
-                ),
+                const Icon(Icons.tag, size: 16, color: AppColors.textMuted),
                 const SizedBox(width: AppSpacing.xxs),
                 Expanded(
-                  child: Text(
-                    'ID Vaku: $code',
-                    style: AppTextStyles.bodyMuted,
-                  ),
+                  child: Text('ID Vaku: $code', style: AppTextStyles.bodyMuted),
                 ),
               ],
             ),

@@ -60,9 +60,7 @@ abstract final class AppTheme {
         shape: AppRadii.cardShape,
         clipBehavior: Clip.antiAlias,
       ),
-      dialogTheme: const DialogThemeData(
-        shape: AppRadii.cardShape,
-      ),
+      dialogTheme: const DialogThemeData(shape: AppRadii.cardShape),
       bottomSheetTheme: const BottomSheetThemeData(
         shape: RoundedRectangleBorder(borderRadius: AppRadii.sheetTop),
         showDragHandle: true,
@@ -161,9 +159,7 @@ abstract final class AppTheme {
         shape: AppRadii.cardShape,
         clipBehavior: Clip.antiAlias,
       ),
-      dialogTheme: const DialogThemeData(
-        shape: AppRadii.cardShape,
-      ),
+      dialogTheme: const DialogThemeData(shape: AppRadii.cardShape),
       bottomSheetTheme: const BottomSheetThemeData(
         shape: RoundedRectangleBorder(borderRadius: AppRadii.sheetTop),
         showDragHandle: true,

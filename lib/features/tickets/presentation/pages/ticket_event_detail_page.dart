@@ -172,10 +172,7 @@ class _TicketEventDetailPageState extends State<TicketEventDetailPage> {
                 ),
               ],
               const SizedBox(height: AppSpacing.md),
-              Text(
-                'Cantidad',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+              Text('Cantidad', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: AppSpacing.sm),
               Row(
                 children: [

@@ -57,12 +57,7 @@ class TicketsRepositoryImpl implements TicketsRepository {
     double radiusKm = 25,
     int limit = 20,
   }) => _guard(
-    () => _remote.nearby(
-      lat: lat,
-      lng: lng,
-      radiusKm: radiusKm,
-      limit: limit,
-    ),
+    () => _remote.nearby(lat: lat, lng: lng, radiusKm: radiusKm, limit: limit),
   );
 
   @override

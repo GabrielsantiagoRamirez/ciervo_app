@@ -32,7 +32,11 @@ void main() {
       isTrue,
     );
     expect(
-      AuthTokenClaims.fromJwt(_jwt({'role': ['1', 'Client']})).isExplicitClient,
+      AuthTokenClaims.fromJwt(
+        _jwt({
+          'role': ['1', 'Client'],
+        }),
+      ).isExplicitClient,
       isTrue,
     );
     expect(

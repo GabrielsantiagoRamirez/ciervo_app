@@ -27,9 +27,7 @@ class QrHubPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('QR Ciervo'),
-      ),
+      appBar: AppBar(title: const Text('QR Ciervo')),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
@@ -97,9 +95,7 @@ class _MyQrPageState extends State<MyQrPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mi QR'),
-      ),
+      appBar: AppBar(title: const Text('Mi QR')),
       body: FutureBuilder<CiervoWalletIdentity>(
         future: _identity,
         builder: (context, snapshot) {
@@ -306,8 +302,7 @@ class _ScanQrPageState extends State<ScanQrPage> {
               subtitle: 'Apunta al QR en tiempo real',
               icon: Icons.photo_camera_outlined,
               color: Theme.of(context).colorScheme.primaryContainer,
-              foregroundColor:
-                  Theme.of(context).colorScheme.onPrimaryContainer,
+              foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
               onTap: _startCamera,
             ),
             const SizedBox(height: CiervoPageLayout.cardGap),
@@ -415,9 +410,9 @@ class _ScanOptionCard extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: foregroundColor,
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleMedium?.copyWith(color: foregroundColor),
                     ),
                     Text(
                       subtitle,
@@ -481,15 +476,15 @@ class _HubActionCard extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: foregroundColor,
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleLarge?.copyWith(color: foregroundColor),
                     ),
                     Text(
                       subtitle,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: foregroundColor,
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleSmall?.copyWith(color: foregroundColor),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(

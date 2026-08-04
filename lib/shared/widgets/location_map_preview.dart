@@ -96,50 +96,47 @@ class _LocationMapPreviewState extends State<LocationMapPreview> {
               tiltGesturesEnabled: false,
               rotateGesturesEnabled: false,
               markers: {
-                Marker(
-                  markerId: const MarkerId('location'),
-                  position: target,
-                ),
+                Marker(markerId: const MarkerId('location'), position: target),
               },
               onTap: (_) => _openMaps(),
             ),
             if (widget.showAddressLabel)
               Positioned(
-              left: AppSpacing.sm,
-              right: AppSpacing.sm,
-              bottom: AppSpacing.sm,
-              child: Material(
-                color: Theme.of(
-                  context,
-                ).colorScheme.surface.withValues(alpha: 0.92),
-                borderRadius: BorderRadius.circular(8),
-                child: InkWell(
-                  onTap: _openMaps,
+                left: AppSpacing.sm,
+                right: AppSpacing.sm,
+                bottom: AppSpacing.sm,
+                child: Material(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surface.withValues(alpha: 0.92),
                   borderRadius: BorderRadius.circular(8),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                      vertical: AppSpacing.xs,
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            _loading
-                                ? 'Obteniendo dirección…'
-                                : (_address ?? ''),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.labelSmall,
+                  child: InkWell(
+                    onTap: _openMaps,
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: AppSpacing.xs,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _loading
+                                  ? 'Obteniendo dirección…'
+                                  : (_address ?? ''),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
                           ),
-                        ),
-                        const Icon(Icons.open_in_new, size: 16),
-                      ],
+                          const Icon(Icons.open_in_new, size: 16),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
           ],
         ),
       ),

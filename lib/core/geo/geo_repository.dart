@@ -60,10 +60,7 @@ class GeoRepository {
   }) => _guard(() async {
     final q = query.trim();
     if (q.length < 2) return const <GeoAutocompleteItem>[];
-    final params = <String, dynamic>{
-      'q': q,
-      'limit': limit.clamp(1, 15),
-    };
+    final params = <String, dynamic>{'q': q, 'limit': limit.clamp(1, 15)};
     if (latitude != null) params['latitude'] = latitude;
     if (longitude != null) params['longitude'] = longitude;
     if (radiusKm != null) params['radiusKm'] = radiusKm;

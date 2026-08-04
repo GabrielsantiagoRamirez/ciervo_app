@@ -47,10 +47,7 @@ class HomeServicesGrid extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Servicios CIERVO',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
+        Text('Servicios CIERVO', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: AppSpacing.xs),
         Text(
           'Todo lo que puedes hacer desde aquí',
@@ -370,17 +367,19 @@ class _ServiceTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final titleColor =
-        isDark ? CiervoBrandColors.gold : const Color(0xFF6B5420);
+    final titleColor = isDark
+        ? CiervoBrandColors.gold
+        : const Color(0xFF6B5420);
     final subtitleColor = isDark
         ? CiervoBrandColors.goldSoft
         : Theme.of(context).colorScheme.onSurfaceVariant;
-    final border = CiervoBrandColors.gold.withValues(alpha: isDark ? 0.55 : 0.45);
+    final border = CiervoBrandColors.gold.withValues(
+      alpha: isDark ? 0.55 : 0.45,
+    );
     final tileBg = isDark
-        ? Theme.of(context)
-            .colorScheme
-            .surfaceContainerHighest
-            .withValues(alpha: 0.25)
+        ? Theme.of(
+            context,
+          ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.25)
         : CiervoBrandColors.gold.withValues(alpha: 0.10);
     return Material(
       color: Colors.transparent,

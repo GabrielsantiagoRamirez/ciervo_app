@@ -150,8 +150,10 @@ class _CiervoUserIdBadgeState extends State<CiervoUserIdBadge>
       duration: const Duration(milliseconds: 320),
     );
     _fade = CurvedAnimation(parent: _expand, curve: Curves.easeOutCubic);
-    _slide = Tween<Offset>(begin: const Offset(0, -0.2), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _expand, curve: Curves.easeOutCubic));
+    _slide = Tween<Offset>(
+      begin: const Offset(0, -0.2),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _expand, curve: Curves.easeOutCubic));
     _applyOverrideOrLoad();
     getIt<SelectedKidContext>().addListener(_onKidChanged);
   }
@@ -368,9 +370,7 @@ class _LogoButton extends StatelessWidget {
               ),
             ],
           ),
-          child: Center(
-            child: CiervoLogoMark(size: size * 0.62),
-          ),
+          child: Center(child: CiervoLogoMark(size: size * 0.62)),
         ),
       ),
     );
@@ -570,9 +570,7 @@ class CiervoUserIdOverlay extends StatelessWidget {
             bottom: false,
             child: Padding(
               padding: const EdgeInsets.only(top: 6),
-              child: const Center(
-                child: CiervoUserIdBadge(compact: true),
-              ),
+              child: const Center(child: CiervoUserIdBadge(compact: true)),
             ),
           ),
         ),

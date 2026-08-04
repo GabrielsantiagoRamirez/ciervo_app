@@ -24,6 +24,7 @@ class CiervoButton extends StatelessWidget {
   final CiervoButtonVariant variant;
   final CiervoButtonState state;
   final IconData? icon;
+
   /// Padding más compacto (barras inferiores angostas).
   final bool dense;
   final bool showIcon;

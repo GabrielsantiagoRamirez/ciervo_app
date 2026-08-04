@@ -893,10 +893,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
   ) async {
     final trimmed = email.trim();
     if (trimmed.isEmpty || InputValidators.email(trimmed) != null) {
-      return (
-        success: false,
-        message: 'Ingresa un correo electrónico válido.',
-      );
+      return (success: false, message: 'Ingresa un correo electrónico válido.');
     }
     emit(
       state.copyWith(
@@ -944,10 +941,7 @@ class FirebaseAuthCubit extends Cubit<FirebaseAuthState> {
     final trimmed = email.trim();
     final otp = code.replaceAll(RegExp(r'\D'), '');
     if (trimmed.isEmpty || InputValidators.email(trimmed) != null) {
-      return (
-        success: false,
-        message: 'Ingresa un correo electrónico válido.',
-      );
+      return (success: false, message: 'Ingresa un correo electrónico válido.');
     }
     if (otp.length != 6) {
       return (success: false, message: 'Ingresa el código de 6 dígitos.');

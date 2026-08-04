@@ -24,9 +24,7 @@ Future<bool> acknowledgeVakuExtraSlotsBeforeUpgrade(
           canPop: false,
           child: AlertDialog(
             title: Text(modal.title),
-            content: SingleChildScrollView(
-              child: Text(modal.body),
-            ),
+            content: SingleChildScrollView(child: Text(modal.body)),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext, false),

@@ -243,6 +243,7 @@ class MoveVehicleOnboardingRequest {
   final String? vin;
   final List<MoveVehicleDocumentInputV2> documents;
   final List<MoveVehiclePhotoInput> photos;
+
   /// Obligatorio: foto Front (type=1) muestra frente + placa legible.
   final bool confirmsFrontShowsReadablePlate;
 
