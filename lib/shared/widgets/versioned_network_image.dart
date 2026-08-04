@@ -44,12 +44,12 @@ class VersionedNetworkImage extends StatelessWidget {
       width: width,
       height: height,
       fit: fit,
-      placeholder: (_, __) => SizedBox(
+      placeholder: (_, _) => SizedBox(
         width: width,
         height: height,
         child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
       ),
-      errorWidget: (_, __, ___) =>
+      errorWidget: (_, _, _) =>
           errorWidget ??
           SizedBox(
             width: width,
