@@ -51,6 +51,20 @@ class BookingRepository {
     return _bookingFromJson(unwrapApiMap(response.data));
   });
 
+  /// Lookup unificado: RSV, @usuario, documento o token QR.
+  /// Contrato: `GET /api/bookings/lookup?q=`
+  Future<Result<Booking>> lookup(String query) => _guard(() async {
+    final q = query.trim();
+    if (q.isEmpty) {
+      throw Exception('Ingresa un código, @usuario o documento.');
+    }
+    final response = await _client.dio.get<dynamic>(
+      '/api/bookings/lookup',
+      queryParameters: {'q': q},
+    );
+    return _bookingFromJson(unwrapApiMap(response.data));
+  });
+
   Future<Result<List<ReservableBusinessCatalogItem>>> getReservableBusinesses({
     required String countryCode,
     required String city,

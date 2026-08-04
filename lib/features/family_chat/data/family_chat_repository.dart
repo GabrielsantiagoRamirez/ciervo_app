@@ -35,7 +35,15 @@ class FamilyChatRepository {
     );
     return unwrapApiList(response.data)
         .whereType<Map>()
-        .map((item) => conversationFromJson(Map<String, dynamic>.from(item)))
+        .map((item) {
+          final json = Map<String, dynamic>.from(item);
+          json.putIfAbsent('type', () => 'Family');
+          json.putIfAbsent(
+            'id',
+            () => json['conversationId'] ?? json['ConversationId'],
+          );
+          return conversationFromJson(json);
+        })
         .toList();
   });
 

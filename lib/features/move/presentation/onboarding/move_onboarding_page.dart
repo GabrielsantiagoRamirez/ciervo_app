@@ -8,7 +8,9 @@ import '../../../../core/permissions/permission_kind.dart';
 import '../../../../core/permissions/permission_manager.dart';
 import '../../../../core/session/auth_token_claims.dart';
 import '../../../../core/session/session_manager.dart';
+import '../../../../core/utils/app_routes.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
+import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../data/media/move_media_repository.dart';
 import '../../domain/onboarding/move_onboarding_draft.dart';
 import '../../domain/onboarding/move_onboarding_enums.dart';
@@ -49,14 +51,25 @@ class MoveOnboardingPage extends StatelessWidget {
       }
       final token = snapshot.data;
       final claims = token == null ? null : AuthTokenClaims.fromJwt(token);
-      final userId = claims?.userId;
-      if (claims?.isExplicitClient != true ||
-          userId == null ||
-          userId.trim().isEmpty) {
-        return const _SafeBlock(
+      final userId = claims?.userId?.trim();
+      final isClient = claims?.isExplicitClient == true;
+      final hasUserId = userId != null && userId.isNotEmpty;
+      if (!isClient || !hasUserId) {
+        final reason = token == null || token.isEmpty
+            ? 'No hay sesión activa.'
+            : !isClient
+            ? 'Tu token no trae rol Client (1); ahora tiene '
+                  '${claims?.role ?? 'sin role'}'
+                  '${claims?.accountKind == null ? '' : ' / ${claims!.accountKind}'}.'
+            : 'Tu token no trae userId (claim nameid/sub).';
+        return _SafeBlock(
           message:
-              'MOVE Driver requiere una sesión Client explícita (rol 1). '
-              'Vuelve a iniciar sesión.',
+              'MOVE Driver requiere sesión Client (rol 1) con userId. '
+              '$reason Cierra sesión e inicia de nuevo para renovar el token.',
+          onRelogin: () async {
+            await getIt<AuthRepository>().logout();
+            if (context.mounted) context.go(AppRoutes.login);
+          },
         );
       }
       return BlocProvider(
@@ -501,6 +514,7 @@ class _VehicleFormState extends State<_VehicleForm> {
   MovePhysicalVehicleType _physical = MovePhysicalVehicleType.car;
   MoveVehicleCategory _category = MoveVehicleCategory.economy;
   final Map<MoveVehicleDocumentType, DateTime?> _expirations = {};
+  bool _confirmsFrontPlate = false;
 
   @override
   void dispose() {
@@ -592,19 +606,46 @@ class _VehicleFormState extends State<_VehicleForm> {
             'Cinco fotos del vehículo',
             style: Theme.of(context).textTheme.titleMedium,
           ),
+          const SizedBox(height: 4),
+          Text(
+            'La foto frontal debe mostrar el frente del vehículo con la placa '
+            'claramente legible (revisión Superadmin).',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           for (final type in MoveVehiclePhotoType.values.where(
             (item) => item != MoveVehiclePhotoType.unknown,
           ))
             _AssetPicker(
               assetKey: 'vehiclePhoto.${type.name}',
-              label: _enumName(type.name),
+              label: _vehiclePhotoLabel(type),
               cameraPreferred: true,
             ),
+          CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            value: _confirmsFrontPlate,
+            controlAffinity: ListTileControlAffinity.leading,
+            title: const Text(
+              'Confirmo que la foto frontal muestra el frente del vehículo '
+              'con la placa legible',
+            ),
+            onChanged: (value) =>
+                setState(() => _confirmsFrontPlate = value ?? false),
+          ),
           const SizedBox(height: 20),
           _ActionButton(
             label: 'Guardar vehículo',
             onPressed: () async {
               if (!_key.currentState!.validate()) return;
+              if (!_confirmsFrontPlate) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Debés confirmar que la foto frontal muestra la placa legible.',
+                    ),
+                  ),
+                );
+                return;
+              }
               final documents = <MoveVehicleDocumentInputV2>[
                 for (final type in MoveVehicleDocumentType.values)
                   if (type != MoveVehicleDocumentType.unknown &&
@@ -639,6 +680,7 @@ class _VehicleFormState extends State<_VehicleForm> {
                   vin: _nullable(_vin.text),
                   documents: documents,
                   photos: photos,
+                  confirmsFrontShowsReadablePlate: _confirmsFrontPlate,
                 ),
                 countryCode: state.draft.countryCode ?? 'CO',
                 services: const [],
@@ -964,6 +1006,20 @@ class MoveOnboardingStatusSummary extends StatelessWidget {
                   Text('Licencia: ${value.maskedLicense}'),
                 if (value.maskedPlate != null)
                   Text('Placa: ${value.maskedPlate}'),
+                if (value.vehicleBrand != null || value.vehicleModel != null)
+                  Text(
+                    [
+                      if (value.vehicleBrand != null) value.vehicleBrand,
+                      if (value.vehicleModel != null) value.vehicleModel,
+                      if (value.vehicleYear != null) '${value.vehicleYear}',
+                      if (value.vehicleColor != null) value.vehicleColor,
+                    ].join(' · '),
+                  ),
+                if (value.vehiclePhotos.isNotEmpty)
+                  Text(
+                    'Fotos vehículo: ${value.vehiclePhotos.length}'
+                    '${value.vehiclePhotos.any((p) => p.isFrontPlatePhoto) ? ' (incluye frontal+placa)' : ''}',
+                  ),
                 if (value.vinLast4 != null)
                   Text('VIN termina en ${value.vinLast4}'),
                 if (value.payoutLast4 != null)
@@ -1169,10 +1225,15 @@ class _ActionButton extends StatelessWidget {
 }
 
 class _SafeBlock extends StatelessWidget {
-  const _SafeBlock({required this.message, this.onRetry});
+  const _SafeBlock({
+    required this.message,
+    this.onRetry,
+    this.onRelogin,
+  });
 
   final String message;
   final VoidCallback? onRetry;
+  final Future<void> Function()? onRelogin;
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -1186,8 +1247,16 @@ class _SafeBlock extends StatelessWidget {
             const Icon(Icons.lock_outline, size: 48),
             const SizedBox(height: 12),
             Text(message, textAlign: TextAlign.center),
-            if (onRetry != null) ...[
+            if (onRelogin != null) ...[
               const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: () => onRelogin!(),
+                icon: const Icon(Icons.logout),
+                label: const Text('Cerrar sesión e iniciar de nuevo'),
+              ),
+            ],
+            if (onRetry != null) ...[
+              const SizedBox(height: 12),
               OutlinedButton(
                 onPressed: onRetry,
                 child: const Text('Reintentar'),
@@ -1273,6 +1342,15 @@ String _stageLabel(MoveOnboardingRouteStage stage) => switch (stage) {
   MoveOnboardingRouteStage.operations => 'Operación',
   MoveOnboardingRouteStage.review => 'Revisión',
   MoveOnboardingRouteStage.status => 'Estado',
+};
+
+String _vehiclePhotoLabel(MoveVehiclePhotoType type) => switch (type) {
+  MoveVehiclePhotoType.front => 'Frontal (placa legible, obligatoria)',
+  MoveVehiclePhotoType.rear => 'Trasera',
+  MoveVehiclePhotoType.left => 'Lateral izquierdo',
+  MoveVehiclePhotoType.right => 'Lateral derecho',
+  MoveVehiclePhotoType.interior => 'Interior',
+  MoveVehiclePhotoType.unknown => 'Foto',
 };
 
 String _enumName(String value) {

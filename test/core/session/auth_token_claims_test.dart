@@ -22,4 +22,21 @@ void main() {
     expect(claims.childProfileId, 9);
     expect(claims.routeKind, 'Kid');
   });
+
+  test('extrae userId desde claim nameid de .NET JWT', () {
+    final payload = base64Url
+        .encode(
+          utf8.encode(
+            jsonEncode({
+              'nameid': '81935499',
+              'role': '1',
+            }),
+          ),
+        )
+        .replaceAll('=', '');
+    final claims = AuthTokenClaims.fromJwt('header.$payload.signature');
+
+    expect(claims.userId, '81935499');
+    expect(claims.isExplicitClient, isTrue);
+  });
 }

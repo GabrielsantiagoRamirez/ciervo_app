@@ -17,7 +17,7 @@ class ChatInboxItem {
   String get id => conversation.id;
 
   String get kindLabel => switch (source) {
-    ChatInboxSource.vakupli => 'Vakupli',
+    ChatInboxSource.vakupli => 'Vaku',
     ChatInboxSource.family => 'Familia',
     _ => switch (conversation.type.toLowerCase()) {
       'business' => 'Negocio',
@@ -28,4 +28,11 @@ class ChatInboxItem {
       _ => 'Chat',
     },
   };
+
+  /// Hay contenido visible (mensaje / preview). Los Vaku siempre cuentan.
+  bool get hasMessages {
+    if (source == ChatInboxSource.vakupli) return true;
+    final preview = conversation.lastMessage?.trim();
+    return preview != null && preview.isNotEmpty;
+  }
 }

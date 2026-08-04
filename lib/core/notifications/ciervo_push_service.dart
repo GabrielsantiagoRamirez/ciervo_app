@@ -83,12 +83,18 @@ class CiervoPushService {
     final initial = await messaging.getInitialMessage();
     if (initial != null) _handleOpenedPayload(initial.data);
 
-    if (await NotificationPresenter.hasDisplayPermission()) {
-      final token = await messaging.getToken().timeout(
-        const Duration(seconds: 8),
-      );
-      if (token != null) await _registerToken(token);
+    // Pedir permiso al arrancar para que los pushes lleguen a la bandeja
+    // aunque la app esté en segundo plano o cerrada.
+    final allowed = await NotificationPresenter.hasDisplayPermission()
+        ? true
+        : await NotificationPresenter.requestDisplayPermission();
+    if (!allowed) {
+      debugPrint('[FCM] Permiso de notificaciones denegado.');
+      return;
     }
+
+    final token = await messaging.getToken().timeout(const Duration(seconds: 8));
+    if (token != null) await _registerToken(token);
   }
 
   bool _hasValidFirebaseOptions() {
@@ -103,7 +109,14 @@ class CiervoPushService {
     if (!_firebaseReady) return;
     if (_sessionManager.state.status.name != 'authenticated') return;
     try {
-      if (!await NotificationPresenter.hasDisplayPermission()) return;
+      // Sin permiso Android 13+ no hay token útil ni pushes en bandeja.
+      if (!await NotificationPresenter.hasDisplayPermission()) {
+        final granted = await NotificationPresenter.requestDisplayPermission();
+        if (!granted) {
+          debugPrint('[FCM] Permiso de notificaciones denegado.');
+          return;
+        }
+      }
       final token = await FirebaseMessaging.instance.getToken();
       if (token != null) await _registerToken(token);
     } catch (error) {

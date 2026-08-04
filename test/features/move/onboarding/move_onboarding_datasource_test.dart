@@ -60,6 +60,7 @@ void main() {
         vin: null,
         documents: [],
         photos: [],
+        confirmsFrontShowsReadablePlate: true,
       ),
       idempotencyKey: key,
     );

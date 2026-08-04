@@ -53,6 +53,11 @@ class _SmartFiltersSheetState extends State<SmartFiltersSheet> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text('Filtros', style: AppTextStyles.title),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'Se combinan entre sí: solo verás comercios que cumplan todo lo que actives.',
+              style: AppTextStyles.bodyMuted,
+            ),
             const SizedBox(height: AppSpacing.md),
             Text(
               'Radio: ${_filters.radiusKm.toStringAsFixed(0)} km',
@@ -153,9 +158,9 @@ class _SmartFiltersSheetState extends State<SmartFiltersSheet> {
             Row(
               children: [
                 TextButton(
-                  onPressed: () {
-                    setState(() => _filters = const DiscoverySmartFilters());
-                  },
+                  onPressed: () => Navigator.of(context).pop(
+                    const DiscoverySmartFilters(),
+                  ),
                   child: const Text('Limpiar'),
                 ),
                 const Spacer(),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_spacing.dart';
+import '../../core/theme/app_radii.dart';
 import '../../features/chat/domain/entities/chat_message.dart';
 import 'location_map_preview.dart';
 
@@ -26,7 +27,7 @@ class ChatLocationCard extends StatelessWidget {
     return Container(
       width: 240,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppRadii.card,
         border: Border.all(color: colors.outlineVariant),
         color: colors.surfaceContainerHighest,
       ),
@@ -37,7 +38,7 @@ class ChatLocationCard extends StatelessWidget {
             latitude: payload.latitude,
             longitude: payload.longitude,
             height: 100,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+            borderRadius: AppRadii.sheetTop,
           ),
           Padding(
             padding: const EdgeInsets.all(AppSpacing.sm),

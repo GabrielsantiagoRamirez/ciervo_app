@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/location/location_service.dart';
@@ -120,6 +121,21 @@ class _PaidCampaignBannerSectionState extends State<PaidCampaignBannerSection> {
     await getIt<CampaignsRepository>().registerClick(campaign.id);
     if (!context.mounted) return;
 
+    // Banner → productos/promos del establecimiento en Marketplace.
+    final businessId = int.tryParse(campaign.businessId ?? '');
+    if (businessId != null && businessId > 0) {
+      context.push('/marketplace/stores/$businessId');
+      return;
+    }
+
+    if ((campaign.promotionId ?? '').isNotEmpty) {
+      final promoId = int.tryParse(campaign.promotionId!);
+      if (promoId != null) {
+        context.push('/marketplace/promos/$promoId');
+        return;
+      }
+    }
+
     if ((campaign.bonusId ?? '').isNotEmpty) {
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
@@ -128,6 +144,7 @@ class _PaidCampaignBannerSectionState extends State<PaidCampaignBannerSection> {
       );
       return;
     }
+
     if ((campaign.businessId ?? '').isNotEmpty) {
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
@@ -212,10 +229,37 @@ class _CampaignBanner extends StatelessWidget {
                         context,
                       ).textTheme.titleMedium?.copyWith(color: Colors.white),
                     ),
+                    if ((campaign.businessName ?? '').isNotEmpty)
+                      Text(
+                        campaign.businessName!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.white70,
+                            ),
+                      ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.storefront_outlined,
+                          size: 14,
+                          color: AppColors.primary.withValues(alpha: 0.95),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Ver productos en promo',
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                        ),
+                      ],
+                    ),
                     if (campaign.description.isNotEmpty)
                       Text(
                         campaign.description,
-                        maxLines: 2,
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(
                           context,

@@ -11,7 +11,6 @@ import '../features/experience/presentation/pages/experience_mode_page.dart';
 import '../features/kid_shell/presentation/pages/kid_shell_page.dart';
 import '../features/staff_scanner/presentation/pages/staff_mode_gate.dart';
 import '../shared/widgets/ciervo_bottom_nav_scaffold.dart';
-import '../shared/widgets/ciervo_brand_loader.dart';
 
 class AccountRouteGate extends StatefulWidget {
   const AccountRouteGate({super.key});
@@ -40,8 +39,10 @@ class _AccountRouteGateState extends State<AccountRouteGate> {
     future: _claims,
     builder: (context, snapshot) {
       if (snapshot.connectionState != ConnectionState.done) {
+        // Evita un segundo splash: el bootstrap ya mostró SplashPage.
         return const Scaffold(
-          body: CiervoBrandLoader(message: 'Preparando tu cuenta'),
+          backgroundColor: Colors.black,
+          body: SizedBox.shrink(),
         );
       }
 

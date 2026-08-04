@@ -85,7 +85,7 @@ class ChatInboxRepository {
       conversation: ChatConversation(
         id: group.chatId?.toString() ?? 'vakupli:$groupId',
         title: group.title,
-        type: 'Vakupli',
+        type: 'Vaku',
         unreadCount: 0,
         status: 'Open',
         lastMessage: group.paymentProgressLabel,

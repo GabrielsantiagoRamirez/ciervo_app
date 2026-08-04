@@ -82,17 +82,18 @@ abstract final class DisplayFormatters {
     final value = (amount?.toDouble() ?? 0).round();
     final sign = value < 0 ? '-' : '';
     final code = currency.trim().toUpperCase();
-    return '$code $sign${_groupThousands(value.abs())}';
+    return '$code $sign${groupThousands(value.abs())}';
   }
 
   /// Precio con símbolo `$` y separador de miles, sin decimales: `$15.000`.
   static String formatPrice(num? amount, {String symbol = '\$'}) {
     final value = (amount?.toDouble() ?? 0).round();
     final sign = value < 0 ? '-' : '';
-    return '$sign$symbol${_groupThousands(value.abs())}';
+    return '$sign$symbol${groupThousands(value.abs())}';
   }
 
-  static String _groupThousands(int value) {
+  /// Miles con punto: `20000` → `20.000`.
+  static String groupThousands(int value) {
     final digits = value.toString();
     final buffer = StringBuffer();
     for (var i = 0; i < digits.length; i++) {
@@ -100,6 +101,15 @@ abstract final class DisplayFormatters {
       buffer.write(digits[i]);
     }
     return buffer.toString();
+  }
+
+  /// Parsea montos con puntos/comas de miles: `20.000` → `20000`.
+  static double? parseMoneyInput(String? raw) {
+    final text = raw?.trim() ?? '';
+    if (text.isEmpty) return null;
+    final cleaned = text.replaceAll(RegExp(r'[^\d]'), '');
+    if (cleaned.isEmpty) return null;
+    return double.tryParse(cleaned);
   }
 
   static String formatStatus(String? status) =>
@@ -137,9 +147,16 @@ abstract final class DisplayFormatters {
     String? firstName,
     String? lastName,
     String? conversationType,
+    String? businessName,
     int? participantCount,
   }) {
     final type = safeText(conversationType).toLowerCase();
+    final business = safeText(businessName);
+    if ((type.contains('business') || business.isNotEmpty) &&
+        business.isNotEmpty) {
+      return business;
+    }
+
     if (type.contains('direct')) {
       final line = identityLine(
         username: username,
@@ -150,11 +167,17 @@ abstract final class DisplayFormatters {
       if (line.isNotEmpty) return line;
     }
 
-    final title = safeText(rawTitle, fallback: '');
+    var title = safeText(rawTitle, fallback: '');
+    // Evita títulos genéricos tipo "Consulta Nuevo negocio..."
+    if (title.toLowerCase().startsWith('consulta ')) {
+      title = title.substring('consulta '.length).trim();
+    }
     if (title.isNotEmpty && !_looksLikeRawId(title)) return title;
 
     if (type.contains('family')) return 'Chat familiar';
-    if (type.contains('business')) return 'Chat comercial';
+    if (type.contains('business')) {
+      return business.isNotEmpty ? business : 'Chat comercial';
+    }
     if (type.contains('group') &&
         participantCount != null &&
         participantCount > 0) {

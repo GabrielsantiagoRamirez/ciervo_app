@@ -109,45 +109,89 @@ class PhysicalNfcCardDto {
     required this.cardUid,
     required this.label,
     required this.status,
+    this.identifier,
     this.walletCardId,
+    this.childProfileId,
+    this.childWalletCardId,
     this.createdAt,
+    this.blockedAt,
+    this.updatedAt,
+    this.canEdit = true,
+    this.canBlock = true,
+    this.canUnblock = false,
+    this.canRevoke = true,
   });
 
   final int id;
+  final String? identifier;
   final String cardUid;
   final String label;
   final String status;
   final int? walletCardId;
+  final int? childProfileId;
+  final int? childWalletCardId;
   final DateTime? createdAt;
+  final DateTime? blockedAt;
+  final DateTime? updatedAt;
+  final bool canEdit;
+  final bool canBlock;
+  final bool canUnblock;
+  final bool canRevoke;
 
   factory PhysicalNfcCardDto.fromJson(Map<String, dynamic> json) {
+    final status = '${json['status'] ?? 'Active'}';
+    final blocked = status.toLowerCase().contains('block');
     return PhysicalNfcCardDto(
       id: _int(json['id']),
+      identifier: _stringOrNull(json['identifier']),
       cardUid: '${json['cardUid'] ?? json['uid'] ?? ''}',
       label: '${json['label'] ?? 'Tarjeta CIERVO'}',
-      status: '${json['status'] ?? 'Active'}',
+      status: status,
       walletCardId: _intOrNull(json['walletCardId']),
+      childProfileId: _intOrNull(json['childProfileId']),
+      childWalletCardId: _intOrNull(json['childWalletCardId']),
       createdAt: _date(json['createdAt']),
+      blockedAt: _date(json['blockedAt']),
+      updatedAt: _date(json['updatedAt']),
+      canEdit: json['canEdit'] is bool ? json['canEdit'] as bool : true,
+      canBlock: json['canBlock'] is bool
+          ? json['canBlock'] as bool
+          : !blocked,
+      canUnblock: json['canUnblock'] is bool
+          ? json['canUnblock'] as bool
+          : blocked,
+      canRevoke: json['canRevoke'] is bool ? json['canRevoke'] as bool : true,
     );
   }
 
   PhysicalNfcCard toDomain() => PhysicalNfcCard(
     id: id,
+    identifier: identifier,
     cardUid: cardUid,
     label: label,
     status: status,
     walletCardId: walletCardId,
+    childProfileId: childProfileId,
+    childWalletCardId: childWalletCardId,
     createdAt: createdAt,
+    blockedAt: blockedAt,
+    updatedAt: updatedAt,
+    canEdit: canEdit,
+    canBlock: canBlock,
+    canUnblock: canUnblock,
+    canRevoke: canRevoke,
   );
 
   static List<PhysicalNfcCardDto> listFrom(dynamic value) {
-    if (value is List) {
-      return value
-          .whereType<Map<String, dynamic>>()
-          .map(PhysicalNfcCardDto.fromJson)
-          .toList();
-    }
-    return const [];
+    final list = value is List
+        ? value
+        : value is Map && value['items'] is List
+        ? value['items'] as List
+        : const [];
+    return list
+        .whereType<Map>()
+        .map((item) => PhysicalNfcCardDto.fromJson(Map<String, dynamic>.from(item)))
+        .toList();
   }
 }
 

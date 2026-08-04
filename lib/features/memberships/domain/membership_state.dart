@@ -10,6 +10,9 @@ class MembershipState {
     this.error,
   });
 
+  /// Días antes del vencimiento en los que se muestra recordatorio (no mora).
+  static const preExpiryReminderDays = {7, 5, 3};
+
   final Map<String, dynamic> me;
   final Map<String, dynamic> benefits;
   final Map<String, PlanLimit> limits;
@@ -29,6 +32,46 @@ class MembershipState {
   }
 
   String? get planStatus => _string(me['status'] ?? me['membershipStatus']);
+
+  bool get isFreePlan {
+    final code = (planCode ?? '').toLowerCase();
+    return code.isEmpty || code == 'free';
+  }
+
+  DateTime? get startsAt => _date(me['startsAt']);
+  DateTime? get endsAt => _date(me['endsAt']);
+  DateTime? get graceEndsAt => _date(me['graceEndsAt']);
+
+  int? get remainingDays => _int(me['remainingDays']);
+  int? get graceDaysRemaining => _int(me['graceDaysRemaining']);
+  int get graceDays => _int(me['graceDays']) ?? 10;
+
+  bool get needsRenewal => me['needsRenewal'] == true;
+  bool get isInGrace => me['isInGrace'] == true;
+  bool get canCancel => me['canCancel'] == true;
+  bool get canRenew => me['canRenew'] == true;
+
+  String? get renewPath => _string(me['renewPath']);
+  String? get cancelPath => _string(me['cancelPath']);
+  String? get billingPeriod => _string(me['billingPeriod']);
+  int? get billingPeriodMonths => _int(me['billingPeriodMonths']);
+
+  /// Clave estable del ciclo actual (para prefs de “no volver a mostrar”).
+  String? get renewalCycleKey {
+    final end = endsAt?.toUtc().toIso8601String();
+    final id = me['membershipId'] ?? me['id'];
+    if (end == null && id == null) return null;
+    return '${id ?? 'm'}_$end';
+  }
+
+  /// ¿Hay que evaluar popup? (hitos 7/5/3 o mora).
+  bool get shouldPromptRenewalReminder {
+    if (!isLoaded || isFreePlan) return false;
+    if (isInGrace) return true;
+    final days = remainingDays;
+    if (days == null) return false;
+    return preExpiryReminderDays.contains(days);
+  }
 
   bool isFeatureEnabled(String key) => limits[key]?.isEnabled == true;
 
@@ -77,5 +120,17 @@ class MembershipState {
   static String? _string(dynamic value) {
     final text = value?.toString().trim();
     return text == null || text.isEmpty ? null : text;
+  }
+
+  static DateTime? _date(dynamic value) {
+    if (value is DateTime) return value.toUtc();
+    return DateTime.tryParse('$value')?.toUtc();
+  }
+
+  static int? _int(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse('$value');
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../shared/widgets/ciervo_qr_view.dart';
+import '../../../../shared/widgets/ciervo_logo_mark.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/ciervo_id_qr.dart';
@@ -23,7 +24,18 @@ class MyCiervoIdentityCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Mi QR Ciervo', style: Theme.of(context).textTheme.titleLarge),
+          Row(
+            children: [
+              const CiervoLogoMark(size: 32),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  'Mi QR Ciervo',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: AppSpacing.xs),
           Text(
             'Presenta este codigo para identificarte o recibir pagos.',

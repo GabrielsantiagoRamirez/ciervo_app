@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter/services.dart';
 
 import '../../../../core/experience/experience_mode.dart';
 import '../../../../core/experience/experience_mode_cubit.dart';
@@ -9,6 +8,7 @@ import '../../../../core/theme/app_component_styles.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/ciervo_business_share_link.dart';
 import '../../../../core/utils/ciervo_share.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_chip_tag.dart';
@@ -18,16 +18,11 @@ import '../../../chat/domain/repositories/chat_repository.dart';
 import '../../../chat/presentation/pages/chat_conversation_page.dart';
 import '../../../bonuses/presentation/pages/bonus_detail_page.dart';
 import '../../../campaigns/presentation/widgets/paid_campaign_banner_section.dart';
-import '../../../favorites/domain/entities/favorite_filters.dart';
-import '../../../favorites/domain/repositories/favorites_repository.dart';
-import '../../../memberships/presentation/cubit/membership_cubit.dart';
+import '../../../favorites/presentation/widgets/favorite_ciervo_button.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/country/country_registration.dart';
 import '../../../../core/errors/user_error_message.dart';
-import '../../../../core/sync/home_feed_refresh.dart';
 import '../../../../core/utils/display_formatters.dart';
-import '../../../../core/utils/display_labels.dart';
-import '../../../../core/widgets/membership_upgrade_dialog.dart';
 import '../../../../core/location/app_location.dart';
 import '../../../../core/result/result.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
@@ -35,6 +30,10 @@ import '../../data/business_detail_repository.dart';
 import '../../data/review_repository.dart';
 import '../../domain/entities/place_detail.dart';
 import '../../../location/data/client_location_repository.dart';
+import '../../../kids/domain/entities/child_profile.dart';
+import '../../../kids/domain/repositories/kids_repository.dart';
+import '../../../master_kids/data/repositories/master_kids_repository.dart';
+import '../../../master_kids/domain/models/master_kids_models.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../widgets/place_detail_location_card.dart';
 import '../widgets/place_detail_promotion_card.dart';
@@ -68,11 +67,25 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
   bool _hasReviewed = false;
   int? _userReviewId;
   bool _loadingCapabilities = true;
+  List<ChildProfile> _children = const [];
+  bool _associatingKid = false;
 
   @override
   void initState() {
     super.initState();
     _loadCapabilities();
+    _loadChildren();
+  }
+
+  Future<void> _loadChildren() async {
+    final result = await getIt<KidsRepository>().children();
+    if (!mounted) return;
+    result.when(
+      success: (items) => setState(() {
+        _children = items.where((child) => child.isActive).toList();
+      }),
+      failure: (_) {},
+    );
   }
 
   bool _loadFailed = false;
@@ -228,72 +241,76 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
         place.businessCategoryId ?? _businessCategoryIdFrom(place.category);
 
     return Scaffold(
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          SliverToBoxAdapter(child: _HeroSection(detail: detail)),
-          SliverPadding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate.fixed([
-                _TagsRow(tags: detail.tags),
-                const SizedBox(height: AppSpacing.md),
-                Text(detail.name, style: AppTextStyles.headline),
-                const SizedBox(height: AppSpacing.xs),
-                _MetaRow(
-                  detail: detail,
-                  ratingAverage: _ratingAverage,
-                  reviewsCount: _reviewsCount,
-                ),
-                if (_userCiervoCode != null) ...[
-                  const SizedBox(height: AppSpacing.xs),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Chip(
-                      avatar: const Icon(
-                        Icons.verified_user_outlined,
-                        size: 18,
-                      ),
-                      label: Text('Ciervo ID: $_userCiervoCode'),
+      body: Stack(
+        children: [
+          CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(
+                child: _HeroSection(detail: detail, showBack: false),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate.fixed([
+                    _TagsRow(tags: detail.tags),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(detail.name, style: AppTextStyles.headline),
+                    const SizedBox(height: AppSpacing.xs),
+                    _MetaRow(
+                      detail: detail,
+                      ratingAverage: _ratingAverage,
+                      reviewsCount: _reviewsCount,
                     ),
-                  ),
-                ],
-                const SizedBox(height: AppSpacing.xs),
-                Text(subtitle, style: AppTextStyles.bodyMuted),
-                const SizedBox(height: AppSpacing.lg),
-                const _SectionTitle('Descripcion'),
-                const SizedBox(height: AppSpacing.xs),
-                Text(detail.description, style: AppTextStyles.body),
-                if (businessCategoryId != null)
-                  ProductSubcategoryFilters(
-                    businessCategoryId: businessCategoryId,
-                  ),
-                const SizedBox(height: AppSpacing.lg),
-                PlaceDetailBonusesSection(businessId: place.id),
-                const SizedBox(height: AppSpacing.lg),
-                PaidCampaignBannerSection(
-                  businessId: place.id,
-                  compactTitle: 'Campañas del comercio',
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                const _SectionTitle('Promociones'),
-                const SizedBox(height: AppSpacing.sm),
-                ...detail.promotions.map(
-                  (promotion) => Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    child: PlaceDetailPromotionCard(promotion: promotion),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                const _SectionTitle('Productos'),
-                const SizedBox(height: AppSpacing.sm),
-                if (_products.isEmpty)
-                  Text(
-                    'No hay productos disponibles.',
-                    style: AppTextStyles.bodyMuted,
-                  )
-                else
-                  ..._products.map(
+                    if (_userCiervoCode != null) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Chip(
+                          avatar: const Icon(
+                            Icons.verified_user_outlined,
+                            size: 18,
+                          ),
+                          label: Text('Ciervo ID: $_userCiervoCode'),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(subtitle, style: AppTextStyles.bodyMuted),
+                    const SizedBox(height: AppSpacing.lg),
+                    const _SectionTitle('Descripcion'),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(detail.description, style: AppTextStyles.body),
+                    if (businessCategoryId != null)
+                      ProductSubcategoryFilters(
+                        businessCategoryId: businessCategoryId,
+                      ),
+                    const SizedBox(height: AppSpacing.lg),
+                    PlaceDetailBonusesSection(businessId: place.id),
+                    const SizedBox(height: AppSpacing.lg),
+                    PaidCampaignBannerSection(
+                      businessId: place.id,
+                      compactTitle: 'Campañas del comercio',
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    const _SectionTitle('Promociones'),
+                    const SizedBox(height: AppSpacing.sm),
+                    ...detail.promotions.map(
+                      (promotion) => Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                        child: PlaceDetailPromotionCard(promotion: promotion),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    const _SectionTitle('Productos'),
+                    const SizedBox(height: AppSpacing.sm),
+                    if (_products.isEmpty)
+                      Text(
+                        'No hay productos disponibles.',
+                        style: AppTextStyles.bodyMuted,
+                      )
+                    else
+                      ..._products.map(
                     (product) => Padding(
                       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                       child: _ProductTile(product: product),
@@ -371,42 +388,102 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
             ),
           ),
         ],
+          ),
+          Positioned(
+            top: 0,
+            left: 0,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  left: AppSpacing.sm,
+                  top: AppSpacing.sm,
+                ),
+                child: Material(
+                  color: AppColors.glass,
+                  borderRadius: AppRadii.chip,
+                  child: IconButton(
+                    tooltip: 'Volver',
+                    icon: Icon(
+                      Icons.arrow_back,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       bottomSheet: SafeArea(
         minimum: const EdgeInsets.fromLTRB(
-          AppSpacing.lg,
+          AppSpacing.md,
           0,
-          AppSpacing.lg,
+          AppSpacing.md,
           AppSpacing.md,
         ),
-        child: Row(
-          children: [
-            _FavoriteButton(
-              key: ValueKey('${place.id}-${_publicDetail?.isFavorite}'),
-              businessId: place.id,
-              initialValue: _publicDetail?.isFavorite ?? place.isFavorite,
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            IconButton.filledTonal(
-              tooltip: 'Contactar negocio',
-              icon: const Icon(Icons.forum_outlined),
-              onPressed: () => _openBusinessChat(context),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            IconButton.filledTonal(
-              tooltip: 'Compartir negocio',
-              icon: const Icon(Icons.share_outlined),
-              onPressed: _shareBusiness,
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: CiervoButton(
-                label: 'Reservar',
-                icon: Icons.event_seat,
-                onPressed: () => _showReservationSheet(context),
-              ),
-            ),
-          ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final narrow = constraints.maxWidth < 380;
+            final veryNarrow = constraints.maxWidth < 320;
+            return Row(
+              children: [
+                FavoriteCiervoButton(
+                  key: ValueKey('${place.id}-${_publicDetail?.isFavorite}'),
+                  businessId: place.id,
+                  initialValue: _publicDetail?.isFavorite ?? place.isFavorite,
+                  size: narrow ? 40 : 44,
+                ),
+                SizedBox(width: narrow ? AppSpacing.xs : AppSpacing.sm),
+                IconButton.filledTonal(
+                  tooltip: 'Contactar negocio',
+                  visualDensity: narrow
+                      ? VisualDensity.compact
+                      : VisualDensity.standard,
+                  icon: const Icon(Icons.forum_outlined),
+                  onPressed: () => _openBusinessChat(context),
+                ),
+                SizedBox(width: narrow ? AppSpacing.xs : AppSpacing.sm),
+                IconButton.filledTonal(
+                  tooltip: 'Compartir negocio',
+                  visualDensity: narrow
+                      ? VisualDensity.compact
+                      : VisualDensity.standard,
+                  icon: const Icon(Icons.share_outlined),
+                  onPressed: _shareBusiness,
+                ),
+                if (_children.isNotEmpty && !veryNarrow) ...[
+                  SizedBox(width: narrow ? AppSpacing.xs : AppSpacing.sm),
+                  IconButton.filledTonal(
+                    tooltip: 'Agregar comercio a mi hijo',
+                    visualDensity: narrow
+                        ? VisualDensity.compact
+                        : VisualDensity.standard,
+                    icon: _associatingKid
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.child_care_outlined),
+                    onPressed: _associatingKid
+                        ? null
+                        : _associateBusinessToKid,
+                  ),
+                ],
+                SizedBox(width: narrow ? AppSpacing.xs : AppSpacing.sm),
+                Expanded(
+                  child: CiervoButton(
+                    label: 'Reservar',
+                    icon: Icons.event_seat,
+                    dense: true,
+                    showIcon: !narrow,
+                    onPressed: () => _showReservationSheet(context),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -446,22 +523,95 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
 
   Future<void> _shareBusiness() async {
     final detail = _publicDetail;
-    final parts = [
-      detail?.shareTitle,
-      detail?.shareDescription,
-      detail?.publicUrl,
-    ].whereType<String>().where((item) => item.trim().isNotEmpty).toList();
-    if (parts.isEmpty) {
+    final name = detail?.name.isNotEmpty == true
+        ? detail!.name
+        : widget.place.name;
+    final link = CiervoBusinessShareLink.build(
+      businessId: widget.place.id,
+      name: name,
+    );
+    final description = detail?.shareDescription?.trim();
+    final body = [
+      if (description != null && description.isNotEmpty) description,
+      link,
+    ].join('\n');
+    await CiervoShare.shareText(
+      body,
+      subject: detail?.shareTitle ?? name,
+    );
+  }
+
+  Future<void> _associateBusinessToKid() async {
+    if (_children.isEmpty || _associatingKid) return;
+    final merchantId = int.tryParse(widget.place.id);
+    if (merchantId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Este negocio aun no tiene enlace para compartir.'),
-        ),
+        const SnackBar(content: Text('No pudimos identificar este comercio.')),
       );
       return;
     }
-    await CiervoShare.shareText(
-      parts.join('\n'),
-      subject: detail?.shareTitle ?? 'Ciervo Club',
+
+    final selected = await showModalBottomSheet<ChildProfile>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Text(
+                  'Agregar comercio a mi hijo',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              ..._children.map(
+                (child) => ListTile(
+                  leading: const Icon(Icons.child_care_outlined),
+                  title: Text('${child.firstName} ${child.lastName}'.trim()),
+                  subtitle: Text('Comercios: ${child.allowedBusinessesCount}'),
+                  onTap: () => Navigator.pop(context, child),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+            ],
+          ),
+        );
+      },
+    );
+    if (selected == null || !mounted) return;
+
+    final kidId = int.tryParse(selected.id);
+    if (kidId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Perfil del menor no válido.')),
+      );
+      return;
+    }
+
+    setState(() => _associatingKid = true);
+    final result = await getIt<MasterKidsRepository>().addMerchant(
+      kidId,
+      KidRuleMerchantCommand(merchantId),
+    );
+    if (!mounted) return;
+    setState(() => _associatingKid = false);
+    result.when(
+      success: (_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Comercio asociado a ${selected.firstName}.',
+            ),
+          ),
+        );
+      },
+      failure: (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(UserErrorMessage.from(error))),
+        );
+      },
     );
   }
 
@@ -571,7 +721,7 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
     final result = existing == null
         ? await repository.createBusinessConversation(
             businessId: businessId,
-            title: 'Consulta ${widget.place.name}',
+            title: widget.place.name,
           )
         : Success(existing);
     if (!context.mounted) return;
@@ -791,103 +941,6 @@ class _ReviewSheetState extends State<_ReviewSheet> {
   }
 }
 
-class _FavoriteButton extends StatefulWidget {
-  const _FavoriteButton({
-    required this.businessId,
-    required this.initialValue,
-    super.key,
-  });
-
-  final String businessId;
-  final bool initialValue;
-
-  @override
-  State<_FavoriteButton> createState() => _FavoriteButtonState();
-}
-
-class _FavoriteButtonState extends State<_FavoriteButton> {
-  bool _favorite = false;
-  bool _busy = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _favorite = widget.initialValue;
-    _load();
-  }
-
-  Future<void> _load() async {
-    final result = await getIt<FavoritesRepository>().check(widget.businessId);
-    if (!mounted) return;
-    result.when(
-      success: (value) => setState(() => _favorite = value),
-      failure: (_) {},
-    );
-  }
-
-  Future<void> _toggle() async {
-    if (_busy) return;
-    if (!_favorite) {
-      final membership = context.read<MembershipCubit>().state;
-      if (membership.isLoaded) {
-        final listResult = await getIt<FavoritesRepository>().list(
-          const FavoriteFilters(pageSize: 200),
-        );
-        final currentCount = listResult.when(
-          success: (items) => items.length,
-          failure: (_) => 0,
-        );
-        if (!membership.canAddFavorite(currentCount)) {
-          await showMembershipUpgradeDialog(
-            context,
-            featureLabel: DisplayLabels.membershipFeatureLabel('favorites.max'),
-          );
-          return;
-        }
-      }
-    }
-    setState(() => _busy = true);
-    final repository = getIt<FavoritesRepository>();
-    final result = _favorite
-        ? await repository.remove(widget.businessId)
-        : await repository.add(widget.businessId);
-    if (!mounted) return;
-    setState(() => _busy = false);
-    result.when(
-      success: (_) {
-        setState(() => _favorite = !_favorite);
-        HomeFeedRefresh.instance.favoritesChanged();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              _favorite ? 'Agregado a favoritos.' : 'Quitado de favoritos.',
-            ),
-          ),
-        );
-      },
-      failure: (error) async {
-        if (!await handlePlanLimitError(context, error)) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
-        }
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) => IconButton.filledTonal(
-    tooltip: _favorite ? 'Quitar favorito' : 'Agregar favorito',
-    onPressed: _busy ? null : _toggle,
-    icon: _busy
-        ? const SizedBox.square(
-            dimension: 18,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          )
-        : Icon(_favorite ? Icons.favorite : Icons.favorite_border),
-  );
-}
-
 int? _businessCategoryIdFrom(String value) {
   final normalized = value
       .toLowerCase()
@@ -911,9 +964,10 @@ int? _businessCategoryIdFrom(String value) {
 }
 
 class _HeroSection extends StatelessWidget {
-  const _HeroSection({required this.detail});
+  const _HeroSection({required this.detail, this.showBack = true});
 
   final PlaceDetail detail;
+  final bool showBack;
 
   @override
   Widget build(BuildContext context) {
@@ -1009,23 +1063,24 @@ class _HeroSection extends StatelessWidget {
               ),
             ),
           ),
-          Positioned(
-            top: MediaQuery.paddingOf(context).top + AppSpacing.sm,
-            left: AppSpacing.sm,
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.glass,
-                borderRadius: AppRadii.chip,
-              ),
-              child: IconButton(
-                icon: Icon(
-                  Icons.arrow_back,
-                  color: Theme.of(context).colorScheme.onSurface,
+          if (showBack)
+            Positioned(
+              top: MediaQuery.paddingOf(context).top + AppSpacing.sm,
+              left: AppSpacing.sm,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.glass,
+                  borderRadius: AppRadii.chip,
                 ),
-                onPressed: () => Navigator.of(context).pop(),
+                child: IconButton(
+                  icon: Icon(
+                    Icons.arrow_back,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

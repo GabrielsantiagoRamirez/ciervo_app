@@ -88,4 +88,44 @@ abstract final class MoveLabels {
     MoveTripStatus.inProgress => 'InProgress',
     _ => status.name,
   };
+
+  /// Traduce claves camelCase del breakdown de tarifa a español.
+  static String fareBreakdownLabel(String raw) {
+    final key = raw.trim();
+    if (key.isEmpty) return 'Concepto';
+    final normalized = key
+        .replaceAll(RegExp(r'[\s_\-]+'), '')
+        .toLowerCase();
+    return switch (normalized) {
+      'basefare' || 'base' => 'Tarifa base',
+      'distanceamount' || 'distance' || 'distancia' => 'Distancia',
+      'waitamount' || 'wait' || 'waiting' || 'espera' => 'Espera',
+      'tolls' || 'peajes' => 'Peajes',
+      'nightsurcharge' || 'night' || 'noche' => 'Recargo nocturno',
+      'rainsurcharge' || 'rain' || 'lluvia' => 'Recargo por lluvia',
+      'highdemandsurcharge' || 'highdemand' || 'surge' =>
+        'Recargo por alta demanda',
+      'airportsurcharge' || 'airport' || 'aeropuerto' =>
+        'Recargo aeropuerto',
+      'promodiscount' || 'promo' || 'discount' => 'Descuento promo',
+      'cashbackdiscount' || 'cashback' => 'Descuento cashback',
+      'subtotal' => 'Subtotal',
+      'total' || 'suggestedfare' || 'fare' => 'Total',
+      'servicefee' || 'fee' => 'Cargo por servicio',
+      'tax' || 'taxes' || 'iva' => 'Impuestos',
+      _ => _humanizeCamelCase(key),
+    };
+  }
+
+  static String _humanizeCamelCase(String value) {
+    final spaced = value
+        .replaceAllMapped(
+          RegExp(r'([a-z])([A-Z])'),
+          (m) => '${m[1]} ${m[2]}',
+        )
+        .replaceAll('_', ' ')
+        .trim();
+    if (spaced.isEmpty) return 'Concepto';
+    return spaced[0].toUpperCase() + spaced.substring(1);
+  }
 }

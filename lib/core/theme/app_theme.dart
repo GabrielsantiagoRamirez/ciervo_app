@@ -56,7 +56,16 @@ abstract final class AppTheme {
       cardTheme: CardThemeData(
         color: AppColors.daySurface,
         elevation: 0,
-        shape: const RoundedRectangleBorder(borderRadius: AppRadii.card),
+        margin: EdgeInsets.zero,
+        shape: AppRadii.cardShape,
+        clipBehavior: Clip.antiAlias,
+      ),
+      dialogTheme: const DialogThemeData(
+        shape: AppRadii.cardShape,
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        shape: RoundedRectangleBorder(borderRadius: AppRadii.sheetTop),
+        showDragHandle: true,
       ),
       chipTheme: AppComponentStyles.chipTheme(colorScheme, false),
       inputDecorationTheme: AppComponentStyles.inputDecorationTheme(
@@ -148,7 +157,16 @@ abstract final class AppTheme {
       cardTheme: CardThemeData(
         color: AppColors.surfaceHigh,
         elevation: 0,
-        shape: const RoundedRectangleBorder(borderRadius: AppRadii.card),
+        margin: EdgeInsets.zero,
+        shape: AppRadii.cardShape,
+        clipBehavior: Clip.antiAlias,
+      ),
+      dialogTheme: const DialogThemeData(
+        shape: AppRadii.cardShape,
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        shape: RoundedRectangleBorder(borderRadius: AppRadii.sheetTop),
+        showDragHandle: true,
       ),
       chipTheme: AppComponentStyles.chipTheme(colorScheme, true),
       inputDecorationTheme: AppComponentStyles.inputDecorationTheme(

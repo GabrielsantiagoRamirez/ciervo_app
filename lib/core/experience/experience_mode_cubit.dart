@@ -52,4 +52,10 @@ class ExperienceModeCubit extends Cubit<ExperienceModeState> {
     await _storage.write(_storageKey, mode.apiValue);
     emit(ExperienceModeState(mode: mode, hasSelection: true));
   }
+
+  /// Actualiza el look (tema/badge) sin confirmar la sesión ni persistir.
+  void previewMode(ExperienceMode mode) {
+    if (state.mode == mode && !state.hasSelection) return;
+    emit(ExperienceModeState(mode: mode, hasSelection: false));
+  }
 }

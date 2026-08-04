@@ -4,7 +4,10 @@ import 'package:flutter/material.dart';
 
 import '../../../core/di/service_locator.dart';
 import '../../../core/errors/user_error_message.dart';
+import '../../../core/location/location_service.dart';
 import '../../../core/utils/ciervo_id_qr.dart';
+import '../../marketplace/domain/repositories/marketplace_repository.dart';
+import '../../marketplace/presentation/pages/marketplace_store_page.dart';
 import '../../reservations/data/booking_repository.dart';
 import '../../wallet/domain/repositories/wallet_repository.dart';
 import '../data/qr_scan_repository.dart';
@@ -251,11 +254,67 @@ class QrScanRouter {
       return;
     }
 
+    if (_looksLikeBusinessQr(raw)) {
+      final opened = await _tryOpenMarketplaceStore(context, raw);
+      if (opened) return;
+    }
+
     if (!context.mounted) return;
     final message = resolveError == null
         ? 'QR no reconocido. Verifica que sea un codigo Ciervo valido.'
         : UserErrorMessage.from(resolveError);
     _showError(context, message);
+  }
+
+  static bool _looksLikeBusinessQr(String raw) {
+    final lower = raw.toLowerCase();
+    return lower.contains('ciervo://business') ||
+        lower.contains('/business/') ||
+        lower.startsWith('ciervo-') ||
+        RegExp(r'^\d+$').hasMatch(raw.trim());
+  }
+
+  static Future<bool> _tryOpenMarketplaceStore(
+    BuildContext context,
+    String raw,
+  ) async {
+    if (!context.mounted) return false;
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    double? lat;
+    double? lng;
+    try {
+      final location = await getIt<LocationService>().currentLocation();
+      lat = location.latitude;
+      lng = location.longitude;
+    } catch (_) {}
+
+    final result = await getIt<MarketplaceRepository>().scanQr(
+      qrCode: raw,
+      latitude: lat,
+      longitude: lng,
+    );
+
+    if (context.mounted) Navigator.of(context).pop();
+
+    var opened = false;
+    await result.when(
+      success: (store) async {
+        if (!context.mounted) return;
+        opened = true;
+        await Navigator.of(context).push<void>(
+          MaterialPageRoute<void>(
+            builder: (_) => MarketplaceStorePage(storeId: store.storeId),
+          ),
+        );
+      },
+      failure: (_) {},
+    );
+    return opened;
   }
 
   static String? _extractPaymentToken(String raw) {

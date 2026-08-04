@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/experience/experience_mode_cubit.dart';
-import '../../../../core/location/location_service.dart';
 import '../../../../core/sync/home_feed_refresh.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -46,21 +45,11 @@ class _HomeFavoritesSectionState extends State<HomeFavoritesSection> {
   }
 
   Future<_FavoritesPreview> _load() async {
-    double? lat;
-    double? lng;
-    try {
-      final location = await getIt<LocationService>().currentLocation();
-      lat = location.latitude;
-      lng = location.longitude;
-    } catch (_) {}
-
+    // Sin GPS/radio por defecto: el listado debe mostrar todos los favoritos.
     final result = await getIt<FavoritesRepository>().list(
       FavoriteFilters(
         country: widget.country,
         city: widget.city,
-        nearLat: lat,
-        nearLng: lng,
-        radiusKm: lat == null ? null : 25,
         sortBy: FavoriteSortBy.recent,
         pageSize: 6,
       ),

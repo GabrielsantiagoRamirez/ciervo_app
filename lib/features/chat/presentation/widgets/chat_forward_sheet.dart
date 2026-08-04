@@ -47,7 +47,13 @@ Future<bool> showChatForwardSheet(
             ListTile(
               leading: Icon(_iconForSource(item)),
               title: Text(item.conversation.title),
-              subtitle: Text(item.kindLabel),
+              subtitle: Text(
+                item.conversation.lastMessage?.trim().isNotEmpty == true
+                    ? item.conversation.lastMessage!.trim()
+                    : item.kindLabel,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
               onTap: () => Navigator.pop(context, item),
             ),
         ],

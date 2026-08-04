@@ -32,6 +32,14 @@ class ChatButtonsBar extends StatelessWidget {
       effective = effective
           .where((b) => isKidAllowedFamilyChatAction(b.code))
           .toList();
+    } else {
+      effective = effective
+          .where((b) => !isHomeDuplicateChatAction(b.code))
+          .toList();
+    }
+
+    if (effective.isEmpty) {
+      return const SizedBox.shrink();
     }
 
     return SingleChildScrollView(
@@ -71,16 +79,6 @@ class ChatButtonsBar extends StatelessWidget {
     ChatButton(
       code: 'pay',
       label: 'Pagar',
-      visibility: ChatButtonVisibility.productionReady,
-    ),
-    ChatButton(
-      code: 'pay_for_me',
-      label: 'Pinduck',
-      visibility: ChatButtonVisibility.productionReady,
-    ),
-    ChatButton(
-      code: 'gift',
-      label: 'Regalo',
       visibility: ChatButtonVisibility.productionReady,
     ),
   ];

@@ -54,19 +54,17 @@ class FamilyPaymentsRepositoryImpl implements FamilyPaymentsRepository {
     required String alias,
   }) => _guard(
     () async =>
-        (await _remote.updateCard(cardId: cardId, alias: alias)).toDomain(),
+        (await _remote.updateCardAlias(cardId: cardId, alias: alias)).toDomain(),
   );
 
   @override
   Future<Result<FamilyPaymentCard>> setPrimaryCard(String cardId) => _guard(
-    () async =>
-        (await _remote.updateCard(cardId: cardId, isPrimary: true)).toDomain(),
+    () async => (await _remote.setPrimaryCard(cardId)).toDomain(),
   );
 
   @override
   Future<Result<FamilyPaymentCard>> setBackupCard(String cardId) => _guard(
-    () async =>
-        (await _remote.updateCard(cardId: cardId, isBackup: true)).toDomain(),
+    () async => (await _remote.setBackupCard(cardId)).toDomain(),
   );
 
   @override
@@ -74,8 +72,12 @@ class FamilyPaymentsRepositoryImpl implements FamilyPaymentsRepository {
       _guard(() async => _remote.deleteCard(cardId));
 
   @override
-  Future<Result<FamilyPaymentCard>> freezeCard(String cardId) =>
-      _guard(() async => (await _remote.freezeCard(cardId)).toDomain());
+  Future<Result<FamilyPaymentCard>> freezeCard(
+    String cardId, {
+    String? reason,
+  }) => _guard(
+    () async => (await _remote.freezeCard(cardId, reason: reason)).toDomain(),
+  );
 
   @override
   Future<Result<FamilyPaymentCard>> unfreezeCard(String cardId) =>

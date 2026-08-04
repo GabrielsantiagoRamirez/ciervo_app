@@ -12,6 +12,7 @@ import '../../../kid_pay_for_me/presentation/pages/kid_pay_for_me_list_page.dart
 import '../../../kid_me/data/kid_me_repository.dart';
 import '../../../kid_profile/presentation/pages/kid_profile_page.dart';
 import '../../../kid_wallet/presentation/pages/kid_wallet_page.dart';
+import '../widgets/kid_services_grid.dart';
 
 class KidShellPage extends StatefulWidget {
   const KidShellPage({super.key});
@@ -209,6 +210,9 @@ class _KidHomePageState extends State<KidHomePage> {
                       MaterialPageRoute(builder: (_) => const KidFamilyPage()),
                     ),
                   ),
+                  const SizedBox(height: AppSpacing.xl),
+                  const KidServicesGrid(),
+                  const SizedBox(height: AppSpacing.lg),
                 ],
               ),
       ),

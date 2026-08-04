@@ -7,6 +7,8 @@ class UserProfile {
     required this.phone,
     this.ciervoUserCode,
     this.username,
+    this.operationalSessionId,
+    this.operationalBand,
     this.nightOperationalId,
     this.identityDocument,
     this.documentType,
@@ -33,6 +35,11 @@ class UserProfile {
   final String phone;
   final String? ciervoUserCode;
   final String? username;
+  /// ID operativo canónico (DIA / NOCHE / 24H) desde `/users/me`.
+  final String? operationalSessionId;
+  /// Franja: `day` | `night` | `24h`.
+  final String? operationalBand;
+  /// Compatibilidad: suele igualar [operationalSessionId].
   final String? nightOperationalId;
   final String? identityDocument;
   final String? documentType;
@@ -51,6 +58,15 @@ class UserProfile {
   final bool phoneVerified;
   final String? authProvider;
 
+  /// Preferir session canónica; fallback a nightOperationalId.
+  String? get displayOperationalSessionId {
+    final session = operationalSessionId?.trim();
+    if (session != null && session.isNotEmpty) return session;
+    final legacy = nightOperationalId?.trim();
+    if (legacy != null && legacy.isNotEmpty) return legacy;
+    return null;
+  }
+
   UserProfile copyWith({
     String? photoUrl,
     String? imageUrl,
@@ -62,6 +78,8 @@ class UserProfile {
     String? countryCode,
     String? ciervoUserCode,
     String? username,
+    String? operationalSessionId,
+    String? operationalBand,
     String? nightOperationalId,
   }) => UserProfile(
     id: id,
@@ -71,6 +89,8 @@ class UserProfile {
     phone: phone,
     ciervoUserCode: ciervoUserCode ?? this.ciervoUserCode,
     username: username ?? this.username,
+    operationalSessionId: operationalSessionId ?? this.operationalSessionId,
+    operationalBand: operationalBand ?? this.operationalBand,
     nightOperationalId: nightOperationalId ?? this.nightOperationalId,
     identityDocument: identityDocument,
     documentType: documentType,

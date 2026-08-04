@@ -54,7 +54,9 @@ abstract final class RouteAccessPolicy {
     }
     if (normalized == '/movies' ||
         normalized.startsWith('/movies/') ||
-        normalized == '/movie/history') {
+        normalized == '/movie/history' ||
+        normalized == '/tickets' ||
+        normalized.startsWith('/tickets/')) {
       return {AppRouteRole.client, AppRouteRole.kid}.contains(role);
     }
 

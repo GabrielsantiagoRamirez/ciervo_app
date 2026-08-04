@@ -7,6 +7,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../core/country/country_registration.dart';
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/geo/geo_autocomplete_models.dart';
+import '../../../../core/geo/geo_repository.dart';
 import '../../../../core/location/location_service.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
@@ -19,9 +21,9 @@ import '../../domain/entities/move_fare_quote.dart';
 import '../../domain/repositories/move_repository.dart';
 import '../cubit/move_passenger_cubit.dart';
 import '../cubit/move_passenger_state.dart';
-import '../utils/move_labels.dart';
 import '../widgets/move_category_selector.dart';
 import '../widgets/move_fare_quote_card.dart';
+import '../widgets/move_place_search_field.dart';
 import 'move_driver_page.dart';
 import 'move_kids_approvals_page.dart';
 import 'move_trip_page.dart';
@@ -59,10 +61,12 @@ class _MoveHomeViewState extends State<_MoveHomeView> {
 
   List<ChildProfile> _children = const [];
   ChildProfile? _selectedChild;
+  late final String _sessionToken;
 
   @override
   void initState() {
     super.initState();
+    _sessionToken = newGeoSessionToken();
     _loadCurrentLocation();
     _loadChildren();
   }
@@ -94,11 +98,13 @@ class _MoveHomeViewState extends State<_MoveHomeView> {
           ? await service.currentLocation()
           : await service.lastKnownLocation();
       if (location != null && mounted) {
+        final latLng = LatLng(location.latitude, location.longitude);
         setState(() {
-          _origin = LatLng(location.latitude, location.longitude);
+          _origin = latLng;
           _loadingLocation = false;
         });
-        _mapController?.animateCamera(CameraUpdate.newLatLngZoom(_origin!, 14));
+        _mapController?.animateCamera(CameraUpdate.newLatLngZoom(latLng, 14));
+        await _reverseGeocodeOrigin(latLng);
         return;
       }
     } catch (_) {
@@ -147,13 +153,55 @@ class _MoveHomeViewState extends State<_MoveHomeView> {
     );
   }
 
-  void _onMapTap(LatLng position) {
+  Future<void> _reverseGeocodeOrigin(LatLng position) async {
+    final result = await getIt<GeoRepository>().reverse(
+      latitude: position.latitude,
+      longitude: position.longitude,
+    );
+    if (!mounted) return;
+    result.when(
+      success: (geocode) {
+        if (geocode.displayLine.isNotEmpty) {
+          _originController.text = geocode.displayLine;
+        }
+      },
+      failure: (_) {},
+    );
+  }
+
+  Future<void> _reverseGeocodeDestination(LatLng position) async {
     setState(() => _destination = position);
-    if (_destinationController.text.trim().isEmpty) {
-      _destinationController.text =
-          'Lat ${position.latitude.toStringAsFixed(5)}, '
-          'Lng ${position.longitude.toStringAsFixed(5)}';
-    }
+    final result = await getIt<GeoRepository>().reverse(
+      latitude: position.latitude,
+      longitude: position.longitude,
+    );
+    if (!mounted) return;
+    result.when(
+      success: (geocode) {
+        _destinationController.text = geocode.displayLine.isNotEmpty
+            ? geocode.displayLine
+            : _coordsLabel(position);
+      },
+      failure: (_) => _destinationController.text = _coordsLabel(position),
+    );
+  }
+
+  String _coordsLabel(LatLng position) =>
+      'Lat ${position.latitude.toStringAsFixed(5)}, '
+      'Lng ${position.longitude.toStringAsFixed(5)}';
+
+  void _onMapTap(LatLng position) => _reverseGeocodeDestination(position);
+
+  void _onOriginResolved(GeoPlaceDetails place) {
+    final latLng = LatLng(place.latitude, place.longitude);
+    setState(() => _origin = latLng);
+    _mapController?.animateCamera(CameraUpdate.newLatLngZoom(latLng, 14));
+  }
+
+  void _onDestinationResolved(GeoPlaceDetails place) {
+    final latLng = LatLng(place.latitude, place.longitude);
+    setState(() => _destination = latLng);
+    _mapController?.animateCamera(CameraUpdate.newLatLngZoom(latLng, 14));
   }
 
   void _estimate() {
@@ -276,21 +324,27 @@ class _MoveHomeViewState extends State<_MoveHomeView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    TextField(
+                    MovePlaceSearchField(
                       controller: _originController,
-                      decoration: const InputDecoration(
-                        labelText: 'Origen',
-                        prefixIcon: Icon(Icons.my_location),
-                      ),
+                      label: 'Origen',
+                      prefixIcon: Icons.my_location,
+                      sessionToken: _sessionToken,
+                      biasLatitude: _origin?.latitude,
+                      biasLongitude: _origin?.longitude,
+                      countryCode: _countryCode,
+                      onPlaceResolved: _onOriginResolved,
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    TextField(
+                    MovePlaceSearchField(
                       controller: _destinationController,
-                      decoration: const InputDecoration(
-                        labelText: 'Destino',
-                        prefixIcon: Icon(Icons.place_outlined),
-                        hintText: 'Toca el mapa o escribe la dirección',
-                      ),
+                      label: 'Destino',
+                      prefixIcon: Icons.place_outlined,
+                      hintText: 'Toca el mapa o escribe la dirección',
+                      sessionToken: _sessionToken,
+                      biasLatitude: _origin?.latitude,
+                      biasLongitude: _origin?.longitude,
+                      countryCode: _countryCode,
+                      onPlaceResolved: _onDestinationResolved,
                     ),
                   ],
                 ),
@@ -512,7 +566,12 @@ class _PaymentMethodSelector extends StatelessWidget {
   final MovePaymentMethod selected;
   final ValueChanged<MovePaymentMethod> onChanged;
 
-  static const _methods = [MovePaymentMethod.wallet, MovePaymentMethod.cash];
+  static const _methods = [
+    MovePaymentMethod.wallet,
+    MovePaymentMethod.cash,
+    MovePaymentMethod.card,
+    MovePaymentMethod.pin,
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -520,24 +579,45 @@ class _PaymentMethodSelector extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Pago', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          'Elige wallet, efectivo, tarjeta (física/digital), PIN o @.',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
         const SizedBox(height: AppSpacing.sm),
         Wrap(
           spacing: AppSpacing.sm,
-          children: _methods.map((method) {
-            return ChoiceChip(
-              selected: method == selected,
-              onSelected: (_) => onChanged(method),
-              avatar: Icon(
-                method == MovePaymentMethod.wallet
-                    ? Icons.account_balance_wallet_outlined
-                    : Icons.payments_outlined,
-                size: 18,
-              ),
-              label: Text(MoveLabels.paymentMethod(method)),
-            );
-          }).toList(),
+          runSpacing: AppSpacing.xs,
+          children: [
+            ..._methods.map((method) {
+              return ChoiceChip(
+                selected: method == selected,
+                onSelected: (_) => onChanged(method),
+                avatar: Icon(_iconFor(method), size: 18),
+                label: Text(_labelFor(method)),
+              );
+            }),
+          ],
         ),
       ],
     );
   }
+
+  String _labelFor(MovePaymentMethod method) => switch (method) {
+    MovePaymentMethod.wallet => 'Wallet Ciervo',
+    MovePaymentMethod.cash => 'Efectivo',
+    MovePaymentMethod.card => 'Tarjeta física/digital',
+    MovePaymentMethod.pin => 'PIN / @',
+    MovePaymentMethod.qr => 'QR',
+    MovePaymentMethod.points => 'Puntos',
+  };
+
+  IconData _iconFor(MovePaymentMethod method) => switch (method) {
+    MovePaymentMethod.wallet => Icons.account_balance_wallet_outlined,
+    MovePaymentMethod.cash => Icons.payments_outlined,
+    MovePaymentMethod.card => Icons.credit_card,
+    MovePaymentMethod.pin => Icons.password_outlined,
+    MovePaymentMethod.qr => Icons.qr_code_2,
+    MovePaymentMethod.points => Icons.stars_outlined,
+  };
 }

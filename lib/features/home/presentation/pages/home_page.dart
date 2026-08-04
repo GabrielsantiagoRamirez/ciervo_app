@@ -22,6 +22,7 @@ import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
+import '../../../../shared/widgets/staggered_reveal.dart';
 import '../../../discovery/presentation/widgets/activity_feed_section.dart';
 import '../../../safety/domain/repositories/safety_repository.dart';
 import '../../../bonuses/presentation/pages/bonuses_pages.dart';
@@ -29,6 +30,7 @@ import '../../../campaigns/presentation/widgets/paid_campaign_banner_section.dar
 import '../../../favorites/presentation/widgets/home_favorites_section.dart';
 import '../../../discovery/data/repositories/business_categories_repository.dart';
 import '../../../discovery/domain/entities/business_summary.dart';
+import '../../../discovery/domain/entities/discovery_smart_filters.dart';
 import '../../../discovery/domain/repositories/discovery_repository.dart';
 import '../../../location/data/client_location_repository.dart';
 import '../../../place_detail/presentation/pages/place_detail_page.dart';
@@ -39,13 +41,25 @@ import '../cubit/home_discovery_state.dart';
 import '../widgets/home_category_list.dart';
 import '../widgets/home_place_card.dart';
 import '../widgets/home_search_bar.dart';
+import '../widgets/home_services_grid.dart';
 import '../widgets/home_top_bar.dart';
 import '../widgets/location_permission_card.dart';
 import '../widgets/smart_filters_sheet.dart';
 import '../../../promotions/presentation/widgets/gold_trial_promotion_sheet.dart';
+import '../../../memberships/presentation/widgets/membership_renewal_reminder.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => HomePageState();
+}
+
+class HomePageState extends State<HomePage> {
+  final _viewKey = GlobalKey<_HomeViewState>();
+
+  void scrollToTopAndRefresh() =>
+      _viewKey.currentState?.scrollToTopAndRefresh();
 
   @override
   Widget build(BuildContext context) {
@@ -59,43 +73,94 @@ class HomePage extends StatelessWidget {
         profileRepository: getIt<ProfileRepository>(),
         initialExperienceMode: context.read<ExperienceModeCubit>().state.mode,
       )..initialize(),
-      child: const _HomeView(),
+      child: _HomeView(key: _viewKey),
     );
   }
 }
 
 class _HomeView extends StatefulWidget {
-  const _HomeView();
+  const _HomeView({super.key});
 
   @override
   State<_HomeView> createState() => _HomeViewState();
 }
 
-class _HomeViewState extends State<_HomeView> {
+class _HomeViewState extends State<_HomeView> with WidgetsBindingObserver {
   late final SelectedKidContext _kidContext;
   Timer? _autoRefreshTimer;
+  final _scrollController = ScrollController();
+  final _searchSectionKey = GlobalKey();
+  bool _appResumed = true;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     getIt<SafetyRepository>().refreshLocalFilters();
     _kidContext = getIt<SelectedKidContext>();
     _kidContext.addListener(_onKidModeChanged);
     _autoRefreshTimer = Timer.periodic(
-      const Duration(seconds: 45),
-      (_) => _refreshFeedSections(),
+      const Duration(minutes: 3),
+      (_) {
+        if (!_appResumed || !mounted) return;
+        _refreshFeedSections();
+      },
     );
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      showGoldTrialPromotionIfEligible(context);
+      await showGoldTrialPromotionIfEligible(context);
+      if (!mounted) return;
+      await showMembershipRenewalReminderIfNeeded(context);
     });
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _autoRefreshTimer?.cancel();
     _kidContext.removeListener(_onKidModeChanged);
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _appResumed = state == AppLifecycleState.resumed;
+  }
+
+  void _focusCommerceSearch() {
+    final ctx = _searchSectionKey.currentContext;
+    if (ctx != null) {
+      Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeOutCubic,
+        alignment: 0.05,
+      );
+    } else if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeOutCubic,
+      );
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Busca un comercio arriba o elige uno de la lista.'),
+      ),
+    );
+  }
+
+  void scrollToTopAndRefresh() {
+    if (!mounted) return;
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeOutCubic,
+      );
+    }
+    _refreshFeedSections();
   }
 
   void _refreshFeedSections() {
@@ -160,6 +225,7 @@ class _HomeViewState extends State<_HomeView> {
                   child: RefreshIndicator(
                     onRefresh: () => _onPullRefresh(cubit, state.usingLocation),
                     child: CustomScrollView(
+                      controller: _scrollController,
                       physics: const AlwaysScrollableScrollPhysics(),
                       slivers: [
                         SliverPadding(
@@ -204,14 +270,25 @@ class _HomeViewState extends State<_HomeView> {
                                   style: AppTextStyles.bodyMuted,
                                 ),
                                 const SizedBox(height: AppSpacing.lg),
-                                HomeSearchBar(onSubmitted: cubit.search),
+                                KeyedSubtree(
+                                  key: _searchSectionKey,
+                                  child: const HomeSearchBar(),
+                                ),
                                 const SizedBox(height: AppSpacing.md),
                                 _CurrentCountry(countryCode: state.countryCode),
                                 const SizedBox(height: AppSpacing.md),
                                 CiervoButton(
-                                  label: 'Películas y entradas',
-                                  icon: Icons.local_movies_outlined,
-                                  onPressed: () => context.push('/movies'),
+                                  label: 'Tickets y eventos',
+                                  icon: Icons.confirmation_number_outlined,
+                                  onPressed: () => context.push('/tickets'),
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                CiervoButton(
+                                  label: 'Marketplace',
+                                  icon: Icons.storefront_outlined,
+                                  variant: CiervoButtonVariant.secondary,
+                                  onPressed: () =>
+                                      context.push('/marketplace'),
                                 ),
                                 if (shouldShowPermission) ...[
                                   const SizedBox(height: AppSpacing.lg),
@@ -232,6 +309,33 @@ class _HomeViewState extends State<_HomeView> {
                                   onCategorySelected: cubit.selectCategory,
                                 ),
                                 const SizedBox(height: AppSpacing.lg),
+                              ],
+                            ),
+                          ),
+                        ),
+                        SliverPadding(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.lg,
+                            0,
+                            AppSpacing.lg,
+                            AppSpacing.xl,
+                          ),
+                          sliver: _DiscoveryResults(
+                            state: state,
+                            mode: modeState.mode,
+                          ),
+                        ),
+                        SliverPadding(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.lg,
+                            0,
+                            AppSpacing.lg,
+                            AppSpacing.xxl,
+                          ),
+                          sliver: SliverToBoxAdapter(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
                                 const ActivityFeedSection(),
                                 const SizedBox(height: AppSpacing.lg),
                                 PaidCampaignBannerSection(
@@ -242,6 +346,10 @@ class _HomeViewState extends State<_HomeView> {
                                 HomeFavoritesSection(
                                   country: state.countryCode,
                                   city: state.city,
+                                ),
+                                const SizedBox(height: AppSpacing.lg),
+                                HomeServicesGrid(
+                                  onFindCommerce: _focusCommerceSearch,
                                 ),
                                 const SizedBox(height: AppSpacing.lg),
                                 HomeBonusesSection(
@@ -257,21 +365,9 @@ class _HomeViewState extends State<_HomeView> {
                                   country: state.countryCode,
                                   city: state.city,
                                 ),
-                                const SizedBox(height: AppSpacing.xl),
+                                const SizedBox(height: AppSpacing.lg),
                               ],
                             ),
-                          ),
-                        ),
-                        SliverPadding(
-                          padding: const EdgeInsets.fromLTRB(
-                            AppSpacing.lg,
-                            0,
-                            AppSpacing.lg,
-                            AppSpacing.xxl,
-                          ),
-                          sliver: _DiscoveryResults(
-                            state: state,
-                            mode: modeState.mode,
                           ),
                         ),
                       ],
@@ -342,16 +438,20 @@ class _DiscoveryResults extends StatelessWidget {
             city: state.city,
             countryCode: state.countryCode,
           );
-          return HomePlaceCard(
-            place: place,
-            mode: mode,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => PlaceDetailPage(place: place),
-                ),
-              );
-            },
+          return StaggeredReveal(
+            index: index,
+            baseDelay: const Duration(milliseconds: 45),
+            child: HomePlaceCard(
+              place: place,
+              mode: mode,
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => PlaceDetailPage(place: place),
+                  ),
+                );
+              },
+            ),
           );
         },
       ),
@@ -408,12 +508,22 @@ class _DiscoveryEmptyState extends StatelessWidget {
       children: [
         CiervoEmptyState(
           title: 'Sin resultados',
-          description: show24h
+          description: state.filters.hasActiveFilters
+              ? 'Ningún comercio cumple todos los filtros activos. Desactiva algunos o limpia la búsqueda.'
+              : show24h
               ? 'No hay experiencias en esta franja. Prueba ver comercios 24h o ampliar el radio.'
-              : 'No encontramos experiencias con estos filtros. Prueba ampliar el radio de búsqueda.',
+              : 'No encontramos experiencias cerca. Prueba ampliar el radio de búsqueda.',
           icon: Icons.explore_off_outlined,
-          actionLabel: show24h ? 'Ver 24h' : 'Ampliar radio',
+          actionLabel: state.filters.hasActiveFilters
+              ? 'Limpiar filtros'
+              : show24h
+              ? 'Ver 24h'
+              : 'Ampliar radio',
           onAction: () async {
+            if (state.filters.hasActiveFilters) {
+              await cubit.applyFilters(const DiscoverySmartFilters());
+              return;
+            }
             if (show24h) {
               await context.read<ExperienceModeCubit>().setMode(
                 ExperienceMode.allDay,
@@ -423,7 +533,7 @@ class _DiscoveryEmptyState extends StatelessWidget {
             await cubit.expandRadius();
           },
         ),
-        if (show24h) ...[
+        if (!state.filters.hasActiveFilters && show24h) ...[
           const SizedBox(height: AppSpacing.sm),
           CiervoButton(
             label: 'Ampliar radio',

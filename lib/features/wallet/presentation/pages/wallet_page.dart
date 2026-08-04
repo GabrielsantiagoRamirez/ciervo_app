@@ -24,7 +24,6 @@ import '../cubit/wallet_cubit.dart';
 import '../cubit/wallet_state.dart';
 import '../widgets/ciervo_digital_card.dart';
 import '../widgets/premium_wallet_dashboard.dart';
-import '../widgets/wallet_nfc_section.dart';
 import 'payment_requests_page.dart';
 import 'recharge_by_ciervo_id_page.dart';
 import 'recharge_page.dart';
@@ -146,7 +145,6 @@ class _WalletView extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.lg),
           _QuickActions(state: state),
-          WalletNfcSection(selectedCard: state.selectedCard),
           const SizedBox(height: AppSpacing.lg),
           Text('Tarjetas', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: AppSpacing.sm),

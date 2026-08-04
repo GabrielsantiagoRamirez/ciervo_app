@@ -29,7 +29,7 @@ class VakupliChatBubble extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.xxs),
         decoration: BoxDecoration(
           color: containerBg,
-          borderRadius: BorderRadius.circular(AppRadii.md),
+          borderRadius: AppRadii.card,
           border: Border.all(
             color: colorScheme.onSurface.withValues(alpha: isDark ? 0.12 : 0.2),
           ),
@@ -38,7 +38,7 @@ class VakupliChatBubble extends StatelessWidget {
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: isMe ? colorScheme.primary : otherBubbleColor,
-            borderRadius: BorderRadius.circular(AppRadii.md - 2),
+            borderRadius: BorderRadius.circular(AppRadii.cardPx - 2),
             border: isMe
                 ? null
                 : Border.all(

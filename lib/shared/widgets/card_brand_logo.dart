@@ -11,10 +11,11 @@ class CardBrandLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (brand == CardBrand.unknown) {
-      return SizedBox(height: height);
+      return SizedBox(width: height * 1.6, height: height);
     }
 
     return SizedBox(
+      width: height * 1.6,
       height: height,
       child: switch (brand) {
         CardBrand.visa => _VisaLogo(height: height),
@@ -32,9 +33,11 @@ class _VisaLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Ancho fijo: con `alignment` y sin width, el Container se estira
+    // y tapa el TextField cuando se usa como suffixIcon.
     return Container(
+      width: height * 1.6,
       height: height,
-      padding: EdgeInsets.symmetric(horizontal: height * 0.35),
       decoration: BoxDecoration(
         color: const Color(0xFF1A1F71),
         borderRadius: BorderRadius.circular(4),
@@ -44,10 +47,10 @@ class _VisaLogo extends StatelessWidget {
         'VISA',
         style: TextStyle(
           color: Colors.white,
-          fontSize: height * 0.45,
+          fontSize: height * 0.42,
           fontWeight: FontWeight.w800,
           fontStyle: FontStyle.italic,
-          letterSpacing: 1.2,
+          letterSpacing: 1.0,
         ),
       ),
     );
@@ -63,8 +66,8 @@ class _MastercardLogo extends StatelessWidget {
   Widget build(BuildContext context) {
     final circle = height * 0.62;
     return SizedBox(
+      width: height * 1.6,
       height: height,
-      width: height * 1.45,
       child: Stack(
         alignment: Alignment.center,
         children: [

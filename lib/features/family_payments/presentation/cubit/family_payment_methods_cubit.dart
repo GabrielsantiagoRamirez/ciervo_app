@@ -101,9 +101,9 @@ class FamilyPaymentMethodsCubit extends Cubit<FamilyPaymentMethodsState> {
     );
   }
 
-  Future<void> freeze(String cardId) async {
+  Future<void> freeze(String cardId, {String? reason}) async {
     emit(state.copyWith(actionCardId: cardId, clearMessages: true));
-    final result = await _repository.freezeCard(cardId);
+    final result = await _repository.freezeCard(cardId, reason: reason);
     result.when(
       success: (_) async {
         emit(
@@ -196,24 +196,41 @@ class FamilyPaymentMethodsCubit extends Cubit<FamilyPaymentMethodsState> {
       alias: alias,
       idempotencyKey: IdempotencyKey.generate('family-card'),
     );
-    return result.when(
-      success: (payload) => AddCardFlowResult(
-        cardId: payload.card.id,
-        requires3ds: payload.requires3ds,
-        verificationUrl: payload.verificationUrl,
-      ),
+
+    late final AddCardFlowResult flow;
+    result.when(
+      success: (payload) {
+        flow = AddCardFlowResult(
+          cardId: payload.card.id,
+          requires3ds: payload.requires3ds,
+          verificationUrl: payload.verificationUrl,
+          status: payload.card.status,
+        );
+      },
       failure: (error) => throw UserErrorMessage.from(error),
     );
+
+    final aliasText = alias?.trim();
+    if (aliasText != null &&
+        aliasText.isNotEmpty &&
+        flow.cardId.isNotEmpty) {
+      await _repository.updateCardAlias(
+        cardId: flow.cardId,
+        alias: aliasText,
+      );
+    }
+
+    return flow;
   }
 
   Future<bool> verifyCard(String cardId) async {
     final result = await _repository.verifyCard(cardId);
-    return result.when(
+    return await result.when(
       success: (_) async {
         await load();
         return true;
       },
-      failure: (error) {
+      failure: (error) async {
         emit(state.copyWith(errorMessage: UserErrorMessage.from(error)));
         return false;
       },
@@ -226,9 +243,17 @@ class AddCardFlowResult {
     required this.cardId,
     required this.requires3ds,
     this.verificationUrl,
+    this.status = '',
   });
 
   final String cardId;
   final bool requires3ds;
   final String? verificationUrl;
+  final String status;
+
+  bool get isAlreadyActive {
+    final normalized = status.toLowerCase().replaceAll('_', '');
+    return normalized == 'active' ||
+        (!requires3ds && !normalized.contains('pending'));
+  }
 }

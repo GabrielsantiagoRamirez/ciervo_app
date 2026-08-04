@@ -90,11 +90,69 @@ void main() {
           mediaAssetId: 13,
         ),
       ],
+      confirmsFrontShowsReadablePlate: true,
     );
 
     expect(
       request.validate(countryCode: 'CO', nowUtc: DateTime.utc(2026)),
       contains('photos'),
+    );
+  });
+
+  test('vehículo exige confirmsFrontShowsReadablePlate', () {
+    final request = MoveVehicleOnboardingRequest(
+      physicalType: MovePhysicalVehicleType.car,
+      serviceCategory: MoveVehicleCategory.economy,
+      brand: 'Marca',
+      model: 'Modelo',
+      year: 2026,
+      color: 'Blanco',
+      plate: 'ABC123',
+      passengerCapacity: 4,
+      vin: null,
+      documents: [
+        const MoveVehicleDocumentInputV2(
+          type: MoveVehicleDocumentType.registration,
+          mediaAssetId: 1,
+        ),
+        MoveVehicleDocumentInputV2(
+          type: MoveVehicleDocumentType.insurance,
+          mediaAssetId: 2,
+          expiresAt: DateTime.utc(2030),
+        ),
+      ],
+      photos: const [
+        MoveVehiclePhotoInput(
+          type: MoveVehiclePhotoType.front,
+          mediaAssetId: 10,
+        ),
+        MoveVehiclePhotoInput(
+          type: MoveVehiclePhotoType.rear,
+          mediaAssetId: 11,
+        ),
+        MoveVehiclePhotoInput(
+          type: MoveVehiclePhotoType.left,
+          mediaAssetId: 12,
+        ),
+        MoveVehiclePhotoInput(
+          type: MoveVehiclePhotoType.right,
+          mediaAssetId: 13,
+        ),
+        MoveVehiclePhotoInput(
+          type: MoveVehiclePhotoType.interior,
+          mediaAssetId: 14,
+        ),
+      ],
+      confirmsFrontShowsReadablePlate: false,
+    );
+
+    expect(
+      request.validate(countryCode: 'CO', nowUtc: DateTime.utc(2026)),
+      contains('confirmsFrontShowsReadablePlate'),
+    );
+    expect(
+      request.toJson()['confirmsFrontShowsReadablePlate'],
+      isFalse,
     );
   });
 

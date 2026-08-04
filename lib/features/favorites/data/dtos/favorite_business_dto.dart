@@ -1,3 +1,4 @@
+import '../../../../core/network/api_response_unwrapper.dart';
 import '../../domain/entities/favorite_business.dart';
 
 class FavoriteBusinessDto {
@@ -42,14 +43,31 @@ class FavoriteBusinessDto {
         ? Map<String, dynamic>.from(json['business'] as Map)
         : json;
     return FavoriteBusinessDto(
-      businessId: _string(business, const ['businessId', 'id']),
+      businessId: _string(business, const [
+        'businessId',
+        'BusinessId',
+        'id',
+        'clubId',
+      ]),
       name: _string(business, const ['name', 'businessName', 'title']),
       category: _string(business, const ['category', 'categoryName', 'type']),
       country: _nullable(business['country'] ?? business['countryCode']),
       city: _nullable(business['city'] ?? business['cityName']),
       zone: _nullable(business['zone'] ?? business['zoneName']),
-      logoUrl: _media(business, const ['logoUrl', 'logoMediaId', 'logo']),
-      coverUrl: _media(business, const ['coverUrl', 'coverMediaId', 'cover']),
+      logoUrl: _media(business, const [
+        'logoUrl',
+        'logoImageUrl',
+        'logoThumbnailUrl',
+        'logoMediaId',
+        'logo',
+      ]),
+      coverUrl: _media(business, const [
+        'coverUrl',
+        'coverImageUrl',
+        'coverThumbnailUrl',
+        'coverMediaId',
+        'cover',
+      ]),
       rating: _double(business, const ['rating', 'score']),
       distanceKm: _double(business, const ['distanceKm', 'distance']),
       favoriteAt: DateTime.tryParse(
@@ -61,7 +79,8 @@ class FavoriteBusinessDto {
       activeCampaignsCount: _int(
         business['activeCampaignsCount'] ?? business['campaignsCount'],
       ),
-      isFavorite: business['isFavorite'] == true || json['isFavorite'] == true,
+      // Este DTO solo se usa en listados/check de favoritos.
+      isFavorite: business['isFavorite'] != false && json['isFavorite'] != false,
       businessCategoryId: _intOrNull(
         business['categoryId'] ??
             business['businessCategoryId'] ??
@@ -90,26 +109,17 @@ class FavoriteBusinessDto {
     priceLevel: priceLevel ?? '',
   );
 
+  /// Contrato: `{ status, value: { items: [...], total } }` o lista plana en `value`.
   static List<FavoriteBusinessDto> listFromResponse(dynamic response) {
-    final items = _unwrapList(response);
-    return items.map(FavoriteBusinessDto.fromJson).toList();
+    return unwrapApiList(response)
+        .whereType<Map>()
+        .map(
+          (item) =>
+              FavoriteBusinessDto.fromJson(Map<String, dynamic>.from(item)),
+        )
+        .where((item) => item.businessId.isNotEmpty)
+        .toList();
   }
-}
-
-List<Map<String, dynamic>> _unwrapList(dynamic response) {
-  dynamic source = response;
-  if (source is Map<String, dynamic> && source.containsKey('data')) {
-    source = source['data'];
-  }
-  final items = source is List
-      ? source
-      : source is Map<String, dynamic> && source['items'] is List
-      ? source['items'] as List
-      : const [];
-  return items
-      .whereType<Map>()
-      .map((item) => Map<String, dynamic>.from(item))
-      .toList();
 }
 
 String _string(Map<String, dynamic> json, List<String> keys) {

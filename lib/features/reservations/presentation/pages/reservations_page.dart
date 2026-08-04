@@ -140,11 +140,24 @@ class _ReservationsPageState extends State<ReservationsPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Consultar reserva'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          textCapitalization: TextCapitalization.characters,
-          decoration: const InputDecoration(hintText: 'RSV-XXXXXXXX'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Puedes buscar por código RSV, @usuario o número de documento. '
+              'También puedes escanear un QR guardado en favoritos.',
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              decoration: const InputDecoration(
+                hintText: 'RSV-XXXXXXXX · @toesca · documento',
+                helperText: 'Ejemplos: RSV-AB12CD34, @toesca o 12345678',
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -160,7 +173,9 @@ class _ReservationsPageState extends State<ReservationsPage> {
     );
     controller.dispose();
     if (code == null || code.trim().isEmpty || !mounted) return;
-    final result = await getIt<BookingRepository>().getByCode(code);
+
+    final query = code.trim();
+    final result = await getIt<BookingRepository>().lookup(query);
     if (!mounted) return;
     result.when(
       success: (booking) => showDialog<void>(

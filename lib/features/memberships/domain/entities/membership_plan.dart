@@ -1,3 +1,4 @@
+import '../../../../core/utils/display_formatters.dart';
 import '../../../../core/utils/display_labels.dart';
 
 class MembershipPlan {
@@ -62,13 +63,13 @@ class MembershipPlan {
     final suffix = displayPeriodLabel;
     if (isFree) return 'Gratis';
     if (estimatedLocalPrice != null && estimatedLocalCurrency != null) {
-      return '$estimatedLocalCurrency ${estimatedLocalPrice!.toStringAsFixed(0)}$suffix';
+      return '${DisplayFormatters.formatMoney(estimatedLocalPrice, currency: estimatedLocalCurrency!)}$suffix';
     }
-    return '$baseCurrency ${priceUsd.toStringAsFixed(2)}$suffix';
+    return '${DisplayFormatters.formatMoney(priceUsd, currency: baseCurrency)}$suffix';
   }
 
   String get displayUsdReference {
     if (isFree) return '';
-    return '$baseCurrency ${priceUsd.toStringAsFixed(2)}';
+    return 'Referencia: ${DisplayFormatters.formatMoney(priceUsd, currency: baseCurrency)}';
   }
 }

@@ -148,18 +148,27 @@ class BusinessSummaryDto {
   }
 
   static List<BusinessSummaryDto> listFromResponse(dynamic response) {
-    final source = response is Map<String, dynamic>
-        ? response['value'] ?? response['data'] ?? response
+    final source = response is Map
+        ? (response['value'] ??
+              response['data'] ??
+              response['Value'] ??
+              response['Data'] ??
+              response)
         : response;
-    final items = source is List
-        ? source
-        : source is Map<String, dynamic> && source['items'] is List
-        ? source['items'] as List
-        : const [];
+    List? rawItems;
+    if (source is List) {
+      rawItems = source;
+    } else if (source is Map) {
+      final nested = source['items'] ?? source['Items'];
+      if (nested is List) rawItems = nested;
+    }
+    rawItems ??= const [];
 
-    return items
-        .whereType<Map<String, dynamic>>()
-        .map(BusinessSummaryDto.fromJson)
+    return rawItems
+        .whereType<Map>()
+        .map((item) => BusinessSummaryDto.fromJson(
+              Map<String, dynamic>.from(item),
+            ))
         .toList();
   }
 

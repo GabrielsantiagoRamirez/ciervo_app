@@ -74,6 +74,7 @@ class _ExperienceModeToggle extends StatelessWidget {
                 label: option.label,
                 icon: option.icon,
                 selected: mode == option,
+                isDayTrack: isDay,
                 onTap: () => onChanged(option),
               ),
             ),
@@ -88,16 +89,20 @@ class _Segment extends StatelessWidget {
     required this.label,
     required this.icon,
     required this.selected,
+    required this.isDayTrack,
     required this.onTap,
   });
 
   final String label;
   final IconData icon;
   final bool selected;
+  final bool isDayTrack;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final unselected =
+        isDayTrack ? AppColors.dayTextMuted : AppColors.textMuted;
     return InkWell(
       onTap: onTap,
       borderRadius: AppRadii.chip,
@@ -118,15 +123,13 @@ class _Segment extends StatelessWidget {
             Icon(
               icon,
               size: 16,
-              color: selected ? AppColors.dayText : AppColors.primaryHigh,
+              color: selected ? AppColors.dayText : AppColors.goldDark,
             ),
             const SizedBox(width: 4),
             Text(
               label,
               style: TextStyle(
-                color: selected
-                    ? AppColors.dayText
-                    : Theme.of(context).colorScheme.onSurface,
+                color: selected ? AppColors.dayText : unselected,
                 fontWeight: FontWeight.w700,
                 fontSize: 13,
               ),

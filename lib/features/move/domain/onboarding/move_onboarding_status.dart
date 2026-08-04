@@ -55,6 +55,34 @@ class MoveReviewItem {
   final String? rowVersion;
 }
 
+class MoveVehiclePhotoReview {
+  const MoveVehiclePhotoReview({
+    required this.photoType,
+    required this.photoTypeName,
+    required this.mediaAssetId,
+    this.url,
+    this.isFrontPlatePhoto = false,
+  });
+
+  factory MoveVehiclePhotoReview.fromJson(Map<String, dynamic> json) {
+    return MoveVehiclePhotoReview(
+      photoType: _int(json['photoType'] ?? json['type']),
+      photoTypeName: json['photoTypeName']?.toString() ??
+          json['typeName']?.toString() ??
+          '',
+      mediaAssetId: _int(json['mediaAssetId']),
+      url: _nullableString(json['url'] ?? json['imageUrl']),
+      isFrontPlatePhoto: json['isFrontPlatePhoto'] == true,
+    );
+  }
+
+  final int photoType;
+  final String photoTypeName;
+  final int mediaAssetId;
+  final String? url;
+  final bool isFrontPlatePhoto;
+}
+
 class MoveDriverOnboardingStatus {
   const MoveDriverOnboardingStatus({
     required this.driverId,
@@ -69,6 +97,14 @@ class MoveDriverOnboardingStatus {
     this.payoutLast4,
     this.currentLicenseId,
     this.vehicleId,
+    this.vehicleStatus,
+    this.vehicleAdminReviewStatus,
+    this.vehicleBrand,
+    this.vehicleModel,
+    this.vehicleYear,
+    this.vehicleColor,
+    this.vehiclePhysicalType,
+    this.vehiclePhotos = const [],
     this.profileRowVersion,
     this.identityRowVersion,
     this.licenseRowVersion,
@@ -93,6 +129,18 @@ class MoveDriverOnboardingStatus {
       payoutLast4: _nullableString(json['payoutLast4']),
       currentLicenseId: _nullableInt(json['currentLicenseId']),
       vehicleId: _nullableInt(json['vehicleId']),
+      vehicleStatus: _nullableString(json['vehicleStatus']),
+      vehicleAdminReviewStatus: _nullableString(
+        json['vehicleAdminReviewStatus'],
+      ),
+      vehicleBrand: _nullableString(json['vehicleBrand']),
+      vehicleModel: _nullableString(json['vehicleModel']),
+      vehicleYear: _nullableInt(json['vehicleYear']),
+      vehicleColor: _nullableString(json['vehicleColor']),
+      vehiclePhysicalType: _nullableString(json['vehiclePhysicalType']),
+      vehiclePhotos: _maps(
+        json['vehiclePhotos'],
+      ).map(MoveVehiclePhotoReview.fromJson).toList(growable: false),
       profileRowVersion: _nullableString(json['profileRowVersion']),
       identityRowVersion: _nullableString(json['identityRowVersion']),
       licenseRowVersion: _nullableString(json['licenseRowVersion']),
@@ -120,6 +168,14 @@ class MoveDriverOnboardingStatus {
   final String? payoutLast4;
   final int? currentLicenseId;
   final int? vehicleId;
+  final String? vehicleStatus;
+  final String? vehicleAdminReviewStatus;
+  final String? vehicleBrand;
+  final String? vehicleModel;
+  final int? vehicleYear;
+  final String? vehicleColor;
+  final String? vehiclePhysicalType;
+  final List<MoveVehiclePhotoReview> vehiclePhotos;
   final String? profileRowVersion;
   final String? identityRowVersion;
   final String? licenseRowVersion;

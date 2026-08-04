@@ -118,15 +118,19 @@ abstract final class AppComponentStyles {
     titleTextStyle: AppTextStyles.title.copyWith(color: fg),
   );
 
+  /// Decoración estándar CIERVO para cards: radio 20 + borde dorado suave.
   static BoxDecoration cardDecoration(Color surfaceColor, bool isDark) =>
       BoxDecoration(
         color: surfaceColor,
         borderRadius: AppRadii.card,
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: isDark ? 0.22 : 0.14),
+        ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowWarm,
-            blurRadius: 24,
-            offset: const Offset(0, 10),
+            color: AppColors.shadowWarm.withValues(alpha: isDark ? 0.45 : 0.28),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       );

@@ -25,9 +25,20 @@ class _ExperienceModePageState extends State<ExperienceModePage> {
     super.initState();
     final state = context.read<ExperienceModeCubit>().state;
     // Cada sesión sugiere por hora local; el usuario puede override.
+    // Si aún no confirmó, no usamos el modo guardado (evita badge/tema desfasados).
     _selectedMode = state.hasSelection
         ? state.mode
         : ExperienceModeX.fromLocalTime();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || state.hasSelection) return;
+      context.read<ExperienceModeCubit>().previewMode(_selectedMode);
+    });
+  }
+
+  void _onModeChanged(ExperienceMode mode) {
+    setState(() => _selectedMode = mode);
+    // Preview en vivo: tema + badge siguen al selector (sin persistir).
+    context.read<ExperienceModeCubit>().previewMode(mode);
   }
 
   Future<void> _continue() async {
@@ -71,7 +82,7 @@ class _ExperienceModePageState extends State<ExperienceModePage> {
                     child: _ExperiencePanel(
                       selectedMode: _selectedMode,
                       saving: _saving,
-                      onChanged: (mode) => setState(() => _selectedMode = mode),
+                      onChanged: _onModeChanged,
                       onContinue: _continue,
                     ),
                   ),
@@ -222,6 +233,7 @@ class _ModeSelector extends StatelessWidget {
                     ? Icons.nightlight_round
                     : option.icon,
                 selected: selectedMode == option,
+                isDayPreview: isDayPreview,
                 onTap: () => onChanged(option),
               ),
             ),
@@ -236,16 +248,24 @@ class _ModeSegment extends StatelessWidget {
     required this.label,
     required this.icon,
     required this.selected,
+    required this.isDayPreview,
     required this.onTap,
   });
 
   final String label;
   final IconData icon;
   final bool selected;
+  final bool isDayPreview;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    // Colores del track (día/noche), NO del ThemeMode global: evita texto
+    // blanco sobre beige cuando el MaterialApp aún está en dark.
+    final unselectedColor =
+        isDayPreview ? AppColors.dayTextMuted : AppColors.textMuted;
+    final selectedFg = AppColors.dayText;
+
     return Semantics(
       button: true,
       selected: selected,
@@ -278,7 +298,7 @@ class _ModeSegment extends StatelessWidget {
               Icon(
                 icon,
                 size: 18,
-                color: selected ? AppColors.dayText : AppColors.primaryHigh,
+                color: selected ? selectedFg : AppColors.goldDark,
               ),
               const SizedBox(width: 4),
               Flexible(
@@ -286,11 +306,7 @@ class _ModeSegment extends StatelessWidget {
                   label,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: selected
-                        ? AppColors.dayText
-                        : (Theme.of(context).brightness == Brightness.dark
-                              ? AppColors.textPrimary
-                              : AppColors.dayText),
+                    color: selected ? selectedFg : unselectedColor,
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
                   ),

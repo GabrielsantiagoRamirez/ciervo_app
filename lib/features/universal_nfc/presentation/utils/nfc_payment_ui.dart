@@ -49,9 +49,21 @@ abstract final class NfcPaymentUi {
   }
 
   static String formatMoney(double amount, String currency) {
-    final value = amount == amount.roundToDouble()
-        ? amount.toStringAsFixed(0)
-        : amount.toStringAsFixed(2);
-    return '$currency $value';
+    // Reutiliza el formateador global: CLP 20.000
+    // ignore: avoid_relative_lib_imports
+    return _formatWithThousands(amount, currency);
+  }
+
+  static String _formatWithThousands(double amount, String currency) {
+    final value = amount.round();
+    final sign = value < 0 ? '-' : '';
+    final digits = value.abs().toString();
+    final buffer = StringBuffer();
+    for (var i = 0; i < digits.length; i++) {
+      if (i > 0 && (digits.length - i) % 3 == 0) buffer.write('.');
+      buffer.write(digits[i]);
+    }
+    final code = currency.trim().toUpperCase();
+    return '$code $sign$buffer';
   }
 }

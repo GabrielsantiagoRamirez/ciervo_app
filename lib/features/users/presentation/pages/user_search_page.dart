@@ -358,7 +358,7 @@ class _UserSearchPageState extends State<UserSearchPage> {
           textInputAction: TextInputAction.search,
           onSubmitted: (_) => _search(),
           decoration: InputDecoration(
-            hintText: 'Nombre, @usuario o CIERVO ID',
+            hintText: 'Nombre, @usuario, CIERVO ID o teléfono',
             prefixIcon: const Icon(Icons.search),
             suffixIcon: IconButton(
               icon: const Icon(Icons.arrow_forward),

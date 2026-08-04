@@ -73,7 +73,21 @@ class _AuthenticatedMediaImageState extends State<AuthenticatedMediaImage> {
         return SizedBox(
           width: widget.width,
           height: widget.height,
-          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          child: const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF1A1712), Color(0xFF0D0D0D)],
+              ),
+            ),
+            child: Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Color(0xFFC9A227),
+              ),
+            ),
+          ),
         );
       }
       return widget.errorWidget ??

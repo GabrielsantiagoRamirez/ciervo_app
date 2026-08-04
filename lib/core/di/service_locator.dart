@@ -20,6 +20,7 @@ import '../kids/selected_kid_context.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
+import '../../features/chat/data/chat_empty_dismiss_store.dart';
 import '../../features/chat/data/chat_inbox_repository.dart';
 import '../../features/chat/data/datasources/chat_remote_datasource.dart';
 import '../../features/chat/data/repositories/chat_repository_impl.dart';
@@ -39,6 +40,9 @@ import '../../features/favorites/domain/repositories/favorites_repository.dart';
 import '../../features/bonuses/data/datasources/bonuses_remote_datasource.dart';
 import '../../features/bonuses/data/repositories/bonuses_repository_impl.dart';
 import '../../features/bonuses/domain/repositories/bonuses_repository.dart';
+import '../../features/marketplace/data/marketplace_remote_datasource.dart';
+import '../../features/marketplace/data/marketplace_repository_impl.dart';
+import '../../features/marketplace/domain/repositories/marketplace_repository.dart';
 import '../../features/campaigns/data/datasources/campaigns_remote_datasource.dart';
 import '../../features/campaigns/data/repositories/campaigns_repository_impl.dart';
 import '../../features/campaigns/domain/repositories/campaigns_repository.dart';
@@ -68,6 +72,9 @@ import '../../features/business_nfc/data/business_nfc_repository.dart';
 import '../../features/catalogs/data/catalog_repository.dart';
 import '../../features/exchange/data/exchange_rate_repository.dart';
 import '../../features/kyc/data/kyc_repository.dart';
+import '../../features/search/data/datasources/global_search_remote_datasource.dart';
+import '../../features/search/data/repositories/global_search_repository_impl.dart';
+import '../../features/search/domain/repositories/global_search_repository.dart';
 import '../../features/users/data/user_search_repository.dart';
 import '../../features/location/data/client_location_repository.dart';
 import '../../features/media/data/media_repository.dart';
@@ -120,6 +127,9 @@ import '../../features/movie/data/repositories/movie_repository_impl.dart';
 import '../../features/movie/domain/repositories/movie_repository.dart';
 import '../../features/movie/presentation/cubit/movie_cubit.dart';
 import '../../features/movie/presentation/cubit/movie_realtime_cubit.dart';
+import '../../features/tickets/data/datasources/tickets_remote_datasource.dart';
+import '../../features/tickets/data/repositories/tickets_repository_impl.dart';
+import '../../features/tickets/domain/repositories/tickets_repository.dart';
 import '../../features/pins/data/datasources/pins_remote_datasource.dart';
 import '../../features/pins/data/durable_pin_service.dart';
 import '../../features/pins/data/pin_p2p_service.dart';
@@ -213,6 +223,9 @@ Future<void> configureDependencies() async {
     ..registerLazySingleton<ChatRepository>(
       () => ChatRepositoryImpl(getIt<ChatRemoteDataSource>()),
     )
+    ..registerLazySingleton<ChatEmptyDismissStore>(
+      () => ChatEmptyDismissStore(getIt<SecureStorage>()),
+    )
     ..registerLazySingleton<ChatInboxRepository>(
       () => ChatInboxRepository(
         getIt<ChatRepository>(),
@@ -275,6 +288,12 @@ Future<void> configureDependencies() async {
     )
     ..registerLazySingleton<BonusesRepository>(
       () => BonusesRepositoryImpl(getIt<BonusesRemoteDataSource>()),
+    )
+    ..registerLazySingleton<MarketplaceRemoteDataSource>(
+      () => MarketplaceRemoteDataSource(getIt<NetworkClient>()),
+    )
+    ..registerLazySingleton<MarketplaceRepository>(
+      () => MarketplaceRepositoryImpl(getIt<MarketplaceRemoteDataSource>()),
     )
     ..registerLazySingleton<CampaignsRemoteDataSource>(
       () => DioCampaignsRemoteDataSource(getIt<NetworkClient>()),
@@ -440,6 +459,12 @@ Future<void> configureDependencies() async {
     ..registerLazySingleton<UserSearchRepository>(
       () => UserSearchRepository(getIt<NetworkClient>()),
     )
+    ..registerLazySingleton<GlobalSearchRemoteDataSource>(
+      () => GlobalSearchRemoteDataSource(getIt<NetworkClient>()),
+    )
+    ..registerLazySingleton<GlobalSearchRepository>(
+      () => GlobalSearchRepositoryImpl(getIt<GlobalSearchRemoteDataSource>()),
+    )
     ..registerLazySingleton<GeoRepository>(
       () => GeoRepository(getIt<NetworkClient>()),
     )
@@ -515,6 +540,12 @@ Future<void> configureDependencies() async {
     )
     ..registerLazySingleton<MovieRepository>(
       () => MovieRepositoryImpl(getIt<MovieRemoteDataSource>()),
+    )
+    ..registerLazySingleton<TicketsRemoteDataSource>(
+      () => DioTicketsRemoteDataSource(getIt<NetworkClient>()),
+    )
+    ..registerLazySingleton<TicketsRepository>(
+      () => TicketsRepositoryImpl(getIt<TicketsRemoteDataSource>()),
     )
     ..registerFactory<MovieRealtimeService>(
       () => MovieRealtimeService(getIt<MovieRepository>()),

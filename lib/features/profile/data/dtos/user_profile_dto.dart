@@ -9,6 +9,8 @@ class UserProfileDto {
     required this.phone,
     this.ciervoUserCode,
     this.username,
+    this.operationalSessionId,
+    this.operationalBand,
     this.nightOperationalId,
     this.identityDocument,
     this.documentType,
@@ -53,6 +55,14 @@ class UserProfileDto {
         'userCiervoCode',
       ]),
       username: _optionalString(source, const ['username', 'userName']),
+      operationalSessionId: _optionalString(source, const [
+        'operationalSessionId',
+        'OperationalSessionId',
+      ]),
+      operationalBand: _optionalString(source, const [
+        'operationalBand',
+        'OperationalBand',
+      ]),
       nightOperationalId: _optionalString(source, const [
         'nightOperationalId',
         'NightOperationalId',
@@ -118,6 +128,8 @@ class UserProfileDto {
   final String phone;
   final String? ciervoUserCode;
   final String? username;
+  final String? operationalSessionId;
+  final String? operationalBand;
   final String? nightOperationalId;
   final String? identityDocument;
   final String? documentType;
@@ -145,6 +157,8 @@ class UserProfileDto {
       phone: phone,
       ciervoUserCode: ciervoUserCode,
       username: username,
+      operationalSessionId: operationalSessionId,
+      operationalBand: operationalBand,
       nightOperationalId: nightOperationalId,
       identityDocument: identityDocument,
       documentType: documentType,

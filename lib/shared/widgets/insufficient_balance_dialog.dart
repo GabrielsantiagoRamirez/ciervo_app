@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/utils/display_formatters.dart';
 import '../../features/family_payments/presentation/pages/family_payment_methods_page.dart';
 import '../../features/chat/presentation/pages/chat_inbox_page.dart';
 import '../../features/kids/presentation/pages/guardian_pay_for_me_page.dart';
@@ -19,7 +20,7 @@ Future<void> showInsufficientBalanceDialog(
   final body =
       description ??
       (amount != null
-          ? 'Necesitas ${currency ?? 'COP'} ${amount.toStringAsFixed(0)} y tu saldo no alcanza.'
+          ? 'Necesitas ${DisplayFormatters.formatMoney(amount, currency: currency ?? 'COP')} y tu saldo no alcanza.'
           : 'No tienes saldo suficiente en tu wallet.');
 
   final action = await showDialog<String>(
@@ -137,7 +138,7 @@ class LowBalanceBanner extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Saldo bajo: $currency ${balance.toStringAsFixed(0)}',
+                    'Saldo bajo: ${DisplayFormatters.formatMoney(balance, currency: currency)}',
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                 ),

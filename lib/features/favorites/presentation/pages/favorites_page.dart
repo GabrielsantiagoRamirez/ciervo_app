@@ -90,7 +90,9 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
     double? lat = _filters.nearLat;
     double? lng = _filters.nearLng;
-    if (lat == null || lng == null) {
+    final wantsGeo =
+        _filters.radiusKm != null || _filters.sortBy == FavoriteSortBy.distance;
+    if (wantsGeo && (lat == null || lng == null)) {
       try {
         final location = await getIt<LocationService>().currentLocation();
         lat = location.latitude;
@@ -98,11 +100,18 @@ class _FavoritesPageState extends State<FavoritesPage> {
       } catch (_) {}
     }
 
-    final filters = _filters.copyWith(
+    final filters = FavoriteFilters(
+      country: _filters.country,
+      city: _filters.city,
+      zone: _filters.zone,
+      categoryId: _filters.categoryId,
+      // Solo enviar ubicación si el usuario pide radio o orden por distancia.
+      nearLat: wantsGeo ? lat : null,
+      nearLng: wantsGeo ? lng : null,
+      radiusKm: _filters.radiusKm,
+      sortBy: _filters.sortBy,
       page: _page,
-      nearLat: lat,
-      nearLng: lng,
-      radiusKm: _filters.radiusKm ?? (lat == null ? null : 25),
+      pageSize: _filters.pageSize,
     );
 
     final result = await getIt<FavoritesRepository>().list(filters);
@@ -287,7 +296,8 @@ class _FavoritesPageState extends State<FavoritesPage> {
         children: const [
           CiervoEmptyState(
             title: 'Sin favoritos',
-            description: 'Guarda comercios para encontrarlos rapido despues.',
+            description:
+                'Guarda comercios para encontrarlos rápido después.',
             icon: Icons.favorite_border,
           ),
         ],

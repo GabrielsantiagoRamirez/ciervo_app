@@ -270,6 +270,7 @@ class WalletCubit extends Cubit<WalletState> {
     int? businessId,
     int? bookingId,
     String currency = 'COP',
+    String? preferredPaymentMethod,
   }) async {
     emit(
       state.copyWith(status: WalletStatus.actionLoading, clearMessages: true),
@@ -283,6 +284,7 @@ class WalletCubit extends Cubit<WalletState> {
       businessId: businessId,
       bookingId: bookingId,
       currency: currency,
+      preferredPaymentMethod: preferredPaymentMethod,
     );
     result.when(
       success: (_) {

@@ -247,8 +247,13 @@ Wallet NFC general (no es exclusivo Kids):
 - `POST /api/wallet/nfc/validate` — Business/Admin.
 - `POST /api/wallet/nfc/charge` — Business/Admin.
 - `GET /api/wallet/nfc/physical-cards` — Client.
-- `POST /api/wallet/cards/{cardId}/physical-nfc` — Client.
+- `POST /api/wallet/cards/{cardId}/physical-nfc` — Client (varias por wallet; UID único).
+- `GET /api/wallet/physical-nfc/{physicalCardId}` — Client.
+- `PUT /api/wallet/physical-nfc/{physicalCardId}` — Client (editar label).
 - `POST /api/wallet/physical-nfc/{physicalCardId}/block` — Client.
+- `POST /api/wallet/physical-nfc/{physicalCardId}/unblock` — Client.
+- `POST|DELETE /api/wallet/physical-nfc/{physicalCardId}/revoke` o `DELETE .../{id}` — Client (libera UID).
+
 
 ### Auditoría
 
@@ -821,4 +826,145 @@ Mantener aliases legacy únicamente durante migración; no implementar fallback 
 - `WebApi/Workers/DomainExpirationWorker.cs`
 - `WebApi/Program.cs`
 - `IOC/Dependencies.cs`
+
+## 12. Actualización MOVE Driver Onboarding v2
+
+> Esta sección agrega el contrato MOVE v2 sin modificar Kids/Movie. Para la implementación autocontenida y ejemplos completos usar `Flutter_MOVE_Driver_Onboarding_Prompt.md`. Se debe implementar **frontend Flutter, no backend**.
+
+### 12.1 Actor, autenticación y límites
+
+- El conductor es un `Client` existente (`role=1`, policy `ClientOnly`), no un rol Driver.
+- Login Client: `POST /api/auth/user/login`; alternativa Firebase Client: `/api/auth/firebase/login|register|sync-verification`.
+- No existe `/master/login` ni login Driver. Password/OTP no forman parte del onboarding.
+- SMS propio no existe; teléfono verificado usa Firebase Phone Auth.
+- Autoridad: JWT. No enviar IDs para cambiar actor.
+- Debe existir email o teléfono Client verificado antes de poder enviar.
+
+### 12.2 Endpoints canónicos
+
+Base `ClientOnly`: `/api/v1/move/driver/onboarding`.
+
+- `GET /status`
+- `PUT /identity`
+- `PUT /license`
+- `PUT /vehicle`
+- `PUT /operations`
+- `POST /submit`
+
+Todos devuelven `Response<MoveDriverOnboardingStatusDto>`. Las cinco mutaciones requieren header `Idempotency-Key`, obligatorio y máximo 120. Esta es una excepción MOVE a la afirmación anterior de que la idempotencia solo va en JSON: en MOVE onboarding v2 va en **header**. Conservar la misma clave y payload hasta respuesta definitiva; payload distinto con la misma clave produce `409`.
+
+Self-service compatible:
+
+- `/api/v1/move/driver/apply` y `/registration/basic-profile`
+- `/me`
+- `/vehicles`, `/registration/vehicle`, `/vehicles/{vehicleId}`
+- `/documents`, `/registration/driver-license`
+- `/registration/review`
+- `/online`, `/location`
+
+Usar v2 para altas nuevas. Tras `Approved`, `/online` sigue aplicando gate `canGoOnline`.
+
+### 12.3 Media privada
+
+Antes de cada PUT, subir imágenes mediante:
+
+```http
+POST /api/media/upload
+Authorization: Bearer <Client JWT>
+Content-Type: multipart/form-data
+
+ownerType=User
+ownerId=<userId JWT>
+mediaType=Gallery
+file=<imagen>
+```
+
+Usar el `value.id` devuelto como `mediaAssetId`. Formatos efectivos: JPG/JPEG/PNG/WebP, máximo 5 MiB. MOVE comprueba ownership User, tamaño, storage relativo y tipo Gallery/ProfilePhoto.
+
+Limitaciones reales:
+
+- `/api/media/register` crea assets incompatibles con MOVE v2 (`SizeBytes=0`/storage externo); no usarlo.
+- El DTO admite PDF para documentos, pero el upload actual no acepta PDF.
+- No existe antivirus/cuarentena.
+- No existe reconocimiento facial automático; selfie para revisión humana.
+
+### 12.4 DTOs y enums
+
+DTO exactos en `DTO/MoveOnboardingDtos.cs`:
+
+- `MoveIdentityOnboardingRequest`: nombres, documento, CO/CL, ciudad, email/teléfono coincidente, nacimiento, selfie, aceptación, versión y hash.
+- `MoveLicenseOnboardingRequest`: número/clase, vigencia, frente, reverso condicional, experiencia.
+- `MoveVehicleOnboardingRequest`: tipo físico, categoría, datos, documentos y cinco fotos.
+- `MoveOperationsOnboardingRequest`: Wallet/payout, emergencia, idiomas, capacidades, agenda, radios y servicios.
+- Respuesta: `driverId`, `status`, `percentage`, `canSubmit`, `canGoOnline`, máscaras/last4, IDs y rowVersions, documentos, etapas, `missing`, `reasons`.
+
+Enums:
+
+- identidad: `1 Pending`, `2 Verified`, `3 Rejected`;
+- licencia/documento: `1 Pending`, `2 Approved`, `3 Rejected`, `4 Expired`;
+- etapas: `1 Identity`, `2 License`, `3 VehicleAndOperations`;
+- payout: `1 Wallet`, `2 ExternalPayout`;
+- tipo físico: `1 Car`, `2 Motorcycle`, `3 Suv`, `4 Van`, `5 Pickup`;
+- fotos: `1 Front`, `2 Rear`, `3 Left`, `4 Right`, `5 Interior`;
+- servicios: `1 Economy`, `2 Taxi`, `3 Executive`, `4 SUV`, `5 Van`, `6 Tourism`, `7 Airport`, `8 Corporate`, `9 Courier`, `10 Delivery`, `11 Errands`;
+- documentos: `1 Registration`, `2 Insurance`, `3 TechnicalInspection`, `4 TaxiAuthorization`;
+- perfil: `0 Draft`, `1 PendingReview`, `2 Approved`, `3 Rejected`, `4 Suspended`, `5 Blocked`.
+
+### 12.5 Reglas y flujo
+
+- Solo CO/CL y edad mínima 18.
+- Registro y seguro en ambos países.
+- Reverso de licencia: CO sí, CL no.
+- Inspección técnica: antigüedad >=6 años CO, >=1 año CL.
+- Taxi requiere TaxiAuthorization.
+- Seguro, inspección y autorización Taxi requieren expiración futura.
+- Cinco fotos exactas y distintas.
+- Contacto de emergencia completo, al menos un servicio y Wallet activa.
+- Wallet es default. Payout externo requiere token de proveedor + banco/tipo + last4; nunca pedir cuenta completa. El proveedor/tokenizador no está expuesto.
+
+Flujo: registro/login Client + contacto verificado → términos → media → identity → license → vehicle/documentos/fotos → operations/Wallet → status → submit → revisión/correcciones → Approved → online.
+
+Editar cualquier etapa reinicia a Draft y offline salvo Blocked. Renderizar siempre `percentage`, `stages`, `missing`, `reasons`, `canSubmit` y `canGoOnline`.
+
+### 12.6 Términos y release
+
+El backend valida términos por configuración `MoveOnboarding:Countries:CO|CL` con `CurrentTermsVersion` y `CurrentTermsContentHash`. No existe endpoint público de catálogo. Flutter debe empaquetar o recibir por configuración remota el documento exacto del país, mostrarlo y enviar:
+
+- CO: versión `2026-07`, SHA-256 `39BA0EAB3352694DED546A61B82DDDC1240956C4C4C6BAFEA529E169937A01BB`, documento `docs/CIERVO_MOVE_DRIVER_TERMS_CO_2026-07.md`.
+- CL: versión `2026-07`, SHA-256 `E189A1B2B5A552925A4A6BA093A38D4D3D4425F753064900355B4CA165658ECE`, documento `docs/CIERVO_MOVE_DRIVER_TERMS_CL_2026-07.md`.
+
+Los hashes fueron verificados contra los archivos y están configurados en backend y `cloudrun-production.env.yaml`. Ante `409`, invalidar la aceptación y exigir aceptar la versión vigente. No inventar endpoint, texto ni hash.
+
+La migración MOVE v2 deberá aplicarse durante despliegue. Los bindings HMAC/AES ya están preparados en `scripts/prod-cloudrun-deploy.ps1` (`ciervo-move-payout-encryption-key` y `ciervo-move-identifier-hmac-key`); los secretos se crearán en Google Secret Manager durante el despliegue. Nunca incluirlos en Flutter.
+
+### 12.7 Pantallas, seguridad y QA
+
+Agregar modelos/repositorios/providers o BLoC, wizard de identidad/licencia/vehículo/operations, uploads con progreso/retry, status/revisión/corrección y Approved/online. Incluir permisos cámara/galería/ubicación/push, borrador offline cifrado, deep links que refrescan status y notificaciones `move.driver.*`.
+
+No guardar/loguear JWT, Firebase token, PII, documentos, imágenes, claves idempotentes, provider token o datos bancarios. Backend aplica HMAC a identificadores y AES-GCM a datos sensibles; no replicar secretos.
+
+Probar DTO/enums, CO/CL/Taxi/vigencias, cinco fotos, contacto verificado, términos cambiados, upload/offline, idempotencia y `400/401/403/404/409/429/5xx`.
+
+## 13. CIERVO Tickets (API unificada)
+
+Contrato completo: [`docs/CIERVO_TICKETS_MOBILE.md`](docs/CIERVO_TICKETS_MOBILE.md).
+
+Apuntar el módulo Tickets solo a:
+
+- `GET /api/v1/events`, `/highlights`, `/nearby`, `/{eventId}`, `/{eventId}/seats` (+ reserve/release)
+- `POST /api/v1/tickets/create`, `/pay`, `/validate`, `/refund`, `/cancel`
+- `GET /api/v1/wallet/tickets`, `/history`, `/{ticketId}`
+- `GET /api/v1/ai/recommend-events`
+
+IDs: `movie-{guid:N}` / `event-{int}`; ticket `TK...`. Pago primario: `CIERVO_BALANCE` / `WALLET`. Legacy `/api/v1/movie` y `/api/events` no usar en la app Tickets.
+
+## 14. Vakupli — contactos, cupos y pago visual
+
+Contrato: [`docs/CIERVO_VAKUPLI_CONTACTS.md`](docs/CIERVO_VAKUPLI_CONTACTS.md).
+
+- Contactos nacionales: `GET /api/vakupli/contacts`, búsqueda `GET /api/vakupli/contacts/search?q=`
+- Participantes con `hasPaid` / `paymentStatus` para UI
+- Solo invitados del mismo país; cupos Free=3 invitados, +4 por tier de plan del creador (`maxGuests` / `remainingSlots` en el grupo)
+- Packs extra **bimensuales por usuario**: `POST /api/vakupli/groups/{groupId}/extra-slots` → +4/pack (Free US$2 / pago US$1), vigencia 2 meses; `GET /api/vakupli/extra-slots/me` antes de upgrade de plan
+- **Modal obligatorio al mejorar plan** si `acknowledgeBeforePlanUpgrade`: cobro bimensual, no se pierden días, no se recobra hasta vencer; botones continuar upgrade / quedarse en plan actual (ver `docs/CIERVO_VAKUPLI_CONTACTS.md`)
 

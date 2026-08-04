@@ -28,6 +28,15 @@ abstract interface class WalletRemoteDataSource {
   Future<RechargeIntentDto> rechargeIntent(String intentId);
   Future<RechargeIntentDto> syncRechargeIntent(String intentId);
   Future<ResolvedWalletUserDto> resolveUser(String ciervoUserCode);
+  Future<List<TransferDirectoryEntryDto>> transferContacts({int take = 50});
+  Future<List<TransferDirectoryEntryDto>> transferFavorites();
+  Future<void> addTransferFavorite({
+    String? targetUserId,
+    String? targetCiervoUserCode,
+    String? targetUsername,
+  });
+  Future<void> removeTransferFavorite(String favoriteUserId);
+  Future<List<TransferDirectoryEntryDto>> transferRecent({int take = 20});
   Future<TransferResultDto> transfer({
     required String targetCiervoUserCode,
     required double amount,
@@ -44,6 +53,7 @@ abstract interface class WalletRemoteDataSource {
     int? businessId,
     int? bookingId,
     String currency = 'COP',
+    String? preferredPaymentMethod,
   });
   Future<RechargeIntentDto> rechargeByCiervoId({
     required String targetCiervoUserCode,
@@ -78,7 +88,13 @@ abstract interface class WalletRemoteDataSource {
     required String label,
     String? countryCode,
   });
+  Future<PhysicalNfcCardDto> updatePhysicalNfcCard({
+    required int id,
+    required String label,
+  });
   Future<void> blockPhysicalNfcCard(int id);
+  Future<void> unblockPhysicalNfcCard(int id);
+  Future<void> revokePhysicalNfcCard(int id);
 }
 
 class DioWalletRemoteDataSource implements WalletRemoteDataSource {
@@ -186,10 +202,67 @@ class DioWalletRemoteDataSource implements WalletRemoteDataSource {
 
   @override
   Future<ResolvedWalletUserDto> resolveUser(String ciervoUserCode) async {
+    final lookup = ciervoUserCode.trim();
     final response = await _client.dio.get<Map<String, dynamic>>(
-      '/api/wallet/resolve-user/$ciervoUserCode',
+      '/api/wallet/resolve-user/${Uri.encodeComponent(lookup)}',
     );
     return ResolvedWalletUserDto.fromJson(unwrapApiMap(response.data));
+  }
+
+  @override
+  Future<List<TransferDirectoryEntryDto>> transferContacts({
+    int take = 50,
+  }) async {
+    final response = await _client.dio.get<dynamic>(
+      '/api/wallet/transfer/contacts',
+      queryParameters: {'take': take},
+    );
+    return TransferDirectoryEntryDto.listFrom(unwrapApiList(response.data));
+  }
+
+  @override
+  Future<List<TransferDirectoryEntryDto>> transferFavorites() async {
+    final response = await _client.dio.get<dynamic>(
+      '/api/wallet/transfer/favorites',
+    );
+    return TransferDirectoryEntryDto.listFrom(unwrapApiList(response.data));
+  }
+
+  @override
+  Future<void> addTransferFavorite({
+    String? targetUserId,
+    String? targetCiervoUserCode,
+    String? targetUsername,
+  }) async {
+    await _client.dio.post<void>(
+      '/api/wallet/transfer/favorites',
+      data: {
+        if (targetUserId != null && targetUserId.isNotEmpty)
+          'targetUserId': int.tryParse(targetUserId) ?? targetUserId,
+        if (targetCiervoUserCode != null && targetCiervoUserCode.isNotEmpty)
+          'targetCiervoUserCode': targetCiervoUserCode,
+        if (targetUsername != null && targetUsername.isNotEmpty)
+          'targetUsername': targetUsername.replaceFirst(RegExp(r'^@'), ''),
+      },
+    );
+  }
+
+  @override
+  Future<void> removeTransferFavorite(String favoriteUserId) async {
+    await _client.dio.delete<void>(
+      '/api/wallet/transfer/favorites/$favoriteUserId',
+    );
+  }
+
+  @override
+  Future<List<TransferDirectoryEntryDto>> transferRecent({
+    int take = 20,
+  }) async {
+    final response = await _client.dio.get<dynamic>(
+      '/api/wallet/transfer/recent',
+      queryParameters: {'take': take},
+    );
+    return TransferDirectoryEntryDto.listFrom(unwrapApiList(response.data));
   }
 
   @override
@@ -225,6 +298,7 @@ class DioWalletRemoteDataSource implements WalletRemoteDataSource {
     int? businessId,
     int? bookingId,
     String currency = 'COP',
+    String? preferredPaymentMethod,
   }) async {
     final seed = payerCiervoUserCode ?? payerUserId ?? 'unknown';
     final data = <String, dynamic>{
@@ -251,6 +325,10 @@ class DioWalletRemoteDataSource implements WalletRemoteDataSource {
     if (chatConversationId != null && chatConversationId.isNotEmpty) {
       data['chatConversationId'] =
           int.tryParse(chatConversationId) ?? chatConversationId;
+    }
+    final method = preferredPaymentMethod?.trim();
+    if (method != null && method.isNotEmpty) {
+      data['preferredPaymentMethod'] = method;
     }
     final response = await _client.dio.post<Map<String, dynamic>>(
       '/api/payment-requests/pay-for-me',
@@ -375,7 +453,7 @@ class DioWalletRemoteDataSource implements WalletRemoteDataSource {
     final response = await _client.dio.get<dynamic>(
       '/api/wallet/nfc/physical-cards',
     );
-    return PhysicalNfcCardDto.listFrom(unwrapApiResponse(response.data));
+    return PhysicalNfcCardDto.listFrom(unwrapApiList(response.data));
   }
 
   @override
@@ -400,6 +478,28 @@ class DioWalletRemoteDataSource implements WalletRemoteDataSource {
   @override
   Future<void> blockPhysicalNfcCard(int id) async {
     await _client.dio.post<void>('/api/wallet/physical-nfc/$id/block');
+  }
+
+  @override
+  Future<PhysicalNfcCardDto> updatePhysicalNfcCard({
+    required int id,
+    required String label,
+  }) async {
+    final response = await _client.dio.put<Map<String, dynamic>>(
+      '/api/wallet/physical-nfc/$id',
+      data: {'label': label},
+    );
+    return PhysicalNfcCardDto.fromJson(unwrapApiMap(response.data));
+  }
+
+  @override
+  Future<void> unblockPhysicalNfcCard(int id) async {
+    await _client.dio.post<void>('/api/wallet/physical-nfc/$id/unblock');
+  }
+
+  @override
+  Future<void> revokePhysicalNfcCard(int id) async {
+    await _client.dio.post<void>('/api/wallet/physical-nfc/$id/revoke');
   }
 
   String _idempotencyKey(String prefix, String seed) {

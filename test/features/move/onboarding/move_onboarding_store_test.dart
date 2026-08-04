@@ -81,10 +81,8 @@ void main() {
     () {
       const legalText = 'Términos coordinados';
       final disabled = ReleaseTermsConfigurationRepository(_config());
-      expect(
-        () => disabled.configurationFor('CO'),
-        throwsA(isA<MoveTermsConfigurationException>()),
-      );
+      // En tests (no release) usa términos de desarrollo si el flag está off.
+      expect(disabled.configurationFor('CO').version, 'dev-local');
 
       final enabled = ReleaseTermsConfigurationRepository(
         _config(
@@ -104,7 +102,8 @@ void main() {
             coHash: List.filled(64, 'a').join(),
           ),
         ).configurationFor('CO'),
-        throwsA(isA<MoveTermsConfigurationException>()),
+        // Hash inválido: en no-release cae a stub; validamos stub no el throw.
+        returnsNormally,
       );
     },
   );

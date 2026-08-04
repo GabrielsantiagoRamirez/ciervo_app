@@ -53,10 +53,13 @@ class _AddFamilyCardViewState extends State<_AddFamilyCardView> {
   final _monthController = TextEditingController();
   final _yearController = TextEditingController();
   final _documentController = TextEditingController();
+  final _monthFocus = FocusNode();
+  final _yearFocus = FocusNode();
+  final _cvvFocus = FocusNode();
   _AddCardStep _step = _AddCardStep.form;
   String? _error;
   bool _submitting = false;
-  bool _obscureCvv = false;
+  bool _obscureCvv = true;
   String _countryCode = CountryRegistration.defaultCountryCode();
   late String _identificationType =
       CountryRegistration.mercadoPagoIdentificationType(_countryCode);
@@ -107,7 +110,24 @@ class _AddFamilyCardViewState extends State<_AddFamilyCardView> {
     _monthController.dispose();
     _yearController.dispose();
     _documentController.dispose();
+    _monthFocus.dispose();
+    _yearFocus.dispose();
+    _cvvFocus.dispose();
     super.dispose();
+  }
+
+  void _onMonthChanged(String value) {
+    final digits = value.replaceAll(RegExp(r'\D'), '');
+    if (digits.length == 2) {
+      _yearFocus.requestFocus();
+    }
+  }
+
+  void _onYearChanged(String value) {
+    final digits = value.replaceAll(RegExp(r'\D'), '');
+    if (digits.length == 2) {
+      _cvvFocus.requestFocus();
+    }
   }
 
   String? _validateForm() {
@@ -233,7 +253,9 @@ class _AddFamilyCardViewState extends State<_AddFamilyCardView> {
           });
           return;
         }
-      } else {
+      } else if (!flow.isAlreadyActive) {
+        // Solo verificar si el alta quedó pendiente; si ya viene ACTIVE,
+        // un verify sin body correcto devolvía "Solicitud inválida" falso.
         final verified = await cubit.verifyCard(flow.cardId);
         if (!verified) {
           setState(() {
@@ -244,6 +266,8 @@ class _AddFamilyCardViewState extends State<_AddFamilyCardView> {
           });
           return;
         }
+      } else {
+        await cubit.load();
       }
 
       if (!mounted) return;
@@ -343,67 +367,81 @@ class _AddFamilyCardViewState extends State<_AddFamilyCardView> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                CardNumberField(controller: _numberController),
+                CardNumberField(
+                  controller: _numberController,
+                  onComplete: () => _monthFocus.requestFocus(),
+                ),
                 const SizedBox(height: AppSpacing.md),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: TextField(
                         controller: _monthController,
+                        focusNode: _monthFocus,
                         keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.next,
+                        onChanged: _onMonthChanged,
+                        onSubmitted: (_) => _yearFocus.requestFocus(),
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
                           LengthLimitingTextInputFormatter(2),
                         ],
                         decoration: const InputDecoration(
-                          labelText: 'Mes (MM)',
+                          labelText: 'Mes',
                           hintText: 'MM',
+                          helperText: '01–12',
                         ),
                       ),
                     ),
-                    const SizedBox(width: AppSpacing.sm),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: TextField(
                         controller: _yearController,
+                        focusNode: _yearFocus,
                         keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.next,
+                        onChanged: _onYearChanged,
+                        onSubmitted: (_) => _cvvFocus.requestFocus(),
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(4),
+                          LengthLimitingTextInputFormatter(2),
                         ],
                         decoration: const InputDecoration(
-                          labelText: 'Año (AA)',
+                          labelText: 'Año',
                           hintText: 'AA',
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: TextField(
-                        controller: _cvvController,
-                        obscureText: _obscureCvv,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(4),
-                        ],
-                        decoration: InputDecoration(
-                          labelText: 'CVV',
-                          suffixIcon: IconButton(
-                            tooltip: _obscureCvv
-                                ? 'Mostrar CVV'
-                                : 'Ocultar CVV',
-                            onPressed: () =>
-                                setState(() => _obscureCvv = !_obscureCvv),
-                            icon: Icon(
-                              _obscureCvv
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
-                            ),
-                          ),
+                          helperText: 'Ej. 29',
                         ),
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextField(
+                  controller: _cvvController,
+                  focusNode: _cvvFocus,
+                  obscureText: _obscureCvv,
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.next,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(4),
+                  ],
+                  decoration: InputDecoration(
+                    labelText: 'CVV',
+                    hintText: '3 o 4 dígitos',
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      tooltip: _obscureCvv ? 'Mostrar CVV' : 'Ocultar CVV',
+                      onPressed: () =>
+                          setState(() => _obscureCvv = !_obscureCvv),
+                      icon: Icon(
+                        _obscureCvv
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                      ),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 TextField(

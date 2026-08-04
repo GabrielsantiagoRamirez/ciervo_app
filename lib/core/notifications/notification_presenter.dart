@@ -8,6 +8,16 @@ import 'package:permission_handler/permission_handler.dart';
 
 import 'notification_channels.dart';
 
+class _GroupedNotificationLine {
+  const _GroupedNotificationLine({
+    required this.title,
+    required this.body,
+  });
+
+  final String title;
+  final String body;
+}
+
 /// Presentación de notificaciones locales (foreground y background FCM).
 abstract final class NotificationPresenter {
   static final FlutterLocalNotificationsPlugin _plugin =
@@ -16,10 +26,14 @@ abstract final class NotificationPresenter {
   static bool _initialized = false;
   static void Function(Map<String, dynamic> data)? onNotificationTap;
 
+  /// Historial corto por grupo para el resumen estilo inbox.
+  static final Map<String, List<_GroupedNotificationLine>> _groupInbox = {};
+  static const _maxInboxLines = 6;
+
   static Future<void> ensureInitialized() async {
     if (_initialized) return;
 
-    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const android = AndroidInitializationSettings('@drawable/ic_stat_ciervo');
     const ios = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -36,6 +50,21 @@ abstract final class NotificationPresenter {
         } catch (_) {}
       },
     );
+
+    // Cold start: tap en notificación local con la app cerrada.
+    final launch = await _plugin.getNotificationAppLaunchDetails();
+    if (launch?.didNotificationLaunchApp == true) {
+      final payload = launch!.notificationResponse?.payload;
+      if (payload != null && payload.isNotEmpty) {
+        try {
+          final data = jsonDecode(payload) as Map<String, dynamic>;
+          // Diferir hasta que haya listener (navigator bound).
+          Future<void>.delayed(const Duration(milliseconds: 400), () {
+            onNotificationTap?.call(data);
+          });
+        } catch (_) {}
+      }
+    }
 
     final androidPlugin = _plugin
         .resolvePlatformSpecificImplementation<
@@ -97,20 +126,26 @@ abstract final class NotificationPresenter {
 
     final notification = message.notification;
     final data = message.data;
-    final title = _firstNonEmpty([
-      notification?.title,
-      data['title']?.toString(),
-      data['subject']?.toString(),
-      data['heading']?.toString(),
-    ]);
-    final body = _firstNonEmpty([
-      notification?.body,
-      data['body']?.toString(),
-      data['message']?.toString(),
-      data['text']?.toString(),
-      data['content']?.toString(),
-      data['description']?.toString(),
-    ]);
+    final title = _brandSafe(
+      _firstNonEmpty([
+        notification?.title,
+        data['title']?.toString(),
+        data['senderName']?.toString(),
+        data['subject']?.toString(),
+        data['heading']?.toString(),
+      ]),
+    );
+    final body = _brandSafe(
+      _firstNonEmpty([
+        notification?.body,
+        data['previewText']?.toString(),
+        data['body']?.toString(),
+        data['message']?.toString(),
+        data['text']?.toString(),
+        data['content']?.toString(),
+        data['description']?.toString(),
+      ]),
+    );
 
     if (title == null && body == null) {
       debugPrint('[Notifications] Push sin titulo ni cuerpo: ${data.keys}');
@@ -123,13 +158,37 @@ abstract final class NotificationPresenter {
     final category = data['category']?.toString() ?? data['type']?.toString();
     final channelId = CiervoNotificationChannels.channelForCategory(category);
     final channelName = CiervoNotificationChannels.labelForChannel(channelId);
+    final groupKey = 'ciervo_group_$channelId';
+    final summaryId = groupKey.hashCode & 0x7fffffff;
 
-    final notificationId =
+    final lines = _groupInbox.putIfAbsent(
+      groupKey,
+      () => <_GroupedNotificationLine>[],
+    );
+    lines.insert(
+      0,
+      _GroupedNotificationLine(title: displayTitle, body: displayBody),
+    );
+    if (lines.length > _maxInboxLines) {
+      lines.removeRange(_maxInboxLines, lines.length);
+    }
+
+    final childId =
         message.messageId?.hashCode ?? DateTime.now().microsecondsSinceEpoch;
+    final payload = jsonEncode(_safePayload(data));
+    final inboxLines = lines
+        .map((line) => '${line.title}: ${line.body}')
+        .toList(growable: false);
+    final summaryTitle = lines.length == 1
+        ? 'CIERVO CLUB'
+        : 'CIERVO CLUB · ${lines.length} notificaciones';
+    final summaryBody = lines.length == 1
+        ? displayBody
+        : lines.map((line) => '• ${line.title}').take(3).join('\n');
 
     try {
       await _plugin.show(
-        notificationId,
+        childId,
         displayTitle,
         displayBody,
         NotificationDetails(
@@ -138,13 +197,14 @@ abstract final class NotificationPresenter {
             channelName,
             channelDescription:
                 CiervoNotificationChannels.descriptionForChannel(channelId),
-            icon: '@mipmap/ic_launcher',
+            icon: '@drawable/ic_stat_ciervo',
             color: const Color(CiervoNotificationChannels.brandColor),
             importance: Importance.high,
             priority: Priority.high,
             visibility: NotificationVisibility.private,
             styleInformation: BigTextStyleInformation(displayBody),
             category: AndroidNotificationCategory.message,
+            groupKey: groupKey,
             playSound: true,
             enableVibration: true,
           ),
@@ -152,13 +212,60 @@ abstract final class NotificationPresenter {
             presentAlert: true,
             presentBadge: true,
             presentSound: true,
+            threadIdentifier: 'ciervo',
           ),
         ),
-        payload: jsonEncode(_safePayload(data)),
+        payload: payload,
+      );
+
+      // Resumen agrupado (una sola tarjeta expandible con lista).
+      await _plugin.show(
+        summaryId,
+        summaryTitle,
+        summaryBody,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            channelId,
+            channelName,
+            channelDescription:
+                CiervoNotificationChannels.descriptionForChannel(channelId),
+            icon: '@drawable/ic_stat_ciervo',
+            color: const Color(CiervoNotificationChannels.brandColor),
+            importance: Importance.high,
+            priority: Priority.high,
+            visibility: NotificationVisibility.private,
+            groupKey: groupKey,
+            setAsGroupSummary: true,
+            styleInformation: InboxStyleInformation(
+              inboxLines,
+              contentTitle: summaryTitle,
+              summaryText: '${lines.length} actualizaciones',
+            ),
+            category: AndroidNotificationCategory.message,
+            playSound: false,
+            enableVibration: false,
+            onlyAlertOnce: true,
+          ),
+          iOS: const DarwinNotificationDetails(
+            presentAlert: false,
+            presentBadge: true,
+            presentSound: false,
+            threadIdentifier: 'ciervo',
+          ),
+        ),
+        payload: payload,
       );
     } catch (error) {
       debugPrint('[Notifications] Error al mostrar: ${error.runtimeType}');
     }
+  }
+
+  static String? _brandSafe(String? value) {
+    final text = value?.trim();
+    if (text == null || text.isEmpty) return null;
+    return text
+        .replaceAll(RegExp('vakuply', caseSensitive: false), 'Vaku')
+        .replaceAll(RegExp('vakupli', caseSensitive: false), 'Vaku');
   }
 
   static String? _firstNonEmpty(List<String?> values) {
@@ -181,6 +288,9 @@ abstract final class NotificationPresenter {
       'tripId',
       'orderId',
       'bonusId',
+      'previewText',
+      'senderName',
+      'messageType',
     };
     return <String, dynamic>{
       for (final entry in data.entries)

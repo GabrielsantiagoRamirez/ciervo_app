@@ -4,6 +4,7 @@ import '../../domain/entities/move_enums.dart';
 import '../../domain/entities/move_fare_quote.dart';
 import '../../domain/entities/move_offer.dart';
 import '../../domain/entities/move_trip.dart';
+import '../../presentation/utils/move_labels.dart';
 
 /// Mapeadores tolerantes JSON -> entidades del dominio MOVE.
 ///
@@ -26,23 +27,57 @@ abstract final class MoveMappers {
           .map((item) => Map<String, dynamic>.from(item))
           .map(
             (item) => MoveFareBreakdownItem(
-              label:
-                  _str(item, const ['label', 'name', 'concept']) ?? 'Concepto',
+              label: MoveLabels.fareBreakdownLabel(
+                _str(item, const [
+                      'label',
+                      'name',
+                      'concept',
+                      'key',
+                      'code',
+                    ]) ??
+                    'Concepto',
+              ),
               amount: _int(item, const ['amount', 'value']),
             ),
           )
           .toList();
     }
     if (raw is Map) {
-      return Map<String, dynamic>.from(raw).entries
-          .where((entry) => entry.value is num)
-          .map(
-            (entry) => MoveFareBreakdownItem(
-              label: entry.key,
-              amount: (entry.value as num).round(),
+      final map = Map<String, dynamic>.from(raw);
+      // bandCharges: lista de tramos con label ES
+      final bandCharges = map['bandCharges'];
+      final items = <MoveFareBreakdownItem>[];
+      for (final entry in map.entries) {
+        if (entry.key == 'bandCharges') continue;
+        if (entry.key.toLowerCase().endsWith('label')) continue;
+        if (entry.value is! num) continue;
+        final labelKey = '${entry.key}Label';
+        final apiLabel = map[labelKey]?.toString().trim();
+        items.add(
+          MoveFareBreakdownItem(
+            label: (apiLabel != null && apiLabel.isNotEmpty)
+                ? apiLabel
+                : MoveLabels.fareBreakdownLabel(entry.key),
+            amount: (entry.value as num).round(),
+          ),
+        );
+      }
+      if (bandCharges is List) {
+        for (final rawBand in bandCharges.whereType<Map>()) {
+          final band = Map<String, dynamic>.from(rawBand);
+          final amount = band['amount'];
+          if (amount is! num) continue;
+          items.add(
+            MoveFareBreakdownItem(
+              label:
+                  _str(band, const ['label', 'name', 'concept']) ??
+                  'Tramo',
+              amount: amount.round(),
             ),
-          )
-          .toList();
+          );
+        }
+      }
+      return items;
     }
     return const [];
   }

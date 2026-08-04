@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
@@ -14,7 +15,7 @@ import '../../../../shared/widgets/ciervo_brand_loader.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
-import '../../../qr_wallet/presentation/pages/qr_wallet_page.dart';
+import '../../../../shared/widgets/ciervo_logo_mark.dart';
 import '../../../wallet/domain/entities/ciervo_wallet_identity.dart';
 import '../../../wallet/domain/repositories/wallet_repository.dart';
 import '../qr_scan_router.dart';
@@ -26,7 +27,9 @@ class QrHubPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('QR Ciervo')),
+      appBar: AppBar(
+        title: const Text('QR Ciervo'),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
@@ -40,8 +43,9 @@ class QrHubPage extends StatelessWidget {
             subtitle: 'Mostrar mi codigo',
             description:
                 'Para eventos, reservas, accesos y cuando te deban escanear.',
-            icon: Icons.qr_code_2_outlined,
+            useCiervoLogo: true,
             color: Theme.of(context).colorScheme.primaryContainer,
+            foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
             onTap: () => Navigator.of(
               context,
             ).push(MaterialPageRoute<void>(builder: (_) => const MyQrPage())),
@@ -53,7 +57,8 @@ class QrHubPage extends StatelessWidget {
             description:
                 'Para pagar en comercios, activar cupones o iniciar un flujo externo.',
             icon: Icons.qr_code_scanner,
-            color: Theme.of(context).colorScheme.secondaryContainer,
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            foregroundColor: Theme.of(context).colorScheme.onSurface,
             onTap: () => Navigator.of(
               context,
             ).push(MaterialPageRoute<void>(builder: (_) => const ScanQrPage())),
@@ -92,7 +97,9 @@ class _MyQrPageState extends State<MyQrPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Mi QR')),
+      appBar: AppBar(
+        title: const Text('Mi QR'),
+      ),
       body: FutureBuilder<CiervoWalletIdentity>(
         future: _identity,
         builder: (context, snapshot) {
@@ -129,11 +136,7 @@ class _MyQrPageState extends State<MyQrPage> {
                     CiervoButton(
                       label: 'Ver entradas y reservas',
                       icon: Icons.confirmation_number_outlined,
-                      onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => const QrWalletPage(),
-                        ),
-                      ),
+                      onPressed: () => context.push('/tickets/wallet'),
                     ),
                   ],
                 ),
@@ -303,6 +306,8 @@ class _ScanQrPageState extends State<ScanQrPage> {
               subtitle: 'Apunta al QR en tiempo real',
               icon: Icons.photo_camera_outlined,
               color: Theme.of(context).colorScheme.primaryContainer,
+              foregroundColor:
+                  Theme.of(context).colorScheme.onPrimaryContainer,
               onTap: _startCamera,
             ),
             const SizedBox(height: CiervoPageLayout.cardGap),
@@ -310,7 +315,8 @@ class _ScanQrPageState extends State<ScanQrPage> {
               title: 'Elegir de galeria',
               subtitle: 'Selecciona una foto que ya tengas',
               icon: Icons.photo_library_outlined,
-              color: Theme.of(context).colorScheme.secondaryContainer,
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              foregroundColor: Theme.of(context).colorScheme.onSurface,
               onTap: _busy ? null : _pickFromGallery,
             ),
             if (_photosDenied) ...[
@@ -378,6 +384,7 @@ class _ScanOptionCard extends StatelessWidget {
     required this.subtitle,
     required this.icon,
     required this.color,
+    required this.foregroundColor,
     required this.onTap,
   });
 
@@ -385,6 +392,7 @@ class _ScanOptionCard extends StatelessWidget {
   final String subtitle;
   final IconData icon;
   final Color color;
+  final Color foregroundColor;
   final VoidCallback? onTap;
 
   @override
@@ -399,21 +407,28 @@ class _ScanOptionCard extends StatelessWidget {
           padding: CiervoPageLayout.compactCardPadding,
           child: Row(
             children: [
-              Icon(icon, size: 36),
+              Icon(icon, size: 36, color: foregroundColor),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: Theme.of(context).textTheme.titleMedium),
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: foregroundColor,
+                      ),
+                    ),
                     Text(
                       subtitle,
-                      style: Theme.of(context).textTheme.bodySmall,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: foregroundColor.withValues(alpha: 0.85),
+                      ),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right),
+              Icon(Icons.chevron_right, color: foregroundColor),
             ],
           ),
         ),
@@ -427,16 +442,20 @@ class _HubActionCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.description,
-    required this.icon,
     required this.color,
+    required this.foregroundColor,
     required this.onTap,
+    this.useCiervoLogo = false,
+    this.icon,
   });
 
   final String title;
   final String subtitle;
   final String description;
-  final IconData icon;
+  final bool useCiervoLogo;
+  final IconData? icon;
   final Color color;
+  final Color foregroundColor;
   final VoidCallback onTap;
 
   @override
@@ -451,23 +470,38 @@ class _HubActionCard extends StatelessWidget {
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Row(
             children: [
-              Icon(icon, size: 40),
+              if (useCiervoLogo)
+                const CiervoLogoMark(size: 48)
+              else
+                Icon(icon ?? Icons.qr_code_2, size: 40, color: foregroundColor),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: Theme.of(context).textTheme.titleLarge),
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: foregroundColor,
+                      ),
+                    ),
                     Text(
                       subtitle,
-                      style: Theme.of(context).textTheme.titleSmall,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: foregroundColor,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
-                    Text(description),
+                    Text(
+                      description,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: foregroundColor.withValues(alpha: 0.9),
+                      ),
+                    ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right),
+              Icon(Icons.chevron_right, color: foregroundColor),
             ],
           ),
         ),

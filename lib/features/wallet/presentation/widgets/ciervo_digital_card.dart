@@ -300,7 +300,7 @@ class CiervoDigitalCard extends StatelessWidget {
                                     size: isCompact ? 14 : 15,
                                   ),
                                   label: Text(
-                                    'PERSONALIZAR APODO',
+                                    'PERSONALIZAR',
                                     style: TextStyle(
                                       fontSize: isCompact ? 9 : 10,
                                     ),

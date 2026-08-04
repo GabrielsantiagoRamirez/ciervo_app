@@ -2,4 +2,5 @@
 <resources>
     <color name="ic_launcher_background">#161311</color>
     <color name="ciervo_launch_background">#161311</color>
+    <color name="ciervo_notification">#C9A227</color>
 </resources>

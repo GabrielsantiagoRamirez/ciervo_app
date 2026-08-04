@@ -30,6 +30,33 @@ Future<void> handleNfcError(
 }) async {
   if (!context.mounted) return;
 
+  if (error is AppException) {
+    final code = error.code?.toUpperCase() ?? '';
+    final msg = error.message.toUpperCase();
+    if (error.statusCode == 409 &&
+        (code == 'PHYSICAL_NFC_ALREADY_REGISTERED' ||
+            msg.contains('PHYSICAL_NFC_ALREADY_REGISTERED') ||
+            (msg.contains('UID') && msg.contains('ALREADY')))) {
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('UID en uso'),
+          content: const Text(
+            'Este UID ya está registrado en otra tarjeta física. '
+            'Usa un chip distinto o revoca la tarjeta anterior para liberar el UID.',
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Entendido'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+  }
+
   if (isNfcPlusRequiredError(error)) {
     final upgrade = await showDialog<bool>(
       context: context,

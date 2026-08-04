@@ -46,7 +46,7 @@ class _FakeFamilyPaymentsRemoteDataSource
   Future<void> deleteCard(String cardId) async {}
 
   @override
-  Future<FamilyPaymentCardDto> freezeCard(String cardId) =>
+  Future<FamilyPaymentCardDto> freezeCard(String cardId, {String? reason}) =>
       throw UnimplementedError();
 
   @override
@@ -155,12 +155,18 @@ class _FakeFamilyPaymentsRemoteDataSource
       throw UnimplementedError();
 
   @override
-  Future<FamilyPaymentCardDto> updateCard({
+  Future<FamilyPaymentCardDto> updateCardAlias({
     required String cardId,
-    String? alias,
-    bool? isPrimary,
-    bool? isBackup,
+    required String alias,
   }) => throw UnimplementedError();
+
+  @override
+  Future<FamilyPaymentCardDto> setPrimaryCard(String cardId) =>
+      throw UnimplementedError();
+
+  @override
+  Future<FamilyPaymentCardDto> setBackupCard(String cardId) =>
+      throw UnimplementedError();
 
   @override
   Future<FamilyPaymentCardDto> verifyCard(String cardId) =>

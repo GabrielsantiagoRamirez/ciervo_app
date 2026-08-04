@@ -33,8 +33,19 @@ import '../features/movie/domain/models/movie_commands.dart';
 import '../features/movie/presentation/cubit/movie_cubit.dart';
 import '../features/movie/presentation/cubit/movie_realtime_cubit.dart';
 import '../features/movie/presentation/pages/movie_pages.dart';
+import '../features/tickets/presentation/pages/ticket_checkout_page.dart';
+import '../features/tickets/presentation/pages/ticket_event_detail_page.dart';
+import '../features/tickets/presentation/pages/ticket_seats_page.dart';
+import '../features/tickets/presentation/pages/tickets_catalog_page.dart';
+import '../features/tickets/presentation/pages/tickets_wallet_page.dart';
 import '../features/move/presentation/onboarding/move_onboarding_page.dart';
 import '../features/move/presentation/pages/move_driver_page.dart';
+import '../features/marketplace/presentation/pages/marketplace_checkout_page.dart';
+import '../features/marketplace/presentation/pages/marketplace_orders_page.dart';
+import '../features/marketplace/presentation/pages/marketplace_page.dart';
+import '../features/marketplace/presentation/pages/marketplace_promo_detail_page.dart';
+import '../features/marketplace/presentation/pages/marketplace_scan_page.dart';
+import '../features/marketplace/presentation/pages/marketplace_store_page.dart';
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/password_recovery_page.dart';
 import '../features/auth/presentation/pages/register_page.dart';
@@ -57,6 +68,8 @@ abstract final class AppRoutePaths {
   static const register = '/register';
   static const experienceMode = '/experience-mode';
   static const movies = '/movies';
+  static const tickets = '/tickets';
+  static const ticketsWallet = '/tickets/wallet';
   static const movieHistory = '/movie/history';
   static const movieConsume = '/movie/consume';
   static const kidsQr = '/kids-v2/qr';
@@ -71,7 +84,11 @@ GoRouter createAppRouter(
 }) {
   return GoRouter(
     navigatorKey: navigatorKey,
-    initialLocation: AppRoutePaths.splash,
+    initialLocation: sessionManager.state.status == SessionStatus.unknown
+        ? AppRoutePaths.splash
+        : sessionManager.state.status == SessionStatus.authenticated
+        ? AppRoutePaths.root
+        : AppRoutePaths.login,
     refreshListenable: AppRouterRefreshStream(
       sessionManager.stream,
       extraListenable: experienceModeCubit.stream,
@@ -155,6 +172,59 @@ GoRouter createAppRouter(
       GoRoute(
         path: AppRoutePaths.experienceMode,
         builder: (context, state) => const ExperienceModePage(),
+      ),
+      GoRoute(
+        path: AppRoutePaths.tickets,
+        builder: (context, state) => const TicketsCatalogPage(),
+      ),
+      GoRoute(
+        path: AppRoutePaths.ticketsWallet,
+        builder: (context, state) => const TicketsWalletPage(),
+      ),
+      GoRoute(
+        path: '/tickets/wallet/:ticketId',
+        builder: (context, state) => TicketWalletDetailPage(
+          ticketId: Uri.decodeComponent(state.pathParameters['ticketId']!),
+        ),
+      ),
+      GoRoute(
+        path: '/tickets/:eventId/seats',
+        builder: (context, state) {
+          final eventId = Uri.decodeComponent(state.pathParameters['eventId']!);
+          final qty =
+              int.tryParse(state.uri.queryParameters['qty'] ?? '') ?? 1;
+          return TicketSeatsPage(
+            eventId: eventId,
+            quantity: qty.clamp(1, 20),
+            ticketTypeId: state.uri.queryParameters['typeId'],
+          );
+        },
+      ),
+      GoRoute(
+        path: '/tickets/:eventId/checkout',
+        builder: (context, state) {
+          final eventId = Uri.decodeComponent(state.pathParameters['eventId']!);
+          final qty =
+              int.tryParse(state.uri.queryParameters['qty'] ?? '') ?? 1;
+          final seatsRaw = state.uri.queryParameters['seats'] ?? '';
+          return TicketCheckoutPage(
+            eventId: eventId,
+            quantity: qty.clamp(1, 20),
+            ticketTypeId: state.uri.queryParameters['typeId'],
+            holdId: state.uri.queryParameters['holdId'],
+            seatIds: seatsRaw
+                .split(',')
+                .map((e) => e.trim())
+                .where((e) => e.isNotEmpty)
+                .toList(),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/tickets/:eventId',
+        builder: (context, state) => TicketEventDetailPage(
+          eventId: Uri.decodeComponent(state.pathParameters['eventId']!),
+        ),
       ),
       GoRoute(
         path: AppRoutePaths.movies,
@@ -363,6 +433,53 @@ GoRouter createAppRouter(
       GoRoute(
         path: AppRoutePaths.root,
         builder: (context, state) => const AccountRouteGate(),
+      ),
+      GoRoute(
+        path: '/marketplace',
+        builder: (context, state) => const MarketplacePage(),
+      ),
+      GoRoute(
+        path: '/marketplace/scan',
+        builder: (context, state) => const MarketplaceScanPage(),
+      ),
+      GoRoute(
+        path: '/marketplace/orders',
+        builder: (context, state) => const MarketplaceOrdersPage(),
+      ),
+      GoRoute(
+        path: '/marketplace/stores/:storeId',
+        builder: (context, state) {
+          final storeId =
+              int.tryParse(state.pathParameters['storeId'] ?? '') ?? 0;
+          return MarketplaceStorePage(storeId: storeId);
+        },
+      ),
+      GoRoute(
+        path: '/marketplace/promos/:promoId',
+        builder: (context, state) {
+          final promoId =
+              int.tryParse(state.pathParameters['promoId'] ?? '') ?? 0;
+          return MarketplacePromoDetailPage(promotionId: promoId);
+        },
+      ),
+      GoRoute(
+        path: '/marketplace/promos/:promoId/checkout',
+        builder: (context, state) {
+          final promoId =
+              int.tryParse(state.pathParameters['promoId'] ?? '') ?? 0;
+          final extra = state.extra;
+          var quantity = 1;
+          var paymentMethod = 'CIERVO';
+          if (extra is Map) {
+            quantity = int.tryParse('${extra['quantity'] ?? 1}') ?? 1;
+            paymentMethod = '${extra['paymentMethod'] ?? 'CIERVO'}';
+          }
+          return MarketplaceCheckoutPage(
+            promotionId: promoId,
+            initialQuantity: quantity,
+            initialPaymentMethod: paymentMethod,
+          );
+        },
       ),
     ],
   );

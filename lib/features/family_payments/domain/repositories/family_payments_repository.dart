@@ -31,7 +31,10 @@ abstract interface class FamilyPaymentsRepository {
 
   Future<Result<void>> deleteCard(String cardId);
 
-  Future<Result<FamilyPaymentCard>> freezeCard(String cardId);
+  Future<Result<FamilyPaymentCard>> freezeCard(
+    String cardId, {
+    String? reason,
+  });
 
   Future<Result<FamilyPaymentCard>> unfreezeCard(String cardId);
 

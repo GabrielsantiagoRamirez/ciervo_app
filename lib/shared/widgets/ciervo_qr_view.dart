@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../core/theme/app_spacing.dart';
+import '../../core/theme/app_radii.dart';
 
 /// QR Ciervo con contraste correcto en tema oscuro y al exportar PNG.
 class CiervoQrView extends StatelessWidget {
@@ -32,7 +33,7 @@ class CiervoQrView extends StatelessWidget {
       padding: EdgeInsets.all(padding),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: AppRadii.card,
       ),
       child: QrImageView(
         data: data,

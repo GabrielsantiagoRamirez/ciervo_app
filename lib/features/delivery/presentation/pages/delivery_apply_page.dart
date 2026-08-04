@@ -33,17 +33,21 @@ class _DeliveryApplyPageState extends State<DeliveryApplyPage> {
   final _document = TextEditingController();
   final _phone = TextEditingController();
   final _plate = TextEditingController();
+  final _brand = TextEditingController();
+  final _model = TextEditingController();
+  final _color = TextEditingController();
   DateTime? _birthDate;
   String _countryCode = CountryRegistration.defaultCountryCode();
   String? _documentType;
   String _vehicle = 'Bike';
   String? _vehiclePhotoPath;
   String? _vehiclePhotoName;
+  bool _confirmsFrontPlate = false;
   bool _loadingProfile = true;
   bool _saving = false;
 
   bool get _needsPlate => _vehicle == 'Motorcycle' || _vehicle == 'Car';
-  bool get _needsVehiclePhoto => true;
+  bool get _needsBrandModel => _vehicle == 'Motorcycle' || _vehicle == 'Car';
 
   List<AdultDocumentOption> get _documentOptions =>
       CountryRegistration.adultDocumentOptions(_countryCode);
@@ -59,6 +63,9 @@ class _DeliveryApplyPageState extends State<DeliveryApplyPage> {
     _document.dispose();
     _phone.dispose();
     _plate.dispose();
+    _brand.dispose();
+    _model.dispose();
+    _color.dispose();
     super.dispose();
   }
 
@@ -193,7 +200,14 @@ class _DeliveryApplyPageState extends State<DeliveryApplyPage> {
                         ),
                       )
                       .toList(),
-                  onChanged: (v) => setState(() => _vehicle = v ?? 'Bike'),
+                  onChanged: (v) => setState(() {
+                    _vehicle = v ?? 'Bike';
+                    if (!_needsBrandModel) {
+                      _brand.clear();
+                      _model.clear();
+                      _plate.clear();
+                    }
+                  }),
                 ),
                 if (_needsPlate) ...[
                   const SizedBox(height: AppSpacing.md),
@@ -209,14 +223,53 @@ class _DeliveryApplyPageState extends State<DeliveryApplyPage> {
                         : null,
                   ),
                 ],
+                if (_needsBrandModel) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: _brand,
+                    decoration: const InputDecoration(labelText: 'Marca'),
+                    validator: (v) => _needsBrandModel
+                        ? InputValidators.requiredText(v ?? '', 'la marca')
+                        : null,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: _model,
+                    decoration: const InputDecoration(labelText: 'Modelo'),
+                    validator: (v) => _needsBrandModel
+                        ? InputValidators.requiredText(v ?? '', 'el modelo')
+                        : null,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: _color,
+                    decoration: const InputDecoration(
+                      labelText: 'Color (opcional)',
+                    ),
+                  ),
+                ],
                 const SizedBox(height: AppSpacing.md),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Foto frontal del vehículo',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  'Debe mostrar el frente del vehículo con la placa claramente '
+                  'legible para la revisión del Superadmin.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: AppSpacing.sm),
                 OutlinedButton.icon(
                   onPressed: _pickVehiclePhoto,
                   icon: const Icon(Icons.photo_camera_outlined),
                   label: Text(
                     _vehiclePhotoPath == null
-                        ? 'Foto del vehículo'
-                        : 'Cambiar foto del vehículo',
+                        ? 'Tomar / subir foto frontal + placa'
+                        : 'Cambiar foto frontal',
                   ),
                 ),
                 if (_vehiclePhotoPath != null) ...[
@@ -231,6 +284,17 @@ class _DeliveryApplyPageState extends State<DeliveryApplyPage> {
                     ),
                   ),
                 ],
+                CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  value: _confirmsFrontPlate,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  title: const Text(
+                    'Confirmo que esta foto es el frente del vehículo '
+                    'con la placa legible',
+                  ),
+                  onChanged: (value) =>
+                      setState(() => _confirmsFrontPlate = value ?? false),
+                ),
                 const SizedBox(height: AppSpacing.lg),
                 CiervoButton(
                   label: _saving ? 'Enviando…' : 'Enviar solicitud',
@@ -262,10 +326,22 @@ class _DeliveryApplyPageState extends State<DeliveryApplyPage> {
 
   Future<void> _pickVehiclePhoto() async {
     final photo = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
+      source: ImageSource.camera,
       imageQuality: 85,
+      preferredCameraDevice: CameraDevice.rear,
     );
-    if (photo == null) return;
+    if (photo == null) {
+      final gallery = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+      if (gallery == null) return;
+      setState(() {
+        _vehiclePhotoPath = gallery.path;
+        _vehiclePhotoName = gallery.name;
+      });
+      return;
+    }
     setState(() {
       _vehiclePhotoPath = photo.path;
       _vehiclePhotoName = photo.name;
@@ -282,8 +358,14 @@ class _DeliveryApplyPageState extends State<DeliveryApplyPage> {
       _message('Selecciona el tipo de documento.');
       return;
     }
-    if (_needsVehiclePhoto && _vehiclePhotoPath == null) {
-      _message('Sube una foto de tu vehículo.');
+    if (_vehiclePhotoPath == null) {
+      _message('Subí la foto frontal del vehículo con la placa legible.');
+      return;
+    }
+    if (!_confirmsFrontPlate) {
+      _message(
+        'Debés confirmar que la foto muestra el frente con la placa legible.',
+      );
       return;
     }
     final today = DateTime.now();
@@ -295,27 +377,26 @@ class _DeliveryApplyPageState extends State<DeliveryApplyPage> {
 
     setState(() => _saving = true);
     String? vehicleMediaId;
-    if (_vehiclePhotoPath != null && _vehiclePhotoName != null) {
-      final upload = await getIt<MediaRepository>().upload(
-        path: _vehiclePhotoPath!,
-        fileName: _vehiclePhotoName!,
-      );
-      final failed = upload.when(
-        success: (asset) {
-          vehicleMediaId = asset.id;
-          return false;
-        },
-        failure: (_) => true,
-      );
-      if (failed) {
-        if (mounted) {
-          setState(() => _saving = false);
-          _message('No pudimos subir la foto del vehículo. Intenta de nuevo.');
-        }
-        return;
+    final upload = await getIt<MediaRepository>().upload(
+      path: _vehiclePhotoPath!,
+      fileName: _vehiclePhotoName ?? 'vehicle-front.jpg',
+    );
+    final failed = upload.when(
+      success: (asset) {
+        vehicleMediaId = asset.id;
+        return false;
+      },
+      failure: (_) => true,
+    );
+    if (failed || vehicleMediaId == null) {
+      if (mounted) {
+        setState(() => _saving = false);
+        _message('No pudimos subir la foto del vehículo. Intenta de nuevo.');
       }
+      return;
     }
 
+    final mediaId = int.tryParse(vehicleMediaId!);
     final d = _birthDate!;
     final payload = <String, dynamic>{
       'birthDate':
@@ -324,8 +405,14 @@ class _DeliveryApplyPageState extends State<DeliveryApplyPage> {
       'documentNumber': _document.text.trim(),
       'phone': _phone.text.trim(),
       'vehicleType': _vehicle,
+      'vehiclePhotoMediaId': mediaId ?? vehicleMediaId,
+      'confirmsFrontShowsReadablePlate': true,
       if (_needsPlate) 'vehiclePlate': _plate.text.trim().toUpperCase(),
-      if (vehicleMediaId != null) 'vehiclePhotoMediaId': vehicleMediaId,
+      if (_needsBrandModel) ...{
+        'vehicleBrand': _brand.text.trim(),
+        'vehicleModel': _model.text.trim(),
+      },
+      if (_color.text.trim().isNotEmpty) 'vehicleColor': _color.text.trim(),
     };
 
     final result = await getIt<DeliveryRepository>().apply(payload);

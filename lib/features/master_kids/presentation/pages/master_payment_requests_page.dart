@@ -190,43 +190,65 @@ class _MasterPaymentRequestsPageState extends State<MasterPaymentRequestsPage> {
   }
 
   Future<void> _reject(PaymentRequest request) async {
-    final reason = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) {
-        final controller = TextEditingController();
-        return AlertDialog(
-          title: const Text('Rechazar solicitud'),
-          content: TextField(
-            controller: controller,
-            maxLength: 500,
-            decoration: const InputDecoration(labelText: 'Motivo'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancelar'),
+    final controller = TextEditingController();
+    try {
+      final reason = await showDialog<String>(
+        context: context,
+        useRootNavigator: true,
+        barrierDismissible: true,
+        builder: (dialogContext) {
+          return AlertDialog(
+            title: const Text('Rechazar solicitud'),
+            content: TextField(
+              controller: controller,
+              maxLength: 500,
+              autofocus: true,
+              decoration: const InputDecoration(labelText: 'Motivo'),
             ),
-            FilledButton(
-              onPressed: () =>
-                  Navigator.pop(dialogContext, controller.text.trim()),
-              child: const Text('Rechazar'),
-            ),
-          ],
+            actions: [
+              TextButton(
+                onPressed: () =>
+                    Navigator.of(dialogContext, rootNavigator: true).pop(),
+                child: const Text('Cancelar'),
+              ),
+              FilledButton(
+                onPressed: () {
+                  Navigator.of(
+                    dialogContext,
+                    rootNavigator: true,
+                  ).pop(controller.text.trim());
+                },
+                child: const Text('Rechazar'),
+              ),
+            ],
+          );
+        },
+      );
+      if (reason == null || !mounted) return;
+      if (reason.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Escribe un motivo para rechazar.')),
         );
-      },
-    );
-    if (reason == null || !mounted) return;
-    setState(() => _actingId = request.id);
-    final result = await widget.masterRepository.rejectPaymentRequest(
-      request.id,
-      reason: reason,
-    );
-    if (!mounted) return;
-    result.when(
-      success: (_) => _load(),
-      failure: (error) => setState(() => _error = UserErrorMessage.from(error)),
-    );
-    if (mounted) setState(() => _actingId = null);
+        return;
+      }
+      setState(() => _actingId = request.id);
+      final result = await widget.masterRepository.rejectPaymentRequest(
+        request.id,
+        reason: reason,
+      );
+      if (!mounted) return;
+      result.when(
+        success: (_) {
+          setState(() => _error = null);
+          _load();
+        },
+        failure: (error) =>
+            setState(() => _error = UserErrorMessage.from(error)),
+      );
+      if (mounted) setState(() => _actingId = null);
+    } finally {
+      controller.dispose();
+    }
   }
 
   @override
@@ -245,14 +267,33 @@ class _MasterPaymentRequestsPageState extends State<MasterPaymentRequestsPage> {
               padding: const EdgeInsets.all(16),
               children: [
                 if (_error != null)
-                  MaterialBanner(
-                    content: Text(_error!),
-                    actions: [
-                      TextButton(
-                        onPressed: () => setState(() => _error = null),
-                        child: const Text('Cerrar'),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Material(
+                      color: Theme.of(context).colorScheme.errorContainer,
+                      borderRadius: BorderRadius.circular(20),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                _error!,
+                                style: TextStyle(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onErrorContainer,
+                                ),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () => setState(() => _error = null),
+                              child: const Text('Cerrar'),
+                            ),
+                          ],
+                        ),
                       ),
-                    ],
+                    ),
                   ),
                 if (_items.isEmpty)
                   const ListTile(
@@ -261,6 +302,9 @@ class _MasterPaymentRequestsPageState extends State<MasterPaymentRequestsPage> {
                   ),
                 for (final item in _items)
                   Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(12),
                       child: Column(

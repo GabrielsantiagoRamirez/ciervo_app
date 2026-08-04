@@ -27,6 +27,9 @@ import '../../features/wallet/presentation/pages/wallet_page.dart';
 import '../../features/family_payments/presentation/pages/family_payment_navigation.dart';
 import '../../features/universal_nfc/presentation/pages/kids_nfc_parent_approvals_page.dart';
 import '../../features/universal_nfc/presentation/pages/universal_nfc_pay_page.dart';
+import '../../features/home/domain/entities/home_place.dart';
+import '../../features/place_detail/presentation/pages/place_detail_page.dart';
+import '../../core/utils/ciervo_business_share_link.dart';
 import 'notification_deep_link_parser.dart';
 
 /// Navega desde una notificacion (in-app o push) a la pantalla correspondiente.
@@ -97,9 +100,30 @@ class NotificationDeepLink {
       _push(context, const PaymentRequestsPage());
       return true;
     }
-    if (lower.contains('/vakupli')) {
+    if (lower.contains('/vaku') ||
+        lower.contains('/vakupli') ||
+        lower.contains('/vacu')) {
       _push(context, const VakupliPage());
       return true;
+    }
+    if (lower.startsWith('/b/') || lower.startsWith('/business/')) {
+      final token = _segmentId(path);
+      final businessId = token == null
+          ? null
+          : CiervoBusinessShareLink.decode(token);
+      if (businessId != null) {
+        _openBusinessPlace(context, businessId);
+        return true;
+      }
+    }
+    if (lower.startsWith('/businesses/') ||
+        lower.startsWith('/place/') ||
+        lower.startsWith('/places/')) {
+      final id = _segmentId(path);
+      if (id != null) {
+        _openBusinessPlace(context, id);
+        return true;
+      }
     }
     if (lower.contains('/bonus') || lower.contains('/bonuses')) {
       final id = _segmentId(path);
@@ -153,7 +177,6 @@ class NotificationDeepLink {
     }
     if (lower.contains('/event') ||
         lower.contains('/ticket') ||
-        lower.contains('/promo') ||
         lower.contains('/coupon') ||
         lower.contains('/reward') ||
         lower.contains('/qr')) {
@@ -268,7 +291,9 @@ class NotificationDeepLink {
       }
       return true;
     }
-    if (text.contains('vakupli')) {
+    if (text.contains('vaku') ||
+        text.contains('vakupli') ||
+        text.contains('vacu')) {
       _push(context, const VakupliPage());
       return true;
     }
@@ -357,7 +382,8 @@ class NotificationDeepLink {
         path.startsWith('/movie/reservations/') ||
         path == '/move/driver' ||
         path.startsWith('/move/driver/') ||
-        path.startsWith('/master/');
+        path.startsWith('/master/') ||
+        path.startsWith('/marketplace/');
   }
 
   static bool _openMoveDriverTarget(BuildContext context, String text) {
@@ -429,6 +455,24 @@ class NotificationDeepLink {
       _openPath(context, path, null);
     }
     return true;
+  }
+
+  static void _openBusinessPlace(BuildContext context, String businessId) {
+    _push(
+      context,
+      PlaceDetailPage(
+        place: HomePlace(
+          id: businessId,
+          name: 'Comercio',
+          category: 'Negocio',
+          rating: 0,
+          priceLevel: '',
+          distanceKm: 0,
+          matchPercent: 0,
+          imageUrl: '',
+        ),
+      ),
+    );
   }
 
   static void _push(BuildContext context, Widget page) {

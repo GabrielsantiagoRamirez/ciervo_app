@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/country/country_registration.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/utils/display_formatters.dart';
+import '../../../../core/widgets/vaku_extra_slots_upgrade_ack_dialog.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_card.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
@@ -12,6 +15,7 @@ import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
 import '../../../../core/utils/display_labels.dart';
 import '../../../payments/domain/repositories/payments_repository.dart';
+import '../../../profile/domain/repositories/profile_repository.dart';
 import '../cubit/membership_cubit.dart';
 import '../../data/memberships_repository.dart';
 import '../../domain/entities/membership_plan.dart';
@@ -45,7 +49,15 @@ class _MembershipPageState extends State<MembershipPage>
   void _load() {
     final repo = getIt<MembershipsRepository>();
     _data = () async {
-      final plansResult = await repo.clientPlans();
+      final profileResult = await getIt<ProfileRepository>().getMe();
+      final countryCode = profileResult.when(
+        success: (profile) =>
+            (profile.countryCode ?? '').trim().isNotEmpty
+            ? profile.countryCode!.trim().toUpperCase()
+            : CountryRegistration.defaultCountryCode(),
+        failure: (_) => CountryRegistration.defaultCountryCode(),
+      );
+      final plansResult = await repo.clientPlans(countryCode: countryCode);
       final meResult = await repo.myMembership();
       final benefitsResult = await repo.benefits();
       final invoicesResult = await repo.invoices();
@@ -114,6 +126,10 @@ class _MembershipPageState extends State<MembershipPage>
       ),
     );
     if (confirmed != true || !mounted) return;
+
+    final canContinueUpgrade =
+        await acknowledgeVakuExtraSlotsBeforeUpgrade(context);
+    if (!canContinueUpgrade || !mounted) return;
 
     setState(() => _subscribingPlanId = plan.id);
     final membershipsRepo = getIt<MembershipsRepository>();
@@ -209,6 +225,45 @@ class _MembershipPageState extends State<MembershipPage>
     );
   }
 
+  Future<void> _cancelMembership() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancelar plan'),
+        content: const Text(
+          'Se cancelará tu plan de pago y pasarás al plan Free. ¿Continuar?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Volver'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Cancelar plan'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    final result = await getIt<MembershipsRepository>().cancel();
+    if (!mounted) return;
+    result.when(
+      success: (_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Plan cancelado. Ahora estás en Free.')),
+        );
+        context.read<MembershipCubit>().load();
+        setState(_load);
+      },
+      failure: (error) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
@@ -262,6 +317,16 @@ class _MembershipPageState extends State<MembershipPage>
                 plans: plans,
                 membership: payload.membership,
                 isCurrentPlan: (plan) => _isCurrentPlan(plan, payload),
+                renewing: _subscribingPlanId != null,
+                onRenew: () {
+                  final current =
+                      plans
+                          .where((p) => _isCurrentPlan(p, payload))
+                          .firstOrNull ??
+                      plans.first;
+                  return _subscribe(current);
+                },
+                onCancel: _cancelMembership,
               ),
               _PlansList(
                 plans: plans,
@@ -297,11 +362,17 @@ class _MyMembership extends StatelessWidget {
     required this.plans,
     required this.membership,
     required this.isCurrentPlan,
+    required this.onRenew,
+    required this.onCancel,
+    this.renewing = false,
   });
 
   final List<MembershipPlan> plans;
   final Map<String, dynamic> membership;
   final bool Function(MembershipPlan plan) isCurrentPlan;
+  final Future<void> Function() onRenew;
+  final Future<void> Function() onCancel;
+  final bool renewing;
 
   @override
   Widget build(BuildContext context) {
@@ -312,11 +383,49 @@ class _MyMembership extends StatelessWidget {
     final next = plans
         .where((plan) => plan.sortOrder > current.sortOrder)
         .firstOrNull;
+    final endsAt = DateTime.tryParse('${membership['endsAt'] ?? ''}');
+    final remainingDays = membership['remainingDays'];
+    final needsRenewal = membership['needsRenewal'] == true;
+    final canCancel = membership['canCancel'] == true;
+    final canRenew = membership['canRenew'] == true;
+    final billingPeriod =
+        '${membership['billingPeriod'] ?? ''}'.trim().isNotEmpty
+        ? '${membership['billingPeriod']}'
+        : (membership['billingPeriodMonths'] != null
+              ? 'Bimensual (${membership['billingPeriodMonths']} meses)'
+              : '');
+
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         _PlanCard(plan: current, highlighted: true),
         const SizedBox(height: AppSpacing.md),
+        if (needsRenewal || membership['isInGrace'] == true) ...[
+          CiervoCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  membership['isInGrace'] == true
+                      ? 'En mora — renueva tu plan'
+                      : 'Renovación pendiente',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  membership['isInGrace'] == true
+                      ? _graceMessage(membership, endsAt)
+                      : endsAt != null
+                      ? 'Tu plan vence el ${_date(endsAt)}'
+                            '${remainingDays != null ? ' (en $remainingDays días)' : ''}. '
+                            '¿Renovar o cancelar?'
+                      : 'Tu plan necesita renovación. ¿Renovar o cancelar?',
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
         CiervoCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -330,17 +439,77 @@ class _MyMembership extends StatelessWidget {
                   '${membership['status'] ?? current.status ?? 'Activo'}',
                 ),
               ),
-              _line('Vence', _date(current.expiresAt)),
+              _line('Vence', _date(endsAt ?? current.expiresAt)),
+              if (remainingDays != null)
+                _line(
+                  (_asInt(remainingDays) != null &&
+                              _asInt(remainingDays)! < 0) ||
+                          membership['isInGrace'] == true
+                      ? 'Días (mora)'
+                      : 'Te quedan',
+                  () {
+                    final n = _asInt(remainingDays);
+                    if (n == null) return '$remainingDays';
+                    final abs = n.abs();
+                    return '$abs día${abs == 1 ? '' : 's'}';
+                  }(),
+                ),
+              if (membership['isInGrace'] == true) ...[
+                _line(
+                  'Mora',
+                  membership['graceDaysRemaining'] != null
+                      ? '${membership['graceDaysRemaining']} día(s) para renovar'
+                      : 'Activa (${membership['graceDays'] ?? 10} días)',
+                ),
+                if (membership['graceEndsAt'] != null)
+                  _line(
+                    'Fin de mora',
+                    _date(DateTime.tryParse('${membership['graceEndsAt']}')),
+                  ),
+              ],
+              if (billingPeriod.isNotEmpty)
+                _line('Periodo', billingPeriod),
               _line(
                 'Multiplicador cashback',
                 '${current.cashbackMultiplier.toStringAsFixed(2)}x',
               ),
               _line('Proximo nivel', next?.name ?? 'Nivel maximo'),
+              if (canRenew || canCancel) ...[
+                const SizedBox(height: AppSpacing.md),
+                if (canRenew)
+                  CiervoButton(
+                    label: renewing ? 'Procesando...' : 'Renovar plan',
+                    icon: Icons.autorenew,
+                    state: renewing
+                        ? CiervoButtonState.loading
+                        : CiervoButtonState.normal,
+                    onPressed: renewing ? null : () => onRenew(),
+                  ),
+                if (canCancel) ...[
+                  if (canRenew) const SizedBox(height: AppSpacing.sm),
+                  OutlinedButton(
+                    onPressed: renewing ? null : () => onCancel(),
+                    child: const Text('Cancelar plan'),
+                  ),
+                ],
+              ],
             ],
           ),
         ),
       ],
     );
+  }
+
+  String _graceMessage(Map<String, dynamic> membership, DateTime? endsAt) {
+    final left = membership['graceDaysRemaining'];
+    final graceEnd = DateTime.tryParse('${membership['graceEndsAt'] ?? ''}');
+    final parts = <String>[
+      if (endsAt != null) 'Venció el ${_date(endsAt)}.',
+      if (left != null) 'Te quedan $left día(s) de mora con beneficios.',
+      if (graceEnd != null) 'Renueva antes del ${_date(graceEnd)}.',
+      'Si no pagas, el plan pasa a Free automáticamente.',
+    ];
+    return parts.join(' ');
   }
 }
 
@@ -432,7 +601,7 @@ class _BenefitsView extends StatelessWidget {
                   ...limits.entries.map(
                     (e) => Text(
                       '${DisplayLabels.membershipLimitLabel(e.key)}: '
-                      '${DisplayLabels.membershipLimitValue(e.value)}',
+                      '${DisplayLabels.membershipLimitDisplay(e.key, e.value)}',
                     ),
                   ),
                 ],
@@ -478,7 +647,11 @@ class _InvoicesView extends StatelessWidget {
               '${invoice['createdAt'] ?? invoice['issuedAt'] ?? ''}',
             ),
             trailing: Text(
-              '${invoice['currency'] ?? 'COP'} ${_amount(invoice['amount'] ?? invoice['total'])}',
+              DisplayFormatters.formatMoney(
+                num.tryParse('${invoice['amount'] ?? invoice['total'] ?? 0}') ??
+                    0,
+                currency: '${invoice['currency'] ?? 'COP'}',
+              ),
             ),
           ),
         );
@@ -514,6 +687,7 @@ class _PlanCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(
               Icons.workspace_premium_outlined,
@@ -523,24 +697,39 @@ class _PlanCard extends StatelessWidget {
             Expanded(
               child: Text(
                 plan.name.isEmpty ? plan.code : plan.name,
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
-            if (highlighted || plan.isCurrent)
-              const Chip(label: Text('Actual')),
-            if (plan.isRecommended)
-              Chip(
-                label: const Text('Recomendado'),
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-              ),
           ],
         ),
+        if (highlighted || plan.isCurrent || plan.isRecommended) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xxs,
+            children: [
+              if (highlighted || plan.isCurrent)
+                const Chip(label: Text('Actual'), visualDensity: VisualDensity.compact),
+              if (plan.isRecommended)
+                Chip(
+                  label: const Text('Recomendado'),
+                  visualDensity: VisualDensity.compact,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer,
+                ),
+            ],
+          ),
+        ],
         const SizedBox(height: AppSpacing.xs),
         Text(plan.displayPrice),
         if (plan.displayUsdReference.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.xxs),
           Text(
-            'Referencia: ${plan.displayUsdReference}',
+            plan.displayUsdReference,
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
@@ -572,7 +761,7 @@ class _PlanCard extends StatelessWidget {
           ...plan.limits.entries.map(
             (entry) => Text(
               '${DisplayLabels.membershipLimitLabel(entry.key)}: '
-              '${DisplayLabels.membershipLimitValue(entry.value)}',
+              '${DisplayLabels.membershipLimitDisplay(entry.key, entry.value)}',
             ),
           ),
         ],
@@ -599,6 +788,12 @@ Widget _line(String label, String value) => Padding(
   padding: const EdgeInsets.only(top: AppSpacing.xxs),
   child: Text('$label: $value'),
 );
+
+int? _asInt(dynamic value) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return int.tryParse('$value');
+}
 
 String _date(DateTime? value) => value == null
     ? 'Sin vencimiento'

@@ -28,6 +28,14 @@ void main() {
   test('MOVE Client gate fails closed for ambiguous and non-client JWTs', () {
     expect(AuthTokenClaims.fromJwt(_jwt({'role': 1})).isExplicitClient, isTrue);
     expect(
+      AuthTokenClaims.fromJwt(_jwt({'role': '1'})).isExplicitClient,
+      isTrue,
+    );
+    expect(
+      AuthTokenClaims.fromJwt(_jwt({'role': ['1', 'Client']})).isExplicitClient,
+      isTrue,
+    );
+    expect(
       AuthTokenClaims.fromJwt(_jwt({'accountKind': 'Client'})).isExplicitClient,
       isFalse,
     );

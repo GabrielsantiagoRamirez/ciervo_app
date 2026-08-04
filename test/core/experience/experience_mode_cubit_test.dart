@@ -68,6 +68,19 @@ void main() {
     expect(await storage.read('ciervo.experienceMode'), '24h');
     await cubit.close();
   });
+
+  test('previewMode cambia el look sin persistir ni confirmar sesión', () async {
+    final storage = _MemorySecureStorage({'ciervo.experienceMode': 'night'});
+    final cubit = ExperienceModeCubit(storage);
+    await cubit.restore();
+
+    cubit.previewMode(ExperienceMode.day);
+
+    expect(cubit.state.mode, ExperienceMode.day);
+    expect(cubit.state.hasSelection, isFalse);
+    expect(await storage.read('ciervo.experienceMode'), 'night');
+    await cubit.close();
+  });
 }
 
 class _MemorySecureStorage implements SecureStorage {

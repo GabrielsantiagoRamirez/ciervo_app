@@ -59,8 +59,16 @@ abstract final class UserErrorMessage {
         'No tienes una wallet activa. Créala o recárgala para pagar tu viaje.',
       'CURRENCY_MISMATCH' =>
         'La moneda de tu wallet no coincide con la del viaje.',
+      'PHYSICAL_NFC_ALREADY_REGISTERED' =>
+        'Este UID ya está en uso. Usa otra tarjeta o revoca la anterior.',
       'PAYMENT_ERROR' =>
         'No pudimos procesar el pago. Conservamos tu operación para que puedas reintentarlo.',
+      'COUNTRY_REQUIRED' =>
+        'Completa tu país en el perfil para usar contactos de Vaku.',
+      'COUNTRY_MISMATCH' =>
+        'Solo puedes invitar usuarios del mismo país que el creador del plan.',
+      'CAPACITY_EXCEEDED' =>
+        'El plan ya no tiene cupos. Mejora tu membresía para invitar a más amigos.',
       'CONCURRENCY' =>
         'La oferta cambió mientras respondías. Actualiza e intenta de nuevo.',
       'TERMS_NOT_ACCEPTED' =>
@@ -90,6 +98,15 @@ abstract final class UserErrorMessage {
     if (upperMsg.contains('INVALID_FILE_TYPE')) {
       return 'Formato de imagen no permitido.';
     }
+    if (upperMsg.contains('COUNTRY_REQUIRED')) {
+      return 'Completa tu país en el perfil para usar contactos de Vaku.';
+    }
+    if (upperMsg.contains('COUNTRY_MISMATCH')) {
+      return 'Solo puedes invitar usuarios del mismo país que el creador del plan.';
+    }
+    if (upperMsg.contains('CAPACITY_EXCEEDED')) {
+      return 'El plan ya no tiene cupos. Mejora tu membresía para invitar a más amigos.';
+    }
 
     if (statusCode == 401) {
       return 'Credenciales inválidas o sesión expirada.';
@@ -116,6 +133,11 @@ abstract final class UserErrorMessage {
           : 'No encontramos el recurso solicitado.';
     }
     if (statusCode == 409) {
+      if (code == 'PHYSICAL_NFC_ALREADY_REGISTERED' ||
+          upperMsg.contains('PHYSICAL_NFC_ALREADY_REGISTERED') ||
+          (upperMsg.contains('UID') && upperMsg.contains('ALREADY'))) {
+        return 'Este UID ya está en uso. Usa otra tarjeta o revoca la anterior.';
+      }
       return sanitized.isNotEmpty
           ? sanitized
           : 'La operación cambió o ya fue procesada. Actualiza la información.';

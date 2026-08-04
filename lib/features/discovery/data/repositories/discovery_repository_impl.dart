@@ -6,6 +6,7 @@ import '../../domain/entities/business_summary.dart';
 import '../../domain/entities/discovery_smart_filters.dart';
 import '../../domain/repositories/discovery_repository.dart';
 import '../datasources/discovery_remote_datasource.dart';
+import '../dtos/business_summary_dto.dart';
 
 class DiscoveryRepositoryImpl implements DiscoveryRepository {
   const DiscoveryRepositoryImpl(this._remoteDataSource);
@@ -34,7 +35,7 @@ class DiscoveryRepositoryImpl implements DiscoveryRepository {
         kidId: kidId,
         filters: filters,
       );
-      return Success(businesses.map((item) => item.toDomain()).toList());
+      return Success(_toDomainFiltered(businesses, filters));
     } catch (error) {
       return Failure(ErrorMapper.fromObject(error));
     }
@@ -60,7 +61,7 @@ class DiscoveryRepositoryImpl implements DiscoveryRepository {
         kidId: kidId,
         filters: filters,
       );
-      return Success(businesses.map((item) => item.toDomain()).toList());
+      return Success(_toDomainFiltered(businesses, filters));
     } catch (error) {
       return Failure(ErrorMapper.fromObject(error));
     }
@@ -84,7 +85,7 @@ class DiscoveryRepositoryImpl implements DiscoveryRepository {
         kidId: kidId,
         filters: filters,
       );
-      return Success(businesses.map((item) => item.toDomain()).toList());
+      return Success(_toDomainFiltered(businesses, filters));
     } catch (error) {
       return Failure(ErrorMapper.fromObject(error));
     }
@@ -112,9 +113,20 @@ class DiscoveryRepositoryImpl implements DiscoveryRepository {
         kidId: kidId,
         filters: filters,
       );
-      return Success(businesses.map((item) => item.toDomain()).toList());
+      return Success(_toDomainFiltered(businesses, filters));
     } catch (error) {
       return Failure(ErrorMapper.fromObject(error));
     }
+  }
+
+  List<BusinessSummary> _toDomainFiltered(
+    List<BusinessSummaryDto> businesses,
+    DiscoverySmartFilters filters,
+  ) {
+    final mapped = businesses.map((item) => item.toDomain());
+    if (!filters.hasActiveFilters) {
+      return mapped.toList();
+    }
+    return mapped.where(filters.matches).toList();
   }
 }

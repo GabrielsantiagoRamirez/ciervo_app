@@ -66,7 +66,7 @@ class _GoldTrialPromotionSheetState extends State<_GoldTrialPromotionSheet> {
     await result.when(
       success: (claim) async {
         await getIt<PromotionsRepository>().markDismissed();
-        await getIt<MembershipCubit>().loadFresh();
+        await getIt<MembershipCubit>().loadFresh(force: true);
         if (!mounted) return;
         Navigator.pop(context);
         final expires = claim.expiresAt;

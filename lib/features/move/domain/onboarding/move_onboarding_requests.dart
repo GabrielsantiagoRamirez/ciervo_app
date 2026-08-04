@@ -229,6 +229,7 @@ class MoveVehicleOnboardingRequest {
     required this.vin,
     required this.documents,
     required this.photos,
+    required this.confirmsFrontShowsReadablePlate,
   });
 
   final MovePhysicalVehicleType physicalType;
@@ -242,6 +243,8 @@ class MoveVehicleOnboardingRequest {
   final String? vin;
   final List<MoveVehicleDocumentInputV2> documents;
   final List<MoveVehiclePhotoInput> photos;
+  /// Obligatorio: foto Front (type=1) muestra frente + placa legible.
+  final bool confirmsFrontShowsReadablePlate;
 
   Map<String, dynamic> toJson() => {
     'physicalType': physicalType.value,
@@ -255,6 +258,7 @@ class MoveVehicleOnboardingRequest {
     'vin': vin,
     'documents': documents.map((item) => item.toJson()).toList(),
     'photos': photos.map((item) => item.toJson()).toList(),
+    'confirmsFrontShowsReadablePlate': confirmsFrontShowsReadablePlate,
   };
 
   MoveValidationErrors validate({
@@ -282,6 +286,13 @@ class MoveVehicleOnboardingRequest {
     }
     if (vin != null && !_vinPattern.hasMatch(vin!)) {
       _error(errors, 'vin', 'VIN inválido.');
+    }
+    if (!confirmsFrontShowsReadablePlate) {
+      _error(
+        errors,
+        'confirmsFrontShowsReadablePlate',
+        'Confirmá que la foto frontal muestra la placa legible.',
+      );
     }
     if (documents.length < 2 || documents.length > 4) {
       _error(errors, 'documents', 'Se requieren entre 2 y 4 documentos.');
@@ -331,6 +342,13 @@ class MoveVehicleOnboardingRequest {
         errors,
         'photos',
         'Se requieren cinco tipos y cinco assets diferentes.',
+      );
+    }
+    if (!photos.any((item) => item.type == MoveVehiclePhotoType.front)) {
+      _error(
+        errors,
+        'photos',
+        'La foto frontal (frente + placa legible) es obligatoria.',
       );
     }
     return errors;

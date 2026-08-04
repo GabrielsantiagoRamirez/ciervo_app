@@ -6,6 +6,7 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../domain/entities/home_place.dart';
+import '../../../favorites/presentation/widgets/favorite_ciervo_button.dart';
 import '../../../media/presentation/authenticated_media_image.dart';
 
 class HomePlaceCard extends StatelessWidget {
@@ -14,6 +15,7 @@ class HomePlaceCard extends StatelessWidget {
     required this.onTap,
     required this.mode,
     this.isFavorite,
+    this.showFavoriteToggle = true,
     super.key,
   });
 
@@ -21,6 +23,7 @@ class HomePlaceCard extends StatelessWidget {
   final VoidCallback onTap;
   final ExperienceMode mode;
   final bool? isFavorite;
+  final bool showFavoriteToggle;
 
   @override
   Widget build(BuildContext context) {
@@ -66,11 +69,6 @@ class HomePlaceCard extends StatelessWidget {
                           spacing: AppSpacing.xs,
                           runSpacing: AppSpacing.xs,
                           children: [
-                            if (isFavorite ?? place.isFavorite)
-                              const _IconBadge(
-                                icon: Icons.favorite,
-                                label: 'Favorito',
-                              ),
                             if (place.isPartner)
                               const _IconBadge(
                                 icon: Icons.handshake_outlined,
@@ -96,7 +94,19 @@ class HomePlaceCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                      if (place.isOpen != null)
+                      if (showFavoriteToggle)
+                        FavoriteCiervoButton(
+                          businessId: place.id,
+                          initialValue: isFavorite ?? place.isFavorite,
+                          size: 39,
+                        )
+                      else if (isFavorite ?? place.isFavorite)
+                        const _IconBadge(
+                          icon: Icons.pets,
+                          label: 'Favorito',
+                        ),
+                      if (place.isOpen != null) ...[
+                        const SizedBox(width: AppSpacing.xs),
                         _Badge(
                           label: place.isOpen! ? 'Abierto' : 'Cerrado',
                           backgroundColor: place.isOpen!
@@ -104,6 +114,7 @@ class HomePlaceCard extends StatelessWidget {
                               : const Color(0xFF5D4037),
                           textColor: Colors.white,
                         ),
+                      ],
                     ],
                   ),
                 ),

@@ -61,16 +61,43 @@ class PhysicalNfcCard {
     required this.cardUid,
     required this.label,
     required this.status,
+    this.identifier,
     this.walletCardId,
+    this.childProfileId,
+    this.childWalletCardId,
     this.createdAt,
+    this.blockedAt,
+    this.updatedAt,
+    this.canEdit = true,
+    this.canBlock = true,
+    this.canUnblock = false,
+    this.canRevoke = true,
   });
 
   final int id;
+  /// Identificador de plataforma (ej. NFC-00000012).
+  final String? identifier;
   final String cardUid;
   final String label;
   final String status;
   final int? walletCardId;
+  final int? childProfileId;
+  final int? childWalletCardId;
   final DateTime? createdAt;
+  final DateTime? blockedAt;
+  final DateTime? updatedAt;
+  final bool canEdit;
+  final bool canBlock;
+  final bool canUnblock;
+  final bool canRevoke;
 
+  bool get isActive => status.toLowerCase() == 'active';
   bool get isBlocked => status.toLowerCase().contains('block');
+  bool get isRevoked => status.toLowerCase().contains('revok');
+
+  String get maskedUid {
+    final uid = cardUid.trim();
+    if (uid.length <= 6) return uid;
+    return '${uid.substring(0, 4)}…${uid.substring(uid.length - 4)}';
+  }
 }

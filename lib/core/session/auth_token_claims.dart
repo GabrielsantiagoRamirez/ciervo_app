@@ -33,12 +33,7 @@ class AuthTokenClaims {
           'userType',
           'user_type',
         ]),
-        role: _firstString(claims, const [
-          'role',
-          'roleName',
-          'role_name',
-          'http://schemas.microsoft.com/ws/2008/06/identity/claims/role',
-        ]),
+        role: _preferredRole(claims),
         businessRoleId: _firstString(claims, const [
           'businessRoleId',
           'business_role_id',
@@ -58,6 +53,8 @@ class AuthTokenClaims {
   final String? businessRoleId;
 
   String? get userId => _firstString(claims, const [
+    // .NET JwtSecurityTokenHandler serializa ClaimTypes.NameIdentifier → "nameid"
+    'nameid',
     'nameidentifier',
     'sub',
     'userId',
@@ -112,9 +109,10 @@ class AuthTokenClaims {
     return value >= 0 && value <= 120 ? value : null;
   }
 
-  /// MOVE Driver es exclusivo de actores Client explícitos (rol numérico 1).
-  /// No usa el fallback de [routeKind] para evitar habilitarlo con JWT ambiguos.
-  bool get isExplicitClient => role?.trim() == '1';
+  /// MOVE Driver exige claim `role` = `"1"` (Client).
+  /// Tolera int `1` o lista JWT `["1", ...]`.
+  bool get isExplicitClient =>
+      role?.trim() == '1' || _roleValues(claims).contains('1');
 
   String get routeKind {
     final values = [
@@ -151,9 +149,51 @@ class AuthTokenClaims {
   }
 }
 
+const _roleClaimKeys = [
+  'role',
+  'roles',
+  'roleName',
+  'role_name',
+  'http://schemas.microsoft.com/ws/2008/06/identity/claims/role',
+];
+
+/// Prefiere el claim numérico de producción (`1` Client) si viene en lista.
+String? _preferredRole(Map<String, dynamic> claims) {
+  final values = _roleValues(claims);
+  if (values.isEmpty) return null;
+  for (final preferred in const ['1', '2', '3', '4']) {
+    if (values.contains(preferred)) return preferred;
+  }
+  return values.first;
+}
+
+List<String> _roleValues(Map<String, dynamic> claims) {
+  final values = <String>[];
+  for (final key in _roleClaimKeys) {
+    final raw = claims[key];
+    if (raw is List) {
+      for (final item in raw) {
+        final text = item?.toString().trim();
+        if (text != null && text.isNotEmpty) values.add(text);
+      }
+    } else if (raw != null) {
+      final text = raw.toString().trim();
+      if (text.isNotEmpty) values.add(text);
+    }
+  }
+  return values;
+}
+
 String? _firstString(Map<String, dynamic> claims, List<String> keys) {
   for (final key in keys) {
     final value = claims[key];
+    if (value is List) {
+      for (final item in value) {
+        final text = item?.toString().trim();
+        if (text != null && text.isNotEmpty) return text;
+      }
+      continue;
+    }
     if (value != null && value.toString().trim().isNotEmpty) {
       return value.toString();
     }

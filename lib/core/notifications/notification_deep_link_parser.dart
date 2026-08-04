@@ -80,6 +80,28 @@ class NotificationDeepLinkParser {
     if (_matches(lower, ['movie', 'chat'], id: true)) {
       return '/chat/${segments.last}';
     }
+    if (_matches(lower, ['promotions'], id: true) ||
+        _matches(lower, ['promotion'], id: true)) {
+      return '/marketplace/promos/${segments.last}';
+    }
+    if (_matches(lower, ['marketplace', 'promos'], id: true)) {
+      return '/marketplace/promos/${segments.last}';
+    }
+    if (_matches(lower, ['marketplace', 'stores'], id: true)) {
+      return '/marketplace/stores/${segments.last}';
+    }
+    if ((root == 'b' || root == 'business') && lower.length == 2) {
+      return '/b/${segments.last}';
+    }
+    if (lower.length == 3 &&
+        root == 'app' &&
+        (lower[1] == 'b' || lower[1] == 'business')) {
+      return '/b/${segments.last}';
+    }
+    if ((root == 'businesses' || root == 'place' || root == 'places') &&
+        lower.length == 2) {
+      return '/businesses/${segments.last}';
+    }
     if (_matches(lower, ['movie', 'reservations'], id: true, tail: 'payment')) {
       return '/movie/reservations/${segments[2]}/payment';
     }
@@ -125,7 +147,9 @@ class NotificationDeepLinkParser {
     }
 
     const rootsWithoutId = {
+      'vaku',
       'vakupli',
+      'vacu',
       'campaign',
       'ads',
       'wallet',
@@ -151,7 +175,6 @@ class NotificationDeepLinkParser {
       'booking',
       'events',
       'ticket',
-      'promotions',
       'coupon',
       'rewards',
     };

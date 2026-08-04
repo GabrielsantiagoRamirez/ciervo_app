@@ -10,6 +10,7 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/kids/selected_kid_context.dart';
 import '../../../../shared/widgets/kids_mode_banner.dart';
 import '../../../../core/experience/experience_mode_cubit.dart';
+import '../../../../core/experience/operational_session_id.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/display_formatters.dart';
 import '../../../../core/utils/input_validators.dart';
@@ -19,22 +20,16 @@ import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
 import '../../../../shared/widgets/ciervo_user_id_badge.dart';
+import '../../../../shared/widgets/ciervo_logo_mark.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../../notifications/presentation/pages/notifications_page.dart';
 import '../../../kids/presentation/pages/kids_page.dart';
 import '../../../memberships/presentation/pages/membership_page.dart';
-import '../../../move/presentation/pages/move_home_page.dart';
 import '../../../move/presentation/pages/move_driver_page.dart';
 import '../../../kyc/presentation/pages/kyc_page.dart';
-import '../../../wallet/presentation/pages/wallet_page.dart';
-import '../../../wallet/presentation/pages/payment_requests_page.dart';
-import '../../../family_payments/presentation/pages/family_payment_methods_page.dart';
 import '../../../family_payments/presentation/pages/parent_payment_history_page.dart';
-import '../../../financial_history/presentation/pages/financial_history_page.dart';
 import '../../../cashback/presentation/pages/cashback_page.dart';
-import '../../../qr_hub/presentation/pages/qr_hub_page.dart';
 import '../../../qr_wallet/presentation/pages/qr_wallet_page.dart';
-// import '../../../reservations/presentation/pages/reservations_page.dart';
 import '../../../delivery/presentation/pages/delivery_page.dart';
 import '../../../delivery/presentation/pages/customer_orders_page.dart';
 import '../../../bonuses/presentation/pages/bonuses_pages.dart';
@@ -384,10 +379,26 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
                   icon: Icons.alternate_email,
                   label: DisplayFormatters.formatUsername(profile.username),
                 ),
-              if ((profile.nightOperationalId ?? '').isNotEmpty)
-                _InfoChip(
-                  icon: Icons.nightlight_round,
-                  label: profile.nightOperationalId!,
+              if ((profile.displayOperationalSessionId ?? '').isNotEmpty)
+                Builder(
+                  builder: (context) {
+                    final uiMode =
+                        context.watch<ExperienceModeCubit>().state.mode;
+                    final raw = profile.displayOperationalSessionId!;
+                    final mode = OperationalSessionId.resolveMode(
+                      band: profile.operationalBand,
+                      rawId: raw,
+                      uiMode: uiMode,
+                    );
+                    return _InfoChip(
+                      icon: OperationalSessionId.iconFor(
+                        raw: raw,
+                        band: profile.operationalBand,
+                        mode: mode,
+                      ),
+                      label: raw,
+                    );
+                  },
                 ),
               _ProfileCiervoIdChip(
                 code: widget.ciervoUserCode,
@@ -541,33 +552,10 @@ class _AccountActions extends StatelessWidget {
             ),
           ),
           _ActionTile(
-            icon: Icons.local_taxi_outlined,
-            title: 'Ciervo Move',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const MoveHomePage()),
-            ),
-          ),
-          _ActionTile(
             icon: Icons.drive_eta_outlined,
             title: 'Conducir con Ciervo Move',
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(builder: (_) => const MoveDriverPage()),
-            ),
-          ),
-          _ActionTile(
-            icon: Icons.account_balance_wallet_outlined,
-            title: 'Mi Wallet',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const WalletPage()),
-            ),
-          ),
-          _ActionTile(
-            icon: Icons.credit_card,
-            title: 'Métodos de pago familiar',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const FamilyPaymentMethodsPage(),
-              ),
             ),
           ),
           _ActionTile(
@@ -576,24 +564,6 @@ class _AccountActions extends StatelessWidget {
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
                 builder: (_) => const ParentPaymentHistoryPage(),
-              ),
-            ),
-          ),
-          _ActionTile(
-            icon: Icons.mark_email_unread_outlined,
-            title: 'Solicitudes de pago',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const PaymentRequestsPage(),
-              ),
-            ),
-          ),
-          _ActionTile(
-            icon: Icons.timeline_outlined,
-            title: 'Historial financiero',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const FinancialHistoryPage(),
               ),
             ),
           ),
@@ -658,21 +628,6 @@ class _AccountActions extends StatelessWidget {
             icon: Icons.edit_outlined,
             title: 'Editar perfil',
             onTap: () => _openEditProfile(context),
-          ),
-          // Mis reservas vive en el menú inferior; no duplicar aquí.
-          // _ActionTile(
-          //   icon: Icons.event_available_outlined,
-          //   title: 'Mis reservas',
-          //   onTap: () => Navigator.of(context).push(
-          //     MaterialPageRoute<void>(builder: (_) => const ReservationsPage()),
-          //   ),
-          // ),
-          _ActionTile(
-            icon: Icons.qr_code_2_outlined,
-            title: 'QR Ciervo',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const QrHubPage()),
-            ),
           ),
           _ActionTile(
             icon: Icons.delivery_dining_outlined,
@@ -744,12 +699,14 @@ class _AccountActions extends StatelessWidget {
 
 class _ActionTile extends StatelessWidget {
   const _ActionTile({
-    required this.icon,
     required this.title,
     required this.onTap,
+    this.icon,
+    this.useCiervoLogo = false,
   });
 
-  final IconData icon;
+  final IconData? icon;
+  final bool useCiervoLogo;
   final String title;
   final VoidCallback onTap;
 
@@ -757,7 +714,9 @@ class _ActionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      leading: Icon(icon),
+      leading: useCiervoLogo
+          ? const CiervoLogoMark(size: 28)
+          : Icon(icon ?? Icons.chevron_right),
       title: Text(title),
       trailing: const Icon(Icons.chevron_right),
       onTap: onTap,

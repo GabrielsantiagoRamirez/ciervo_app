@@ -20,31 +20,41 @@ class VakupliSplitSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.xxs),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: AppRadii.input,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _SplitOptionTile(
-              label: 'Equal split',
-              selected: selected == VakupliSplitOption.equal,
-              onTap: () => onChanged(VakupliSplitOption.equal),
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '¿Cómo dividen el pago?',
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.xxs),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+            borderRadius: AppRadii.input,
           ),
-          const SizedBox(width: AppSpacing.xs),
-          Expanded(
-            child: _SplitOptionTile(
-              label: 'Custom split',
-              selected: selected == VakupliSplitOption.custom,
-              onTap: () => onChanged(VakupliSplitOption.custom),
-            ),
+          child: Row(
+            children: [
+              Expanded(
+                child: _SplitOptionTile(
+                  label: 'Partes iguales',
+                  selected: selected == VakupliSplitOption.equal,
+                  onTap: () => onChanged(VakupliSplitOption.equal),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: _SplitOptionTile(
+                  label: 'Monto personalizado',
+                  selected: selected == VakupliSplitOption.custom,
+                  onTap: () => onChanged(VakupliSplitOption.custom),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -63,40 +73,56 @@ class _SplitOptionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final selectedBg = colorScheme.primary;
     final selectedText = AppColors.dayText;
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: AppRadii.input,
-      child: Ink(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.md,
-        ),
-        decoration: BoxDecoration(
-          color: selected ? selectedBg : colorScheme.surface,
-          borderRadius: AppRadii.input,
-          boxShadow: selected
-              ? [
-                  BoxShadow(
-                    color: colorScheme.onSurface.withValues(
-                      alpha: isDark ? 0.2 : 0.14,
-                    ),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ]
-              : null,
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: AppTextStyles.label.copyWith(
-              color: selected ? selectedText : colorScheme.onSurfaceVariant,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: AppRadii.input,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.md,
+          ),
+          decoration: BoxDecoration(
+            color: selected ? selectedBg : Colors.transparent,
+            borderRadius: AppRadii.input,
+            border: Border.all(
+              color: selected
+                  ? selectedBg
+                  : colorScheme.outline.withValues(alpha: 0.35),
+              width: selected ? 2 : 1,
             ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                selected
+                    ? Icons.check_circle
+                    : Icons.radio_button_unchecked,
+                size: 18,
+                color: selected
+                    ? selectedText
+                    : colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              Flexible(
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.label.copyWith(
+                    color: selected
+                        ? selectedText
+                        : colorScheme.onSurfaceVariant,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

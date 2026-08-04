@@ -46,69 +46,25 @@ class DioProfileRemoteDataSource implements ProfileRemoteDataSource {
 
   @override
   Future<UserProfileDto> getMe() async {
-    UserProfileDto profile;
-    try {
-      final response = await _client.dio.get<Map<String, dynamic>>(
-        '/api/clients/me',
-      );
-      profile = UserProfileDto.fromJson(unwrapApiMap(response.data));
-    } on DioException catch (error) {
-      if (error.response?.statusCode != 404) rethrow;
-      final response = await _client.dio.get<Map<String, dynamic>>(
-        '/api/users/me',
-      );
-      return UserProfileDto.fromJson(unwrapApiMap(response.data));
-    }
-
-    if (_hasPhoto(profile)) return profile;
-
-    try {
-      final userResponse = await _client.dio.get<Map<String, dynamic>>(
-        '/api/users/me',
-      );
-      final userProfile = UserProfileDto.fromJson(
-        unwrapApiMap(userResponse.data),
-      );
-      if (_hasPhoto(userProfile)) {
-        return UserProfileDto(
-          id: profile.id,
-          firstName: profile.firstName,
-          lastName: profile.lastName,
-          email: profile.email,
-          phone: profile.phone,
-          ciervoUserCode: profile.ciervoUserCode ?? userProfile.ciervoUserCode,
-          identityDocument: profile.identityDocument,
-          documentType: profile.documentType,
-          photoUrl: userProfile.photoUrl,
-          currentLatitude: profile.currentLatitude,
-          currentLongitude: profile.currentLongitude,
-          locationUpdatedAt: profile.locationUpdatedAt,
-          city: profile.city,
-          countryCode: profile.countryCode,
-        );
-      }
-    } catch (_) {}
-
-    return profile;
-  }
-
-  bool _hasPhoto(UserProfileDto profile) {
-    final photo = profile.photoUrl?.trim();
-    return photo != null && photo.isNotEmpty;
+    // Contrato real: GET /api/users/me (no existe GET /api/clients/me).
+    final response = await _client.dio.get<Map<String, dynamic>>(
+      '/api/users/me',
+    );
+    return UserProfileDto.fromJson(unwrapApiMap(response.data));
   }
 
   @override
   Future<UserProfileDto> updateMe(UpdateProfileRequestDto request) async {
     try {
       final response = await _client.dio.put<Map<String, dynamic>>(
-        '/api/clients/me',
+        '/api/users/me',
         data: request.toJson(),
       );
       return UserProfileDto.fromJson(unwrapApiMap(response.data));
     } on DioException catch (error) {
       if (error.response?.statusCode != 404) rethrow;
       final response = await _client.dio.put<Map<String, dynamic>>(
-        '/api/users/me',
+        '/api/clients/me',
         data: request.toJson(),
       );
       return UserProfileDto.fromJson(unwrapApiMap(response.data));

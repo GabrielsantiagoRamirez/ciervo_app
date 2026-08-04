@@ -74,7 +74,7 @@ class DioDiscoveryRemoteDataSource implements DiscoveryRemoteDataSource {
         'countryCode': countryCode,
         'page': 1,
         'pageSize': 30,
-        'category': ?categoryId,
+        'categoryId': ?categoryId,
         'search': ?_nonEmpty(search),
         'kidId': ?kidId,
         ...filters.toQueryParameters(),
@@ -95,20 +95,37 @@ class DioDiscoveryRemoteDataSource implements DiscoveryRemoteDataSource {
     String? kidId,
     DiscoverySmartFilters filters = const DiscoverySmartFilters(),
   }) async {
+    // by-category ignora lat/lng/radio; con GPS usamos nearby + categoryId.
+    if (location != null) {
+      return nearbyBusinesses(
+        location: location,
+        experienceMode: experienceMode,
+        countryCode: countryCode,
+        city: city,
+        category: category,
+        kidId: kidId,
+        filters: filters,
+      );
+    }
+
     final categoryId = _categoryId(category);
+    if (categoryId == null) {
+      return businessesByCity(
+        city,
+        experienceMode: experienceMode,
+        countryCode: countryCode,
+        kidId: kidId,
+        filters: filters,
+      );
+    }
+
     final response = await _client.dio.get<Map<String, dynamic>>(
       '/api/businesses/by-category',
       queryParameters: {
-        'category': ?categoryId,
+        'category': categoryId,
         'experienceMode': experienceMode.apiValue,
-        'countryCode': countryCode,
-        if (location == null) 'city': city,
-        if (location != null) ...{
-          'latitude': location.latitude,
-          'longitude': location.longitude,
-        },
         'kidId': ?kidId,
-        ...filters.toQueryParameters(includeRadius: location != null),
+        ...filters.toQueryParameters(includeRadius: false),
       },
     );
     return BusinessSummaryDto.listFromResponse(

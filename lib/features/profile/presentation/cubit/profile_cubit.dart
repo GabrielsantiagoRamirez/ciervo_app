@@ -47,12 +47,14 @@ class ProfileCubit extends Cubit<ProfileState> {
         );
       },
       failure: (error) {
-        final code = _codeFromWalletOnly(ciervoIdResult);
+        // El CIERVO ID del wallet puede existir aunque falle /users/me.
+        // No marcar "loaded" sin perfil: oculta el error real.
         emit(
-          state.copyWith(
-            status: code == null ? ProfileStatus.failure : ProfileStatus.loaded,
-            ciervoUserCode: code,
-            errorMessage: code == null ? UserErrorMessage.from(error) : null,
+          ProfileState(
+            status: ProfileStatus.failure,
+            profile: null,
+            ciervoUserCode: _codeFromWalletOnly(ciervoIdResult),
+            errorMessage: UserErrorMessage.from(error),
           ),
         );
       },

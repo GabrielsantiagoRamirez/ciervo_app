@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_radii.dart';
 import '../../../financial_history/presentation/pages/financial_history_page.dart';
 import '../../../notifications/domain/entities/notification_badges.dart';
 import '../../../notifications/presentation/cubit/notification_badges_cubit.dart';
@@ -10,6 +11,7 @@ import '../../../notifications/presentation/pages/notifications_page.dart';
 import '../../../qr_hub/presentation/pages/qr_hub_page.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../../shared/widgets/ciervo_user_id_badge.dart';
+import '../../../../shared/widgets/ciervo_logo_mark.dart';
 import '../../domain/entities/wallet_card.dart';
 import '../../domain/entities/wallet_transaction.dart';
 import '../cubit/wallet_cubit.dart';
@@ -19,7 +21,6 @@ import 'ciervo_digital_card.dart';
 import 'exchange_rate_banner.dart';
 import '../../../bonuses/presentation/widgets/wallet_available_bonuses_section.dart';
 import '../../../secure_shipment/presentation/pages/secure_shipment_list_page.dart';
-import 'wallet_nfc_section.dart';
 import '../pages/recharge_page.dart';
 import '../pages/transfer_page.dart';
 
@@ -131,8 +132,6 @@ class _PremiumWalletDashboardState extends State<PremiumWalletDashboard> {
                     ? null
                     : () => _confirmBlockCard(context, card),
               ),
-              const SizedBox(height: AppSpacing.md),
-              WalletNfcSection(selectedCard: card),
               const SizedBox(height: AppSpacing.md),
               _SecureShipmentEntry(palette: palette),
               const SizedBox(height: AppSpacing.xl),
@@ -308,7 +307,7 @@ class _BalanceBar extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: palette.surfaceHigh,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppRadii.card,
         border: Theme.of(context).brightness == Brightness.light
             ? Border.all(color: palette.textMuted.withValues(alpha: 0.2))
             : null,
@@ -347,7 +346,7 @@ class _BalanceBar extends StatelessWidget {
           const SizedBox(width: AppSpacing.md),
           InkWell(
             onTap: onRecharge,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: AppRadii.card,
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.sm),
               child: Column(
@@ -408,7 +407,7 @@ class _QuickActionsRow extends StatelessWidget {
         ),
         _CircleAction(
           label: 'Escanear QR',
-          icon: Icons.qr_code_scanner,
+          useCiervoLogo: true,
           palette: palette,
           onTap: () => Navigator.of(
             context,
@@ -442,13 +441,15 @@ class _QuickActionsRow extends StatelessWidget {
 class _CircleAction extends StatelessWidget {
   const _CircleAction({
     required this.label,
-    required this.icon,
     required this.palette,
+    this.icon,
+    this.useCiervoLogo = false,
     this.onTap,
   });
 
   final String label;
-  final IconData icon;
+  final IconData? icon;
+  final bool useCiervoLogo;
   final CiervoWalletPalette palette;
   final VoidCallback? onTap;
 
@@ -462,18 +463,32 @@ class _CircleAction extends StatelessWidget {
           CircleAvatar(
             radius: 28,
             backgroundColor: palette.surfaceHigh,
-            child: Icon(
-              icon,
-              color: onTap == null ? palette.textMuted : CiervoBrandColors.gold,
-            ),
+            child: useCiervoLogo
+                ? Opacity(
+                    opacity: onTap == null ? 0.45 : 1,
+                    child: const CiervoLogoMark(size: 30),
+                  )
+                : Icon(
+                    icon ?? Icons.apps,
+                    color: onTap == null
+                        ? palette.textMuted
+                        : CiervoBrandColors.gold,
+                  ),
           ),
           const SizedBox(height: 6),
           SizedBox(
-            width: 72,
+            width: 86,
             child: Text(
               label,
               textAlign: TextAlign.center,
-              style: TextStyle(color: palette.textMuted, fontSize: 11),
+              maxLines: 1,
+              softWrap: false,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: palette.textMuted,
+                fontSize: label.length > 11 ? 10 : 11,
+                height: 1.1,
+              ),
             ),
           ),
         ],
@@ -542,7 +557,7 @@ class _MovementTile extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: palette.surface,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppRadii.card,
         border: Theme.of(context).brightness == Brightness.light
             ? Border.all(color: palette.textMuted.withValues(alpha: 0.15))
             : null,
@@ -629,9 +644,9 @@ class _SecureShipmentEntry extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: palette.surface,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: AppRadii.card,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppRadii.card,
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const SecureShipmentListPage()),
         ),
@@ -643,7 +658,7 @@ class _SecureShipmentEntry extends StatelessWidget {
                 padding: const EdgeInsets.all(AppSpacing.sm),
                 decoration: BoxDecoration(
                   color: CiervoBrandColors.gold.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: AppRadii.card,
                 ),
                 child: const Icon(
                   Icons.local_shipping_outlined,

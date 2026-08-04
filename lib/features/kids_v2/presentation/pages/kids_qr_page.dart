@@ -196,7 +196,7 @@ class _KidsQrPageState extends State<KidsQrPage> with WidgetsBindingObserver {
       KidsQrScanRequest(
         kidId: widget.kidId,
         deviceId: widget.deviceId,
-        merchantQr: _qr.text.trim(),
+        merchantQr: _normalizeMerchantQr(_qr.text),
         amount: amount,
         latitude: location.latitude,
         longitude: location.longitude,
@@ -346,6 +346,28 @@ class _KidsQrPageState extends State<KidsQrPage> with WidgetsBindingObserver {
     KidsRealtimePhase.paused => 'pausado',
   };
 
+  /// Convierte Ciervo ID de comercio (CV000022) al formato que entiende el API.
+  String _normalizeMerchantQr(String raw) {
+    final value = raw.trim();
+    if (value.isEmpty) return value;
+    final upper = value.toUpperCase();
+    if (upper.startsWith('CIERVO://') ||
+        upper.startsWith('CIERVO-QR-') ||
+        upper.startsWith('CIERVO-MERCHANT-')) {
+      return value;
+    }
+    // CV000022 / CV22 → CIERVO-MERCHANT-{idNumérico}
+    final cv = RegExp(r'^CV0*(\d+)$', caseSensitive: false).firstMatch(value);
+    if (cv != null) {
+      return 'CIERVO-MERCHANT-${cv.group(1)}';
+    }
+    // Solo dígitos → merchant id numérico
+    if (RegExp(r'^\d+$').hasMatch(value)) {
+      return 'CIERVO-MERCHANT-$value';
+    }
+    return value;
+  }
+
   @override
   Widget build(BuildContext context) {
     final session = _session;
@@ -380,6 +402,18 @@ class _KidsQrPageState extends State<KidsQrPage> with WidgetsBindingObserver {
               leading: Icon(Icons.check_circle_outline),
               title: Text('QR leído correctamente'),
             ),
+          TextField(
+            controller: _qr,
+            enabled: !_loading && session == null,
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(
+              labelText: 'QR o Ciervo ID del comercio',
+              hintText: 'Escanea o escribe CV000022 / CIERVO-MERCHANT-…',
+              prefixIcon: Icon(Icons.storefront_outlined),
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 12),
           TextField(
             controller: _amount,
             enabled: !_loading && session == null,

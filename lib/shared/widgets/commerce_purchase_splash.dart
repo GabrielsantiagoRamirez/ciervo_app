@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_radii.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/display_formatters.dart';
 import '../../features/delivery/domain/entities/delivery_models.dart';
@@ -127,7 +128,7 @@ class _CommercePurchaseSplashDialogState<T>
         constraints: const BoxConstraints(maxWidth: 420),
         child: Material(
           color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: AppRadii.card,
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.xl),
             child: _processing

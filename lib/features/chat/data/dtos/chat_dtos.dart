@@ -14,7 +14,10 @@ ChatConversation conversationFromJson(Map<String, dynamic> json) {
   return ChatConversation(
     id: '${json['id'] ?? json['conversationId'] ?? ''}',
     title: DisplayFormatters.chatTitle(
-      rawTitle: (json['title'] ?? json['displayName'])?.toString(),
+      rawTitle: (json['title'] ??
+              json['businessName'] ??
+              json['displayName'])
+          ?.toString(),
       username: _optionalString(json, const [
         'peerUsername',
         'username',
@@ -25,6 +28,7 @@ ChatConversation conversationFromJson(Map<String, dynamic> json) {
         'peerFullName',
         'peerName',
         'otherDisplayName',
+        'businessName',
       ]),
       firstName: _optionalString(json, const [
         'peerFirstName',
@@ -34,10 +38,26 @@ ChatConversation conversationFromJson(Map<String, dynamic> json) {
       conversationType: type,
       participantCount: participantCount,
     ),
-    type: type,
-    unreadCount: _int(json['unreadCount']),
-    status: '${json['status'] ?? 'Open'}',
+    type: type.isEmpty ? 'Direct' : type,
+    unreadCount: _int(
+      json['unreadCount'] ??
+          json['UnreadCount'] ??
+          json['unread'] ??
+          json['unreadMessages'],
+    ),
+    status: '${json['status'] ?? json['Status'] ?? 'Open'}',
     businessId: _nullableInt(json['businessId']),
+    businessName: _optionalString(json, const [
+      'businessName',
+      'BusinessName',
+      'merchantName',
+    ]),
+    businessLogoUrl: _optionalString(json, const [
+      'businessLogoUrl',
+      'logoUrl',
+      'businessImageUrl',
+    ]),
+    avatarUrl: _optionalString(json, const ['avatarUrl', 'AvatarUrl']),
     peerUserId: _nullableInt(json['peerUserId']),
     peerUsername: _optionalString(json, const [
       'peerUsername',
@@ -49,13 +69,80 @@ ChatConversation conversationFromJson(Map<String, dynamic> json) {
       'peerFullName',
       'peerName',
     ]),
+    peerPhotoUrl: _optionalString(json, const [
+      'peerPhotoUrl',
+      'peerAvatarUrl',
+      'peerImageUrl',
+      'otherPhotoUrl',
+      'photoUrl',
+    ]),
     participantCount: participantCount,
-    lastMessage: (json['lastMessageBody'] ?? json['lastMessage']?['body'])
-        ?.toString(),
+    lastMessage: _lastMessageBody(json),
     updatedAt: DateTime.tryParse(
       '${json['updatedAt'] ?? json['lastMessageAt'] ?? ''}',
     ),
   );
+}
+
+String? _lastMessageBody(Map<String, dynamic> json) {
+  final direct = json['lastMessageBody'] ?? json['LastMessageBody'];
+  if (direct != null && '$direct'.trim().isNotEmpty) return '$direct'.trim();
+
+  final last = json['lastMessage'] ?? json['LastMessage'];
+  if (last is Map) {
+    final preview = _nonEmptyString(
+      last['previewText'] ?? last['PreviewText'],
+    );
+    if (preview != null) {
+      return _withOwnPrefix(last, preview);
+    }
+
+    final body = _nonEmptyString(
+      last['body'] ?? last['text'] ?? last['message'] ?? last['content'],
+    );
+    if (body != null) return _withOwnPrefix(last, body);
+
+    final fromType = _previewFromMessageType(last);
+    if (fromType != null) return _withOwnPrefix(last, fromType);
+  }
+
+  if (last is String && last.trim().isNotEmpty) return last.trim();
+  return null;
+}
+
+String? _withOwnPrefix(Map<dynamic, dynamic> last, String text) {
+  if (last['isOwnMessage'] == true && !text.toLowerCase().startsWith('tú:')) {
+    return 'Tú: $text';
+  }
+  return text;
+}
+
+String? _previewFromMessageType(Map<dynamic, dynamic> last) {
+  final type = '${last['messageType'] ?? last['type'] ?? ''}'.toLowerCase();
+  if (type.isEmpty) return null;
+  if (type.contains('image') || type.contains('photo')) {
+    return '📷 Imagen';
+  }
+  if (type.contains('location') || type.contains('ubicacion')) {
+    final address = _nonEmptyString(last['address'] ?? last['Address']);
+    return address == null ? '📍 Ubicación' : '📍 $address';
+  }
+  if (type.contains('voice') || type.contains('audio')) {
+    return '🎤 Nota de voz';
+  }
+  if (type.contains('file') || type.contains('document')) {
+    return '📎 Archivo';
+  }
+  if (type.contains('payment') || type.contains('pago')) {
+    return '💳 Pago';
+  }
+  return null;
+}
+
+String? _nonEmptyString(dynamic value) {
+  if (value == null) return null;
+  final trimmed = '$value'.trim();
+  return trimmed.isEmpty ? null : trimmed;
 }
 
 ChatMessage messageFromJson(Map<String, dynamic> json) {

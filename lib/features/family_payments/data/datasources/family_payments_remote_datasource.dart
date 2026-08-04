@@ -18,16 +18,18 @@ abstract interface class FamilyPaymentsRemoteDataSource {
 
   Future<FamilyPaymentCardDto> verifyCard(String cardId);
 
-  Future<FamilyPaymentCardDto> updateCard({
+  Future<FamilyPaymentCardDto> updateCardAlias({
     required String cardId,
-    String? alias,
-    bool? isPrimary,
-    bool? isBackup,
+    required String alias,
   });
+
+  Future<FamilyPaymentCardDto> setPrimaryCard(String cardId);
+
+  Future<FamilyPaymentCardDto> setBackupCard(String cardId);
 
   Future<void> deleteCard(String cardId);
 
-  Future<FamilyPaymentCardDto> freezeCard(String cardId);
+  Future<FamilyPaymentCardDto> freezeCard(String cardId, {String? reason});
 
   Future<FamilyPaymentCardDto> unfreezeCard(String cardId);
 
@@ -149,26 +151,38 @@ class DioFamilyPaymentsRemoteDataSource
 
   @override
   Future<FamilyPaymentCardDto> verifyCard(String cardId) async {
+    // El backend exige [FromBody]; sin body ASP.NET responde 400 "Solicitud inválida".
     final response = await _client.dio.post<Map<String, dynamic>>(
       '/api/family/payment-methods/cards/$cardId/verify',
+      data: const <String, dynamic>{},
     );
     return FamilyPaymentCardDto.fromJson(unwrapApiMap(response.data));
   }
 
   @override
-  Future<FamilyPaymentCardDto> updateCard({
+  Future<FamilyPaymentCardDto> updateCardAlias({
     required String cardId,
-    String? alias,
-    bool? isPrimary,
-    bool? isBackup,
+    required String alias,
   }) async {
-    final response = await _client.dio.put<Map<String, dynamic>>(
-      '/api/family/payment-methods/cards/$cardId',
-      data: {
-        if (alias != null) 'alias': alias,
-        if (isPrimary != null) 'isPrimary': isPrimary,
-        if (isBackup != null) 'isBackup': isBackup,
-      },
+    final response = await _client.dio.patch<Map<String, dynamic>>(
+      '/api/family/payment-methods/cards/$cardId/alias',
+      data: {'alias': alias.trim().isEmpty ? null : alias.trim()},
+    );
+    return FamilyPaymentCardDto.fromJson(unwrapApiMap(response.data));
+  }
+
+  @override
+  Future<FamilyPaymentCardDto> setPrimaryCard(String cardId) async {
+    final response = await _client.dio.post<Map<String, dynamic>>(
+      '/api/family/payment-methods/cards/$cardId/set-primary',
+    );
+    return FamilyPaymentCardDto.fromJson(unwrapApiMap(response.data));
+  }
+
+  @override
+  Future<FamilyPaymentCardDto> setBackupCard(String cardId) async {
+    final response = await _client.dio.post<Map<String, dynamic>>(
+      '/api/family/payment-methods/cards/$cardId/set-backup',
     );
     return FamilyPaymentCardDto.fromJson(unwrapApiMap(response.data));
   }
@@ -179,9 +193,12 @@ class DioFamilyPaymentsRemoteDataSource
   }
 
   @override
-  Future<FamilyPaymentCardDto> freezeCard(String cardId) async {
+  Future<FamilyPaymentCardDto> freezeCard(String cardId, {String? reason}) async {
     final response = await _client.dio.post<Map<String, dynamic>>(
       '/api/family/payment-methods/cards/$cardId/freeze',
+      data: {
+        if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
+      },
     );
     return FamilyPaymentCardDto.fromJson(unwrapApiMap(response.data));
   }

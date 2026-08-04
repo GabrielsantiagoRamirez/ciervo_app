@@ -11,6 +11,7 @@ import '../../domain/entities/nfc_models.dart';
 import '../../domain/entities/payment_request.dart';
 import '../../domain/entities/recharge_intent.dart';
 import '../../domain/entities/resolved_wallet_user.dart';
+import '../../domain/entities/transfer_directory_entry.dart';
 import '../../domain/entities/transfer_result.dart';
 import '../../domain/entities/wallet_card.dart';
 import '../../domain/entities/wallet_transaction.dart';
@@ -264,6 +265,57 @@ class WalletRepositoryImpl implements WalletRepository {
   }
 
   @override
+  Future<Result<List<TransferDirectoryEntry>>> transferContacts({
+    int take = 50,
+  }) async {
+    try {
+      final items = await _remoteDataSource.transferContacts(take: take);
+      return Success(items.map((e) => e.toDomain()).toList());
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
+  Future<Result<List<TransferDirectoryEntry>>> transferFavorites() async {
+    try {
+      final items = await _remoteDataSource.transferFavorites();
+      return Success(items.map((e) => e.toDomain()).toList());
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
+  Future<Result<void>> addTransferFavorite({
+    String? targetUserId,
+    String? targetCiervoUserCode,
+    String? targetUsername,
+  }) => _void(
+    () => _remoteDataSource.addTransferFavorite(
+      targetUserId: targetUserId,
+      targetCiervoUserCode: targetCiervoUserCode,
+      targetUsername: targetUsername,
+    ),
+  );
+
+  @override
+  Future<Result<void>> removeTransferFavorite(String favoriteUserId) =>
+      _void(() => _remoteDataSource.removeTransferFavorite(favoriteUserId));
+
+  @override
+  Future<Result<List<TransferDirectoryEntry>>> transferRecent({
+    int take = 20,
+  }) async {
+    try {
+      final items = await _remoteDataSource.transferRecent(take: take);
+      return Success(items.map((e) => e.toDomain()).toList());
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
   Future<Result<TransferResult>> transfer({
     required String targetCiervoUserCode,
     required double amount,
@@ -296,6 +348,7 @@ class WalletRepositoryImpl implements WalletRepository {
     int? businessId,
     int? bookingId,
     String currency = 'COP',
+    String? preferredPaymentMethod,
   }) async {
     try {
       return Success(
@@ -308,6 +361,7 @@ class WalletRepositoryImpl implements WalletRepository {
           businessId: businessId,
           bookingId: bookingId,
           currency: currency,
+          preferredPaymentMethod: preferredPaymentMethod,
         )).toDomain(),
       );
     } catch (error) {
@@ -454,6 +508,30 @@ class WalletRepositoryImpl implements WalletRepository {
   @override
   Future<Result<void>> blockPhysicalNfcCard(int id) =>
       _void(() => _remoteDataSource.blockPhysicalNfcCard(id));
+
+  @override
+  Future<Result<PhysicalNfcCard>> updatePhysicalNfcCard({
+    required int id,
+    required String label,
+  }) async {
+    try {
+      final dto = await _remoteDataSource.updatePhysicalNfcCard(
+        id: id,
+        label: label,
+      );
+      return Success(dto.toDomain());
+    } catch (error) {
+      return Failure(ErrorMapper.fromObject(error));
+    }
+  }
+
+  @override
+  Future<Result<void>> unblockPhysicalNfcCard(int id) =>
+      _void(() => _remoteDataSource.unblockPhysicalNfcCard(id));
+
+  @override
+  Future<Result<void>> revokePhysicalNfcCard(int id) =>
+      _void(() => _remoteDataSource.revokePhysicalNfcCard(id));
 
   Future<Result<void>> _void(Future<void> Function() action) async {
     try {

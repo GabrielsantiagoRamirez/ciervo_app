@@ -2,41 +2,37 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
-import '../../../../core/experience/experience_mode_cubit.dart';
-import '../../../../core/geo/geo_repository.dart';
 import '../../../../core/location/location_service.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/utils/display_labels.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
-import '../../../discovery/domain/entities/business_summary.dart';
-import '../../../discovery/domain/repositories/discovery_repository.dart';
-import '../../../discovery/data/repositories/business_categories_repository.dart';
-import '../../../home/domain/entities/home_place.dart';
-import '../../../home/presentation/cubit/home_discovery_cubit.dart';
-import '../../../home/presentation/cubit/home_discovery_state.dart';
-import '../../../home/presentation/widgets/home_place_card.dart';
-import '../../../home/presentation/widgets/smart_filters_sheet.dart';
-import '../../../location/data/client_location_repository.dart';
-import '../../../place_detail/presentation/pages/place_detail_page.dart';
-import '../../../profile/domain/repositories/profile_repository.dart';
+import '../../domain/entities/global_search_models.dart';
+import '../../domain/repositories/global_search_repository.dart';
+import '../cubit/global_search_cubit.dart';
+import '../global_search_navigation.dart';
 
+/// Buscador unificado: GET /api/search (personas, lugares, productos, etc.).
 class SearchPage extends StatelessWidget {
-  const SearchPage({super.key});
+  const SearchPage({this.initialQuery, super.key});
+
+  final String? initialQuery;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => HomeDiscoveryCubit(
-        locationService: getIt<LocationService>(),
-        discoveryRepository: getIt<DiscoveryRepository>(),
-        clientLocationRepository: getIt<ClientLocationRepository>(),
-        businessCategoriesRepository: getIt<BusinessCategoriesRepository>(),
-        geoRepository: getIt<GeoRepository>(),
-        profileRepository: getIt<ProfileRepository>(),
-        initialExperienceMode: context.read<ExperienceModeCubit>().state.mode,
-      )..initialize(),
+      create: (_) {
+        final cubit = GlobalSearchCubit(
+          repository: getIt<GlobalSearchRepository>(),
+          locationService: getIt<LocationService>(),
+          initialQuery: initialQuery,
+        );
+        final q = initialQuery?.trim() ?? '';
+        if (q.length >= 2) {
+          cubit.search(q);
+        }
+        return cubit;
+      },
       child: const _SearchView(),
     );
   }
@@ -50,8 +46,15 @@ class _SearchView extends StatefulWidget {
 }
 
 class _SearchViewState extends State<_SearchView> {
-  final _controller = TextEditingController();
-  String _category = 'Top';
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(
+      text: context.read<GlobalSearchCubit>().state.query,
+    );
+  }
 
   @override
   void dispose() {
@@ -59,233 +62,210 @@ class _SearchViewState extends State<_SearchView> {
     super.dispose();
   }
 
+  void _submit() {
+    context.read<GlobalSearchCubit>().search(_controller.text);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final cubit = context.read<HomeDiscoveryCubit>();
-    final modeState = context.watch<ExperienceModeCubit>().state;
-    final discoveryState = context.watch<HomeDiscoveryCubit>().state;
-    if (discoveryState.experienceMode != modeState.mode) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) {
-          cubit.setExperienceMode(modeState.mode);
-        }
-      });
-    }
+    final state = context.watch<GlobalSearchCubit>().state;
+    final cubit = context.read<GlobalSearchCubit>();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Buscar')),
-      body: CustomScrollView(
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        physics: const AlwaysScrollableScrollPhysics(),
-        slivers: [
-          SliverPadding(
+      body: Column(
+        children: [
+          Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.lg,
               AppSpacing.md,
-              AppSpacing.lg,
-              AppSpacing.md,
-            ),
-            sliver: SliverToBoxAdapter(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  TextField(
-                    controller: _controller,
-                    autofocus: true,
-                    textInputAction: TextInputAction.search,
-                    onSubmitted: (_) => _apply(cubit),
-                    decoration: const InputDecoration(
-                      hintText: 'Buscar comercios, eventos o promociones',
-                      prefixIcon: Icon(Icons.search_rounded),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Wrap(
-                    spacing: AppSpacing.xs,
-                    runSpacing: AppSpacing.xs,
-                    children: cubit.categories.map((category) {
-                      return ChoiceChip(
-                        label: Text(_label(category)),
-                        selected: _category == category,
-                        onSelected: (_) => setState(() => _category = category),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          icon: Badge(
-                            isLabelVisible:
-                                discoveryState.filters.activeCount > 0,
-                            label: Text(
-                              '${discoveryState.filters.activeCount}',
-                            ),
-                            child: const Icon(Icons.tune),
-                          ),
-                          label: const Text('Filtros'),
-                          onPressed: () async {
-                            final applied = await showSmartFiltersSheet(
-                              context: context,
-                              initial: discoveryState.filters,
-                            );
-                            if (applied != null && context.mounted) {
-                              await cubit.applyFilters(applied);
-                              if (_controller.text.trim().isNotEmpty) {
-                                _apply(cubit);
-                              }
-                            }
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: FilledButton.icon(
-                          icon: const Icon(Icons.search),
-                          label: const Text('Buscar'),
-                          onPressed: () => _apply(cubit),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              0,
               AppSpacing.lg,
               AppSpacing.sm,
             ),
-            sliver: SliverToBoxAdapter(
-              child: Text(
-                discoveryState.usingLocation
-                    ? 'Mostrando negocios cercanos en ${discoveryState.countryCode}'
-                    : 'Mostrando negocios de ${discoveryState.city}, ${discoveryState.countryCode}',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              0,
-              AppSpacing.lg,
-              AppSpacing.xxl,
-            ),
-            sliver: BlocBuilder<HomeDiscoveryCubit, HomeDiscoveryState>(
-              builder: (context, state) {
-                return switch (state.status) {
-                  HomeDiscoveryStatus.initial => const SliverToBoxAdapter(
-                    child: CiervoEmptyState(
-                      title: 'Busca en Ciervo',
-                      description:
-                          'Encuentra experiencias por nombre, categoria o ciudad.',
-                      icon: Icons.search_rounded,
-                    ),
-                  ),
-                  HomeDiscoveryStatus.loading => const SliverToBoxAdapter(
-                    child: CiervoLoadingState(itemCount: 4),
-                  ),
-                  HomeDiscoveryStatus.empty => SliverToBoxAdapter(
-                    child: CiervoEmptyState(
-                      title: _category == 'turismo'
-                          ? 'Turismo en fase piloto'
-                          : 'Sin resultados',
-                      description: _category == 'turismo'
-                          ? 'Turismo está en fase piloto. Pronto encontrarás más experiencias.'
-                          : 'No encontramos coincidencias para tu búsqueda.',
-                      icon: _category == 'turismo'
-                          ? Icons.travel_explore_outlined
-                          : Icons.search_off_rounded,
-                    ),
-                  ),
-                  HomeDiscoveryStatus.failure => SliverToBoxAdapter(
-                    child: CiervoErrorState(
-                      title: 'No pudimos buscar',
-                      description: state.errorMessage ?? 'Intenta nuevamente.',
-                    ),
-                  ),
-                  HomeDiscoveryStatus.loaded => SliverList.separated(
-                    itemCount: state.businesses.length,
-                    separatorBuilder: (_, _) =>
-                        const SizedBox(height: AppSpacing.md),
-                    itemBuilder: (context, index) {
-                      final place = _mapBusinessToPlace(
-                        state.businesses[index],
-                        city: state.city,
-                        countryCode: state.countryCode,
-                      );
-                      return BlocBuilder<
-                        ExperienceModeCubit,
-                        ExperienceModeState
-                      >(
-                        builder: (context, modeState) {
-                          return HomePlaceCard(
-                            place: place,
-                            mode: modeState.mode,
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) => PlaceDetailPage(place: place),
-                                ),
-                              );
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextField(
+                  controller: _controller,
+                  autofocus: true,
+                  textInputAction: TextInputAction.search,
+                  onSubmitted: (_) => _submit(),
+                  decoration: InputDecoration(
+                    hintText:
+                        'Personas, lugares, productos, promos, servicios…',
+                    prefixIcon: const Icon(Icons.search_rounded),
+                    suffixIcon: _controller.text.isEmpty
+                        ? null
+                        : IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              _controller.clear();
+                              setState(() {});
                             },
-                          );
-                        },
-                      );
-                    },
+                          ),
                   ),
-                };
-              },
+                  onChanged: (_) => setState(() {}),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Wrap(
+                  spacing: AppSpacing.xs,
+                  runSpacing: AppSpacing.xs,
+                  children: [
+                    FilterChip(
+                      label: Text(
+                        state.counts.total > 0
+                            ? 'Todo (${state.total})'
+                            : 'Todo',
+                      ),
+                      selected: state.selectedType == null,
+                      onSelected: (_) => cubit.selectType(null),
+                    ),
+                    for (final type in const [
+                      GlobalSearchItemType.person,
+                      GlobalSearchItemType.business,
+                      GlobalSearchItemType.product,
+                      GlobalSearchItemType.promotion,
+                      GlobalSearchItemType.service,
+                      GlobalSearchItemType.event,
+                    ])
+                      FilterChip(
+                        avatar: Icon(iconForSearchType(type), size: 16),
+                        label: Text(
+                          state.counts.forType(type) > 0
+                              ? '${type.chipLabel} (${state.counts.forType(type)})'
+                              : type.chipLabel,
+                        ),
+                        selected: state.selectedType == type,
+                        onSelected: (_) => cubit.selectType(type),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: cubit.searchNearby,
+                        icon: const Icon(Icons.near_me_outlined),
+                        label: const Text('Cerca de mí'),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    FilledButton(
+                      onPressed: _submit,
+                      child: const Text('Buscar'),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
+          const Divider(height: 1),
+          Expanded(child: _ResultsBody(state: state)),
         ],
       ),
     );
   }
+}
 
-  HomePlace _mapBusinessToPlace(
-    BusinessSummary business, {
-    required String city,
-    required String countryCode,
-  }) {
-    return HomePlace(
-      id: business.id,
-      name: business.name.isNotEmpty ? business.name : 'Negocio',
-      category: business.category.isEmpty ? 'General' : business.category,
-      rating: business.rating,
-      priceLevel: business.priceLevel,
-      distanceKm: business.distanceKm,
-      matchPercent: 0,
-      imageUrl: business.imageUrl,
-      businessCategoryId: business.businessCategoryId,
-      isFavorite: business.isFavorite,
-      isPartner: business.isPartner,
-      hasCashback: business.hasCashback,
-      benefitTier: business.benefitTier,
-      city: city,
-      countryCode: countryCode,
-      experienceBucket: business.experienceBucket,
-      open24Hours: business.open24Hours,
-      acceptsCiervoPayments: business.acceptsCiervoPayments,
-      hasDelivery: business.hasDelivery,
-      requiresReservation: business.requiresReservation,
-      isFamilyFriendly: business.isFamilyFriendly,
-      isPetFriendly: business.isPetFriendly,
-      isAccessible: business.isAccessible,
-      hasParking: business.hasParking,
-      hasActivePromotions: business.hasActivePromotions,
-      isOpen: business.isOpen,
+class _ResultsBody extends StatelessWidget {
+  const _ResultsBody({required this.state});
+
+  final GlobalSearchState state;
+
+  @override
+  Widget build(BuildContext context) {
+    return switch (state.status) {
+      GlobalSearchStatus.initial => const CiervoEmptyState(
+        title: '¿Qué estás buscando?',
+        description:
+            'Personas, comercios, comida, promos, servicios o eventos cerca de ti.',
+        icon: Icons.search_rounded,
+      ),
+      GlobalSearchStatus.loading => const Padding(
+        padding: EdgeInsets.all(AppSpacing.lg),
+        child: CiervoLoadingState(itemCount: 6),
+      ),
+      GlobalSearchStatus.failure => CiervoErrorState(
+        title: 'No pudimos buscar',
+        description: state.errorMessage ?? 'Intenta de nuevo.',
+        onRetry: () => context.read<GlobalSearchCubit>().search(state.query),
+      ),
+      GlobalSearchStatus.empty => CiervoEmptyState(
+        title: 'Sin resultados',
+        description: state.query.isEmpty
+            ? 'No hay resultados cerca en este momento.'
+            : 'Nada coincide con “${state.query}”. Prueba otro término o filtro.',
+        icon: Icons.search_off_outlined,
+      ),
+      GlobalSearchStatus.loaded => ListView.separated(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          AppSpacing.sm,
+          AppSpacing.md,
+          AppSpacing.xxl,
+        ),
+        itemCount: state.items.length,
+        separatorBuilder: (_, _) => const Divider(height: 1, indent: 72),
+        itemBuilder: (context, index) {
+          final item = state.items[index];
+          return _SearchResultTile(item: item);
+        },
+      ),
+    };
+  }
+}
+
+class _SearchResultTile extends StatelessWidget {
+  const _SearchResultTile({required this.item});
+
+  final GlobalSearchItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final secondary = [
+      item.type.chipLabel,
+      if (item.subtitle != null && item.subtitle!.isNotEmpty) item.subtitle!,
+      if (item.businessName != null &&
+          item.businessName!.isNotEmpty &&
+          item.businessName != item.title)
+        item.businessName!,
+      if (item.username != null && item.username!.isNotEmpty)
+        '@${item.username}',
+      if (item.ciervoUserCode != null && item.ciervoUserCode!.isNotEmpty)
+        item.ciervoUserCode!,
+      if (item.priceLabel.isNotEmpty) item.priceLabel,
+      if (item.distanceLabel.isNotEmpty) item.distanceLabel,
+    ].join(' · ');
+
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
+      leading: CircleAvatar(
+        backgroundColor: theme.colorScheme.surfaceContainerHighest,
+        backgroundImage: item.imageUrl != null && item.imageUrl!.isNotEmpty
+            ? NetworkImage(item.imageUrl!)
+            : null,
+        child: item.imageUrl == null || item.imageUrl!.isEmpty
+            ? Icon(iconForSearchType(item.type))
+            : null,
+      ),
+      title: Text(
+        item.title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: theme.textTheme.titleMedium,
+      ),
+      subtitle: Text(
+        secondary,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => GlobalSearchNavigation.open(context, item),
     );
   }
-
-  void _apply(HomeDiscoveryCubit cubit) {
-    cubit.search(_controller.text, category: _category);
-  }
-
-  String _label(String category) => DisplayLabels.categoryLabel(category);
 }

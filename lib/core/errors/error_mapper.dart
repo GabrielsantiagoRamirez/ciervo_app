@@ -51,12 +51,23 @@ abstract final class ErrorMapper {
 
     return AppException(
       message: backendMessage ?? _fallbackMessage(error),
-      code: _nonEmptyString(map['errorCode']) ?? _nonEmptyString(map['code']),
+      code:
+          _nonEmptyString(map['errorCode']) ??
+          _nonEmptyString(map['code']) ??
+          _codeFromMsg(map['msg']),
       statusCode: response?.statusCode,
       correlationId: correlationId,
       fieldErrors: problem.errors,
       cause: error,
     );
+  }
+
+  /// Cuando el backend pone el código en `msg` (ej. PHYSICAL_NFC_ALREADY_REGISTERED).
+  static String? _codeFromMsg(Object? msg) {
+    final text = msg?.toString().trim();
+    if (text == null || text.isEmpty) return null;
+    if (RegExp(r'^[A-Z][A-Z0-9_]+$').hasMatch(text)) return text;
+    return null;
   }
 
   static String? _nonEmptyString(Object? value) {

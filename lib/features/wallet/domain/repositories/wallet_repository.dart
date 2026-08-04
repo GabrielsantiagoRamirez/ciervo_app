@@ -4,6 +4,7 @@ import '../entities/nfc_models.dart';
 import '../entities/payment_request.dart';
 import '../entities/recharge_intent.dart';
 import '../entities/resolved_wallet_user.dart';
+import '../entities/transfer_directory_entry.dart';
 import '../entities/transfer_result.dart';
 import '../entities/wallet_card.dart';
 import '../entities/wallet_transaction.dart';
@@ -29,6 +30,15 @@ abstract interface class WalletRepository {
   Future<Result<CiervoWalletIdentity>> myCiervoId();
   Future<Result<Map<String, dynamic>>> mercadoPagoConfig();
   Future<Result<ResolvedWalletUser>> resolveUser(String ciervoUserCode);
+  Future<Result<List<TransferDirectoryEntry>>> transferContacts({int take = 50});
+  Future<Result<List<TransferDirectoryEntry>>> transferFavorites();
+  Future<Result<void>> addTransferFavorite({
+    String? targetUserId,
+    String? targetCiervoUserCode,
+    String? targetUsername,
+  });
+  Future<Result<void>> removeTransferFavorite(String favoriteUserId);
+  Future<Result<List<TransferDirectoryEntry>>> transferRecent({int take = 20});
   Future<Result<TransferResult>> transfer({
     required String targetCiervoUserCode,
     required double amount,
@@ -45,6 +55,7 @@ abstract interface class WalletRepository {
     int? businessId,
     int? bookingId,
     String currency = 'COP',
+    String? preferredPaymentMethod,
   });
   Future<Result<RechargeIntent>> rechargeByCiervoId({
     required String targetCiervoUserCode,
@@ -78,5 +89,11 @@ abstract interface class WalletRepository {
     required String label,
     String? countryCode,
   });
+  Future<Result<PhysicalNfcCard>> updatePhysicalNfcCard({
+    required int id,
+    required String label,
+  });
   Future<Result<void>> blockPhysicalNfcCard(int id);
+  Future<Result<void>> unblockPhysicalNfcCard(int id);
+  Future<Result<void>> revokePhysicalNfcCard(int id);
 }

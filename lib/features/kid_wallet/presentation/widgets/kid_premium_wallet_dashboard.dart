@@ -5,6 +5,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../kid_businesses/presentation/pages/kid_businesses_page.dart';
 import '../../../kid_nfc/presentation/pages/kid_nfc_device_registration_page.dart';
 import '../../../kid_pay_for_me/presentation/pages/kid_pay_for_me_request_page.dart';
+import '../../../kid_shell/presentation/widgets/kid_services_grid.dart';
 import '../../../wallet/presentation/widgets/ciervo_digital_card.dart';
 
 class KidPremiumWalletDashboard extends StatefulWidget {
@@ -108,9 +109,9 @@ class _KidPremiumWalletDashboardState extends State<KidPremiumWalletDashboard> {
             ),
             const SizedBox(height: AppSpacing.sm),
             OutlinedButton.icon(
-              onPressed: () => context.push('/movies'),
-              icon: const Icon(Icons.local_movies_outlined),
-              label: const Text('Explorar películas y solicitar entradas'),
+              onPressed: () => context.push('/tickets'),
+              icon: const Icon(Icons.confirmation_number_outlined),
+              label: const Text('Explorar tickets y eventos'),
             ),
             const SizedBox(height: AppSpacing.xs),
             OutlinedButton.icon(
@@ -160,6 +161,9 @@ class _KidPremiumWalletDashboardState extends State<KidPremiumWalletDashboard> {
                 palette: palette,
               ),
             ],
+            const SizedBox(height: AppSpacing.xl),
+            KidServicesGrid(onViewMovements: _scrollToMovements),
+            const SizedBox(height: AppSpacing.lg),
           ],
         ),
       ),

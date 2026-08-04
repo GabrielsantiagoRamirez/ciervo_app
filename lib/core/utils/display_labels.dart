@@ -345,8 +345,21 @@ abstract final class DisplayLabels {
       'sharedwallet' => 'Wallet compartida',
       'familybudget' => 'Presupuesto familiar',
       'approvals' => 'Aprobaciones de pagos',
+      'vakuplimaxguests' || 'vakuplimaxtotal' || 'maxguests' || 'maxtotal' =>
+          'Cupos del grupo',
       _ => _humanize(key),
     };
+  }
+
+  /// Valor para UI de límites. `vakupli.maxGuests` se muestra como maxTotal
+  /// (incluye creador): invitados + 1.
+  static String membershipLimitDisplay(String key, dynamic value) {
+    final normalized = key.replaceAll(RegExp(r'[._]'), '').toLowerCase();
+    if ((normalized == 'vakuplimaxguests' || normalized == 'maxguests') &&
+        value is num) {
+      return '${value.toInt() + 1}';
+    }
+    return membershipLimitValue(value);
   }
 
   static String membershipLimitValue(dynamic value) {

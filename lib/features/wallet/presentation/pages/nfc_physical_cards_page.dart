@@ -77,18 +77,20 @@ class _NfcPhysicalCardsPageState extends State<NfcPhysicalCardsPage> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Registrar tarjeta física'),
+          title: const Text('Agregar tarjeta física'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: uidController,
-                  decoration: const InputDecoration(
+                  readOnly: presetUid != null && presetUid.isNotEmpty,
+                  decoration: InputDecoration(
                     labelText: 'UID de la tarjeta',
                     hintText: '04A1B2C3D4',
-                    helperText:
-                        'Cada lectura NFC genera un UID único para pagos e historial.',
+                    helperText: presetUid != null && presetUid.isNotEmpty
+                        ? 'UID leído por NFC. No se podrá editar después.'
+                        : 'Puedes registrar varias tarjetas; cada UID debe ser único.',
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
@@ -181,12 +183,62 @@ class _NfcPhysicalCardsPageState extends State<NfcPhysicalCardsPage> {
     await _register(presetUid: uid);
   }
 
+  Future<void> _editLabel(PhysicalNfcCard card) async {
+    final controller = TextEditingController(text: card.label);
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Editar etiqueta'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Etiqueta',
+            helperText: 'El UID no se puede cambiar.',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+    if (saved != true || !mounted) return;
+    final label = controller.text.trim();
+    if (label.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('La etiqueta no puede estar vacía.')),
+      );
+      return;
+    }
+    final result = await getIt<WalletRepository>().updatePhysicalNfcCard(
+      id: card.id,
+      label: label,
+    );
+    if (!mounted) return;
+    result.when(
+      success: (_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Etiqueta actualizada.')),
+        );
+        _load();
+      },
+      failure: (error) => handleNfcError(context, error),
+    );
+  }
+
   Future<void> _block(PhysicalNfcCard card) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Bloquear tarjeta'),
-        content: Text('Bloquear ${card.label} (${card.cardUid})?'),
+        content: Text('¿Bloquear ${card.label} (${card.maskedUid})?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -209,6 +261,59 @@ class _NfcPhysicalCardsPageState extends State<NfcPhysicalCardsPage> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Tarjeta bloqueada.')));
+        _load();
+      },
+      failure: (error) => handleNfcError(context, error),
+    );
+  }
+
+  Future<void> _unblock(PhysicalNfcCard card) async {
+    final result = await getIt<WalletRepository>().unblockPhysicalNfcCard(
+      card.id,
+    );
+    if (!mounted) return;
+    result.when(
+      success: (_) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Tarjeta desbloqueada.')));
+        _load();
+      },
+      failure: (error) => handleNfcError(context, error),
+    );
+  }
+
+  Future<void> _revoke(PhysicalNfcCard card) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Eliminar tarjeta física'),
+        content: Text(
+          '¿Revocar ${card.label}?\n\n'
+          'Se podrá volver a registrar este UID en otra tarjeta.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Revocar'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+    final result = await getIt<WalletRepository>().revokePhysicalNfcCard(
+      card.id,
+    );
+    if (!mounted) return;
+    result.when(
+      success: (_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tarjeta revocada. El UID quedó libre.')),
+        );
         _load();
       },
       failure: (error) => handleNfcError(context, error),
@@ -240,7 +345,7 @@ class _NfcPhysicalCardsPageState extends State<NfcPhysicalCardsPage> {
             heroTag: 'register-uid',
             onPressed: () => _register(),
             icon: const Icon(Icons.add_card_outlined),
-            label: const Text('Registrar UID'),
+            label: const Text('Agregar tarjeta física'),
           ),
         ],
       ),
@@ -276,8 +381,9 @@ class _NfcPhysicalCardsPageState extends State<NfcPhysicalCardsPage> {
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         const Text(
-                          'Cada registro NFC genera un UID propio. '
-                          'Úsalo para pagos e historial sin reutilizar el mismo identificador.',
+                          'Puedes registrar varias tarjetas físicas. '
+                          'El UID de cada chip es único y no se edita; '
+                          'para liberarlo, revoca la tarjeta.',
                         ),
                       ],
                     ),
@@ -293,8 +399,8 @@ class _NfcPhysicalCardsPageState extends State<NfcPhysicalCardsPage> {
                     const CiervoEmptyState(
                       title: 'Sin tarjetas físicas',
                       description:
-                          'Escanea tu tarjeta CIERVO Plus o registra el UID manualmente. '
-                          'El cobro se realiza desde el panel del comercio.',
+                          'Escanea tu tarjeta CIERVO o registra el UID manualmente. '
+                          'Puedes agregar más de una.',
                       icon: Icons.credit_card_outlined,
                     )
                   else
@@ -302,20 +408,57 @@ class _NfcPhysicalCardsPageState extends State<NfcPhysicalCardsPage> {
                       (card) => Padding(
                         padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                         child: CiervoCard(
-                          child: ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            leading: const Icon(Icons.nfc),
-                            title: Text(card.label),
-                            subtitle: Text(
-                              'UID: ${card.cardUid} · ${card.status}',
-                            ),
-                            trailing: card.isBlocked
-                                ? null
-                                : IconButton(
-                                    tooltip: 'Bloquear',
-                                    onPressed: () => _block(card),
-                                    icon: const Icon(Icons.block_outlined),
-                                  ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: Icon(
+                                  card.isBlocked
+                                      ? Icons.block
+                                      : Icons.nfc,
+                                ),
+                                title: Text(card.label),
+                                subtitle: Text(
+                                  [
+                                    if (card.identifier != null &&
+                                        card.identifier!.isNotEmpty)
+                                      card.identifier!,
+                                    'UID: ${card.maskedUid}',
+                                    card.status,
+                                  ].join(' · '),
+                                ),
+                              ),
+                              Wrap(
+                                spacing: AppSpacing.xs,
+                                children: [
+                                  if (card.canEdit)
+                                    TextButton.icon(
+                                      onPressed: () => _editLabel(card),
+                                      icon: const Icon(Icons.edit_outlined),
+                                      label: const Text('Editar'),
+                                    ),
+                                  if (card.canBlock)
+                                    TextButton.icon(
+                                      onPressed: () => _block(card),
+                                      icon: const Icon(Icons.block_outlined),
+                                      label: const Text('Bloquear'),
+                                    ),
+                                  if (card.canUnblock)
+                                    TextButton.icon(
+                                      onPressed: () => _unblock(card),
+                                      icon: const Icon(Icons.lock_open_outlined),
+                                      label: const Text('Desbloquear'),
+                                    ),
+                                  if (card.canRevoke)
+                                    TextButton.icon(
+                                      onPressed: () => _revoke(card),
+                                      icon: const Icon(Icons.delete_outline),
+                                      label: const Text('Revocar'),
+                                    ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
                       ),

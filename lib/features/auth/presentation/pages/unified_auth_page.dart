@@ -197,6 +197,11 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView> {
             _emailStep = _EmailStep.registerPassword;
             return;
           }
+          if (widget.startEmailRegistration) {
+            // En flujo de registro: cuenta existente → avisar e ir a login.
+            _emailStep = _EmailStep.chooseExistingAction;
+            return;
+          }
           if (lookup.resolvedFlow == AuthFlow.legacyMigration) {
             _emailStep = _EmailStep.enterPassword;
             return;
@@ -567,14 +572,20 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView> {
   }
 
   Widget _emailEnterStep(BuildContext context, bool loading) {
+    final isRegister = widget.startEmailRegistration;
     return CiervoCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Tu correo', style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            isRegister ? 'Crear cuenta' : 'Tu correo',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: AppSpacing.sm),
-          const Text(
-            'Ingresa tu correo. Si no tienes cuenta, te guiaremos para crearla.',
+          Text(
+            isRegister
+                ? 'Ingresa tu correo para abrir el formulario de registro.'
+                : 'Ingresa tu correo. Si no tienes cuenta, te guiaremos para crearla.',
           ),
           const SizedBox(height: AppSpacing.lg),
           TextField(
@@ -588,20 +599,23 @@ class _UnifiedAuthViewState extends State<_UnifiedAuthView> {
           ),
           const SizedBox(height: AppSpacing.lg),
           CiervoButton(
-            label: loading ? 'Verificando' : 'Continuar',
+            label: loading
+                ? 'Verificando'
+                : (isRegister ? 'Continuar al registro' : 'Continuar'),
             icon: Icons.arrow_forward,
             state: loading
                 ? CiervoButtonState.loading
                 : CiervoButtonState.normal,
             onPressed: loading ? null : _lookupEmail,
           ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: loading ? null : _openPasswordRecovery,
-              child: const Text('¿Olvidaste tu contraseña?'),
+          if (!isRegister)
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: loading ? null : _openPasswordRecovery,
+                child: const Text('¿Olvidaste tu contraseña?'),
+              ),
             ),
-          ),
         ],
       ),
     );

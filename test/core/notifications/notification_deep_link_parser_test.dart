@@ -5,6 +5,14 @@ void main() {
   test('acepta rutas internas y hosts Ciervo explícitos', () {
     expect(NotificationDeepLinkParser.parse('/chat/123'), '/chat/123');
     expect(
+      NotificationDeepLinkParser.parse('/promotions/5'),
+      '/marketplace/promos/5',
+    );
+    expect(
+      NotificationDeepLinkParser.parse('/marketplace/stores/10'),
+      '/marketplace/stores/10',
+    );
+    expect(
       NotificationDeepLinkParser.parse('ciervo://reservations/abc-123'),
       '/reservations/abc-123',
     );

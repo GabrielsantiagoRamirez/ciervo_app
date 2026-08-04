@@ -1,23 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../../chat/domain/entities/chat_button.dart';
 import '../../../chat/domain/repositories/chat_repository.dart';
 import '../../../chat/presentation/widgets/chat_buttons_bar.dart';
+import '../../../../core/country/country_registration.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/user_error_message.dart';
+import '../../../../core/result/result.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/utils/display_formatters.dart';
+import '../../../../core/utils/thousands_separator_input_formatter.dart';
 import '../../../../shared/widgets/ciervo_button.dart';
 import '../../../../shared/widgets/ciervo_empty_state.dart';
 import '../../../../shared/widgets/ciervo_error_state.dart';
 import '../../../../shared/widgets/ciervo_loading_state.dart';
-import '../../../users/presentation/pages/user_search_page.dart';
+import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../data/vakupli_repository.dart';
 import '../../domain/entities/vakupli_plan.dart';
 import '../widgets/vakupli_chat_bubble.dart';
 import '../widgets/vakupli_friends_group.dart';
 import '../widgets/vakupli_plan_card.dart';
 import '../widgets/vakupli_split_selector.dart';
+import '../widgets/vaku_buy_extra_slots_sheet.dart';
+import '../widgets/vaku_insufficient_funds_sheet.dart';
+import 'vakupli_contacts_picker_page.dart';
 
 class VakupliPage extends StatefulWidget {
   const VakupliPage({super.key});
@@ -77,7 +83,7 @@ class _VakupliPageState extends State<VakupliPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Vakupli'),
+        title: const Text('Vaku'),
         bottom: TabBar(
           controller: _tabs,
           tabs: const [
@@ -153,7 +159,7 @@ class _PlansTab extends StatelessWidget {
               children: [
                 if (apiUnavailable)
                   const CiervoEmptyState(
-                    title: 'Vakupli próximamente',
+                    title: 'Vaku próximamente',
                     description:
                         'El módulo social estará disponible cuando el backend lo active.',
                     icon: Icons.groups_outlined,
@@ -215,6 +221,38 @@ class _VakupliCreatePlanTabState extends State<VakupliCreatePlanTab> {
   VakupliSplitOption _split = VakupliSplitOption.equal;
   bool _submitting = false;
   String? _error;
+  String _currency = 'COP';
+  String _countryCode = 'CO';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCountryCurrency();
+  }
+
+  Future<void> _loadCountryCurrency() async {
+    final result = await getIt<ProfileRepository>().getMe();
+    if (!mounted) return;
+    result.when(
+      success: (profile) {
+        final country = (profile.countryCode ?? '').trim().toUpperCase();
+        final resolved = country.isNotEmpty
+            ? country
+            : CountryRegistration.defaultCountryCode();
+        setState(() {
+          _countryCode = resolved;
+          _currency = CountryRegistration.currencyForCountry(resolved);
+        });
+      },
+      failure: (_) {
+        final resolved = CountryRegistration.defaultCountryCode();
+        setState(() {
+          _countryCode = resolved;
+          _currency = CountryRegistration.currencyForCountry(resolved);
+        });
+      },
+    );
+  }
 
   @override
   void dispose() {
@@ -225,7 +263,7 @@ class _VakupliCreatePlanTabState extends State<VakupliCreatePlanTab> {
   }
 
   Future<void> _submit() async {
-    final amount = double.tryParse(_amount.text.replaceAll(',', '').trim());
+    final amount = DisplayFormatters.parseMoneyInput(_amount.text);
     if (_title.text.trim().isEmpty || amount == null || amount <= 0) {
       setState(() => _error = 'Completa título y monto.');
       return;
@@ -239,6 +277,7 @@ class _VakupliCreatePlanTabState extends State<VakupliCreatePlanTab> {
       totalAmount: amount,
       splitOption: _split,
       description: _description.text.trim(),
+      currency: _currency,
     );
     if (!mounted) return;
     result.when(
@@ -258,6 +297,7 @@ class _VakupliCreatePlanTabState extends State<VakupliCreatePlanTab> {
 
   @override
   Widget build(BuildContext context) {
+    final countryLabel = CountryRegistration.countryLabel(_countryCode);
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
@@ -269,10 +309,12 @@ class _VakupliCreatePlanTabState extends State<VakupliCreatePlanTab> {
         TextField(
           controller: _amount,
           keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          decoration: const InputDecoration(
-            labelText: 'Monto total (COP)',
+          inputFormatters: const [ThousandsSeparatorInputFormatter()],
+          decoration: InputDecoration(
+            labelText: 'Monto total ($_currency)',
+            hintText: _currency == 'CLP' ? '20.000' : '20.000',
             prefixText: '\$ ',
+            helperText: 'Moneda según tu país de cuenta: $countryLabel',
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -324,6 +366,7 @@ class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
   List<VakupliMessage> _messages = const [];
   List<VakupliFriend> _friends = const [];
   List<ChatButton> _chatButtons = const [];
+  late VakupliPlan _plan;
   final _message = TextEditingController();
   bool _loading = true;
   bool _sending = false;
@@ -331,6 +374,7 @@ class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
   @override
   void initState() {
     super.initState();
+    _plan = widget.plan;
     _messages = widget.plan.messages;
     _friends = widget.plan.friends;
     _loadMessages();
@@ -339,7 +383,7 @@ class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
   }
 
   Future<void> _loadButtons() async {
-    final chatId = widget.plan.chatId;
+    final chatId = _plan.chatId;
     if (chatId == null) return;
     final result = await getIt<ChatRepository>().buttons();
     if (!mounted) return;
@@ -350,14 +394,135 @@ class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
   }
 
   Future<void> _loadParticipants() async {
-    final groupId = widget.plan.id;
+    final groupId = _plan.id;
     if (groupId == null) return;
     final result = await widget.repository.participants(groupId);
     if (!mounted) return;
     result.when(
-      success: (friends) => setState(() => _friends = friends),
+      success: (friends) => setState(() {
+        _friends = friends;
+        final paid = friends.where((f) => f.hasPaid).length;
+        final used = friends.length;
+        final remaining = ((_plan.maxTotal ?? _plan.maxParticipants) - used)
+            .clamp(0, _plan.maxTotal ?? _plan.maxParticipants);
+        _plan = _plan.copyWith(
+          friends: friends,
+          paidContributions: paid,
+          totalContributions: used > 0 ? used : _plan.totalContributions,
+          participantCount: used,
+          usedSlots: used,
+          remainingSlots: remaining,
+        );
+      }),
       failure: (_) {},
     );
+  }
+
+  Future<void> _inviteFriend() async {
+    final planId = _plan.id;
+    if (planId == null) return;
+    if (!_plan.hasCapacity) {
+      final bought = await _offerExtraSlots(
+        reason:
+            'Sin cupos. ${_plan.planCapacityHint}. '
+            'Puedes comprar packs de +${_plan.extraSlotPackSize} invitados '
+            'o mejorar tu membresía.',
+      );
+      if (!bought || !_plan.hasCapacity) return;
+    }
+    if (!mounted) return;
+
+    final userId = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => const VakupliContactsPickerPage(),
+      ),
+    );
+    if (userId == null || !mounted) return;
+
+    final divisor = (_plan.maxTotal ?? _plan.maxParticipants) > 0
+        ? (_plan.maxTotal ?? _plan.maxParticipants)
+        : (_plan.participantCount > 0 ? _plan.participantCount : 1);
+    final perPerson = _plan.totalAmount > 0
+        ? (_plan.totalAmount / divisor)
+        : 10000.0;
+
+    final result = await widget.repository.inviteToPlan(
+      planId: planId,
+      userId: userId,
+      amount: perPerson,
+    );
+    if (!mounted) return;
+    result.when(
+      success: (_) async {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invitación enviada.')),
+        );
+        await _loadParticipants();
+      },
+      failure: (error) async {
+        final message = UserErrorMessage.from(error);
+        final upper = message.toUpperCase();
+        final raw = error.toString().toUpperCase();
+        if (upper.contains('CAPACITY_EXCEEDED') ||
+            raw.contains('CAPACITY_EXCEEDED') ||
+            message.toLowerCase().contains('cupo')) {
+          await _offerExtraSlots(reason: message);
+          return;
+        }
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      },
+    );
+  }
+
+  Future<bool> _offerExtraSlots({required String reason}) async {
+    final action = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Sin cupos'),
+        content: Text(reason),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cerrar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, 'buy'),
+            child: const Text('Comprar cupos'),
+          ),
+        ],
+      ),
+    );
+    if (action != 'buy' || !mounted) return false;
+    return _buyExtraSlots();
+  }
+
+  Future<bool> _buyExtraSlots() async {
+    final purchase = await showVakuBuyExtraSlotsSheet(context, plan: _plan);
+    if (purchase == null || !mounted) return false;
+    setState(() {
+      _plan = _plan.copyWith(
+        maxGuests: purchase.maxGuests,
+        maxTotal: purchase.maxGuests + 1,
+        maxParticipants: purchase.maxGuests + 1,
+        purchasedExtraGuests: purchase.purchasedExtraGuests,
+        remainingSlots: purchase.remainingSlots,
+        extraSlotsPeriodEndsAt: purchase.periodEndsAt,
+        extraSlotsPeriodActive: true,
+        nextPackPriceUsd: _plan.nextPackPriceUsd ?? purchase.priceUsd,
+      );
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Listo: +${purchase.guestsAdded} invitados. '
+          'Quedan ${purchase.remainingSlots} cupos.',
+        ),
+      ),
+    );
+    return true;
   }
 
   @override
@@ -367,7 +532,7 @@ class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
   }
 
   Future<void> _loadMessages() async {
-    final planId = widget.plan.id;
+    final planId = _plan.id;
     if (planId == null) {
       setState(() => _loading = false);
       return;
@@ -384,7 +549,7 @@ class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
   }
 
   Future<void> _sendMessage() async {
-    final planId = widget.plan.id;
+    final planId = _plan.id;
     if (planId == null || _message.text.trim().isEmpty) return;
     setState(() => _sending = true);
     final result = await widget.repository.sendMessage(
@@ -404,84 +569,294 @@ class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
     );
   }
 
-  Future<void> _inviteFriend() async {
-    final planId = widget.plan.id;
+  Future<void> _paySplit() async {
+    final planId = _plan.id;
     if (planId == null) return;
-    if (widget.plan.participantCount >= widget.plan.maxParticipants) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('El grupo ya alcanzó el máximo de 5 participantes.'),
-        ),
-      );
-      return;
-    }
-    final userId = await Navigator.of(context).push<String>(
-      MaterialPageRoute(builder: (_) => const UserSearchPage(selectMode: true)),
+
+    final dueResult = await widget.repository.pendingContributionDue(planId);
+    if (!mounted) return;
+    final due = dueResult.when(
+      success: (value) => value,
+      failure: (_) => (
+        amount: _pendingAmountFallback(),
+        currency: 'COP',
+      ),
     );
-    if (userId == null || !mounted) return;
-    final result = await widget.repository.inviteToPlan(
+
+    final cards = await loadWalletCards();
+    if (!mounted) return;
+    final available = cards.fold<double>(
+      0,
+      (sum, card) => sum + card.availableBalance,
+    );
+
+    int? walletCardId;
+    final hasPayableCard = cards.any((card) => card.canSpend(due.amount));
+    if (!hasPayableCard || available < due.amount) {
+      final resolution = await showVakuInsufficientFundsSheet(
+        context,
+        amountDue: due.amount,
+        availableBalance: available,
+        currency: due.currency,
+        cards: cards,
+      );
+      if (!mounted || resolution == null) return;
+      if (resolution.action == VakuFundsAction.pickCard &&
+          resolution.card != null) {
+        walletCardId = int.tryParse(resolution.card!.id);
+      } else {
+        await openVakuFundsAction(context, resolution, cards: cards);
+        return;
+      }
+    } else {
+      final primary =
+          cards.where((c) => c.isPrimary && c.canSpend(due.amount)).firstOrNull ??
+          cards.where((c) => c.canSpend(due.amount)).firstOrNull;
+      walletCardId = int.tryParse(primary?.id ?? '');
+    }
+
+    final result = await widget.repository.paySplit(
       planId: planId,
-      userId: userId,
-      amount: widget.plan.totalAmount > 0 ? widget.plan.totalAmount : 10000,
+      amount: due.amount,
+      walletCardId: walletCardId,
     );
     if (!mounted) return;
     result.when(
-      success: (_) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Invitación enviada.')));
-      },
-      failure: (error) {
-        final message = UserErrorMessage.from(error);
+      success: (_) async {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              message.toLowerCase().contains('maximo de 5')
-                  ? 'El grupo ya alcanzó el máximo de 5 participantes.'
-                  : message,
+              'Pago de ${DisplayFormatters.formatMoney(due.amount, currency: due.currency)} registrado.',
             ),
           ),
+        );
+        await _loadParticipants();
+      },
+      failure: (error) async {
+        final message = UserErrorMessage.from(error);
+        final raw = error.toString().toUpperCase();
+        if (raw.contains('INSUFFICIENT') ||
+            message.toLowerCase().contains('saldo')) {
+          final resolution = await showVakuInsufficientFundsSheet(
+            context,
+            amountDue: due.amount,
+            availableBalance: available,
+            currency: due.currency,
+            cards: cards,
+          );
+          if (!mounted || resolution == null) return;
+          if (resolution.action == VakuFundsAction.pickCard &&
+              resolution.card != null) {
+            final retry = await widget.repository.paySplit(
+              planId: planId,
+              amount: due.amount,
+              walletCardId: int.tryParse(resolution.card!.id),
+            );
+            if (!mounted) return;
+            retry.when(
+              success: (_) async {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Pago del plan registrado.')),
+                );
+                await _loadParticipants();
+              },
+              failure: (retryError) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(UserErrorMessage.from(retryError)),
+                  ),
+                );
+              },
+            );
+            return;
+          }
+          await openVakuFundsAction(context, resolution, cards: cards);
+          return;
+        }
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+      },
+    );
+  }
+
+  double _pendingAmountFallback() {
+    final unpaid = _friends.where((f) => !f.hasPaid && f.amount != null);
+    if (unpaid.isNotEmpty) return unpaid.first.amount!;
+    final max = _plan.maxTotal ?? _plan.maxParticipants;
+    if (_plan.totalAmount > 0 && max > 0) {
+      return _plan.totalAmount / max;
+    }
+    return _plan.totalAmount;
+  }
+
+  Future<void> _onGroupAction(String action) async {
+    final groupId = _plan.id;
+    if (groupId == null) return;
+    switch (action) {
+      case 'edit':
+        await _editGroup();
+      case 'cancel':
+        await _confirmGroupAction(
+          title: 'Cancelar plan',
+          body: 'El plan quedará cancelado. ¿Continuar?',
+          confirmLabel: 'Cancelar plan',
+          run: () => widget.repository.cancelGroup(groupId),
+        );
+      case 'leave':
+        await _confirmGroupAction(
+          title: 'Salir del grupo',
+          body: 'Dejarás de ser miembro de este plan.',
+          confirmLabel: 'Salir',
+          run: () => widget.repository.leaveGroup(groupId),
+          popOnSuccess: true,
+        );
+      case 'delete':
+        await _confirmGroupAction(
+          title: 'Eliminar plan',
+          body:
+              'Solo el creador puede eliminar. Esta acción no se puede deshacer.',
+          confirmLabel: 'Eliminar',
+          run: () => widget.repository.deleteGroup(groupId),
+          popOnSuccess: true,
+        );
+    }
+  }
+
+  Future<void> _editGroup() async {
+    final groupId = _plan.id;
+    if (groupId == null) return;
+    final controller = TextEditingController(text: _plan.title);
+    final name = await showDialog<String>(
+      context: context,
+      useRootNavigator: true,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Editar plan'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(labelText: 'Nombre'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () =>
+                Navigator.of(dialogContext, rootNavigator: true).pop(),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(
+              dialogContext,
+              rootNavigator: true,
+            ).pop(controller.text.trim()),
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (name == null || name.isEmpty || !mounted) return;
+    final result = await widget.repository.updateGroup(
+      groupId: groupId,
+      name: name,
+    );
+    if (!mounted) return;
+    result.when(
+      success: (plan) {
+        setState(
+          () => _plan = plan.copyWith(friends: _friends, messages: _messages),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Plan actualizado.')),
+        );
+      },
+      failure: (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(UserErrorMessage.from(error))),
         );
       },
     );
   }
 
-  Future<void> _paySplit() async {
-    final planId = widget.plan.id;
-    if (planId == null) return;
-    final result = await widget.repository.paySplit(
-      planId: planId,
-      amount: widget.plan.totalAmount,
+  Future<void> _confirmGroupAction({
+    required String title,
+    required String body,
+    required String confirmLabel,
+    required Future<Result<void>> Function() run,
+    bool popOnSuccess = false,
+  }) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      useRootNavigator: true,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(title),
+        content: Text(body),
+        actions: [
+          TextButton(
+            onPressed: () =>
+                Navigator.of(dialogContext, rootNavigator: true).pop(false),
+            child: const Text('Volver'),
+          ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.of(dialogContext, rootNavigator: true).pop(true),
+            child: Text(confirmLabel),
+          ),
+        ],
+      ),
     );
+    if (confirmed != true || !mounted) return;
+    final result = await run();
     if (!mounted) return;
     result.when(
       success: (_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pago del plan registrado.')),
-        );
-      },
-      failure: (error) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(UserErrorMessage.from(error))));
+        ).showSnackBar(SnackBar(content: Text('$confirmLabel listo.')));
+        if (popOnSuccess) {
+          Navigator.of(context).pop(true);
+        } else {
+          setState(() {
+            _plan = _plan.copyWith(statusLabel: 'Cancelado');
+          });
+        }
+      },
+      failure: (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(UserErrorMessage.from(error))),
+        );
       },
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final incomplete = !_plan.statusLabel.toLowerCase().contains('complet');
     return Scaffold(
-      appBar: AppBar(title: Text(widget.plan.title)),
+      appBar: AppBar(
+        title: Text(_plan.title),
+        actions: [
+          if (_plan.id != null && incomplete)
+            PopupMenuButton<String>(
+              onSelected: _onGroupAction,
+              itemBuilder: (_) => const [
+                PopupMenuItem(value: 'edit', child: Text('Editar')),
+                PopupMenuItem(value: 'cancel', child: Text('Cancelar plan')),
+                PopupMenuItem(value: 'leave', child: Text('Salir del grupo')),
+                PopupMenuItem(value: 'delete', child: Text('Eliminar')),
+              ],
+            ),
+        ],
+      ),
       body: Column(
         children: [
           Expanded(
             child: ListView(
               padding: const EdgeInsets.all(AppSpacing.lg),
               children: [
-                VakupliPlanCard(plan: widget.plan),
+                VakupliPlanCard(plan: _plan),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  'Participantes: ${widget.plan.participantsLabel}',
+                  'Cupos del grupo: ${_plan.participantsLabel}',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -492,19 +867,33 @@ class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: _inviteFriend,
-                        icon: const Icon(Icons.link),
-                        label: const Text('Invitar'),
+                        icon: const Icon(Icons.person_add_alt_1),
+                        label: Text(
+                          _plan.hasCapacity
+                              ? 'Invitar'
+                              : 'Sin cupos',
+                        ),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: CiervoButton(
-                        label: 'Pagar split',
+                        label: 'Pagar mi parte',
                         icon: Icons.payments_outlined,
                         onPressed: _paySplit,
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                OutlinedButton.icon(
+                  onPressed: _buyExtraSlots,
+                  icon: const Icon(Icons.add_box_outlined),
+                  label: Text(
+                    _plan.nextPackPriceLabel.isNotEmpty
+                        ? 'Más cupos (${_plan.nextPackPriceLabel})'
+                        : 'Comprar cupos extra (+${_plan.extraSlotPackSize})',
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 Text(
@@ -526,10 +915,10 @@ class _VakupliPlanDetailPageState extends State<VakupliPlanDetailPage> {
               ],
             ),
           ),
-          if (widget.plan.chatId != null && _chatButtons.isNotEmpty)
+          if (_plan.chatId != null && _chatButtons.isNotEmpty)
             ChatButtonsBar(
               buttons: _chatButtons,
-              conversationId: '${widget.plan.chatId}',
+              conversationId: '${_plan.chatId}',
               enabled: !_sending,
             ),
           SafeArea(

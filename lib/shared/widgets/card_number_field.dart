@@ -8,11 +8,13 @@ class CardNumberField extends StatefulWidget {
   const CardNumberField({
     required this.controller,
     this.labelText = 'Número de tarjeta',
+    this.onComplete,
     super.key,
   });
 
   final TextEditingController controller;
   final String labelText;
+  final VoidCallback? onComplete;
 
   @override
   State<CardNumberField> createState() => _CardNumberFieldState();
@@ -49,20 +51,33 @@ class _CardNumberFieldState extends State<CardNumberField> {
         TextField(
           controller: widget.controller,
           keyboardType: TextInputType.number,
+          textInputAction: TextInputAction.next,
           inputFormatters: [
+            // 16 dígitos + 3 espacios (Visa/Mastercard).
             LengthLimitingTextInputFormatter(19),
             _CardNumberGroupingFormatter(),
           ],
+          onChanged: (value) {
+            final digits = value.replaceAll(RegExp(r'\D'), '');
+            if (digits.length >= 16) {
+              widget.onComplete?.call();
+            }
+          },
           decoration: InputDecoration(
             labelText: widget.labelText,
+            hintText: '•••• •••• •••• ••••',
             prefixIcon: const Icon(Icons.credit_card),
             suffixIcon: Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: CardBrandLogo(brand: _brand),
+              padding: const EdgeInsets.only(right: 10),
+              child: Center(
+                child: CardBrandLogo(brand: _brand, height: 22),
+              ),
             ),
             suffixIconConstraints: const BoxConstraints(
-              minWidth: 56,
+              minWidth: 48,
+              maxWidth: 56,
               minHeight: 32,
+              maxHeight: 40,
             ),
           ),
         ),
@@ -70,7 +85,7 @@ class _CardNumberFieldState extends State<CardNumberField> {
           const SizedBox(height: 8),
           Row(
             children: [
-              CardBrandLogo(brand: _brand, height: 24),
+              CardBrandLogo(brand: _brand, height: 20),
               const SizedBox(width: 8),
               Text(
                 'Tarjeta ${_brand.label} detectada',
@@ -93,10 +108,11 @@ class _CardNumberGroupingFormatter extends TextInputFormatter {
     TextEditingValue newValue,
   ) {
     final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    final limited = digits.length > 16 ? digits.substring(0, 16) : digits;
     final buffer = StringBuffer();
-    for (var i = 0; i < digits.length; i++) {
+    for (var i = 0; i < limited.length; i++) {
       if (i > 0 && i % 4 == 0) buffer.write(' ');
-      buffer.write(digits[i]);
+      buffer.write(limited[i]);
     }
     final formatted = buffer.toString();
     return TextEditingValue(

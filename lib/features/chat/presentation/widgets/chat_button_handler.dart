@@ -44,6 +44,43 @@ bool isKidAllowedFamilyChatAction(String code) {
   return normalized == 'payforme' || normalized == 'pagapormi';
 }
 
+/// Acciones que ya están en Servicios CIERVO (Home) y no deben repetirse en chat.
+bool isHomeDuplicateChatAction(String code) {
+  final normalized = code.replaceAll(RegExp(r'[\s_-]'), '').toLowerCase();
+  const duplicates = {
+    'sendgift',
+    'gift',
+    'enviarregalo',
+    'payforme',
+    'pagapormi',
+    'requestapproval',
+    'solicitaraprobacion',
+    'approval',
+    'delivery',
+    'domicilios',
+    'qr',
+    'nfc',
+    'paynfc',
+    'pagonfc',
+    'wallet',
+    'miwallet',
+    'trips',
+    'viajes',
+    'transport',
+    'transporte',
+    'move',
+    'tickets',
+    'reservas',
+    'reservations',
+    'vacu',
+    'vaku',
+    'vakupli',
+    'pin',
+    'pagaporpin',
+  };
+  return duplicates.contains(normalized);
+}
+
 Future<void> handleChatButtonTap(
   BuildContext context, {
   required ChatButton button,
@@ -207,7 +244,10 @@ Future<void> showChatButtonsSheet(
   int? businessId,
   String? businessName,
 }) async {
-  final visible = buttons.visibleOnMobile();
+  final visible = buttons
+      .visibleOnMobile()
+      .where((b) => !isHomeDuplicateChatAction(b.code))
+      .toList();
   if (visible.isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(

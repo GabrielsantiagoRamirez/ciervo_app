@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_spacing.dart';
 import 'ciervo_brand_loader.dart';
 import 'ciervo_skeleton.dart';
+import 'staggered_reveal.dart';
 
 class CiervoLoadingState extends StatelessWidget {
   const CiervoLoadingState({
@@ -27,9 +28,14 @@ class CiervoLoadingState extends StatelessWidget {
         if (showSkeletons)
           ...List.generate(
             itemCount,
-            (index) => const Padding(
-              padding: EdgeInsets.only(bottom: AppSpacing.md),
-              child: CiervoSkeleton(width: double.infinity, height: 84),
+            (index) => StaggeredReveal(
+              index: index,
+              baseDelay: const Duration(milliseconds: 70),
+              beginScale: 0.98,
+              child: const Padding(
+                padding: EdgeInsets.only(bottom: AppSpacing.md),
+                child: CiervoSkeleton(width: double.infinity, height: 84),
+              ),
             ),
           ),
       ],

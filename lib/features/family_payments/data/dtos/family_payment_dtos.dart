@@ -123,12 +123,12 @@ class AddFamilyCardResponseDto {
           map['threeDsRedirectUrl'] ??
           map['authenticationUrl'],
     );
-    final status = _string(map['status']).toLowerCase();
+    final status = _string(map['status']).toLowerCase().replaceAll('_', '');
     final requires3ds =
         json['requires3ds'] == true ||
         json['requires3DS'] == true ||
         json['requiresVerification'] == true ||
-        status == 'pending_verification' ||
+        status.contains('pending') ||
         (verificationUrl != null && verificationUrl.isNotEmpty);
     final cardId = _string(map['cardId'] ?? map['id']);
     return AddFamilyCardResponseDto(

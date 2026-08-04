@@ -1,3 +1,5 @@
+import 'business_summary.dart';
+
 /// Filtros smart de discovery (query params del API).
 class DiscoverySmartFilters {
   const DiscoverySmartFilters({
@@ -72,6 +74,30 @@ class DiscoverySmartFilters {
       if (accessible) 'accessible': true,
       if (hasParking) 'hasParking': true,
     };
+  }
+
+  /// Filtrado local (AND). Refuerza el API cuando ignora params o no aplica radio.
+  bool matches(BusinessSummary business) {
+    if (business.distanceKm > 0 && business.distanceKm > radiusKm) {
+      return false;
+    }
+    if (minRating != null && business.rating < minRating!) {
+      return false;
+    }
+    if (openNow && business.isOpen == false && !business.open24Hours) {
+      return false;
+    }
+    if (acceptsCiervoPayments && !business.acceptsCiervoPayments) {
+      return false;
+    }
+    if (hasDelivery && !business.hasDelivery) return false;
+    if (requiresReservation && !business.requiresReservation) return false;
+    if (hasPromotions && !business.hasActivePromotions) return false;
+    if (familyFriendly && !business.isFamilyFriendly) return false;
+    if (petFriendly && !business.isPetFriendly) return false;
+    if (accessible && !business.isAccessible) return false;
+    if (hasParking && !business.hasParking) return false;
+    return true;
   }
 
   DiscoverySmartFilters copyWith({
