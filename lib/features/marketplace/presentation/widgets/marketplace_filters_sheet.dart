@@ -37,16 +37,38 @@ class _MarketplaceFiltersSheet extends StatefulWidget {
 
 class _MarketplaceFiltersSheetState extends State<_MarketplaceFiltersSheet> {
   late MarketplaceFeedQuery _query;
+  late TextEditingController _categoryController;
+  String _categorySearch = '';
 
   @override
   void initState() {
     super.initState();
     _query = widget.initial;
+
+    _categoryController = TextEditingController()
+      ..addListener(() {
+        setState(() {
+          _categorySearch = _categoryController.text.trim().toLowerCase();
+        });
+      });
   }
+
+      @override
+    void dispose() {
+      _categoryController.dispose();
+      super.dispose();
+    }
 
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.viewInsetsOf(context).bottom;
+    final filteredCategories = widget.catalog.categories.where((category) {
+      if (_categorySearch.isEmpty) return true;
+
+      return category.name
+          .toLowerCase()
+          .contains(_categorySearch);
+    }).toList();
     return Padding(
       padding: EdgeInsets.fromLTRB(
         AppSpacing.lg,
@@ -61,32 +83,67 @@ class _MarketplaceFiltersSheetState extends State<_MarketplaceFiltersSheet> {
             Text('Filtros marketplace', style: AppTextStyles.title),
             const SizedBox(height: AppSpacing.md),
             Text('Categoría', style: AppTextStyles.label),
-            const SizedBox(height: AppSpacing.xs),
-            Wrap(
-              spacing: AppSpacing.xs,
-              runSpacing: AppSpacing.xs,
-              children: [
-                ChoiceChip(
-                  label: const Text('Todas'),
-                  selected: _query.categoryId == null,
-                  onSelected: (_) => setState(
-                    () => _query = _query.copyWith(clearCategory: true),
-                  ),
-                ),
-                for (final category in widget.catalog.categories)
-                  ChoiceChip(
-                    label: Text(category.name),
-                    selected: _query.categoryId == category.id,
-                    onSelected: (_) => setState(
-                      () => _query = _query.copyWith(
-                        categoryId: category.id,
-                        categoria: category.name,
-                      ),
-                    ),
-                  ),
-              ],
+            const SizedBox(height: 8),
+
+            TextField(
+              controller: _categoryController,
+              decoration: const InputDecoration(
+                hintText: 'Buscar categoría...',
+                prefixIcon: Icon(Icons.search),
+              ),
             ),
-            if (widget.catalog.cities.isNotEmpty) ...[
+
+                        const SizedBox(height: AppSpacing.xs),
+                        SizedBox(
+  height: 260,
+  child: ListView(
+    children: [
+      ListTile(
+        leading: Icon(
+          _query.categoryId == null
+              ? Icons.radio_button_checked
+              : Icons.radio_button_off,
+        ),
+        title: const Text('Todas'),
+        onTap: () {
+          setState(() {
+            _query = _query.copyWith(clearCategory: true);
+          });
+        },
+      ),
+
+const SizedBox(height: 8),
+
+      ...filteredCategories.map(
+        (category) => ListTile(
+          leading: Icon(
+            _query.categoryId == category.id
+                ? Icons.radio_button_checked
+                : Icons.radio_button_off,
+          ),
+          title: Text(
+          category.name,
+          style: TextStyle(
+            fontWeight: _query.categoryId == category.id
+                ? FontWeight.bold
+                : FontWeight.normal,
+          ),
+        ),
+          onTap: () {
+            FocusScope.of(context).unfocus();
+            setState(() {
+              _query = _query.copyWith(
+                categoryId: category.id,
+                categoria: category.name,
+              );
+            });
+          },
+        ),
+      ),
+    ],
+  ),
+)
+            , if (widget.catalog.cities.isNotEmpty) ...[
               const SizedBox(height: AppSpacing.md),
               Text('Ciudad', style: AppTextStyles.label),
               const SizedBox(height: AppSpacing.xs),

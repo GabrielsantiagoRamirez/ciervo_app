@@ -86,11 +86,6 @@ class _PremiumWalletDashboardState extends State<PremiumWalletDashboard> {
               _Header(userName: _userName, palette: palette),
               if (widget.state.ciervoUserCode != null) ...[
                 const SizedBox(height: AppSpacing.sm),
-                Center(
-                  child: CiervoUserIdBadge(
-                    codeOverride: widget.state.ciervoUserCode,
-                  ),
-                ),
               ],
               const SizedBox(height: AppSpacing.lg),
               if (card != null)

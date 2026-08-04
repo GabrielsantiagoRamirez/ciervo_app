@@ -1,3 +1,4 @@
+import 'package:ciervo_clud/shared/widgets/ciervo_user_id_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -72,7 +73,10 @@ class _ClientEntry extends StatelessWidget {
     if (!context.watch<ExperienceModeCubit>().state.hasSelection) {
       return const ExperienceModePage();
     }
-    return const CiervoBottomNavScaffold();
+
+    return const CiervoUserIdOverlay(
+      child: CiervoBottomNavScaffold(),
+    );
   }
 }
 
